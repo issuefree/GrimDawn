@@ -30,6 +30,27 @@ def getBonuses():
 						bonuses[bonus] = s.bonuses[bonus]
 	return bonuses
 
+class Model:
+	def __init__(self, model):
+		self.model = model
+		self.checkModel()
+
+	def __str__(self):
+		for key in sorted(self.model.keys()):
+			print key, self.model[key]
+
+	def checkModel(self):
+		print self.getValue("elemental resist")
+		self.setValue("elemental resist", max(self.getValue("cold resist"), self.getValue("lightning resist"), self.getValue("fire resist"), self.getValue("electrocute resist"), self.getValue("frostburn resist"), self.getValue("burn resist")))
+
+	def getValue(self, key):
+		if key in self.model.keys():
+			return self.model[key]
+		else:
+			return 0
+	def setValue(self, key, value):
+		self.model[key] = value
+
 
 a = Affinity(0,0,1,1,0)
 b = Affinity("3e 2o")
@@ -53,7 +74,6 @@ def evaluateBonuses(model, bonuses):
 			value += model[bonus]*bonuses[bonus]
 	return value
 
-model = {"offense":1, "fire %":2}
 
 # print evaluateBonuses(model, getBonuses())
 
@@ -76,10 +96,10 @@ model = {"offense":1, "fire %":2}
 		# Repeat until I run out of constellations or I hit one below the threshold. All unmarked constellations are useless.
 # If I approach this treating contellations as whole entities and trim the space as above for initial pass I think I may be able to evaluate the whole space.
 
-constellationRanks = []
-for c in Constellation.constellations:
-	constellationRanks += [(c.name, c.evaluate(model))]
-print sorted(constellationRanks, key=itemgetter(1), reverse=True)
+# constellationRanks = []
+# for c in Constellation.constellations:
+# 	constellationRanks += [(c.name, c.evaluate(model))]
+# print sorted(constellationRanks, key=itemgetter(1), reverse=True)
 
 def getNeededConstellations(wanted, currentAffinity=Affinity(0)):
 	needed = []
@@ -100,4 +120,11 @@ for c in Constellation.constellations:
 	for s in c.stars:
 		for bonus in s.bonuses.keys():
 			bonuses[bonus] = True
-print sorted(bonuses.keys())
+
+# for bonus in sorted(bonuses.keys()):
+# 	print bonus
+
+model = Model({"cold %":1, "fire %":2})
+
+print model
+model.checkModel()

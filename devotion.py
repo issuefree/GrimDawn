@@ -241,7 +241,7 @@ model = Model({
 	"Guardian's Gaze":25,
 	"Dryad's Blessing":10,
 	"Turtle Shell":15,
-	"Fetid Pool":150,
+	"Fetid Pool":150-25,
 	"Giant's Blood":25,
 	"Bysmiel's Command":50,
 	"Wayward Soul":25,

@@ -10,23 +10,23 @@ class Affinity:
 		self.primordial = 0
 
 		if type(ascendant) == type(""):
-			m = re.search("(\d)+a", ascendant)
+			m = re.search("(\d+)+a", ascendant)
 			if m:
 				self.ascendant = int(m.group(1))
 
-			m = re.search("(\d)+c", ascendant)
+			m = re.search("(\d+)+c", ascendant)
 			if m:
 				self.chaos = int(m.group(1))
 
-			m = re.search("(\d)+e", ascendant)
+			m = re.search("(\d+)+e", ascendant)
 			if m:
 				self.eldritch = int(m.group(1))
 
-			m = re.search("(\d)+o", ascendant)
+			m = re.search("(\d+)+o", ascendant)
 			if m:
 				self.order = int(m.group(1))
 
-			m = re.search("(\d)+p", ascendant)
+			m = re.search("(\d+)+p", ascendant)
 			if m:
 				self.primordial = int(m.group(1))
 		else:
@@ -81,9 +81,9 @@ class Star:
 
 	def evaluate(self, model):
 		value = 0
-		for bonus in model.keys():
+		for bonus in model.model.keys():
 			if bonus in self.bonuses.keys():
-				value += model[bonus]*self.bonuses[bonus]
+				value += model.get(bonus)*self.bonuses[bonus]
 		return value
 
 class Constellation:
@@ -142,6 +142,18 @@ class Constellation:
 			return True
 
 		return False
+
+	def canActivate(self, current=Affinity()):		
+		if not self.isComplete() and current >= self.requires:
+			return True
+		return False
+
+	def activate(self):
+		for s in self.stars:
+			s.active = True
+	def deactivate(self):
+		for s in self.stars:
+			s.active = False
 
 xA = Constellation("Crossroads Ascendant", "", "1a")
 Star(xA, [], {"offense":15})
@@ -358,7 +370,7 @@ b = Star(obelisk, a, {"defense":30, "armor":150})
 c = Star(obelisk, b, {"retaliation %":100})
 d = Star(obelisk, a, {"defense %":5, "defense":25})
 e = Star(obelisk, d, {"block %":5, "blocked damage %":30})
-f = Star(obelisk, e, {"reduced stun duration":30, "reduced freeze duration":30, "armor %":4, "max pierce resist %":3})
+f = Star(obelisk, e, {"reduced stun duration":30, "reduced freeze duration":30, "armor %":4, "max pierce resist":3})
 g = Star(obelisk, f, {"Stone Form":True})
 
 soldier = Constellation("Unknown Soldier", "15a 8o")
@@ -504,7 +516,7 @@ g = Star(sage, f, {"Elemental Seeker":True})
 
 wolf = Constellation("Mogdrogen the Wolf", "15a 12e")
 a = Star(wolf, [], {"offense":35, "pet offense %":5})
-b = Star(wolf, a, {"bleed %":80, "pet damage %":30})
+b = Star(wolf, a, {"bleed %":80, "pet all damage %":30})
 c = Star(wolf, b, {"vitality resist":20, "pet total speed":6})
 d = Star(wolf, c, {"bleed":25*5, "bleed %":80})
 e = Star(wolf, d, {"bleed resist":15, "elemental resist":15, "max bleed resist":3, "pet all damage %":80})
@@ -592,7 +604,7 @@ g = Star(torch, f, {"Meteor Shower":True})
 
 god = Constellation("Dying God", "8c 15p")
 a = Star(god, [], {"offense":20, "vitality %":80})
-b = Star(god, a, {"offense":20, "chaos":80})
+b = Star(god, a, {"offense":20, "chaos %":80})
 c = Star(god, b, {"offense %":3, "spirit":25, "pet all damage %":30, "pet attack speed":5})
 d = Star(god, c, {"offense":45, "chaos resist":15})
 e = Star(god, d, {"vitality %":100, "chaos %":100})

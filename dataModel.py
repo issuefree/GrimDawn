@@ -51,6 +51,16 @@ class Model:
 			"life leech"
 		]
 
+		durationDamages = [
+			"bleed",
+			"poison",
+			"burn",
+			"electrocute",
+			"frostburn",
+			"internal",
+			"vitality decay"
+		]
+
 		# physique grants health/s, health and defense so this should be accounted for
 		val = 0
 		val += self.get("health/s") * .04
@@ -144,24 +154,16 @@ class Model:
 		# catch all for flat damage of any type
 		# triggered flat damage should be either specified manually or be equivalent to normal flat damage.
 		# catch all for triggered damage of any type (no triggered damage is useless right?)		
-		damages = [
-			"acid", "poison",
-			"aether", 
-			"bleed", 
-			"fire", "burn", 
-			"chaos", 
-			"lightning", "electrocute", 
-			"elemental", 
-			"cold", "frostburn", 
-			"physical", "internal",
-			"pierce",
-			"vitality", "vitality decay",
-			"life leech"
-		]
 		for damage in damages:
-			self.set(damage, max(self.get(damage), self.get("damage")))
+			# duration damage is counted for half
+			factor = 1
+			if damage in durationDamages:
+				factor = .5
+
+			self.set(damage, max(self.get(damage), self.get("damage")*factor))
 			# pet flat damage?
-			self.set("triggered "+damage, max([self.get("triggered "+damage), self.get(damage), self.get("triggered damage")]))
+
+			self.set("triggered "+damage, max([self.get("triggered "+damage), self.get(damage), self.get("triggered damage")*factor]))
 
 		#nothing grants total speed
 
@@ -255,6 +257,12 @@ class Ability:
 		else:
 			return 0
 
+	def gb(self, key):
+		if key in self.bonuses.keys():
+			return self.bonuses[key]
+		else:
+			return 0
+
 	def calculateEffective(self, model):
 		self.calculateTriggerTime(model)
 
@@ -264,6 +272,18 @@ class Ability:
 		elif self.gc("type") == "attack":
 			# normalized around 2 attacks per second. If I use actual attack speed we get inverse calculated value to actual value. ie triggered attacks are more valuable to people who attack a lot but dividing by number of attacks devalues it
 			self.effective = self.getNumTriggers(model)/(2.0*model.getStat("fight length"))*targets
+
+			if "duration" in self.bonuses.keys():
+				#find duration based elements (for attacks that include a debuff component) and calculate them out to per hits.
+				upTime = self.getUpTime(model)
+				print "up", upTime
+				durationMod = upTime/self.effective*targets
+				print "durationMod", durationMod
+				durationBonuses = self.bonuses["duration"]
+				for bonus in durationBonuses.keys():
+					self.bonuses[bonus] = durationBonuses[bonus]*durationMod
+				del self.bonuses["duration"]
+
 		elif self.gc("type") == "shield":
 			self.effective = self.getNumTriggers(model)
 		elif self.gc("type") == "heal":
@@ -320,18 +340,36 @@ class Ability:
 			if "health" in self.bonuses.keys():
 				self.bonuses["health"] += totalDamage
 			else:
-				self.bonuses["health"] = totalDamage			
+				self.bonuses["health"] = totalDamage
 
+		if self.gc("type") == "attack":
+			for dam in damages:
+				# % damage depends on a weapon component and a flat damage component to be meaningful
+				# technically it could depend on a triggered component of the spell as well but I don't think that scenario exists.
+				# actually I think only targo's hammer is an attack ability with a %damage increase.
+				if dam+" %" in self.bonuses.keys():
+					if model.getStat(dam) <= 0:
+						print "-------------> " +self.name+" requires a defined internal damage _stat_ in the model."
+					else:
+						self.bonuses[dam] = self.gb(dam) + (self.model.getStat(dam) * self.gb("weapon %")/100.0 + self.gb(dam)) * self.gb(dam+" %")/100.0
+
+		# armor reduction is like + physical damage that isn't affected by %damage
+		if self.gb("reduce armor") > 0:
+			if model.getStat("physical %") <= 0:
+				print "-------------> " +self.name+" requires a defined stat for physical %."
+			else:
+				self.bonuses["physical"] = self.gb("physical") + self.gb("reduce armor")*.7 / (model.getStat("physical %")/100.0)				
 
 	def calculateValue(self, model):
-		self.calculateDynamicBonuses(model)
 
 		self.calculateEffective(model)
 		print "Effective %:", self.name, self.effective
 
+		self.calculateDynamicBonuses(model)
+		
 		self.star.bonuses[self.name] = 1
 		for bonus in self.bonuses.keys():
-			self.star.bonuses[bonus] = self.bonuses[bonus]*self.effective
+			self.star.bonuses[bonus] = self.bonuses[bonus]*self.effective			
 
 class Star:
 	def __init__(self, constellation, requires=[], bonuses={}):
@@ -372,6 +410,7 @@ class Star:
 		value = 0
 		if self.ability != None:
 			self.ability.calculateValue(model)
+			print self.ability.bonuses
 		for bonus in model.bonuses.keys():
 			if bonus in self.bonuses.keys():
 				value += model.get(bonus)*self.bonuses[bonus]

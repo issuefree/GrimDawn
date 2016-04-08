@@ -24,15 +24,9 @@ e = Star(falcon, d, {})
 # 6 projectiles
 # 100% chance to pierce (assume pierce means on average 2 hits)
 # I'm guestimating I'll get 4 hits per.
-# 15 % on attack
-# 1 second recharge
-# we'll use an arbitrary .5 seconds per attack for an auto attacker
-# 1/.15 = 6.66 so 1 in 6.66 attacks will trigger
-# add the 2 from the recharge for 1 in 8.66
-# 1/8.66 * 4 = .46
 e.addAbility(Ability(
-	"Falcon Swoop", {"type":"attack", "trigger":"attack", "chance":.15, "recharge":1, "targets":4}, 
-	{"weapon damage %":65, "triggered bleed":125} ))
+	"Falcon Swoop", {"type":"attack", "trigger":"attack", "chance":.15, "recharge":1, "targets":4, "duration":3}, 
+	{"weapon damage %":65, "duration":{"triggered bleed":135*3}} ))
 
 shepherd = Constellation("Shepherd's Crook", "1a", "5a")
 a = Star(shepherd, [], {"health":40, "pet health %":8})
@@ -57,14 +51,9 @@ c = Star(anvil, b, {"armor absorb":3})
 d = Star(anvil, c, {"defense":15, "constitution %":20})
 e = Star(anvil, d, {"Targo's Hammer":True})
 # 25% chance on block
-# estimating .75 seconds per block
-#	working no our default .5 seconds per attack so a block is .666 as valuable as an attack
-# described as a close AoE so we'll assume ~3 hits# 
-# 3 * .25 * .66
-	# .495, 
 e.addAbility(Ability("Targo's Hammer", 
 	{"type":"attack", "trigger":"block", "chance":.25, "targets":3},
-	{"stun %":50, "weapon damage %":92, "physical":100, "internal %":.92*145} ))
+	{"stun %":50, "weapon damage %":92, "physical":100, "internal %":145} ))
 
 owl = Constellation("Owl", "1a", "5a")
 a = Star(owl, [], {"spirit":10})
@@ -156,10 +145,13 @@ g = Star(huntress, e, {})
 # this will slightly undervalue the skill as it can refresh within it's duration.
 # I can't decide if I want to use targets. The "defense" part assumes I'll hit everything hitting me so it's over valued.
 # the bleed resist reduction feels like I shouldn't count it per target since it only matters on the things I'm hitting and hitting things is already accounted for.
-# so I'll manually multiply the bleed damage by the targets
+
+# I'm treating reduced offense like defense so don't count the targets (it's built into that conversion)
+# reduced resist only matters when other stuff hits so reducing resist on stuff I'm not hitting doesn't count for anything.
+# remove the multi target component (I'm overcounting defense and undercounting reduced resist a bit).
 g.addAbility(Ability("Rend", 
-	{"type":"buff", "trigger":"attack", "chance":.2, "recharge":5, "duration":5}, 
-	{"defense":125, "reduce bleed resist":33, "triggered bleed":307*2*5} ))
+	{"type":"attack", "trigger":"attack", "chance":.2, "recharge":1, "duration":5, "targets":3},
+	{"duration":{"defense":125/3, "reduce bleed resist":33/3, "triggered bleed":307*5}} ))
 
 leviathan = Constellation("Leviathan", "13a 13e")
 a = Star(leviathan, [], {"cold":8, "cold %":80})
@@ -173,12 +165,11 @@ g = Star(leviathan, d, {})
 # 3 second recharge
 # 6 second duration
 # 3.5 meter radius
-# decent sized aoe probably 2 targets, it lasts and hits stuff that walks in (I assume) so call it another .5
-	# .3*2.5, 
+# decent sized aoe probably 2.5 targets, it lasts and hits stuff that walks in (I assume) so call it another .5
 g.addAbility(Ability(
 	"Whirlpool", 
-	{"type":"attack", "trigger":"attack", "chance":.3, "recharge":3, "targets":2.5}, 
-	{"triggered cold":322, "triggered frostburn":266, "slow move":35} ))
+	{"type":"attack", "trigger":"attack", "chance":.3, "recharge":3, "targets":3, "duration":6}, 
+	{"triggered cold":322, "duration":{"triggered frostburn":133*2}, "slow move":35} ))
 
 oleron = Constellation("Oleron", "20a 7o")
 a = Star(oleron, [], {"physique":20, "cunning":20, "health":100})
@@ -190,12 +181,15 @@ f = Star(oleron, d, {"offense":15, "internal":25*5, "internal %":100, "max pierc
 g = Star(oleron, d, {})
 # 100% on critical (hrm, call it 15%)
 # 1 second recharge
-# 1/(1/.15+4) ~= .1
 # 5 meter pbaoe for 3 targets
+# weird one. There are two duration components with different durations. I can either scale the damage to be over a longer time or scale the others to be shorter.
+# I'll make the damages longer.
+# If we assume everything has enough armor for all of the reduce armor to take effect (if they have less and we're doing physical damage they're probably dead already anyway)
+# Then if we know our flat physical we can assume 70% absorb
 g.addAbility(Ability(
 	"Blind Fury", 
 	# .1*3, 
-	{"type":"attack", "trigger":"critical", "chance":1, "recharge":1, "targets":3},
+	{"type":"attack", "trigger":"critical", "chance":1, "recharge":1, "targets":3, },
 	{"weapon damage %":85, "internal":324, "bleed":324, "slow attack":25, "reduce armor":275} ))
 
 tortoise = Constellation("Tortoise", "1o", "2o 3p")
@@ -637,7 +631,7 @@ e = Star(fiend, d, {})
 # 2 projectiles
 # 2.5 targets
 # 1 attack recharge, 4 attack trigger
-e.addAbility("Flame Torrent", 2.5/5, {"weaopn damage %":35, "triggered fire":132, "triggered chaos":56, "triggered burn":504})
+e.addAbility("Flame Torrent", 2.5/5, {"weapon damage %":35, "triggered fire":132, "triggered chaos":56, "triggered burn":504})
 
 viper = Constellation("Viper", "1c", "2c 3p")
 a = Star(viper, [], {"spirit":10})

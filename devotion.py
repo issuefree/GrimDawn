@@ -1,7 +1,9 @@
 import sys
 from time import time
-from constellationData import *
 import random
+
+from constellationData import *
+from dataModel import *
 
 methodTimes = {}
 def timeMethod(label, startTime):
@@ -293,6 +295,7 @@ nyx = Model(
 		# armor absorb is good vs lots of little hits. This char regens fast with lots of little enemies so there's not much value
 		"armor absorb":2,
 		"health":.5, "health/s":1,
+		"energy":.1, "energy/s":5,
 		"avoid melee":10, "avoid ranged":15,
 		"resist":7.5,
 
@@ -321,8 +324,10 @@ nyx = Model(
 
 	{
 		"attacks/s":10,
-		"hits/s":1,
+		"hits/s":1.5,
 		"blocks/s":0,
+		"crit chance":.09,
+		"low healths/s":1.0/30, # total guesswork.
 
 		"physique":650,
 		"cunning":400,
@@ -335,15 +340,13 @@ nyx = Model(
 		"armor":450,
 
 		"vitality %":750+350,
-		"chaos %":350
+		"chaos %":350,
+
+		"fight length":30
 	}
 )
 
 print nyx
-
-for c in Constellation.constellations:
-	for a in c.abilities:
-		print a.name, a.evaluate(nyx)
 
 Constellation.constellations.remove(hydra)
 Constellation.constellations.remove(scepter)
@@ -408,8 +411,11 @@ print bestScore
 checkedSolutions = {}
 deadSolutions = {}
 
-doMove(nyx, wanted, 50)
+# doMove(nyx, wanted, 50)
 
+for c in Constellation.constellations:
+	for a in c.abilities:
+		print a.name, a.evaluate(nyx)
 
 # killSolution([xA, hawk, shepherd])
 # print deadSolutions
@@ -423,3 +429,5 @@ doMove(nyx, wanted, 50)
 # I think the next step is to look at trying to branch and bound.
 # I think this is pretty nonlinear so I don't have a real good way of doing that.
 #	an expensive way would be to look at each solution's best possible outcome by adding the best scoring constellations to the solution up to the remaining points and if it's not better than my current best don't continue.
+
+print scales.stars[-1].bonuses

@@ -1,389 +1,4 @@
-import re
-from operator import *
-
-class Model:
-	def __init__(self, bonuses, stats):
-		self.bonuses = bonuses
-		self.stats = stats
-
-		self.checkModel()
-
-	def __str__(self):
-		out = ""
-		for key in sorted(self.bonuses.keys()):
-			if self.get(key) > 0:
-				out += key + " " + str(self.bonuses[key]) + "\n"
-		return out
-
-	def checkModel(self):
-		primaryDamages = [
-			"acid",
-			"aether", 
-			"bleed", 
-			"fire",
-			"chaos", 
-			"lightning",
-			"elemental", 
-			"cold",
-			"physical",
-			"pierce",
-			"vitality",
-			"life leech"
-		]
-
-		damages = [
-			"acid", "poison",
-			"aether", 
-			"bleed", 
-			"fire", "burn", 
-			"chaos", 
-			"lightning", "electrocute", 
-			"elemental", 
-			"cold", "frostburn", 
-			"physical", "internal",
-			"pierce",
-			"vitality", "vitality decay",
-			"life leech"
-		]
-
-		# physique grants health/s, health and defense so this should be accounted for
-		val = 0
-		val += self.get("health/s") * .04
-		val += self.get("health") * 3
-		val += self.get("defense") * .5
-
-		self.set("physique", max(self.get("physique"), val))
-
-		# cunning grants physical %, pierce %, bleed %, internal % and offense.
-		val = 0
-		val += self.get("physical %") * .33
-		val += self.get("pierce %") * .285
-		val += self.get("bleed %") * .333
-		val += self.get("internal %") * .333
-		val += self.get("offense") * .5
-
-		self.set("cunning", max(self.get("cunning"), val))
-
-		# spirit grants fire %, burn %, cold %, frostburn %, lightning %, electrocute %, acid %, poison %, vitality %, vitality decay%, aether %, chaos %, energy and energy regen
-		val = 0
-		val += sum([self.get(b) for b in ["elemental %", "acid %", "vitality %", "aether %", "chaos %"]]) * .33
-		val += sum([self.get(b) for b in ["burn %", "frostburn %", "electrocute %", "poison %", "vitality decay %"]]) * .333
-		val += self.get("energy") * 2
-		val += self.get("energy/s") * .01
-
-		self.set("spirit", max(self.get("spirit"), val))
-		#check stats vs % stats
-		percStats = ["physique", "cunning", "spirit", "offense", "defense", "health", "armor"]
-		for stat in percStats:
-			self.set(stat+" %", self.getStat(stat) * self.get(stat) / 100)
-			print stat + " %: " + str(self.get(stat+" %"))
-
-		#check resist reduction
-		# I'm assuming 25% resistance for the purposes of calculating value.
-		# at that resistance each point of resist reduction resulst in 1.33% more overall damage.
-		# if we have +400% vitality damage (500% total) a 1 percent reduction in resist is worth
-		# 500*.0133 vitality % or 6.65 %
-		for damage in primaryDamages:
-			if self.get(damage+" %") > 0:
-				self.set("reduce "+damage+" resist", self.getStat(damage+" %")*.0133*self.get(damage+" %"))
-				print "reduce "+damage+" resist: " + str(self.get("reduce "+damage+" resist"))
-
-		# handle shorthand sets: retaliation, resist	
-		# retaliation types
-		retaliations = [
-			"chaos retaliation", 
-			"life leech retaliation", 
-			"pierce retaliation", 
-			"vitality decay retaliation", 
-			"physical retaliation", 
-			"bleed retaliation"
-		]
-		for b in retaliations:
-			self.set(b, max(self.get(b), self.get("retaliation")))
-			self.set("pet "+b, max(self.get("pet "+b), self.get("pet retaliation")))
-
-		#resist types
-		resists = [
-			"physical resist", 
-			"fire resist", 
-			"cold resist", 
-			"lightning resist", 
-			"acid resist", 
-			"acid resist", 
-			"vitality resist", 
-			"pierce resist", 
-			"aether resist", 
-			"chaos resist",
-			"bleed resist"
-		]
-		for b in resists:
-			self.set(b, max(self.get(b), self.get("resist")))
-			self.set("pet "+b, max(self.get("pet "+b), self.get("pet resist")))
-
-			self.set("reduce "+b, max(self.get("reduce "+b), self.get("reduce resist")))
-		for b in resists:
-			self.set("reduce resist", max(self.get("reduce resist"), self.get("reduce "+b)))
-
-
-		# elemental damage % and resist should be the sum of the individual components
-		self.set("elemental %", max(self.get("elemental %"), sum([self.get(b) for b in ["cold %", "lightning %", "fire %"]])))
-
-		# elemental resists are weird. e.g. fire resist protects against burn and elemental resist protects against fire but elemental resist does not protect against burn
-		self.set("elemental resist", max(self.get("elemental resist"), sum([self.get(b) for b in ["cold resist", "lightning resist", "fire resist"]])))
-
-		# all damage should be >= all other damage bonuses (sans retaliation)
-		# don't count cold, lightning, or fire as they're already aggregated under elemental
-		parts = ["acid %", "aether %", "bleed %", "burn %", "chaos %", "electrocute %", "elemental %", "frostburn %", "internal %", "physical %", "pierce %", "poison %", "vitality %", "vitality decay %"]
-		self.set("all damage %", max(self.get("all damage %"), sum([self.get(b) for b in parts])))
-
-		# catch all for flat damage of any type
-		# triggered flat damage should be either specified manually or be equivalent to normal flat damage.
-		# catch all for triggered damage of any type (no triggered damage is useless right?)		
-		damages = [
-			"acid", "poison",
-			"aether", 
-			"bleed", 
-			"fire", "burn", 
-			"chaos", 
-			"lightning", "electrocute", 
-			"elemental", 
-			"cold", "frostburn", 
-			"physical", "internal",
-			"pierce",
-			"vitality", "vitality decay",
-			"life leech"
-		]
-		for damage in damages:
-			self.set(damage, max(self.get(damage), self.get("damage")))
-			# pet flat damage?
-			self.set("triggered "+damage, max([self.get("triggered "+damage), self.get(damage), self.get("triggered damage")]))
-
-		#nothing grants total speed
-
-	def get(self, key):
-		if key in self.bonuses.keys():
-			return self.bonuses[key]
-		else:
-			return 0
-	def set(self, key, value):
-		self.bonuses[key] = value
-
-	def getStat(self, key):
-		if key in self.stats.keys():
-			return self.stats[key]
-		else:
-			return 0
-
-class Affinity:
-	def __init__(self, ascendant=0, chaos=0, eldritch=0, order=0, primordial=0):
-		self.ascendant = 0
-		self.chaos = 0
-		self.eldritch = 0
-		self.order = 0
-		self.primordial = 0
-
-		if type(ascendant) == type(""):
-			m = re.search("(\d+)+a", ascendant)
-			if m:
-				self.ascendant = int(m.group(1))
-
-			m = re.search("(\d+)+c", ascendant)
-			if m:
-				self.chaos = int(m.group(1))
-
-			m = re.search("(\d+)+e", ascendant)
-			if m:
-				self.eldritch = int(m.group(1))
-
-			m = re.search("(\d+)+o", ascendant)
-			if m:
-				self.order = int(m.group(1))
-
-			m = re.search("(\d+)+p", ascendant)
-			if m:
-				self.primordial = int(m.group(1))
-		else:
-			self.ascendant = ascendant
-			self.chaos = chaos
-			self.eldritch = eldritch
-			self.order = order
-			self.primordial = primordial
-
-	def magnitude(self):
-		return self.ascendant + self.chaos + self.eldritch + self.order + self.primordial
-
-	def __ge__(self, other):
-		return self.ascendant >= other.ascendant and self.chaos >= other.chaos and self.eldritch >= other.eldritch and self.order >= other.order and self.primordial >= other.primordial
-	def __lt__(self, other):
-		return not self >= other
-
-
-	def __add__(self, other):
-		return Affinity(self.ascendant+other.ascendant, self.chaos+other.chaos, self.eldritch+other.eldritch, self.order+other.order, self.primordial+other.primordial)
-
-	def __sub__(self, other):
-		return Affinity(self.ascendant-other.ascendant, self.chaos-other.chaos, self.eldritch-other.eldritch, self.order-other.order, self.primordial-other.primordial)
-
-	def __str__(self):
-		return "" + str(self.ascendant) + "a " + str(self.chaos) + "c " + str(self.eldritch) + "e " + str(self.order) + "o " + str(self.primordial) + "p"
-
-class Ability:
-	def __init__(self, name, star):
-		self.name = name
-		self.star = star
-
-		self.type = None
-
-		self.trigger = None #[attack,hit,block]
-		self.triggerChance = 0
-		self.recharge = 0
-		self.duration = 0		
-		self.targets = 0
-
-	def calculateInterval(self, model):
-		triggerFrequency = model.getStat(self.trigger+"s/s")
-		#if something has a 33% chance to activate then on average 1 in 3 triggers will activate it.
-		triggerFrequency * self.triggerChance
-
-	def evaluate(self, model):
-		self.calculateEffective(model)
-
-class Star:
-	def __init__(self, constellation, requires=[], bonuses={}):
-		self.constellation = constellation
-
-		#array of stars
-		if type(requires) != type([]):
-			self.requires = [requires]
-		else:
-			self.requires = requires 
-
-		self.active = False
-		self.bonuses = bonuses
-
-		self.name = ""
-
-		self.constellation.addStar(self)
-
-	def __str__(self):
-		return self.constellation.name + "." + str(self.constellation.stars.index(self))
-
-	def canActivate(self, affinities):
-		if self.active:
-			return False
-		for star in self.requires:
-			if not star.active:
-				return False
-		if affinities < self.constellation.requires:
-			return False
-		return True
-
-	def evaluate(self, model):
-		value = 0
-		for bonus in model.bonuses.keys():
-			if bonus in self.bonuses.keys():
-				value += model.get(bonus)*self.bonuses[bonus]
-		return value
-
-	# buffs
-	#	relatively easy, estimate uptime times buff stats
-	# heals/shields
-	#	a heal for x is like having had x more health (unless you were already full)
-	#   a shield for x is like having had x more health (if you're getting attacked (which if we weren't why would we care))
-	#   estimate length of a fight times estimated how many times the thing will trigger time value of equivalent health
-	# attacks
-	#	much tricker.
-	#   We're trying to gauge relative value so we'd want the value of the attack to be equivalent to adding a corresponding amount of damage
-	#	this falls apart for casters since added flat damage isn't valuable but a triggered attack certainly could be
-	#	Example:
-	#		I'm a bleed based caster so % bleed damage is valuable but flat bleed damage is not (since I don't use weapon attacks)
-	#			Now, there's an ability that triggers bleed damage. This would be very valuable to my kit.
-	#		I'm a bleed based auto attacker so both %bleed and flat bleed are valuable.
-	#			A triggered ability that caused bleed damage would still be valuable.
-	#	I think we'll need an aggregated stat to handle it. "triggered bleed"
-	#   % damage is a weird one because it applies to the weapon damage portion of an attack.
-	#   In our bleed based melee build lets say we have a weapon that does massive bleed damage on attack. A triggered ability with % bleed damage and a weapon component might be pretty valuable. It's like the weapon damage component * the % damage * the flat damage number (not triggered) so if I value flat bleed at say 100 (for easy math) and my ability has a 30% weapon component and increases bleed damage by 40% I should value that stat at 100*40*.3 = 120
-
-	def addAbility(self, name, perc, bonuses):
-		self.name = name
-		self.bonuses[name] = 1
-		for bonus in bonuses.keys():
-			self.bonuses[bonus] = bonuses[bonus]*perc
-		self.constellation.abilities += [self]
-
-class Constellation:
-
-	constellations = []	
-
-	def __init__(self, name, requires, provides=Affinity()):
-		self.name = name
-		if type(requires) == type(""):
-			self.requires = Affinity(requires)
-		else:
-			self.requires = requires
-
-		if type(provides) == type(""):
-			self.provides = Affinity(provides)
-		else:
-			self.provides = provides
-
-		self.stars = []
-		self.abilities = []
-		self.value = 0
-
-		Constellation.constellations += [self]
-
-	def __str__(self):
-		return self.name + ": (" + str(self.requires) + ")  (" + str(self.provides) + ")"
-
-	def isComplete(self):
-		for star in self.stars:
-			if not star.active:
-				return False
-		return True
-
-	def addStar(self, star):
-		self.stars += [star]
-
-	def evaluate(self, model):
-		if self.value > 0:
-			return self.value
-		self.value = 0
-		for star in self.stars:
-			self.value += star.evaluate(model)
-
-		return self.value
-
-	def needs(self, other, current=Affinity()):
-		# if I already have everything I need then I don't need the other
-		if current >= self.requires:
-			return False
-
-		need = self.requires - current
-		if need.ascendant > 0 and other.provides.ascendant > 0:
-			return True
-		if need.chaos > 0 and other.provides.chaos > 0:
-			return True
-		if need.eldritch > 0 and other.provides.eldritch > 0:
-			return True
-		if need.order > 0 and other.provides.order > 0:
-			return True
-		if need.primordial > 0 and other.provides.primordial > 0:
-			return True
-
-		return False
-
-	def canActivate(self, current=Affinity()):		
-		if not self.isComplete() and current >= self.requires:
-			return True
-		return False
-
-	def activate(self):
-		for s in self.stars:
-			s.active = True
-	def deactivate(self):
-		for s in self.stars:
-			s.active = False
+from dataModel import *
 
 xA = Constellation("Crossroads Ascendant", "", "1a")
 Star(xA, [], {"offense":15})
@@ -405,7 +20,7 @@ a = Star(falcon, [], {"physical %":15})
 b = Star(falcon, a, {"bleed %":24})
 c = Star(falcon, b, {"cunning":15})
 d = Star(falcon, c, {"physical %":24})
-e = Star(falcon, d, {"Falcon Swoop":True})
+e = Star(falcon, d, {})
 # 6 projectiles
 # 100% chance to pierce (assume pierce means on average 2 hits)
 # I'm guestimating I'll get 4 hits per.
@@ -415,7 +30,9 @@ e = Star(falcon, d, {"Falcon Swoop":True})
 # 1/.15 = 6.66 so 1 in 6.66 attacks will trigger
 # add the 2 from the recharge for 1 in 8.66
 # 1/8.66 * 4 = .46
-e.addAbility("Falcon Swoop", .46, {"weapon damage %":65, "triggered bleed":125})
+e.addAbility(Ability(
+	"Falcon Swoop", {"type":"attack", "trigger":"attack", "chance":.15, "recharge":1, "targets":4}, 
+	{"weapon damage %":65, "triggered bleed":125} ))
 
 shepherd = Constellation("Shepherd's Crook", "1a", "5a")
 a = Star(shepherd, [], {"health":40, "pet health %":8})
@@ -423,8 +40,10 @@ b = Star(shepherd, a, {"cunning":10, "health":40})
 c = Star(shepherd, b, {"elemental resist":10, "pet elemental resist":15})
 d = Star(shepherd, c, {"health %":3, "pet health %":5, "pet defense %":5})
 e = Star(shepherd, d, {})
-# 4 second uptime, 6 second recharge 25% trigger on attack. Estimating 50% uptime.
-e.addAbility("Shepherd's Call", .5, {"offense":70, "pet all damage %": 190, "pet crit damage":25, "pet retaliation %":250})
+e.addAbility(Ability(
+	"Shepherd's Call", 
+	{"type":"buff", "trigger":"attack", "chance":.25, "duration":4, "recharge":6},
+	{"offense":70, "pet all damage %": 190, "pet crit damage":25, "pet retaliation %":250} ))
 
 hammer = Constellation("Hammer", "1a", "4a")
 a = Star(hammer, [], {"physical %":15})
@@ -442,7 +61,10 @@ e = Star(anvil, d, {"Targo's Hammer":True})
 #	working no our default .5 seconds per attack so a block is .666 as valuable as an attack
 # described as a close AoE so we'll assume ~3 hits# 
 # 3 * .25 * .66
-e.addAbility("Targo's Hammer", .495, {"stun %":50, "weapon damage %":92, "physical":100, "internal %":.92*145})
+	# .495, 
+e.addAbility(Ability("Targo's Hammer", 
+	{"type":"attack", "trigger":"block", "chance":.25, "targets":3},
+	{"stun %":50, "weapon damage %":92, "physical":100, "internal %":.92*145} ))
 
 owl = Constellation("Owl", "1a", "5a")
 a = Star(owl, [], {"spirit":10})
@@ -498,7 +120,10 @@ g = Star(boar, e, {})
 # description sounds like a frontal cone so we'll go with 2 targets avg
 # 1 in 4 blocks will trigger .55/.75 = .66 so 1 in ~6 attack equivalents + 2 from the recharge
 # 1/8*2 = .25
-g.addAbility("Trample", .25, {"stun %":100, "weapon damage %":80, "internal":404})
+g.addAbility(Ability(
+	"Trample", 
+	{"type":"attack", "trigger":"block", "chance":.25, "recharge":1, "targets":2},
+	{"stun %":100, "weapon damage %":80, "internal":404} ))
 
 scythe = Constellation("Harvestman's Scythe", "3a 3o 5p", "3a 3p")
 a = Star(scythe, [], {"energy/s":2})
@@ -527,11 +152,14 @@ g = Star(huntress, e, {})
 # calling it .9
 # no stat for reducing opponent offense so we'll call it defense
 
-# the bleed damage is high and long and the apply rate is very high but it's also AoE.
-# using the .5 per attack the 307 bleed per second is worth ~150 per hit.
-# assuming 3 targets that's 450 per hit but I the damage may spread across hits as I hit different targets...
-# call hit 500
-g.addAbility("Rend", .9, {"defense":125, "reduce bleed resist":33, "triggered bleed":500})
+#halfway between an attack and a buff. Since the debuff doesn't overlap I'm going to set the recharge to the duration.
+# this will slightly undervalue the skill as it can refresh within it's duration.
+# I can't decide if I want to use targets. The "defense" part assumes I'll hit everything hitting me so it's over valued.
+# the bleed resist reduction feels like I shouldn't count it per target since it only matters on the things I'm hitting and hitting things is already accounted for.
+# so I'll manually multiply the bleed damage by the targets
+g.addAbility(Ability("Rend", 
+	{"type":"buff", "trigger":"attack", "chance":.2, "recharge":5, "duration":5}, 
+	{"defense":125, "reduce bleed resist":33, "triggered bleed":307*2*5} ))
 
 leviathan = Constellation("Leviathan", "13a 13e")
 a = Star(leviathan, [], {"cold":8, "cold %":80})
@@ -546,7 +174,11 @@ g = Star(leviathan, d, {})
 # 6 second duration
 # 3.5 meter radius
 # decent sized aoe probably 2 targets, it lasts and hits stuff that walks in (I assume) so call it another .5
-g.addAbility("Whirlpool", .3*2.5, {"cold":322, "frostburn":266, "slow move":35})
+	# .3*2.5, 
+g.addAbility(Ability(
+	"Whirlpool", 
+	{"type":"attack", "trigger":"attack", "chance":.3, "recharge":3, "targets":2.5}, 
+	{"triggered cold":322, "triggered frostburn":266, "slow move":35} ))
 
 oleron = Constellation("Oleron", "20a 7o")
 a = Star(oleron, [], {"physique":20, "cunning":20, "health":100})
@@ -560,7 +192,11 @@ g = Star(oleron, d, {})
 # 1 second recharge
 # 1/(1/.15+4) ~= .1
 # 5 meter pbaoe for 3 targets
-g.addAbility("Blind Fury", .1*3, {"weapon damage %":85, "internal":324, "bleed":324, "slow attack":25, "reduce armor":275})
+g.addAbility(Ability(
+	"Blind Fury", 
+	# .1*3, 
+	{"type":"attack", "trigger":"critical", "chance":1, "recharge":1, "targets":3},
+	{"weapon damage %":85, "internal":324, "bleed":324, "slow attack":25, "reduce armor":275} ))
 
 tortoise = Constellation("Tortoise", "1o", "2o 3p")
 a = Star(tortoise, [], {"defense":10, "health":25})
@@ -570,8 +206,11 @@ d = Star(tortoise, c, {"health %":4, "defense":10, "armor %":4})
 e = Star(tortoise, c, {})
 # 100% chance at 40% health
 # 30 second recharge
-# I'll probably only hit 40% health once per fight on a 30 second cooldown
-e.addAbility("Turtle Shell", 1, {"health":2700})
+e.addAbility(Ability(
+	"Turtle Shell", 
+	# 1, 
+	{"type":"shield", "trigger":"low health", "chance":1, "recharge":30},
+	{"health":2700} ))
 
 blade = Constellation("Assassin's Blade", "1o", "3a 2o")
 a = Star(blade, [], {"pierce %":15})
@@ -582,7 +221,11 @@ e = Star(blade, d, {})
 #100% on crit: ~15% on attack
 #15 second duration, so on big targets we'll have nearly 100% uptime. for small stuff it doesn't matter.
 #call it 66%?
-e.addAbility("Assassin's Mark", .66, {"reduce physical resist":33, "reduce pierce resist":33})
+e.addAbility(Ability(
+	"Assassin's Mark", 
+	# .66, 
+	{"type":"buff", "trigger":"critical", "chance":1, "recharge":0, "duration":3},
+	{"reduce physical resist":33, "reduce pierce resist":33} ))
 
 lion = Constellation("Lion", "1o", "3o")
 a = Star(lion, [], {"health %":4, "defense":8, "pet health %":3})
@@ -614,7 +257,11 @@ e = Star(dryad, d, {})
 # how long is a fight? call it... 30 seconds.
 # 1 in 3 attacks triggers it, .5 seconds per attack = 1.5 seconds + 4 seconds recharge = 5.5 seconds. Will trigger ~5 times per fight.
 # lets say half of them aren't used because we're near full health
-e.addAbility("Dryad's Blessing", 2.5, {"health %":8, "health":350, "reduced poison duration":30, "reduced bleed duration":30})
+e.addAbility(Ability(
+	"Dryad's Blessing", 
+	# 2.5, 
+	{"type":"heal", "trigger":"attack", "chance":.33, "recharge":4},
+	{"health %":8, "health":350, "reduced poison duration":30, "reduced bleed duration":30} ))
 
 shieldmaiden = Constellation("Shieldmaiden (requires shield)", "4o 6p", "2o 3p")
 a = Star(shieldmaiden, [], {"block %":4})
@@ -639,7 +286,11 @@ f = Star(scales, e, {})
 # normalizing to .5 s per attack = 1/8
 # let's say I get... 300 health per, it triggers 3 times in a fight that's 900 health in a fight.
 # multiply by 8 since it's not weapon attack adjusted
-f.addAbility("Tip the Scales", 1.0/8, {"triggered vitality":170, "energy leech":320, "health":900*8})
+f.addAbility(Ability(
+	"Tip the Scales", 
+	# 1.0/8, 
+	{"type":"attack", "trigger":"hit", "chance":.2, "recharge":1.5},
+	{"triggered vitality":170, "energy":320, "attack as health":135} ))
 
 assassin = Constellation("Assassin", "6a 4o", "1a 1o")
 a = Star(assassin, [], {"pierce %":30})
@@ -654,7 +305,10 @@ g = Star(assassin, f, {})
 #100% pass through
 # call it 6 hits
 # 4 attacks for recharge, ~6 attacks between hits = .1
-g.addAbility("Blades of Wrath", .1*6, {"triggered pierce":168, "weapon damage %":25})
+g.addAbility(Ability(
+	"Blades of Wrath", 
+	{"type":"attack", "trigger":"critical", "chance":1, "recharge":2, "targets":6},
+	{"triggered pierce":168, "weapon damage %":25} ))
 
 blades = Constellation("Blades of Nadaan (requires sword)", "10a", "3a 2o")
 a = Star(blades, [], {"avoid melee":2, "avoid ranged":2})
@@ -676,7 +330,11 @@ g = Star(targo, f, {})
 #8 second recharge
 #5 second duration
 #9.5 seconds
-g.addAbility("Shield Wall", 5/9.5, {"damage reflect %":125, "blocked damage %":125, "armor %":30})
+g.addAbility(Ability(
+	"Shield Wall", 
+	# 5/9.5, 
+	{"type":"buff", "trigger":"attack", "chance":.33, "recharge":8, "duration":5},
+	{"damage reflect %":125, "blocked damage %":125, "armor %":30} ))
 
 obelisk = Constellation("Obelisk of Menhir", "8o 15p")
 a = Star(obelisk, [], {"armor %":7})
@@ -690,7 +348,11 @@ g = Star(obelisk, f, {})
 #12 second recharge
 #8 second duration
 #8/16.4
-g.addAbility("Stone Form", 8/16.4, {"armor %":50, "armor absorb":20, "pierce resist":50, "reduced poison duration":50, "reduced bleed duration":50, "retaliation %":70})
+g.addAbility(Ability(
+	"Stone Form", 
+	# 8/16.4, 
+	{"type":"buff", "trigger":"block", "chance":.15, "recharge":12, "duration":8},
+	{"armor %":50, "armor absorb":20, "pierce resist":50, "reduced poison duration":50, "reduced bleed duration":50, "retaliation %":70} ))
 
 soldier = Constellation("Unknown Soldier", "15a 8o")
 a = Star(soldier, [], {"offense":15, "pierce %":60})
@@ -709,7 +371,11 @@ g = Star(soldier, f, {})
 # I'm assuming strike is an engage and blades is the normal attack
 # lets assume 1 strike and 5 normal attacks in a lifespan
 # 3.3 s to trigger 6 second recharge means 2.5 lifespans in a 30 second fight.
-g.addAbility("Living Shadow", 2.5, {"triggered bleed":35+(48*2*5), "triggered physical":68.5+45.5*5})
+g.addAbility(Ability(
+	"Living Shadow", 
+	# 2.5, 
+	{"type":"summon", "trigger":"critical", "chance":1, "recharge":6, "lifespan":20},
+	{"triggered bleed":35+(48*2*5), "triggered pierce":68.5+45.5*5} ))
 
 scorpion = Constellation("Scorpion", "1e", "5e")
 a = Star(scorpion, [], {"offense":12})
@@ -724,7 +390,11 @@ e = Star(scorpion, c, {})
 # 4 hits
 # reduced defense will count as offense
 # 3 attack recharge, 4 attack trigger = 1/7
-e.addAbility("Scorpion Sting", 1.0/7, {"offense":140, "triggered poison":320, "weapon damage %":30})
+e.addAbility(Ability(
+	"Scorpion Sting", 
+	# 1.0/7, 
+	{"type":"attack", "trigger":"attack", "chance":.25, "recharge":1.5, "targets":4},
+	{"reduce defense":140, "triggered poison":320, "weapon damage %":30} ))
 
 eye = Constellation("Eye of the Guaridan", "1e", "3a 3e")
 a = Star(eye, [], {"acid %":15, "poison %":15})

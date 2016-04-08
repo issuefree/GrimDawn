@@ -1,5 +1,13 @@
-foo = [1,2,3,4]
+duration = 4.0
+recharge = 10.0
+fightLength = 60.0
 
-import random
-random.shuffle(foo)
-print foo
+print duration/(duration+recharge)*fightLength
+
+print duration/(duration+recharge)*(fightLength-duration) + duration
+
+upTime = 0
+while fightLength > 0:
+	upTime += min(duration, fightLength)
+	fightLength -= duration + recharge
+print upTime

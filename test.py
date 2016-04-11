@@ -31,3 +31,11 @@ a = range(10)
 print a
 for i in range(1, len(a)):
 	print a[:i+1]
+
+
+
+# optimizations to try:
+	# when considering path values, consider only up to our total needs.
+		# if the max of our wanted is 2a 10o 6c it makes no sense to give more value to 10a 10o 6c. The extra ascendant is useless.
+
+# consider tracking all bounded paths of low length or low points. It may be worth the extra time to nip paths in the bud early if they're redundant.

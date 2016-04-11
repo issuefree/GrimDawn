@@ -1,17 +1,9 @@
 import sys
-from time import time
 import random
 
 from constellationData import *
 from dataModel import *
-
-methodTimes = {}
-def timeMethod(label, startTime):
-	if label in methodTimes.keys():
-		methodTimes[label] += time()-startTime
-	else:
-		methodTimes[label] = time()-startTime
-
+from models import *
 
 #this relies on state which I'd rather not
 def getAvailableStars(constellations, affinities):
@@ -24,14 +16,27 @@ def getAvailableStars(constellations, affinities):
 	timeMethod("getAvailableStars", start)
 	return available
 
-def getAvailableConstellations(current, constellations, affinities):
+
+def getNextMoves(current, constellations, affinities, points, model):
 	start = time()
-	available = []
+	moves = []
 	for c in constellations:
-		if not c in current and c.canActivate(affinities):
-			available.append(c)
-	timeMethod("getAvailableConstellations", start)
-	return available
+		if c in current:
+			continue
+		if len(c.stars) > points:
+			continue
+		if not c.canActivate(affinities):
+			continue
+		moves += [c]
+	tempMoves = moves[:]
+	for move in tempMoves:
+		for other in tempMoves:
+			if other in move.redundancies:
+				moves.remove(move)
+				break
+
+	timeMethod("getNextMoves", start)
+	return moves
 
 # cache if performance becomes an issue
 def getAffinities(constellations):
@@ -54,27 +59,23 @@ def getBonuses():
 						bonuses[bonus] = s.bonuses[bonus]
 	return bonuses
 
-def sortConstellationsByScore(constellations, model):
+def sortByScore(constellations, model):
 	start = time()
-	list = sorted(constellations, key=lambda c: c.evaluate(model), reverse=True)
-	timeMethod("sortConstellationsByScore", start)
-	return list
+	out = sorted(constellations, key=lambda c: c.evaluate(model), reverse=True)
+	timeMethod("sortByScore", start)
+	return out
+
+def sortByScorePerStar(constellations, model):
+	start = time()
+	out = sorted(constellations, key=lambda c: (c.evaluate(model)/len(c.stars)), reverse=True)
+	timeMethod("sortConstellationsByScorePerStar", start)
+	return out
 
 def sortConstellationsByProvides(constellations):
 	start = time()
-	list = sorted(constellations, key=lambda c: c.provides.magnitude(), reverse=True)
+	out = sorted(constellations, key=lambda c: c.provides.magnitude(), reverse=True)
 	timeMethod("sortConstellationsByProvides", start)
-	return list
-
-
-
-# xC.stars[0].active = True
-# # spider.stars[0].active = True
-# fiend.stars[0].active = True
-# fiend.stars[1].active = True
-# fiend.stars[2].active = True
-# fiend.stars[3].active = True
-# # print getBonuses()
+	return out
 
 def evaluateBonuses(model, bonuses):
 	value = 0
@@ -82,10 +83,6 @@ def evaluateBonuses(model, bonuses):
 		if bonus in bonuses.keys():
 			value += model[bonus]*bonuses[bonus]
 	return value
-
-# print spider.evaluate(model)
-# print fiend.evaluate(model)
-# print fiend.stars[0].evaluate(model)
 
 # search methodology:
 # I think it needs to be depth first because only a complete solution has value since I'm looking for optimal endgame.
@@ -103,36 +100,41 @@ def evaluateBonuses(model, bonuses):
 # If I approach this treating contellations as whole entities and trim the space as above for initial pass I think I may be able to evaluate the whole space.
 
 
-def getNeededConstellations(current, points, wanted, affinities=Affinity(0)):
+def getNeededConstellations(current, points, wanted, affinities=Affinity(0), possibles=Constellation.constellations):
 	start = time()
 	needed = wanted[:]
-	for c in Constellation.constellations:
-		if not c in current and not len(c.stars) > points and c.canActivate(affinities) and not c in needed:
-			for w in wanted:
-				if not len(w.stars) > points and w.canActivate(affinities) and w.needs(c, affinities):
-					needed.append(c)
-					break
+
+	#I'm doing this piece by piece when really I need the total need for my wants. This is probably more efficient.
+	#I may also be able to identify needs that can be satified by a single constellation.
+
+	maxAffinities = Affinity()
+	for c in wanted:
+		maxAffinities = maxAffinities.maxAffinities(c.requires)
+
+	neededAffinities = maxAffinities - affinities
+
+	for c in possibles:
+		if len(c.stars) > points:  #I don't have enough points so it doesn't matter if I need it
+			continue
+		if c in current or c in needed:	#I've either already used it or already selected it
+			continue
+		if c.requires.magnitude() > 1: # Don't select tier 2 constellations JUST because they have a needed affinity.
+			continue
+
+		if neededAffinities.intersects(c.provides):
+			needed.append(c)			
 	timeMethod("getNeededConstellations", start)
 	return needed
 
-bonuses = {}
-for c in Constellation.constellations:
-	for s in c.stars:
-		for bonus in s.bonuses.keys():
-			bonuses[bonus] = True
-
-# for bonus in sorted(bonuses.keys()):
-# 	# if bonus.find("retaliation") >= 0:
-# 	print bonus
-
-
-
-# print model
-# model.checkModel()
-# print model
-
-# searchConstellations = getNeededConstellations(wanted)
-
+def printBonusList():
+	print "All constellation bonuses:"
+	bonuses = {}
+	for c in Constellation.constellations:
+		for s in c.stars:
+			for bonus in s.bonuses.keys():
+				bonuses[bonus] = True
+	for key in sorted(bonuses.keys()):
+		print "  "+key
 
 def printSolution(solution, model, pre=""):
 	value = 0
@@ -140,13 +142,15 @@ def printSolution(solution, model, pre=""):
 	for c in solution:
 		out += c.name + ", "
 		value += c.evaluate(model)
-	print value,":",out
+	out = out[:-2]
+	print int(value),":",out
 
 def solutionPath(solution, pre=""):
-	out = pre
+	out = ""
 	for c in solution:
-		out += c.name + ", "
-	return out
+		out += c.id + ", "
+	out = out[:-2]	
+	return pre + "["+out+"],"
 
 def getSolutionHash(solution):
 	sSol = sorted(solution, key=lambda c: c.name)
@@ -170,264 +174,251 @@ def getSolutionCost(solution):
 		cost += len(s.stars)
 	return cost
 
+boundedPaths = [[Affinity(),0,0]] #[affinities, cost, score]
+def addBoundedPath(solution, model):
+	start = time()
+	global boundedPaths
+	affinities = getAffinities(solution)
+	cost = getSolutionCost(solution)
+	score = evaluateSolution(solution, model)
+
+	deadBPIs = []
+	for bpi in range(len(boundedPaths)-1, -1, -1):
+		bp = boundedPaths[bpi]
+		if affinities <= bp[0] and cost >= bp[1] and score <= bp[2]: 
+			timeMethod("addBoundedPath", start)
+			return True
+		if affinities >= bp[0] and cost <= bp[1] and score >= bp[2]: 
+			# boundedPaths[bpi] = [affinities, cost, score, str(affinities), solutionPath(solution)]
+			del boundedPaths[bpi]
+	boundedPaths += [[affinities, cost, score, str(affinities), solutionPath(solution)]]
+	timeMethod("addBoundedPath", start)
+	return False
+
+def checkBoundedPath(solution, model):
+	start = time()
+	global boundedPaths
+	affinities = getAffinities(solution)
+	cost = getSolutionCost(solution)
+	score = evaluateSolution(solution, model)
+
+	for bpi in range(len(boundedPaths)-1, -1, -1):
+		bp = boundedPaths[bpi]
+		if affinities <= bp[0] and cost >= bp[1] and score < bp[2]: 
+			print "    <-<-  "+str(affinities)+" @ ("+str(cost)+") = "+ str(int(score))
+			print "            "+solutionPath(solution)
+			print "          "+str(bp[0])+" @ ("+str(bp[1])+") = "+ str(int(bp[2]))
+			timeMethod("checkBoundedPath", start)
+			return True
+		if affinities >= bp[0] and cost <= bp[1] and score > bp[2]: 
+			boundedPaths[bpi] = [affinities, cost, score, str(affinities), solutionPath(solution)]
+			print "    -->>  "+str(affinities)+" @ ("+str(cost)+") = "+ str(int(score))+ "  " + str(affinities.magnitude()*score/cost)
+			print "          "+str(bp[0])+" @ ("+str(bp[1])+") = "+ str(int(bp[2]))+ "  " + str(bp[0].magnitude()*bp[2]/bp[1])
+			print "            "+solutionPath(solution)
+			timeMethod("checkBoundedPath", start)
+			return False
+	timeMethod("checkBoundedPath", start)
+	return False
+
 def getUpperBoundScore(solution, points, wanted, model):
+	start = time()
 	score = evaluateSolution(solution, model)
 	for c in wanted:
 		if not c in solution and len(c.stars) <= points:
 			score += c.evaluate(model)
 			points -= len(c.stars)
+	timeMethod("getUpperBoundScore", start)
 	return score
 
-# {"one":
-# 	{"two":
-# 		{"three":True},
-# 		{"four":True},
-# 		{"five":
-# 			{"six":True}
-# 		}
-# 	}
-# }
-
-
 def killSolution(solution):
+	start = time()
 	# print "Killing solution: " + solutionPath(solution)
-	sSol = sorted(solution, key=lambda c: c.name)
+	sSol = sorted(solution, key=lambda c: c.evaluate)
 	deadNode = deadSolutions
 	for sol in sSol:
 		if sol == sSol[-1]:
-			deadNode[sol.name] = True			
+			deadNode[sol.name] = True
+			timeMethod("killSolution", start)
 			return
 
 		if not sol.name in deadNode.keys():
 			deadNode[sol.name] = {}
 		deadNode = deadNode[sol.name]		
+	timeMethod("killSolution", start)
 
 
 def isDeadSolution(solution):
-	sSol = sorted(solution, key=lambda c: c.name)
+	start = time()
+	sSol = sorted(solution, key=lambda c: c.evaluate)
 	deadNode = deadSolutions
 	for sol in sSol:
 		if not sol.name in deadNode.keys():
+			timeMethod("isDeadSolution", start)
 			return False
 		if deadNode[sol.name] == True:
+			timeMethod("isDeadSolution", start)
 			return True
 		deadNode = deadNode[sol.name]
+	timeMethod("isDeadSolution", start)
 	return False
 
+def startsWith(start, complete):
+	if len(start) == 0:
+		return False
+	for i in range(len(start)):
+		if start[i] != complete[i]:
+			return False
+	return True
 
-def doMove(model, wanted, points, solution=[]):	
-	global bestScore, bestSolution, checkedSolutions, deadSolutions
+numCheckedSolutions = 0
+def doMove(model, wanted, points, solution=[], remaining=Constellation.constellations, moveStr=""):	
+	global bestScore, bestSolutions, checkedSolutions, deadSolutions, numCheckedSolutions
+	numCheckedSolutions += 1
 
 	if len(solution) > 0:
-		# sol = getSolutionHash(solution)
-		# if sol in checkedSolutions:
-		# 	return
-		# checkedSolutions[sol] = True
+		# if startsWith(solution, testSolution):
+		# 	print "Solution: ", solutionPath(solution)
 
 		if isDeadSolution(solution):
+			# if startsWith(solution, testSolution):
+			# 	print "Start of test solution is marked as dead."
 			return
 
-		trimSolution = solution[:]
-		ub = getUpperBoundScore(trimSolution, points, wanted, model)
-		while ub < bestScore:
-			killSolution(trimSolution)
+		ub = getUpperBoundScore(solution, points, wanted, model)
+		if ub < bestScore and evaluateSolution(solution, model) < ub:
+			# if startsWith(solution, testSolution):
+			# 	print "Start of test solution is marked as low upper bound.", str(ub)
 
-			trimMove = trimSolution[-1]
-			trimSolution = trimSolution[:-1]
-			# print "Dead branch : best possible score: " + str(ub)
-			# printSolution(solution, model, "    ")
-			# print "Skipping due to low score:", str(ub), "<", bestScore
-			# printSolution(solution, model)
-			ub = getUpperBoundScore(trimSolution, points+len(trimMove.stars), wanted, model)
-			if ub < bestScore:
-				print "    Trimming branch (" +str(getSolutionCost(trimSolution)) +"): " + solutionPath(trimSolution)
+			killSolution(solution)
+			return
+
+		if checkBoundedPath(solution, model):
+			# if startsWith(solution, testSolution):
+			# 	print "Start of test solution is marked as bounded."
+
+			killSolution(solution)
+			return
 		
-		if isDeadSolution(solution):
-			return
-
 	affinities = getAffinities(solution)
-	
-	searchConstellations = getNeededConstellations(solution, points, wanted, affinities)
-	availableConstellations = getAvailableConstellations(solution, searchConstellations, affinities)
-	# nextMoves = sortConstellationsByScore(availableConstellations, model)
-	# nextMoves = sortConstellationsByProvides(availableConstellations)
-	random.shuffle(availableConstellations)
-	nextMoves = availableConstellations
 
-	# printSolution(solution, model)
-	# print "Points remaining:" + str(points)
-	# if len(solution) >= 5:
-	# 	return
-	# for nm in nextMoves:
-	# 	print "    " + str(nm.name) + ": " + str(nm.evaluate(model) )
+	searchConstellations = getNeededConstellations(solution, points, wanted, affinities, remaining)	
+	nextMoves = getNextMoves(solution, searchConstellations, affinities, points, model)
+
+	# if startsWith(solution, testSolution):
+	# 	print "searchConstellations", solutionPath(searchConstellations)
+	# 	print "nextMoves", solutionPath(nextMoves)
+
+	# nextMoves = sortByScore(nextMoves, model)
+	# nextMoves = sortByScorePerStar(nextMoves, model)
+	nextMoves = sortConstellationsByProvides(nextMoves)
+	# nextMoves = sorted(availableConstellations, key=lambda c: c.name, reverse=False)
+	# random.shuffle(nextMoves)
+	# nextMoves = availableConstellations
 
 	isSolution = True
 	for move in nextMoves:
-		if points >= len(move.stars):
-			isSolution = False
-			doMove(model, wanted, points-len(move.stars), solution+[move])
+		isSolution = False
+		newMoveStr = moveStr + move.id + "("+ str(int(move.evaluate(model))) +")" +" {"+str(nextMoves.index(move)+1)+"/"+str(len(nextMoves))+"}, "
+
+		doMove(model, wanted, points-len(move.stars), solution+[move], searchConstellations, newMoveStr)
 	
 	killSolution(solution)
-	if getSolutionCost(solution) < 25:
-		print "    Trimming evaluated branch (" + str(getSolutionCost(solution)) + "): " + solutionPath(solution)
+	if getSolutionCost(solution) <= 20:
+		print "    <-X-  (" + str(getSolutionCost(solution)) + "): " + moveStr[:-2]
+		print "      ", numCheckedSolutions, "  ", len(boundedPaths)
+		# print "    ", str(methodTimes), sum([methodTimes[key] for key in methodTimes.keys()])
 	
 	# printSolution(solution, model)
 	if isSolution:
 		score = evaluateSolution(solution, model)
-		if score > bestScore:
+		if score >= bestScore:
 			bestScore = score
-			bestSolution = solution
+			bestSolutions += [(score, solution)]
 			print "New best: "
-			# printSolution(solution, model)
-		printSolution(solution, model)
-	# print methodTimes
-
-nyx = Model(
-	{
-		"spirit":12.5, 
-		"offense":15, 
-		"crit damage":3,
-		"vitality %":20,
-		"chaos %":7.5,
-		"cast speed":5,
-		"defense":5,
-		"armor":3, 
-		# armor absorb is good vs lots of little hits. This char regens fast with lots of little enemies so there's not much value
-		"armor absorb":2,
-		"health":.5, "health/s":1,
-		"energy":.1, "energy/s":5,
-		"avoid melee":10, "avoid ranged":15,
-		"resist":7.5,
-
-		"pet attack speed":3,
-		"pet total speed":5,
-		"pet offense":5,
-		"pet offense %":50,
-		"pet lifesteal %":2,
-		"pet all damage %":7.5,
-		"pet defense %":1,
-		"pet resist":1.5,
-		"pet health %":5,
-		"pet health/s":1,
-		"pet retaliation":1, "pet retaliaion %":3,
-
-		"triggered vitality":30, "triggered vitality decay":10,
-		"triggered chaos":3,
-		"triggered fire":1.5,
-		"triggered life leech":1.5,
-		"triggered damage":1,
-		
-		"weapon damage %":1,
-		"slow move":7,
-		"stun %":10
-	},
-
-	{
-		"attacks/s":10,
-		"hits/s":1.5,
-		"blocks/s":0,
-		"crit chance":.09,
-		"low healths/s":1.0/30, # total guesswork.
-
-		"physique":650,
-		"cunning":400,
-		"spirit":650,
-
-		"offense":1350,
-		"defense":1000,
-
-		"health":5000,
-		"armor":450,
-
-		"vitality %":750+350,
-		"chaos %":350,
-
-		"fight length":30
-	}
-)
-
-print nyx
-
-Constellation.constellations.remove(hydra)
-Constellation.constellations.remove(scepter)
-Constellation.constellations.remove(shieldmaiden)
-Constellation.constellations.remove(blades)
-Constellation.constellations.remove(berserker)
-Constellation.constellations.remove(kraken)
-#shield based abilities
-Constellation.constellations.remove(anvil)
-Constellation.constellations.remove(boar)
-Constellation.constellations.remove(targo)
-Constellation.constellations.remove(obelisk)
-
-
-constellationRanks = []
-for c in Constellation.constellations:
-	constellationRanks += [(c, c.evaluate(nyx)/len(c.stars))]
-
-constellationRanks.sort(key=itemgetter(1), reverse=True)
-
-thresh = constellationRanks[len(constellationRanks)/2][1]*.9
-
-print "Desired constellations"
-wanted = []
-for c in constellationRanks:
-	if c[1] > thresh:
-		wanted += [c[0]]
-		print "  ", c[0].evaluate(nyx), c[0].name
-print len(wanted)
-
-
-# 17714.3822581 : Crossroads Ascendant, Shepherd's Crook, Wolverine, Owl, Crossroads Chaos, Viper, Jackal, Eel, Wendigo, Crossroads Order, Tortoise, Panther, Crossroads Primordial, Dying God
-#17748.2414442 : Crossroads Ascendant, Shepherd's Crook, Crossroads Eldrich, Bat, Raven, Viper, Affliction, Bysmiel's Bonds, Crossroads Chaos, Crossroads Order, Tortoise, Wendigo, Dryad, 
-#17775.7414442 : Crossroads Ascendant, Shepherd's Crook, Crossroads Eldrich, Bat, Fiend, Affliction, Bysmiel's Bonds, Crossroads Order, Tortoise, Dryad, Panther, Wendigo, 
-#19187.7679724 : Crossroads Order, Tortoise, Crossroads Eldrich, Raven, Bat, Rat, Gallows, Panther, Solemn Watcher, Viper, Wendigo, Dying God, 
-# New best: 
-# 19576.7679724 : Crossroads Eldrich, Hawk, Crossroads Order, Tortoise, Gallows, Panther, Bat, Fiend, Wendigo, Viper, Solemn Watcher, Dying God, 
-# New best: 
-# 19581.4179724 : Crossroads Eldrich, Hawk, Crossroads Order, Tortoise, Gallows, Panther, Bat, Rat, Viper, Wendigo, Revenant, Dying God, 
-seedSolutions = [
-	[xA, shepherd, wolverine, owl, xC, viper, jackal, eel, wendigo, xO, tortoise, panther, xP, god],
-	[xO, tortoise, xE, raven, bat, rat, gallows, panther, watcher, viper, wendigo, god],
-	[xA, shepherd, xE, bat, fiend, affliction, bonds, xO, tortoise, dryad, panther, wendigo],
-	[xA, shepherd, xE, bat, raven, viper, affliction, bonds, xC, xO, tortoise, wendigo, dryad],
-	[xE, hawk, xO, tortoise, gallows, panther, bat, fiend, wendigo, viper, watcher, god],
-	[xE, hawk, xO, tortoise, gallows, panther, bat, rat, viper, wendigo, revenant, god]
-]
+			printSolution(solution, model)
+		# printSolution(solution, model)
+	# print "checked:", str(numCheckedSolutions), str(methodTimes), sum([methodTimes[key] for key in methodTimes.keys()])
+	# if numCheckedSolutions > 5000:
+	# 	sys.exit(0)
 
 
 
-bestSolution = []
+bestSolutions = []
 bestScore = 0
-
-for sol in seedSolutions:
-	score = evaluateSolution(sol, nyx)
-	printSolution(sol, nyx)
-	if score > bestScore:
-		bestScore = score
-		bestSolution = sol
-print bestScore
-
 checkedSolutions = {}
 deadSolutions = {}
 
-# doMove(nyx, wanted, 50)
+def startSearch(model):
+	global bestScore, bestSolutions
 
-for c in Constellation.constellations:
-	for a in c.abilities:
-		print a.name, a.evaluate(nyx)
+	# initialize model
+	model.checkModel()
 
-# killSolution([xA, hawk, shepherd])
-# print deadSolutions
-# killSolution([xA, hawk, viper])
-# print deadSolutions
-# killSolution([xP, hawk, viper])
-# print deadSolutions
-# # killSolution([xA, hawk])
-# print isDeadSolution([xA, hawk, scepter])
+	print "\nEvaluating constellations..."
+	constellationRanks = []
+	for c in Constellation.constellations:
+		constellationRanks += [(c, c.evaluate(nyx))]
+		c.buildRedundancies(model)
+
+	constellationRanks.sort(key=itemgetter(1), reverse=True)
+
+	thresh = constellationRanks[len(constellationRanks)/4][1]*.9
+
+	print "\n  Desired constellations:"
+	wanted = []
+	for c in constellationRanks:
+		if c[1] > thresh:
+			wanted += [c[0]]
+			print "      ", c[0].evaluate(nyx), c[0].name
+	print "  Total:", len(wanted)
+
+
+	# getNeededConstellations(current, points, wanted, affinities=Affinity(0), possibles=Constellation.constellations):
+	needed = getNeededConstellations([], 50, wanted)
+	print "\nSearch Space: "+str(len(needed))
+	# return
+	
+	bestSolutions = [(evaluateSolution(solution, model), solution) for solution in model.seedSolutions]
+	bestSolutions.sort(key=itemgetter(0), reverse=True)
+
+	print "\nEvaluating seed solutions..."
+	for solution in bestSolutions:
+		printSolution(solution[1], model, "  ")
+		if solution[0] >= bestScore:
+			bestScore = solution[0]
+		for i in range(1, len(solution[1])-1):
+			addBoundedPath(solution[1][:i+1], nyx)
+	bestSolutions = []
+
+	print "\nExecuting search..."
+	doMove(model, wanted, 50)
+
+	print "\n\n\n\n\nBest solutions found:"
+	bestSolutions.sort(key=itemgetter(0), reverse=True)
+	for solution in bestSolutions:
+		printSolution(solution[1], model, "  ")
+	for solution in bestSolutions:
+		print solutionPath(solution[1], "    ")
+
+
+startSearch(nyx)
+
+# test = chariot
+# print test.evaluate(nyx)
+# print test.evaluate(nyx)/len(test.stars)
+# for star in test.stars:
+# 	print star.evaluate(nyx)
+
+
+# for c in Constellation.constellations:
+# 	if c.requires > Affinity("1a"):
+# 		print c.name, c.evaluate(nyx)
 
 # I think the next step is to look at trying to branch and bound.
 # I think this is pretty nonlinear so I don't have a real good way of doing that.
 #	an expensive way would be to look at each solution's best possible outcome by adding the best scoring constellations to the solution up to the remaining points and if it's not better than my current best don't continue.
 
-print scales.stars[-1].bonuses
+
+# I can kill a solution path if I have already seen a solution fewer points, greater affinities and greater score
+# I don't need to evaluate needs every time. Adding a constellation can only remove needs so if I pass them in and trim the ones I no longer need that should save time.
+# if i could have activated the next move in the last step then i dont need to evaluate it this step

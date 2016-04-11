@@ -1,12 +1,83 @@
 import re
 from operator import *
+from time import time
 
-class Model:
+methodTimes = {}
+def timeMethod(label, startTime):
+	if label in methodTimes.keys():
+		methodTimes[label] += time()-startTime
+	else:
+		methodTimes[label] = time()-startTime
+
+primaryDamages = [
+	"acid",
+	"aether", 
+	"bleed", 
+	"fire",
+	"chaos", 
+	"lightning",
+	"elemental", 
+	"cold",
+	"physical",
+	"pierce",
+	"vitality",
+	"life leech"
+]
+
+damages = [
+	"acid", "poison",
+	"aether", 
+	"bleed", 
+	"fire", "burn", 
+	"chaos", 
+	"lightning", "electrocute", 
+	"elemental", 
+	"cold", "frostburn", 
+	"physical", "internal",
+	"pierce",
+	"vitality", "vitality decay",
+	"life leech"
+]
+
+durationDamages = [
+	"bleed",
+	"poison",
+	"burn",
+	"electrocute",
+	"frostburn",
+	"internal",
+	"vitality decay"
+]
+
+retaliations = [
+	"chaos retaliation", 
+	"life leech retaliation", 
+	"pierce retaliation", 
+	"vitality decay retaliation", 
+	"physical retaliation", 
+	"bleed retaliation"
+]
+
+resists = [
+	"physical resist", 
+	"fire resist", 
+	"cold resist", 
+	"lightning resist", 
+	"acid resist", 
+	"acid resist", 
+	"vitality resist", 
+	"pierce resist", 
+	"aether resist", 
+	"chaos resist",
+	"bleed resist"
+]
+
+class Model:	
 	def __init__(self, bonuses, stats):
 		self.bonuses = bonuses
 		self.stats = stats
 
-		self.checkModel()
+		self.seedSolutions = []
 
 	def __str__(self):
 		out = ""
@@ -16,50 +87,12 @@ class Model:
 		return out
 
 	def checkModel(self):
+		print "Checking model..."
 		if not "fight length" in self.stats.keys():
 			self.stats["fight length"] = 30
 
 		self.stats["criticals/s"] = self.getStat("attacks/s")*self.getStat("crit chance")
 
-		primaryDamages = [
-			"acid",
-			"aether", 
-			"bleed", 
-			"fire",
-			"chaos", 
-			"lightning",
-			"elemental", 
-			"cold",
-			"physical",
-			"pierce",
-			"vitality",
-			"life leech"
-		]
-
-		damages = [
-			"acid", "poison",
-			"aether", 
-			"bleed", 
-			"fire", "burn", 
-			"chaos", 
-			"lightning", "electrocute", 
-			"elemental", 
-			"cold", "frostburn", 
-			"physical", "internal",
-			"pierce",
-			"vitality", "vitality decay",
-			"life leech"
-		]
-
-		durationDamages = [
-			"bleed",
-			"poison",
-			"burn",
-			"electrocute",
-			"frostburn",
-			"internal",
-			"vitality decay"
-		]
 
 		# physique grants health/s, health and defense so this should be accounted for
 		val = 0
@@ -68,6 +101,7 @@ class Model:
 		val += self.get("defense") * .5
 
 		self.set("physique", max(self.get("physique"), val))
+		print "  Physique:", self.get("physique")
 
 		# cunning grants physical %, pierce %, bleed %, internal % and offense.
 		val = 0
@@ -78,6 +112,7 @@ class Model:
 		val += self.get("offense") * .5
 
 		self.set("cunning", max(self.get("cunning"), val))
+		print "  Cunning:", self.get("cunning")
 
 		# spirit grants fire %, burn %, cold %, frostburn %, lightning %, electrocute %, acid %, poison %, vitality %, vitality decay%, aether %, chaos %, energy and energy regen
 		val = 0
@@ -87,50 +122,32 @@ class Model:
 		val += self.get("energy/s") * .01
 
 		self.set("spirit", max(self.get("spirit"), val))
+		print "  Spirit:", self.get("spirit")
+
 		#check stats vs % stats
 		percStats = ["physique", "cunning", "spirit", "offense", "defense", "health", "energy", "armor"]
 		for stat in percStats:
 			self.set(stat+" %", self.getStat(stat) * self.get(stat) / 100)
-			print stat + " %: " + str(self.get(stat+" %"))
+			print "  " + stat + " %: " + str(self.get(stat+" %"))
 
 		#check resist reduction
-		# I'm assuming 25% resistance for the purposes of calculating value.
+		# I'm assuming 20% resistance for the purposes of calculating value.
 		# at that resistance each point of resist reduction resulst in 1.33% more overall damage.
 		# if we have +400% vitality damage (500% total) a 1 percent reduction in resist is worth
 		# 500*.0133 vitality % or 6.65 %
+		# Testing against dummy is giving me 7.5 increased damage for -10% resist. Using that
 		for damage in primaryDamages:
 			if self.get(damage+" %") > 0:
-				self.set("reduce "+damage+" resist", self.getStat(damage+" %")*.0133*self.get(damage+" %"))
-				print "reduce "+damage+" resist: " + str(self.get("reduce "+damage+" resist"))
+				self.set("reduce "+damage+" resist", self.getStat(damage+" %")*.0075*self.get(damage+" %"))
+				print "  reduce "+damage+" resist: " + str(self.get("reduce "+damage+" resist"))
 
 		# handle shorthand sets: retaliation, resist	
 		# retaliation types
-		retaliations = [
-			"chaos retaliation", 
-			"life leech retaliation", 
-			"pierce retaliation", 
-			"vitality decay retaliation", 
-			"physical retaliation", 
-			"bleed retaliation"
-		]
 		for b in retaliations:
 			self.set(b, max(self.get(b), self.get("retaliation")))
 			self.set("pet "+b, max(self.get("pet "+b), self.get("pet retaliation")))
 
 		#resist types
-		resists = [
-			"physical resist", 
-			"fire resist", 
-			"cold resist", 
-			"lightning resist", 
-			"acid resist", 
-			"acid resist", 
-			"vitality resist", 
-			"pierce resist", 
-			"aether resist", 
-			"chaos resist",
-			"bleed resist"
-		]
 		for b in resists:
 			self.set(b, max(self.get(b), self.get("resist")))
 			self.set("pet "+b, max(self.get("pet "+b), self.get("pet resist")))
@@ -142,14 +159,17 @@ class Model:
 
 		# elemental damage % and resist should be the sum of the individual components
 		self.set("elemental %", max(self.get("elemental %"), sum([self.get(b) for b in ["cold %", "lightning %", "fire %"]])))
+		print "  elemental %:", self.get("elemental %")
 
 		# elemental resists are weird. e.g. fire resist protects against burn and elemental resist protects against fire but elemental resist does not protect against burn
 		self.set("elemental resist", max(self.get("elemental resist"), sum([self.get(b) for b in ["cold resist", "lightning resist", "fire resist"]])))
+		print "  elemental resist:", self.get("elemental resist")
 
 		# all damage should be >= all other damage bonuses (sans retaliation)
 		# don't count cold, lightning, or fire as they're already aggregated under elemental
 		parts = ["acid %", "aether %", "bleed %", "burn %", "chaos %", "electrocute %", "elemental %", "frostburn %", "internal %", "physical %", "pierce %", "poison %", "vitality %", "vitality decay %"]
 		self.set("all damage %", max(self.get("all damage %"), sum([self.get(b) for b in parts])))
+		print "  all damage %:", self.get("all damage %")
 
 		# catch all for flat damage of any type
 		# triggered flat damage should be either specified manually or be equivalent to normal flat damage.
@@ -167,6 +187,24 @@ class Model:
 
 		#nothing grants total speed
 
+		self.filterConstellations()
+
+	def filterConstellations(self):
+		print "\n  Checking for weapon restricted constellations..."
+		for c in self.blacklist:
+			Constellation.constellations.remove(c)
+			print "    -", c.name, "blacklisted "
+		for c in Constellation.constellations[:]:
+			if c.restricts:
+				satisfied = False
+				for weapon in self.getStat("weapons"):
+					if weapon in c.restricts:
+						satisfied = True
+				if not satisfied:
+					Constellation.constellations.remove(c)
+					print "    -", c.name, "removed <-",str(c.requires)
+
+
 	def get(self, key):
 		if key in self.bonuses.keys():
 			return self.bonuses[key]
@@ -183,56 +221,98 @@ class Model:
 
 class Affinity:
 	def __init__(self, ascendant=0, chaos=0, eldritch=0, order=0, primordial=0):
-		self.ascendant = 0
-		self.chaos = 0
-		self.eldritch = 0
-		self.order = 0
-		self.primordial = 0
+		self.affinities = [0,0,0,0,0]
 
 		if type(ascendant) == type(""):
 			m = re.search("(\d+)+a", ascendant)
 			if m:
-				self.ascendant = int(m.group(1))
+				self.affinities[0] = int(m.group(1))
 
 			m = re.search("(\d+)+c", ascendant)
 			if m:
-				self.chaos = int(m.group(1))
+				self.affinities[1] = int(m.group(1))
 
 			m = re.search("(\d+)+e", ascendant)
 			if m:
-				self.eldritch = int(m.group(1))
+				self.affinities[2] = int(m.group(1))
 
 			m = re.search("(\d+)+o", ascendant)
 			if m:
-				self.order = int(m.group(1))
+				self.affinities[3] = int(m.group(1))
 
 			m = re.search("(\d+)+p", ascendant)
 			if m:
-				self.primordial = int(m.group(1))
+				self.affinities[4] = int(m.group(1))
 		else:
-			self.ascendant = ascendant
-			self.chaos = chaos
-			self.eldritch = eldritch
-			self.order = order
-			self.primordial = primordial
+			self.affinities = [ascendant, chaos, eldritch, order, primordial]
 
 	def magnitude(self):
-		return self.ascendant + self.chaos + self.eldritch + self.order + self.primordial
+		return sum(self.affinities)
 
+	def maxAffinities(self, other):
+		m = Affinity()
+		for i in range(len(self.affinities)):
+			m.affinities[i] = max(self.affinities[i], other.affinities[i])
+		return m
+
+	def intersects(self, other):
+		for i in range(len(self.affinities)):
+			if self.affinities[i] > 0 and other.affinities[i] > 0:
+				return True
+		return False
+
+	def __eq__(self, other):
+		for i in range(len(self.affinities)):
+			if self.affinities[i] != other.affinities[i]:
+				return False
+		return True
+	def __gt__(self, other):
+		for i in range(len(self.affinities)):
+			if self.affinities[i] == 0 and other.affinities[i] == 0:
+				continue
+			if self.affinities[i] <= other.affinities[i]:
+				return False
+		return True
 	def __ge__(self, other):
-		return self.ascendant >= other.ascendant and self.chaos >= other.chaos and self.eldritch >= other.eldritch and self.order >= other.order and self.primordial >= other.primordial
+		for i in range(len(self.affinities)):
+			if self.affinities[i] == 0 and other.affinities[i] == 0:
+				continue
+			if self.affinities[i] < other.affinities[i]:
+				return False
+		return True
 	def __lt__(self, other):
-		return not self >= other
-
+		for i in range(len(self.affinities)):
+			if self.affinities[i] == 0 and other.affinities[i] == 0:
+				continue
+			if self.affinities[i] >= other.affinities[i]:
+				return False
+		return True
+	def __le__(self, other):
+		for i in range(len(self.affinities)):
+			if self.affinities[i] == 0 and other.affinities[i] == 0:
+				continue
+			if self.affinities[i] > other.affinities[i]:
+				return False
+		return True
 
 	def __add__(self, other):
-		return Affinity(self.ascendant+other.ascendant, self.chaos+other.chaos, self.eldritch+other.eldritch, self.order+other.order, self.primordial+other.primordial)
+		a = Affinity()
+		for i in range(len(self.affinities)):
+			a.affinities[i] = self.affinities[i] + other.affinities[i]
+		return a
 
 	def __sub__(self, other):
-		return Affinity(self.ascendant-other.ascendant, self.chaos-other.chaos, self.eldritch-other.eldritch, self.order-other.order, self.primordial-other.primordial)
+		a = Affinity()
+		for i in range(len(self.affinities)):
+			a.affinities[i] = max(self.affinities[i] - other.affinities[i], 0)
+		return a
 
 	def __str__(self):
-		return "" + str(self.ascendant) + "a " + str(self.chaos) + "c " + str(self.eldritch) + "e " + str(self.order) + "o " + str(self.primordial) + "p"
+		out = ""
+		sh = ["a", "c", "e", "o", "p"]
+		for i in range(len(self.affinities)):
+			out += str(self.affinities[i]) + sh[i] + " "
+		return out
 
 class Ability:
 	def __init__(self, name, conditions, bonuses):
@@ -273,15 +353,25 @@ class Ability:
 			# normalized around 2 attacks per second. If I use actual attack speed we get inverse calculated value to actual value. ie triggered attacks are more valuable to people who attack a lot but dividing by number of attacks devalues it
 			self.effective = self.getNumTriggers(model)/(2.0*model.getStat("fight length"))*targets
 
+			# print "nt", self.getNumTriggers(model)
+
+			interval = self.triggerTime+self.gc("recharge")
+			for dam in durationDamages:
+				if "triggered "+dam in self.bonuses.keys():
+					if type(self.bonuses["triggered "+dam]) == type([]):
+						damage, ticks = self.bonuses["triggered "+dam]
+						if ticks < interval:
+							self.bonuses["triggered "+dam] = damage*ticks
+						else:
+							self.bonuses["triggered "+dam] = damage*interval
+
 			if "duration" in self.bonuses.keys():
-				#find duration based elements (for attacks that include a debuff component) and calculate them out to per hits.
+				#find duration based elements (for attacks that include a debuff component)
 				upTime = self.getUpTime(model)
-				print "up", upTime
-				durationMod = upTime/self.effective*targets
-				print "durationMod", durationMod
+				# print "up", upTime
 				durationBonuses = self.bonuses["duration"]
 				for bonus in durationBonuses.keys():
-					self.bonuses[bonus] = durationBonuses[bonus]*durationMod
+					self.bonuses[bonus] = durationBonuses[bonus]*upTime/self.effective*targets
 				del self.bonuses["duration"]
 
 		elif self.gc("type") == "shield":
@@ -331,11 +421,11 @@ class Ability:
 			"vitality", "vitality decay",
 			"life leech"
 		]
-		if "attack as health" in self.bonuses.keys():
+		if "attack as health %" in self.bonuses.keys():
 			totalDamage = 0
 			for dam in damages:
 				if "triggered "+dam in self.bonuses.keys():
-					totalDamage += self.bonuses["triggered "+dam]*model.getStat(dam+" %")*self.bonuses["attack as health"]/100/100.0
+					totalDamage += self.bonuses["triggered "+dam]*model.getStat(dam+" %")*self.bonuses["attack as health %"]/100/100.0
 
 			if "health" in self.bonuses.keys():
 				self.bonuses["health"] += totalDamage
@@ -349,21 +439,29 @@ class Ability:
 				# actually I think only targo's hammer is an attack ability with a %damage increase.
 				if dam+" %" in self.bonuses.keys():
 					if model.getStat(dam) <= 0:
-						print "-------------> " +self.name+" requires a defined internal damage _stat_ in the model."
+						print "    " +self.name+" requires a defined internal damage _stat_ in the model."
 					else:
 						self.bonuses[dam] = self.gb(dam) + (self.model.getStat(dam) * self.gb("weapon %")/100.0 + self.gb(dam)) * self.gb(dam+" %")/100.0
 
 		# armor reduction is like + physical damage that isn't affected by %damage
 		if self.gb("reduce armor") > 0:
 			if model.getStat("physical %") <= 0:
-				print "-------------> " +self.name+" requires a defined stat for physical %."
+				print "    " +self.name+" requires a defined stat for physical %."
 			else:
-				self.bonuses["physical"] = self.gb("physical") + self.gb("reduce armor")*.7 / (model.getStat("physical %")/100.0)				
+				self.bonuses["physical"] = self.gb("physical") + self.gb("reduce armor")*.7 / (model.getStat("physical %")/100.0)
+
+		# handle damage that scales with pet damage
+		for dam in damages:
+			if self.gb("pet "+dam) > 0:
+				if model.getStat("pet all damage %") == 0:
+					print "    " +self.name+" requires a defined stat for pet all damage %."
+				else:
+					self.bonuses["triggered "+dam] = self.gb("triggered "+dam) + self.gb("pet "+dam)*model.getStat("pet all damage %")/100
 
 	def calculateValue(self, model):
 
 		self.calculateEffective(model)
-		print "Effective %:", self.name, self.effective
+		# print "Effective %:", self.name, self.effective
 
 		self.calculateDynamicBonuses(model)
 		
@@ -407,10 +505,10 @@ class Star:
 	def evaluate(self, model):
 		if self.value != None:
 			return self.value
-		value = 0
+		value = float(0)
 		if self.ability != None:
 			self.ability.calculateValue(model)
-			print self.ability.bonuses
+			# print self.ability.bonuses
 		for bonus in model.bonuses.keys():
 			if bonus in self.bonuses.keys():
 				value += model.get(bonus)*self.bonuses[bonus]
@@ -465,9 +563,12 @@ class Constellation:
 		else:
 			self.provides = provides
 
+		self.restricts = []
 		self.stars = []
 		self.abilities = []
 		self.value = 0
+
+		self.redundancies = []
 
 		Constellation.constellations += [self]
 
@@ -486,7 +587,7 @@ class Constellation:
 	def evaluate(self, model):
 		if self.value > 0:
 			return self.value
-		self.value = 0
+		self.value = float(0)
 		for star in self.stars:
 			self.value += star.evaluate(model)
 
@@ -498,20 +599,22 @@ class Constellation:
 			return False
 
 		need = self.requires - current
-		if need.ascendant > 0 and other.provides.ascendant > 0:
-			return True
-		if need.chaos > 0 and other.provides.chaos > 0:
-			return True
-		if need.eldritch > 0 and other.provides.eldritch > 0:
-			return True
-		if need.order > 0 and other.provides.order > 0:
-			return True
-		if need.primordial > 0 and other.provides.primordial > 0:
-			return True
+		for i in range(len(need.affinities)):
+			if need.affinities[i] > 0 and other.provides.affinities[i] > 0:
+				return True
 
 		return False
 
-	def canActivate(self, current=Affinity()):		
+	def buildRedundancies(self, model):
+		if self.requires.magnitude() > 1:
+			return
+		for c in Constellation.constellations:
+			if c.requires.magnitude() > 1:
+				continue
+			if self.value < c.evaluate(model) and len(self.stars) >= len(c.stars) and self.provides <= c.provides:
+				self.redundancies += [c]
+
+	def canActivate(self, current=Affinity()):
 		if not self.isComplete() and current >= self.requires:
 			return True
 		return False

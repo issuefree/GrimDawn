@@ -101,17 +101,19 @@ def evaluateBonuses(model, bonuses):
 
 
 def getNeededConstellations(current, points, wanted, affinities=Affinity(0), possibles=Constellation.constellations):
+	global globalMaxAffinities
 	start = time()
 	needed = wanted[:]
 
 	#I'm doing this piece by piece when really I need the total need for my wants. This is probably more efficient.
 	#I may also be able to identify needs that can be satified by a single constellation.
 
-	maxAffinities = Affinity()
-	for c in wanted:
-		maxAffinities = maxAffinities.maxAffinities(c.requires)
+	if globalMaxAffinities.magnitude() == 0:
+		globalMaxAffinities = Affinity()
+		for c in wanted:
+			globalMaxAffinities = globalMaxAffinities.maxAffinities(c.requires)
 
-	neededAffinities = maxAffinities - affinities
+	neededAffinities = globalMaxAffinities - affinities
 
 	for c in possibles:
 		if len(c.stars) > points:  #I don't have enough points so it doesn't matter if I need it
@@ -174,49 +176,68 @@ def getSolutionCost(solution):
 		cost += len(s.stars)
 	return cost
 
-boundedPaths = [[Affinity(),0,0]] #[affinities, cost, score]
+globalMaxAffinities = Affinity()
+
 def addBoundedPath(solution, model):
+	global globalMetadata
+
+	if len(solution) > globalMetadata["boundedPathLength"]:
+		return False
+
 	start = time()
-	global boundedPaths
-	affinities = getAffinities(solution)
+
+	affinities = getAffinities(solution).minAffinities(globalMaxAffinities)
+	# if getAffinities(solution) > affinities:
+	# 	print "sol:", str(getAffinities(solution))
+	# 	print "min:", str(affinities)
+	# 	print "gbl:", str(globalMaxAffinities)
 	cost = getSolutionCost(solution)
 	score = evaluateSolution(solution, model)
 
 	deadBPIs = []
-	for bpi in range(len(boundedPaths)-1, -1, -1):
-		bp = boundedPaths[bpi]
+	for bpi in range(len(globalMetadata["boundedPaths"])-1, -1, -1):
+		bp = globalMetadata["boundedPaths"][bpi]
 		if affinities <= bp[0] and cost >= bp[1] and score <= bp[2]: 
 			timeMethod("addBoundedPath", start)
 			return True
 		if affinities >= bp[0] and cost <= bp[1] and score >= bp[2]: 
-			# boundedPaths[bpi] = [affinities, cost, score, str(affinities), solutionPath(solution)]
-			del boundedPaths[bpi]
-	boundedPaths += [[affinities, cost, score, str(affinities), solutionPath(solution)]]
+			# globalMetadata["boundedPaths"][bpi] = [affinities, cost, score]
+			del globalMetadata["boundedPaths"][bpi]
+	globalMetadata["boundedPaths"] += [[affinities, cost, score, solution]]
 	timeMethod("addBoundedPath", start)
 	return False
 
 def checkBoundedPath(solution, model):
+	global globalMetadata
+
+	if len(solution) > globalMetadata["boundedPathLength"]:
+		return False
+
 	start = time()
-	global boundedPaths
-	affinities = getAffinities(solution)
+
+	affinities = getAffinities(solution).minAffinities(globalMaxAffinities)
 	cost = getSolutionCost(solution)
 	score = evaluateSolution(solution, model)
 
-	for bpi in range(len(boundedPaths)-1, -1, -1):
-		bp = boundedPaths[bpi]
+	for bpi in range(len(globalMetadata["boundedPaths"])-1, -1, -1):
+		bp = globalMetadata["boundedPaths"][bpi]
 		if affinities <= bp[0] and cost >= bp[1] and score < bp[2]: 
-			print "    <-<-  "+str(affinities)+" @ ("+str(cost)+") = "+ str(int(score))
-			print "            "+solutionPath(solution)
-			print "          "+str(bp[0])+" @ ("+str(bp[1])+") = "+ str(int(bp[2]))
+			print "    <-<-  "+str(affinities)+" @ ("+str(cost)+") = "+ str(int(score)) + "  " + solutionPath(solution)
+			print "      <<  "+str(bp[0])+" @ ("+str(bp[1])+") = "+ str(int(bp[2])) + "  " + solutionPath(bp[3])
+
 			timeMethod("checkBoundedPath", start)
 			return True
 		if affinities >= bp[0] and cost <= bp[1] and score > bp[2]: 
-			boundedPaths[bpi] = [affinities, cost, score, str(affinities), solutionPath(solution)]
-			print "    -->>  "+str(affinities)+" @ ("+str(cost)+") = "+ str(int(score))+ "  " + str(affinities.magnitude()*score/cost)
-			print "          "+str(bp[0])+" @ ("+str(bp[1])+") = "+ str(int(bp[2]))+ "  " + str(bp[0].magnitude()*bp[2]/bp[1])
-			print "            "+solutionPath(solution)
+			print "    -->>  "+str(affinities)+" @ ("+str(cost)+") = "+ str(int(score))+ "  " + str(int(affinities.magnitude()*score/cost)) + "  " + solutionPath(solution)
+			print "      ->  "+str(bp[0])+" @ ("+str(bp[1])+") = "+ str(int(bp[2]))+ "  " + str(int(bp[0].magnitude()*bp[2]/bp[1])) + "  " + solutionPath(bp[3])
+			
+			globalMetadata["boundedPaths"][bpi] = [affinities, cost, score, solution]
+
 			timeMethod("checkBoundedPath", start)
 			return False
+	if len(solution) <= globalMetadata["boundedPathLength"]:
+		print "    -+->  "+str(affinities)+" @ ("+str(cost)+") = "+ str(int(score))+ "  " + str(int(affinities.magnitude()*score/cost)) + "  " + solutionPath(solution)
+		globalMetadata["boundedPaths"] += [[affinities, cost, score, solution]]
 	timeMethod("checkBoundedPath", start)
 	return False
 
@@ -234,7 +255,7 @@ def killSolution(solution):
 	start = time()
 	# print "Killing solution: " + solutionPath(solution)
 	sSol = sorted(solution, key=lambda c: c.evaluate)
-	deadNode = deadSolutions
+	deadNode = globalMetadata["deadSolutions"]
 	for sol in sSol:
 		if sol == sSol[-1]:
 			deadNode[sol.name] = True
@@ -250,7 +271,7 @@ def killSolution(solution):
 def isDeadSolution(solution):
 	start = time()
 	sSol = sorted(solution, key=lambda c: c.evaluate)
-	deadNode = deadSolutions
+	deadNode = globalMetadata["deadSolutions"]
 	for sol in sSol:
 		if not sol.name in deadNode.keys():
 			timeMethod("isDeadSolution", start)
@@ -270,10 +291,10 @@ def startsWith(start, complete):
 			return False
 	return True
 
-numCheckedSolutions = 0
+
 def doMove(model, wanted, points, solution=[], remaining=Constellation.constellations, moveStr=""):	
-	global bestScore, bestSolutions, checkedSolutions, deadSolutions, numCheckedSolutions
-	numCheckedSolutions += 1
+	global globalMetadata
+	globalMetadata["numCheckedSolutions"] += 1
 
 	if len(solution) > 0:
 		# if startsWith(solution, testSolution):
@@ -285,7 +306,7 @@ def doMove(model, wanted, points, solution=[], remaining=Constellation.constella
 			return
 
 		ub = getUpperBoundScore(solution, points, wanted, model)
-		if ub < bestScore and evaluateSolution(solution, model) < ub:
+		if ub < globalMetadata["bestScore"] and evaluateSolution(solution, model) < ub:
 			# if startsWith(solution, testSolution):
 			# 	print "Start of test solution is marked as low upper bound.", str(ub)
 
@@ -325,31 +346,36 @@ def doMove(model, wanted, points, solution=[], remaining=Constellation.constella
 	killSolution(solution)
 	if getSolutionCost(solution) <= 20:
 		print "    <-X-  (" + str(getSolutionCost(solution)) + "): " + moveStr[:-2]
-		print "      ", numCheckedSolutions, "  ", len(boundedPaths)
+		print "      ", globalMetadata["numCheckedSolutions"], "  ", len(globalMetadata["boundedPaths"])
 		# print "    ", str(methodTimes), sum([methodTimes[key] for key in methodTimes.keys()])
 	
 	# printSolution(solution, model)
 	if isSolution:
 		score = evaluateSolution(solution, model)
-		if score >= bestScore:
-			bestScore = score
-			bestSolutions += [(score, solution)]
+		if score >= globalMetadata["bestScore"]:
+			globalMetadata["bestScore"] = score
+			globalMetadata["bestSolutions"] += [(score, solution)]
 			print "New best: "
 			printSolution(solution, model)
 		# printSolution(solution, model)
-	# print "checked:", str(numCheckedSolutions), str(methodTimes), sum([methodTimes[key] for key in methodTimes.keys()])
-	# if numCheckedSolutions > 5000:
+	# print "checked:", str(globalMetadata["numCheckedSolutions"]), str(methodTimes), sum([methodTimes[key] for key in methodTimes.keys()])
+	# if globalMetadata["numCheckedSolutions"] > 5000:
 	# 	sys.exit(0)
 
 
+globalMetadata = {}
+globalMetadata["globalMaxAffinities"] = Affinity()
 
-bestSolutions = []
-bestScore = 0
-checkedSolutions = {}
-deadSolutions = {}
+globalMetadata["bestScore"] = 0
+globalMetadata["bestSolutions"] = []
+globalMetadata["deadSolutions"] = {}
+globalMetadata["boundedPaths"] = [[Affinity(),0,0]] #[affinities, cost, score]
+globalMetadata["boundedPathLength"] = 6
+
+globalMetadata["numCheckedSolutions"] = 0
 
 def startSearch(model):
-	global bestScore, bestSolutions
+	global globalMetadata
 
 	# initialize model
 	model.checkModel()
@@ -378,26 +404,26 @@ def startSearch(model):
 	print "\nSearch Space: "+str(len(needed))
 	# return
 	
-	bestSolutions = [(evaluateSolution(solution, model), solution) for solution in model.seedSolutions]
-	bestSolutions.sort(key=itemgetter(0), reverse=True)
+	globalMetadata["bestSolutions"] = [(evaluateSolution(solution, model), solution) for solution in model.seedSolutions]
+	globalMetadata["bestSolutions"].sort(key=itemgetter(0), reverse=True)
 
 	print "\nEvaluating seed solutions..."
-	for solution in bestSolutions:
+	for solution in globalMetadata["bestSolutions"]:
 		printSolution(solution[1], model, "  ")
-		if solution[0] >= bestScore:
-			bestScore = solution[0]
+		if solution[0] >= globalMetadata["bestScore"]:
+			globalMetadata["bestScore"] = solution[0]
 		for i in range(1, len(solution[1])-1):
 			addBoundedPath(solution[1][:i+1], nyx)
-	bestSolutions = []
+	globalMetadata["bestSolutions"] = []
 
 	print "\nExecuting search..."
 	doMove(model, wanted, 50)
 
 	print "\n\n\n\n\nBest solutions found:"
-	bestSolutions.sort(key=itemgetter(0), reverse=True)
-	for solution in bestSolutions:
+	globalMetadata["bestSolutions"].sort(key=itemgetter(0), reverse=True)
+	for solution in globalMetadata["bestSolutions"]:
 		printSolution(solution[1], model, "  ")
-	for solution in bestSolutions:
+	for solution in globalMetadata["bestSolutions"]:
 		print solutionPath(solution[1], "    ")
 
 

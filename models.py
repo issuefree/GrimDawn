@@ -77,7 +77,9 @@ nyx.blacklist = [
 	falcon, hammer, owl, harpy, throne, wolverine, blade # don't need these. crook will supply all I need.
 ]
 nyx.seedSolutions = [
-	[xC, rat, bat, bonds, manticore, xP, eel, hound, wendigo, gallows, witchblade, god],
+    [xE, bat, scorpion, viper, gallows, eel, bonds, jackal, wendigo, revenant, xP, god],
+    [xA, xC, fiend, bat, viper, gallows, eel, wendigo, manticore, xE, xP, revenant, god],
+    [xA, xE, bat, fiend, viper, gallows, eel, wendigo, manticore, xO, xP, revenant, god],
     [xA, xC, fiend, bat, viper, gallows, eel, wendigo, manticore, xE, revenant, xP, god],
     [xA, xE, bat, fiend, viper, gallows, wendigo, manticore, xO, xP, eel, revenant, god],
     [xA, xC, fiend, bat, viper, gallows, guide, wendigo, manticore, revenant, xP, god],

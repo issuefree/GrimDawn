@@ -596,15 +596,11 @@ affliction.id = "affliction"
 a = Star(affliction, [], {"vitality %":40, "poison %":40})
 b = Star(affliction, a, {"spirit":15, "vitality decay retaliation":600, })
 c = Star(affliction, b, {})
-#33% when hit
-#2 second recharge
-#6 second duration
-# 3 meter radius
-# 2 targets
-# 4 hits recharge, 3.33 hits trigger
+# this tends to hit ranged a fair amount which are often much more spread out so it doesn't and/or stay on targets.
+# need to check whether the damage ticks.
 c.addAbility(Ability(
 	"Fetid Pool", 
-	{"type":"attack", "trigger":"hit", "chance":.33, "recharge":2, "duration":6, "targets":2},
+	{"type":"attack", "trigger":"hit", "chance":.33, "recharge":2, "duration":6, "targets":1.5},
 	{"triggered vitality":128, "triggered poison":[68,2], "duration":{"slow move":25}} ))
 
 d = Star(affliction, c, {"offense":18, "defense":10})

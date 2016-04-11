@@ -246,15 +246,25 @@ class Affinity:
 		else:
 			self.affinities = [ascendant, chaos, eldritch, order, primordial]
 
+	# total sum of affinities
 	def magnitude(self):
 		return sum(self.affinities)
 
+    # returns an affinity with the max values of each.
 	def maxAffinities(self, other):
-		m = Affinity()
+		a = Affinity()
 		for i in range(len(self.affinities)):
-			m.affinities[i] = max(self.affinities[i], other.affinities[i])
-		return m
+			a.affinities[i] = max(self.affinities[i], other.affinities[i])
+		return a
 
+	# returns an affinity with the min values of each.
+	def minAffinities(self, other):
+		a = Affinity()
+		for i in range(len(self.affinities)):
+			a.affinities[i] = min(self.affinities[i], other.affinities[i])
+		return a
+
+    # returns true if either affinity has value in any category
 	def intersects(self, other):
 		for i in range(len(self.affinities)):
 			if self.affinities[i] > 0 and other.affinities[i] > 0:

@@ -39,3 +39,11 @@ for i in range(1, len(a)):
 		# if the max of our wanted is 2a 10o 6c it makes no sense to give more value to 10a 10o 6c. The extra ascendant is useless.
 
 # consider tracking all bounded paths of low length or low points. It may be worth the extra time to nip paths in the bud early if they're redundant.
+
+# consider making a run with path length capped at some low number to identify useless paths across the set. 
+	# If we start on xA and there's an optimal start at xC we may evaluate several million unnecessary solutions.
+	# the cost of a run to detph 3 or 4 may not be very high relative to the gain.
+
+
+#IN GAME:
+	# check if fetid pool ticks damage on targets. I think I can use my curse to trigger on a dummy and look for numbers.

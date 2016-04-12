@@ -42,7 +42,7 @@ nyx = Model(
 	},
 
 	{
-		"attacks/s":10,
+		"attacks/s":5,
 		"hits/s":1.5,
 		"blocks/s":0,
 		"kills/s":1,

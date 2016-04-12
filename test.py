@@ -27,16 +27,13 @@ from models import nyx
 # 			print affinities
 # 			print c
 
-a = range(10)
-print a
-for i in range(1, len(a)):
-	print a[:i+1]
-
+nyx.checkModel()
+print bonds.evaluate(nyx)
+for star in bonds.stars:
+	print star.evaluate(nyx)
 
 
 # optimizations to try:
-	# when considering path values, consider only up to our total needs.
-		# if the max of our wanted is 2a 10o 6c it makes no sense to give more value to 10a 10o 6c. The extra ascendant is useless.
 
 # consider tracking all bounded paths of low length or low points. It may be worth the extra time to nip paths in the bud early if they're redundant.
 
@@ -44,6 +41,11 @@ for i in range(1, len(a)):
 	# If we start on xA and there's an optimal start at xC we may evaluate several million unnecessary solutions.
 	# the cost of a run to detph 3 or 4 may not be very high relative to the gain.
 
+# there's a flaw in our approach to attack triggered abilities.
+#	1. I don't want more attack triggered abilities than I have decent attacks.
+#	2. The attacks per second isn't our total attacks per second it's the a/s of the linked ablity.
+#		I don't know the ability at analysis time so I can't really put a good a/s number on it.
+#		I think I'll have to use this as a guide and tweak the numbers after the fact.
 
 #IN GAME:
 	# check if fetid pool ticks damage on targets. I think I can use my curse to trigger on a dummy and look for numbers.

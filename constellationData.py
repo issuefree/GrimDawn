@@ -417,17 +417,16 @@ b = Star(scorpion, a, {"poison %":24})
 c = Star(scorpion, b, {"offense":18})
 d = Star(scorpion, c, {"acid %":15, "poison %":30})
 e = Star(scorpion, c, {})
-#25% on attack
-#1.5 s recharge
-#6 projectiles
-#100% passthrough
-# 4 hits
-# reduced defense will count as offense
-# 3 attack recharge, 4 attack trigger = 1/7
+# it's a pbaoe with a decent range. It's weird for a ranged character since it triggers close to you regardless
+# of what you hit.
+# It can be put on a pet or totem so it'll pbaoe whatever they're hitting so it's still pretty decent.
+# Still cutting this down to 2 targets.
+# further since it doesn't actually hit what you're hitting often the defense reduction as offense
+# doesn't follow. I'm going to divide that by 2.
 e.addAbility(Ability(
 	"Scorpion Sting", 
-	{"type":"attack", "trigger":"attack", "chance":.25, "recharge":1.5, "targets":3, "duration":5},
-	{"triggered poison":[64,5], "duration":{"offense":140/3}, "weapon damage %":30} ))
+	{"type":"attack", "trigger":"attack", "chance":.25, "recharge":1.5, "targets":2, "duration":5},
+	{"triggered poison":[64,5], "duration":{"offense":140/2/2}, "weapon damage %":30} ))
 
 eye = Constellation("Eye of the Guardian", "1e", "3a 3e")
 eye.id = "eye"
@@ -452,16 +451,10 @@ b = Star(bat, a, {"vitality decay":166*.15})
 c = Star(bat, b, {"vitality %":24, "bleed %":30})
 d = Star(bat, c, {"life leech %":30, "lifesteal %":3})
 e = Star(bat, d, {})
-#20% on attack
-#1 second recharge
-#2 projectiles
-#70% pass through
-# call it 2.5 hits on average
-#2 attacks recharge and 5 attacks trigger
-# 3.5 seconds between ~= 8 hits per fight. ~250 damage = 125 heal per hit = 1000 health per fight
+# two spikes shoot out from you toward what you triggered on. They're pretty narrowly focused and not particularly well aimed. They don't seem to hit a ton. On the fence on 1.5 - 2 targets.
 e.addAbility(Ability(
 	"Twin Fangs", 
-	{"type":"attack", "trigger":"attack", "chance":.2, "recharge":1, "targets":2},
+	{"type":"attack", "trigger":"attack", "chance":.2, "recharge":1, "targets":1.5},
 	{"weapon damage %":25, "triggered pierce":116, "triggered vitality":111, "attack as health %":50} ))
 
 spider = Constellation("Spider", "1e", "6e")
@@ -526,8 +519,6 @@ e = Star(bonds, d, {})
 #20 second lifespan
 #1 lifespan per fight
 # 5 main attack and 2 secondary attacks per lifespan
-# this guy scales with pet damage so I'm not sure how to handle it
-# there's a scale factor we need to account for somehow at some point
 e.addAbility(Ability(
 	"Bysmiel's Command", 
 	{"type":"summon", "trigger":"attack", "chance":.2, "recharge":30, "lifespan":20},

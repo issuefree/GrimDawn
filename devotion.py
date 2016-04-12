@@ -5,6 +5,23 @@ from constellationData import *
 from dataModel import *
 from models import *
 
+def checkSolution(solution):
+	affinities = Affinity()
+	sol = []
+	for c in solution:
+		if c.canActivate(affinities):
+			sol += [c]
+			affinities = getAffinities(sol)
+			# print c
+		else:
+			print "FAIL FAIL FAIL"
+			print [str(s) + ", " for s in sol]
+			print affinities >= c.requires
+			print affinities, " >= ", c.requires
+			print affinities
+			print c
+
+
 #this relies on state which I'd rather not
 def getAvailableStars(constellations, affinities):
 	start = time()
@@ -154,14 +171,6 @@ def solutionPath(solution, pre=""):
 	out = out[:-2]	
 	return pre + "["+out+"],"
 
-def getSolutionHash(solution):
-	sSol = sorted(solution, key=lambda c: c.name)
-	sol = ""
-	for c in sSol:
-		sol += c.name
-	return sol
-
-
 def evaluateSolution(solution, model):
 	value = 0
 	for c in solution:
@@ -181,37 +190,33 @@ globalMaxAffinities = Affinity()
 def addBoundedPath(solution, model):
 	global globalMetadata
 
-	if len(solution) > globalMetadata["boundedPathLength"]:
+	if len(solution) > globalMetadata["boundedPathLengthMax"]:
 		return False
 
-	start = time()
-
 	affinities = getAffinities(solution).minAffinities(globalMaxAffinities)
-	# if getAffinities(solution) > affinities:
-	# 	print "sol:", str(getAffinities(solution))
-	# 	print "min:", str(affinities)
-	# 	print "gbl:", str(globalMaxAffinities)
 	cost = getSolutionCost(solution)
 	score = evaluateSolution(solution, model)
 
-	deadBPIs = []
 	for bpi in range(len(globalMetadata["boundedPaths"])-1, -1, -1):
 		bp = globalMetadata["boundedPaths"][bpi]
-		if affinities <= bp[0] and cost >= bp[1] and score <= bp[2]: 
-			timeMethod("addBoundedPath", start)
+		if affinities <= bp[0] and cost >= bp[1] and score < bp[2]: 
 			return True
-		if affinities >= bp[0] and cost <= bp[1] and score >= bp[2]: 
-			# globalMetadata["boundedPaths"][bpi] = [affinities, cost, score]
+		if affinities >= bp[0] and cost <= bp[1] and score > bp[2]:
 			del globalMetadata["boundedPaths"][bpi]
+		if affinities == bp[0] and cost == bp[1] and score == bp[2]:
+			return False
+
 	globalMetadata["boundedPaths"] += [[affinities, cost, score, solution]]
-	timeMethod("addBoundedPath", start)
 	return False
 
 def checkBoundedPath(solution, model):
 	global globalMetadata
 
-	if len(solution) > globalMetadata["boundedPathLength"]:
-		return False
+	if globalMetadata["boundingRun"] == True:
+		return addBoundedPath(solution, model)
+
+	if len(solution) > globalMetadata["boundedPathLengthMax"]:
+		return False	
 
 	start = time()
 
@@ -235,8 +240,10 @@ def checkBoundedPath(solution, model):
 
 			timeMethod("checkBoundedPath", start)
 			return False
-	if len(solution) <= globalMetadata["boundedPathLength"]:
-		print "    -+->  "+str(affinities)+" @ ("+str(cost)+") = "+ str(int(score))+ "  " + str(int(affinities.magnitude()*score/cost)) + "  " + solutionPath(solution)
+		if affinities == bp[0] and cost == bp[1] and score == bp[2]: 
+			return False
+	if len(solution) <= globalMetadata["boundedPathLengthMax"]:
+		print "    -+->  "+str(affinities)+" @ ("+str(cost)+") = "+ str(int(score))+ "  " + str(int(affinities.magnitude()*score/cost)) + "  " + solutionPath(solution)		
 		globalMetadata["boundedPaths"] += [[affinities, cost, score, solution]]
 	timeMethod("checkBoundedPath", start)
 	return False
@@ -296,27 +303,21 @@ def doMove(model, wanted, points, solution=[], remaining=Constellation.constella
 	global globalMetadata
 	globalMetadata["numCheckedSolutions"] += 1
 
+	if globalMetadata["boundingRun"] == True:
+		if len(solution) >= globalMetadata["boundingRunDepth"]:
+			return
+
 	if len(solution) > 0:
-		# if startsWith(solution, testSolution):
-		# 	print "Solution: ", solutionPath(solution)
 
 		if isDeadSolution(solution):
-			# if startsWith(solution, testSolution):
-			# 	print "Start of test solution is marked as dead."
 			return
 
 		ub = getUpperBoundScore(solution, points, wanted, model)
 		if ub < globalMetadata["bestScore"] and evaluateSolution(solution, model) < ub:
-			# if startsWith(solution, testSolution):
-			# 	print "Start of test solution is marked as low upper bound.", str(ub)
-
 			killSolution(solution)
 			return
 
 		if checkBoundedPath(solution, model):
-			# if startsWith(solution, testSolution):
-			# 	print "Start of test solution is marked as bounded."
-
 			killSolution(solution)
 			return
 		
@@ -324,10 +325,6 @@ def doMove(model, wanted, points, solution=[], remaining=Constellation.constella
 
 	searchConstellations = getNeededConstellations(solution, points, wanted, affinities, remaining)	
 	nextMoves = getNextMoves(solution, searchConstellations, affinities, points, model)
-
-	# if startsWith(solution, testSolution):
-	# 	print "searchConstellations", solutionPath(searchConstellations)
-	# 	print "nextMoves", solutionPath(nextMoves)
 
 	# nextMoves = sortByScore(nextMoves, model)
 	# nextMoves = sortByScorePerStar(nextMoves, model)
@@ -343,13 +340,15 @@ def doMove(model, wanted, points, solution=[], remaining=Constellation.constella
 
 		doMove(model, wanted, points-len(move.stars), solution+[move], searchConstellations, newMoveStr)
 	
+	if globalMetadata["boundingRun"]:
+		return
+
 	killSolution(solution)
 	if getSolutionCost(solution) <= 20:
 		print "    <-X-  (" + str(getSolutionCost(solution)) + "): " + moveStr[:-2]
 		print "      ", globalMetadata["numCheckedSolutions"], "  ", len(globalMetadata["boundedPaths"])
 		# print "    ", str(methodTimes), sum([methodTimes[key] for key in methodTimes.keys()])
 	
-	# printSolution(solution, model)
 	if isSolution:
 		score = evaluateSolution(solution, model)
 		if score >= globalMetadata["bestScore"]:
@@ -357,24 +356,9 @@ def doMove(model, wanted, points, solution=[], remaining=Constellation.constella
 			globalMetadata["bestSolutions"] += [(score, solution)]
 			print "New best: "
 			printSolution(solution, model)
-		# printSolution(solution, model)
-	# print "checked:", str(globalMetadata["numCheckedSolutions"]), str(methodTimes), sum([methodTimes[key] for key in methodTimes.keys()])
-	# if globalMetadata["numCheckedSolutions"] > 5000:
-	# 	sys.exit(0)
 
 
-globalMetadata = {}
-globalMetadata["globalMaxAffinities"] = Affinity()
-
-globalMetadata["bestScore"] = 0
-globalMetadata["bestSolutions"] = []
-globalMetadata["deadSolutions"] = {}
-globalMetadata["boundedPaths"] = [[Affinity(),0,0]] #[affinities, cost, score]
-globalMetadata["boundedPathLength"] = 6
-
-globalMetadata["numCheckedSolutions"] = 0
-
-def startSearch(model):
+def startSearch(model, startingSolution=[]):
 	global globalMetadata
 
 	# initialize model
@@ -412,12 +396,21 @@ def startSearch(model):
 		printSolution(solution[1], model, "  ")
 		if solution[0] >= globalMetadata["bestScore"]:
 			globalMetadata["bestScore"] = solution[0]
-		for i in range(1, len(solution[1])-1):
+		for i in range(1, len(solution[1])):
 			addBoundedPath(solution[1][:i+1], nyx)
 	globalMetadata["bestSolutions"] = []
 
+
+	if globalMetadata["boundingRun"]:
+		print "\nPerforming a bounding run to depth", globalMetadata["boundingRunDepth"]
+		doMove(model, wanted, globalMetadata["points"])
+		globalMetadata["boundingRun"] = False
+		globalMetadata["deadSolutions"] = {}
+		print " ", len(globalMetadata["boundedPaths"]), "bounding paths created."
+
 	print "\nExecuting search..."
-	doMove(model, wanted, 50)
+
+	doMove(model, wanted, globalMetadata["points"], startingSolution)
 
 	print "\n\n\n\n\nBest solutions found:"
 	globalMetadata["bestSolutions"].sort(key=itemgetter(0), reverse=True)
@@ -426,7 +419,41 @@ def startSearch(model):
 	for solution in globalMetadata["bestSolutions"]:
 		print solutionPath(solution[1], "    ")
 
+globalMetadata = {}
+globalMetadata["globalMaxAffinities"] = Affinity()
 
+globalMetadata["bestScore"] = 0
+globalMetadata["bestSolutions"] = []
+globalMetadata["deadSolutions"] = {}
+globalMetadata["boundedPaths"] = [[Affinity(),0,0]] #[affinities, cost, score]
+globalMetadata["boundedPathLengthMax"] = 6
+
+globalMetadata["boundingRun"] = True
+globalMetadata["boundingRunDepth"] = 5
+
+globalMetadata["numCheckedSolutions"] = 0
+
+globalMetadata["points"] = 50
+
+
+# nyx.checkModel()
+# solution = [
+# 	xE, 
+# 	bat, 
+# 	scorpion, 
+# 	viper, 
+# 	bonds, 
+# 	gallows, 
+# 	eel, 
+# 	wendigo, 
+# 	jackal, 
+# 	revenant, 
+# 	xP, 
+# 	god
+# ]
+# checkSolution(solution)
+# for c in solution:
+# 	print c.name, c.evaluate(nyx)
 startSearch(nyx)
 
 # test = chariot

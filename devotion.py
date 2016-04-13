@@ -326,9 +326,9 @@ def doMove(model, wanted, points, solution=[], remaining=Constellation.constella
 	searchConstellations = getNeededConstellations(solution, points, wanted, affinities, remaining)	
 	nextMoves = getNextMoves(solution, searchConstellations, affinities, points, model)
 
-	# nextMoves = sortByScore(nextMoves, model)
+	nextMoves = sortByScore(nextMoves, model)
 	# nextMoves = sortByScorePerStar(nextMoves, model)
-	nextMoves = sortConstellationsByProvides(nextMoves)
+	# nextMoves = sortConstellationsByProvides(nextMoves)
 	# nextMoves = sorted(availableConstellations, key=lambda c: c.name, reverse=False)
 	# random.shuffle(nextMoves)
 	# nextMoves = availableConstellations

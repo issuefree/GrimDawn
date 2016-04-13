@@ -47,5 +47,8 @@ for star in bonds.stars:
 #		I don't know the ability at analysis time so I can't really put a good a/s number on it.
 #		I think I'll have to use this as a guide and tweak the numbers after the fact.
 
+# Some abilities may have pretty different value for melee vs ranged characters. Specifically pbaoe abilities.
+	# consider a pbaoe flag in the ability and adjust the dynamic values based on the characters flag of melee/ranged
+
 #IN GAME:
-	# check if fetid pool ticks damage on targets. I think I can use my curse to trigger on a dummy and look for numbers.
+	# check if fetid pool ticks damage on targets.

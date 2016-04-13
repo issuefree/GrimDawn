@@ -850,7 +850,7 @@ g = Star(god, f, {})
 g.addAbility(Ability(
 	"Hungering Void", 
 	{"type":"buff", "trigger":"attack", "chance":1, "recharge":30, "duration":20},
-	{"health/s":-275, "crit damage":30, "vitality %":215, "chaos%":215, "total speed":8, "chaos retaliation":485, "terrify retaliation":55, "pet all damage %":150, "pet crit damage":20, "stun %":10, "slow move":30*.45} ))
+	{"health/s":-275, "crit damage":30, "vitality %":215, "chaos %":215, "total speed":8, "chaos retaliation":485, "terrify retaliation":55, "pet all damage %":150, "pet crit damage":20, "stun %":10, "slow move":30*.45} ))
 
 imp = Constellation("Imp", "1p", "3e 3p")
 imp.id = "imp"

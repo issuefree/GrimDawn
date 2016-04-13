@@ -4,22 +4,7 @@ import random
 from constellationData import *
 from dataModel import *
 from models import *
-
-def checkSolution(solution):
-	affinities = Affinity()
-	sol = []
-	for c in solution:
-		if c.canActivate(affinities):
-			sol += [c]
-			affinities = getAffinities(sol)
-			# print c
-		else:
-			print "FAIL FAIL FAIL"
-			print [str(s) + ", " for s in sol]
-			print affinities >= c.requires
-			print affinities, " >= ", c.requires
-			print affinities
-			print c
+from utils import *
 
 
 #this relies on state which I'd rather not
@@ -54,15 +39,6 @@ def getNextMoves(current, constellations, affinities, points, model):
 
 	timeMethod("getNextMoves", start)
 	return moves
-
-# cache if performance becomes an issue
-def getAffinities(constellations):
-	start = time()
-	affinities = Affinity()
-	for c in constellations:
-		affinities += c.provides
-	timeMethod("getAffinities", start)
-	return affinities
 
 def getBonuses():
 	bonuses = {}
@@ -155,35 +131,6 @@ def printBonusList():
 	for key in sorted(bonuses.keys()):
 		print "  "+key
 
-def printSolution(solution, model, pre=""):
-	value = 0
-	out = pre
-	for c in solution:
-		out += c.name + ", "
-		value += c.evaluate(model)
-	out = out[:-2]
-	print int(value),":",out
-
-def solutionPath(solution, pre=""):
-	out = ""
-	for c in solution:
-		out += c.id + ", "
-	out = out[:-2]	
-	return pre + "["+out+"],"
-
-def evaluateSolution(solution, model):
-	value = 0
-	for c in solution:
-		value += c.evaluate(model)
-	return value
-
-# print len(searchConstellations)
-
-def getSolutionCost(solution):
-	cost = 0
-	for s in solution:
-		cost += len(s.stars)
-	return cost
 
 globalMaxAffinities = Affinity()
 
@@ -354,15 +301,16 @@ def doMove(model, wanted, points, solution=[], remaining=Constellation.constella
 		if score >= globalMetadata["bestScore"]:
 			globalMetadata["bestScore"] = score
 			globalMetadata["bestSolutions"] += [(score, solution)]
+
+			model.seedSolutions += [solution]
+			model.saveSeedSolutions()
+
 			print "New best: "
 			printSolution(solution, model)
 
 
 def startSearch(model, startingSolution=[]):
 	global globalMetadata
-
-	# initialize model
-	model.checkModel()
 
 	print "\nEvaluating constellations..."
 	constellationRanks = []
@@ -398,6 +346,7 @@ def startSearch(model, startingSolution=[]):
 			globalMetadata["bestScore"] = solution[0]
 		for i in range(1, len(solution[1])):
 			addBoundedPath(solution[1][:i+1], nyx)
+		killSolution(solution[1])
 	globalMetadata["bestSolutions"] = []
 
 
@@ -428,7 +377,7 @@ globalMetadata["deadSolutions"] = {}
 globalMetadata["boundedPaths"] = [[Affinity(),0,0]] #[affinities, cost, score]
 globalMetadata["boundedPathLengthMax"] = 6
 
-globalMetadata["boundingRun"] = True
+globalMetadata["boundingRun"] = False
 globalMetadata["boundingRunDepth"] = 5
 
 globalMetadata["numCheckedSolutions"] = 0
@@ -436,36 +385,7 @@ globalMetadata["numCheckedSolutions"] = 0
 globalMetadata["points"] = 50
 
 
-# nyx.checkModel()
-# solution = [
-# 	xE, 
-# 	bat, 
-# 	scorpion, 
-# 	viper, 
-# 	bonds, 
-# 	gallows, 
-# 	eel, 
-# 	wendigo, 
-# 	jackal, 
-# 	revenant, 
-# 	xP, 
-# 	god
-# ]
-# checkSolution(solution)
-# for c in solution:
-# 	print c.name, c.evaluate(nyx)
 startSearch(nyx)
-
-# test = chariot
-# print test.evaluate(nyx)
-# print test.evaluate(nyx)/len(test.stars)
-# for star in test.stars:
-# 	print star.evaluate(nyx)
-
-
-# for c in Constellation.constellations:
-# 	if c.requires > Affinity("1a"):
-# 		print c.name, c.evaluate(nyx)
 
 # I think the next step is to look at trying to branch and bound.
 # I think this is pretty nonlinear so I don't have a real good way of doing that.

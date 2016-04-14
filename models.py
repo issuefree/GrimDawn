@@ -116,12 +116,7 @@ class Model:
 				self.set("reduce "+damage+" resist", self.getStat(damage+" %")*.0075*self.get(damage+" %"))
 				print "  reduce "+damage+" resist: " + str(self.get("reduce "+damage+" resist"))
 
-		# handle shorthand sets: retaliation, resist	
-		# retaliation types
-		for b in retaliations:
-			self.set(b, max(self.get(b), self.get("retaliation")))
-			self.set("pet "+b, max(self.get("pet "+b), self.get("pet retaliation")))
-
+		# handle shorthand sets: resist	
 		#resist types
 		for b in resists:
 			self.set(b, max(self.get(b), self.get("resist")))
@@ -149,8 +144,9 @@ class Model:
 		# catch all for flat damage of any type
 		# triggered flat damage should be either specified manually or be equivalent to normal flat damage.
 		# catch all for triggered damage of any type (no triggered damage is useless right?)		
+		# retaliation types
 		for damage in damages:
-			# duration damage is counted for half
+			# duration damage is counted for half if not specified manually
 			factor = 1
 			if damage in durationDamages:
 				factor = .5
@@ -159,6 +155,11 @@ class Model:
 			# pet flat damage?
 
 			self.set("triggered "+damage, max([self.get("triggered "+damage), self.get(damage), self.get("triggered damage")*factor]))
+
+			self.set(damage+" retaliation", max(self.get(damage+" retaliation"), self.get("retaliation")*factor))
+			self.set("pet "+damage+" retaliation", max(self.get("pet "+damage+" retaliation"), self.get("pet retaliation")*factor))
+			
+
 
 		#nothing grants total speed
 
@@ -277,15 +278,15 @@ nyx = Model(
 armitage = Model(
 	"armitage",
 	{
-		"attack speed":1,
-		"cast speed":1,
+		"attack speed":10,
+		"cast speed":7.5,
 		
 		"energy": .1, # "energy %": ,
 		"energy absorb": 1,
 		# "energy regeneration": ,
 		# "energy/s": ,
 
-		"health": .75, # "health %": ,
+		"health": .66, # "health %": ,
 		"health regeneration": 5,
 		# "health/s": 5,
 
@@ -304,12 +305,17 @@ armitage = Model(
 
 		"offense": 3, # "offense %": ,
 
-		"physical": 2, "physical %": 5,
-		"fire": 3, "fire %": 7.5,
+		"physical": 3, "physical %": 7.5,
+		"fire": 5, "fire %": 12.5,
 		"lightning": 2, "lightning %": 5,
 		"elemental": 1.5, # "elemental %": 20,
 		"burn": 2, "burn %": 5, "burn duration": 1,
-		"electrocute %": 1, "electrocute duration": 1,
+
+		"triggered burn":3,
+		"electrocute":1, "electrocute %": 2, "electrocute duration": 1,
+		"triggered electrocute":1.5,
+
+		"triggered damage":1,
 
 		"weapon damage %":10,
 
@@ -359,6 +365,7 @@ armitage = Model(
 		"fight length":45,
 
 		"weapons":["shield"],
+		"shapeFactors":{"pbaoe":1.5},
 		"blacklist":[
 		]
 	}

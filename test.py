@@ -60,7 +60,7 @@ import os
 armitage.initialize()
 print armitage
 
-c = obelisk
+c = scorpion
 
 c.evaluate(armitage)
 

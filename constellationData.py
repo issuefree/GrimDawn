@@ -60,7 +60,7 @@ b = Star(anvil, a, {"physique":10})
 c = Star(anvil, b, {"armor absorb":3})
 d = Star(anvil, c, {"defense":15, "constitution %":20})
 e = Star(anvil, d, {"Targo's Hammer":True})
-# 25% chance on block
+
 e.addAbility(Ability("Targo's Hammer", 
 	{"type":"attack", "trigger":"block", "chance":.25, "targets":3},
 	{"stun %":50, "weapon damage %":92, "physical":100, "internal %":145} ))
@@ -210,8 +210,7 @@ g = Star(oleron, d, {})
 # Then if we know our flat physical we can assume 70% absorb
 g.addAbility(Ability(
 	"Blind Fury", 
-	# .1*3, 
-	{"type":"attack", "trigger":"critical", "chance":1, "recharge":1, "targets":3, },
+	{"type":"attack", "trigger":"critical", "chance":1, "recharge":1, "targets":3, "shape":"pbaoe"},
 	{"weapon damage %":85, "internal":324, "bleed":324, "slow attack":25, "reduce armor":275} ))
 
 tortoise = Constellation("Tortoise", "1o", "2o 3p")
@@ -425,7 +424,7 @@ e = Star(scorpion, c, {})
 # doesn't follow. I'm going to divide that by 2.
 e.addAbility(Ability(
 	"Scorpion Sting", 
-	{"type":"attack", "trigger":"attack", "chance":.25, "recharge":1.5, "targets":2, "duration":5},
+	{"type":"attack", "trigger":"attack", "chance":.25, "recharge":1.5, "targets":2, "duration":5, "shape":"pbaoe"},
 	{"triggered poison":[64,5], "duration":{"offense":140/2/2}, "weapon damage %":30} ))
 
 eye = Constellation("Eye of the Guardian", "1e", "3a 3e")
@@ -641,7 +640,7 @@ h = Star(abomination, g, {})
 # call it 4 targets
 h.addAbility(Ability(
 	"Tainted Eruption",
-	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":3, "targets":4},
+	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":3, "targets":4, "shape":"pbaoe"},
 	{"triggered poison":[264,5], "stun %":100} ))
 
 sage = Constellation("Blind Sage", "10a 18e")
@@ -919,7 +918,7 @@ e = Star(bull, d, {})
 # 4 attacks trigger, 1 attack recharge
 e.addAbility(Ability(
 	"Bull Rush", 
-	{"type":"attack", "trigger":"attack", "chance":.25, "recharge":.5, "targets":2},
+	{"type":"attack", "trigger":"attack", "chance":.25, "recharge":.5, "targets":2, "shape":"pbaoe"},
 	{"weapon damage %":45, "triggered physical":114, "triggered internal":[125,2]} ))
 
 wraith = Constellation("Wraith", "1p", "3a 3p")
@@ -1036,7 +1035,7 @@ f = Star(bear, d, {})
 #4m radius
 f.addAbility(Ability(
 	"Maul", 
-	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":1, "targets":3},
+	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":1, "targets":3, "shape":"pbaoe"},
 	{"weapon damage %":75, "triggered physical":161.5, "stun %":100} ))
 
 ulo = Constellation("Ulo the Keeper of the Waters", "4o 6p", "2o 3p")
@@ -1129,5 +1128,5 @@ g = Star(empyrion, f, {})
 #5m radius
 g.addAbility(Ability(
 	"Light of Empyrion", 
-	{"type":"attack", "trigger":"hit", "chance":.2, "recharge":4, "targets":3, "duration":10},
+	{"type":"attack", "trigger":"hit", "chance":.2, "recharge":4, "targets":3, "duration":10, "shape":"pbaoe"},
 	{"weapon damage %":35, "triggered fire":226, "triggered burn":[102,2], "stun %":50, "duration":{"reduce armor":225}, "damage to undead":50, "damage to cthonics":50} ))

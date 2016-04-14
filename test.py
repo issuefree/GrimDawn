@@ -13,7 +13,7 @@ import os
 
 # nyx = loadModel("nyx")
 
-from models import nyx
+# from models import nyx
 
 # def getAffinities(constellations):
 # 	start = time()
@@ -42,32 +42,32 @@ from models import nyx
 # for s in sorted(nyx.seedSolutions, key=lambda c: evaluateSolution(c, nyx), reverse=True):
 # 	print solutionPath(s), evaluateSolution(s, nyx)
 
-solution = [
-	xE, 
-	bat, 
-	viper, 
-	gallows, 
-	hawk, 
-	manticore, 
-	jackal, 
-	eel, 
-	wendigo, 
-	revenant, 
-	xP,
-	xA,
-	god
-]
-# checkSolution(solution)
-# for c in solution:
-# 	print c.name, c.evaluate(nyx)
+# solution = [
+# 	xE, 
+# 	bat, 
+# 	viper, 
+# 	gallows, 
+# 	hawk, 
+# 	manticore, 
+# 	jackal, 
+# 	eel, 
+# 	wendigo, 
+# 	revenant, 
+# 	xP,
+# 	xA,
+# 	god
+# ]
+# # checkSolution(solution)
+# # for c in solution:
+# # 	print c.name, c.evaluate(nyx)
 
-print
-print
+# print
+# print
 
-solByVal = sorted(solution, key=lambda c: c.evaluate(nyx), reverse=True)
+# solByVal = sorted(solution, key=lambda c: c.evaluate(nyx), reverse=True)
 
-print solutionPath(solByVal)
-print isGoodSolution(solution)
+# print solutionPath(solByVal)
+# print isGoodSolution(solution)
 
 # print
 # print
@@ -132,3 +132,7 @@ print isGoodSolution(solution)
 
 # print nyx.seedSolutions
 
+
+
+for bonus in sorted(getBonuses().keys()):
+	print bonus

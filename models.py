@@ -1,6 +1,8 @@
+import os
 from dataModel import *
 from constellationData import *
 from utils import *
+
 
 class Model:	
 	def __init__(self, name, bonuses, stats):
@@ -8,6 +10,8 @@ class Model:
 		self.bonuses = bonuses
 		self.stats = stats
 
+
+	def initialize(self):
 		self.checkModel()
 
 		self.seedSolutions = []
@@ -36,19 +40,32 @@ class Model:
 		file.close()
 
 	def readSeedSolutions(self):
-		file = open(self.name+"/solutions.py", "r")
-		lines = file.read()
-		exec(lines)
+		try:
+			file = open(self.name+"/solutions.py", "r")
+			lines = file.read()
+			exec(lines)
+		except:
+			pass
 
 		self.saveSeedSolutions()
 
 	def checkModel(self):
 		print "Checking model..."
+		print "  "+self.name
 		if not "fight length" in self.stats.keys():
 			self.stats["fight length"] = 30
 
 		self.stats["criticals/s"] = self.getStat("attacks/s")*self.getStat("crit chance")
 
+		# /s stats can be calculated based on fight length and the value of the stat
+
+		#1 health/s for a 30s fight is equal to... 30 health, consider the character's % regen stat
+		hps = self.get("health") * self.getStat("fight length") * max(1, self.getStat("health regeneration")/100)
+		if self.get("health/s") > 0:
+			print "  < health/s:", self.get("health/s"), "!=", hps
+		else:
+			print "  health/s", hps
+			self.set("health/s", hps)
 
 		# physique grants health/s, health and defense so this should be accounted for
 		val = 0
@@ -253,3 +270,90 @@ nyx = Model(
 		]
 	}
 )
+
+
+armitage = Model(
+	"armitage",
+	{
+		"attack speed":1,
+		"cast speed":1,
+		
+		"energy": .1, # "energy %": ,
+		"energy absorb": 1,
+		# "energy regeneration": ,
+		# "energy/s": ,
+
+		"health": .75, # "health %": ,
+		"health regeneration": 5,
+		# "health/s": 5,
+
+		"armor": 1, # "armor %": ,
+		"armor absorb": 5,
+		
+		"defense": 0, # "defense %": ,
+		"resist": 10,
+		"elemental resist": 12.5,
+		"physical resist": 15,
+
+		"block %": 20,
+		"blocked damage %":20 ,
+		"shield recovery": 20,
+
+		"offense": 3, # "offense %": ,
+
+		"physical": 2.5, "physical %": 5,
+		"fire": 5, "fire %": 10,
+		"lightning": 3, "lightning %": 7.5,
+		"elemental": 2, # "elemental %": 20,
+		"burn": 2, "burn %": 5, "burn duration": 1,
+		"electrocute %": 2, "electrocute duration": 1,
+
+		# "crit damage": ,
+		"damage reflect %": 20,
+		"retaliation":5, 
+		"retaliation %": 25,
+		
+		# "lifesteal %": ,
+		"move %": 5,
+
+		# "physique": ,
+		# "reduce elemental resist": ,
+		# "spirit":
+	},
+
+	{
+		"attacks/s":1.5,
+		"hits/s":4,
+		"blocks/s":1.5,
+		"kills/s":1,
+		"crit chance":.05,
+		"low healths/s":1.0/30, # total guesswork.
+
+		"physique":900,
+		"cunning":400,
+		"spirit":450,
+
+		"offense":1200,
+		"defense":1400,
+
+		"health":7500,
+		"health regeneration":25,
+
+		"armor":1000,
+		"energy":2500,
+
+		"physical %":200+150+100,
+		"fire %":400+175+100,
+		"lightning %":200+175+100,
+		"acid %":150+175+100,
+
+		"retaliation %":250+100,
+
+		"fight length":45,
+
+		"weapons":["shield"],
+		"blacklist":[
+		]
+	}
+)
+

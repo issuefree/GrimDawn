@@ -40,17 +40,7 @@ def getNextMoves(current, constellations, affinities, points, model):
 	timeMethod("getNextMoves", start)
 	return moves
 
-def getBonuses():
-	bonuses = {}
-	for c in Constellation.constellations:
-		for s in c.stars:
-			if s.active:
-				for bonus in s.bonuses.keys():
-					if bonus in bonuses.keys():
-						bonuses[bonus] += s.bonuses[bonus]
-					else:
-						bonuses[bonus] = s.bonuses[bonus]
-	return bonuses
+
 
 def sortByScore(constellations, model):
 	start = time()
@@ -312,10 +302,12 @@ def doMove(model, wanted, points, solution=[], remaining=Constellation.constella
 def startSearch(model, startingSolution=[]):
 	global globalMetadata
 
+	model.initialize()
+
 	print "\nEvaluating constellations..."
 	constellationRanks = []
 	for c in Constellation.constellations:
-		constellationRanks += [(c, c.evaluate(nyx))]
+		constellationRanks += [(c, c.evaluate(model))]
 		c.buildRedundancies(model)
 
 	constellationRanks.sort(key=itemgetter(1), reverse=True)
@@ -327,7 +319,7 @@ def startSearch(model, startingSolution=[]):
 	for c in constellationRanks:
 		if c[1] > thresh:
 			wanted += [c[0]]
-			print "      ", c[0].evaluate(nyx), c[0].name
+			print "      ", c[0].evaluate(model), c[0].name
 	print "  Total:", len(wanted)
 
 
@@ -345,7 +337,7 @@ def startSearch(model, startingSolution=[]):
 		if solution[0] >= globalMetadata["bestScore"]:
 			globalMetadata["bestScore"] = solution[0]
 		for i in range(1, len(solution[1])):
-			addBoundedPath(solution[1][:i+1], nyx)
+			addBoundedPath(solution[1][:i+1], model)
 		killSolution(solution[1])
 	globalMetadata["bestSolutions"] = []
 
@@ -385,7 +377,7 @@ globalMetadata["numCheckedSolutions"] = 0
 globalMetadata["points"] = 50
 
 
-startSearch(nyx)
+startSearch(armitage)
 
 # I think the next step is to look at trying to branch and bound.
 # I think this is pretty nonlinear so I don't have a real good way of doing that.

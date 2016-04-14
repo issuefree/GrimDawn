@@ -50,3 +50,15 @@ def getAffinities(constellations):
 		affinities += c.provides
 	timeMethod("getAffinities", start)
 	return affinities
+
+
+def getBonuses():
+	bonuses = {}
+	for c in Constellation.constellations:
+		for s in c.stars:
+			for bonus in s.bonuses.keys():
+				if bonus in bonuses.keys():
+					bonuses[bonus] += s.bonuses[bonus]
+				else:
+					bonuses[bonus] = s.bonuses[bonus]
+	return bonuses

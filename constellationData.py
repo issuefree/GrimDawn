@@ -579,13 +579,13 @@ f = Star(behemoth, b, {})
 # will trigger once per 30s fight but will probably overheal
 f.addAbility(Ability(
 	"Giant's Blood", 
-	{"type":"heal", "trigger":"hit", "chance":.15, "recharge":30},
-	{"health %":20, "health":1000, "health/s":240*10} ))
+	{"type":"heal", "trigger":"hit", "chance":.15, "recharge":30, "duration":10},
+	{"health":1000, "health %":20, "duration":{"health/s":240}} ))
 
 affliction = Constellation("Affliction", "4a 3c 4e", "1a 1e")
 affliction.id = "affliction"
 a = Star(affliction, [], {"vitality %":40, "poison %":40})
-b = Star(affliction, a, {"spirit":15, "vitality decay retaliation":600, })
+b = Star(affliction, a, {"spirit":15, "vitality decay retaliation":300})
 c = Star(affliction, b, {})
 # this tends to hit ranged a fair amount which are often much more spread out so it doesn't and/or stay on targets.
 # need to check whether the damage ticks.
@@ -595,7 +595,7 @@ c.addAbility(Ability(
 	{"triggered vitality":128, "triggered poison":[68,2], "duration":{"slow move":25}} ))
 
 d = Star(affliction, c, {"offense":18, "defense":10})
-e = Star(affliction, d, {"crit damage":10, "vitality decay retaliation":720})
+e = Star(affliction, d, {"crit damage":10, "vitality decay retaliation":360})
 f = Star(affliction, c, {"vitality":(11+21)/2, "acid resist":10})
 g = Star(affliction, f, {"offense %":3, "vitality %":50, "acid %":50})
 
@@ -955,7 +955,7 @@ f = Star(messenger, e, {})
 f.addAbility(Ability(
 	"Messenger of War", 
 	{"type":"buff", "trigger":"hit", "chance":.2, "recharge":15, "duration":8},
-	{"move speed":30, "slow resist":70, "pierce retaliation":2400, "retaliation %":200} ))
+	{"move %":30, "slow resist":70, "pierce retaliation":800, "retaliation %":200} ))
 
 tempest = Constellation("Tempest", "5a 5p", "1e 1p")
 tempest.id = "tempest"
@@ -1110,11 +1110,10 @@ e = Star(tree, d, {"health %":4, "health regeneration":20, "pet health/s":50})
 f = Star(tree, d, {})
 #25% when hit
 #12s recharge
-#8s 2 per
 f.addAbility(Ability(
 	"Healing Rain", 
-	{"type":"heal", "trigger":"hit", "chance":.25, "recharge":12},
-	{"health/s":100*8, "energy/s":10*8, "health regeneration":50, "energy regeneration":50, "health %":10, "health":550} ))
+	{"type":"heal", "trigger":"hit", "chance":.25, "recharge":12, "duration":8},
+	{"duration":{"health/s":100, "energy/s":10, "health regeneration":50, "energy regeneration":50}, "health %":10, "health":550} ))
 
 empyrion = Constellation("Light of Empyrion", "8o 18p")
 empyrion.id = "empyrion"

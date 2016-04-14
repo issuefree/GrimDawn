@@ -52,6 +52,16 @@ def getAffinities(constellations):
 	return affinities
 
 
+def printBonusList():
+	print "All constellation bonuses:"
+	bonuses = {}
+	for c in Constellation.constellations:
+		for s in c.stars:
+			for bonus in s.bonuses.keys():
+				bonuses[bonus] = True
+	for key in sorted(bonuses.keys()):
+		print "  "+key
+		
 def getBonuses():
 	bonuses = {}
 	for c in Constellation.constellations:

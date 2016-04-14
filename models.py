@@ -60,12 +60,14 @@ class Model:
 		# /s stats can be calculated based on fight length and the value of the stat
 
 		#1 health/s for a 30s fight is equal to... 30 health, consider the character's % regen stat
-		hps = self.get("health") * self.getStat("fight length") * max(1, self.getStat("health regeneration")/100)
-		if self.get("health/s") > 0:
-			print "  < health/s:", self.get("health/s"), "!=", hps
-		else:
-			print "  health/s", hps
-			self.set("health/s", hps)
+		parts = ["health", "energy"]
+		for part in parts:
+			hps = self.get(part) * self.getStat("fight length") * max(1, self.getStat(part+" regeneration")/100)
+			if self.get(part+"/s") > 0:
+				print "  < "+part+"/s:", self.get(part+"/s"), "!=", hps
+			else:
+				print "  "+part+"/s", hps
+				self.set(part+"/s", hps)
 
 		# physique grants health/s, health and defense so this should be accounted for
 		val = 0
@@ -287,34 +289,39 @@ armitage = Model(
 		"health regeneration": 5,
 		# "health/s": 5,
 
-		"armor": 1, # "armor %": ,
-		"armor absorb": 5,
+		"armor": 1.5, # "armor %": ,
+		"armor absorb": 10,
 		
 		"defense": 0, # "defense %": ,
 		"resist": 10,
-		"elemental resist": 12.5,
-		"physical resist": 15,
+		#"elemental resist": 12.5,
+		"physical resist": 30,
+		"pierce resist":20,
 
-		"block %": 20,
-		"blocked damage %":20 ,
-		"shield recovery": 20,
+		"block %": 75,
+		"blocked damage %":50,
+		"shield recovery":35,
 
 		"offense": 3, # "offense %": ,
 
-		"physical": 2.5, "physical %": 5,
-		"fire": 5, "fire %": 10,
-		"lightning": 3, "lightning %": 7.5,
-		"elemental": 2, # "elemental %": 20,
+		"physical": 2, "physical %": 5,
+		"fire": 3, "fire %": 7.5,
+		"lightning": 2, "lightning %": 5,
+		"elemental": 1.5, # "elemental %": 20,
 		"burn": 2, "burn %": 5, "burn duration": 1,
-		"electrocute %": 2, "electrocute duration": 1,
+		"electrocute %": 1, "electrocute duration": 1,
+
+		"weapon damage %":10,
 
 		# "crit damage": ,
 		"damage reflect %": 20,
-		"retaliation":5, 
-		"retaliation %": 25,
+		"retaliation":4, 
+		"retaliation %": 20,
 		
+		"stun %":-1,
+
 		# "lifesteal %": ,
-		"move %": 5,
+		"move %": 10,
 
 		# "physique": ,
 		# "reduce elemental resist": ,

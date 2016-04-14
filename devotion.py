@@ -111,16 +111,6 @@ def getNeededConstellations(current, points, wanted, affinities=Affinity(0), pos
 	timeMethod("getNeededConstellations", start)
 	return needed
 
-def printBonusList():
-	print "All constellation bonuses:"
-	bonuses = {}
-	for c in Constellation.constellations:
-		for s in c.stars:
-			for bonus in s.bonuses.keys():
-				bonuses[bonus] = True
-	for key in sorted(bonuses.keys()):
-		print "  "+key
-
 
 globalMaxAffinities = Affinity()
 
@@ -369,8 +359,8 @@ globalMetadata["deadSolutions"] = {}
 globalMetadata["boundedPaths"] = [[Affinity(),0,0]] #[affinities, cost, score]
 globalMetadata["boundedPathLengthMax"] = 6
 
-globalMetadata["boundingRun"] = False
-globalMetadata["boundingRunDepth"] = 5
+globalMetadata["boundingRun"] = True
+globalMetadata["boundingRunDepth"] = 4
 
 globalMetadata["numCheckedSolutions"] = 0
 

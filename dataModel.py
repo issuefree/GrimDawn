@@ -243,6 +243,16 @@ class Ability:
 		elif self.gc("type") == "heal":
 			# we're counting half effectiveness due to overheal
 			self.effective = self.getNumTriggers(model)*.5
+
+			if "duration" in self.bonuses.keys():
+				#find duration based elements (for attacks that include a debuff component)
+				upTime = self.getUpTime(model)
+				# print "up", upTime
+				durationBonuses = self.bonuses["duration"]
+				for bonus in durationBonuses.keys():
+					self.bonuses[bonus] = durationBonuses[bonus]*upTime/self.effective*targets
+				del self.bonuses["duration"]
+
 		elif self.gc("type") == "summon":
 			self.effective = self.getUpTime(model)
 

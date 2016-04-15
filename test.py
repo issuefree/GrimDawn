@@ -5,36 +5,42 @@ from models import *
 
 import os
 
+model = armitage
+model.initialize()
+print model
 
-# solution = [
-# 	xE, 
-# 	bat, 
-# 	viper, 
-# 	gallows, 
-# 	hawk, 
-# 	manticore, 
-# 	jackal, 
-# 	eel, 
-# 	wendigo, 
-# 	revenant, 
-# 	xP,
-# 	xA,
-# 	god
-# ]
-# # checkSolution(solution)
-# # for c in solution:
-# # 	print c.name, c.evaluate(nyx)
+solution = [
+xC, 
+xO, 
+dryad, 
+tortoise, 
+hound, 
+targo, 
+shieldmaiden, 
+xA, 
+xE, 
+light, 
+wolverine, 
+messenger, 
+behemoth
+]
 
-# print
-# print
+print getSolutionCost(solution)
 
-# solByVal = sorted(solution, key=lambda c: c.evaluate(nyx), reverse=True)
+# checkSolution(solution)
+for c in solution:
+	print c.name, c.evaluate(model)
 
-# print solutionPath(solByVal)
-# print isGoodSolution(solution)
+print
+print
 
-# print
-# print
+solByVal = sorted(solution, key=lambda c: c.evaluate(model), reverse=True)
+
+print solutionPath(solByVal)
+print isGoodSolution(solution)
+
+print
+print
 
 # optimizations to try:
 
@@ -56,17 +62,22 @@ import os
 #IN GAME:
 	# check if fetid pool ticks damage on targets.
 
-
-armitage.initialize()
-print armitage
-
-c = obelisk
+c = eye
 
 c.evaluate(armitage)
 
 for star in c.stars:
+	if star.ability:
+		print star.ability.name, star.ability.effective
 	for bonus in star.bonuses:
-		print bonus, star.bonuses[bonus], armitage.get(bonus)*star.bonuses[bonus]
+		if model.get(bonus) != 0:
+			print str(bonus).ljust(25), int(star.bonuses[bonus]), "\t", int(model.get(bonus)*star.bonuses[bonus])
 
 # for bonus in sorted(getBonuses().keys()):
 # 	print bonus
+
+print
+
+# for c in Constellation.constellations:
+# 	if c.provides > Affinity("1a"):
+# 		print c.name, c.evaluate(model), c.evaluate(model)/len(c.stars)

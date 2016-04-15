@@ -289,7 +289,7 @@ armitage = Model(
 		"health regeneration": 5,
 		# "health/s": 5,
 
-		"armor": 1.5, # "armor %": ,
+		"armor": 3, # "armor %": ,
 		"armor absorb": 10,
 		
 		"defense": 0, # "defense %": ,
@@ -304,18 +304,19 @@ armitage = Model(
 
 		"offense": 3, # "offense %": ,
 
-		"physical": 2, "physical %": 5,
-		"fire": 3, "fire %": 7.5,
-		"lightning": 2, "lightning %": 5,
-		"elemental": 1.5, # "elemental %": 20,
-		"burn": 2, "burn %": 5, "burn duration": 1,
-		"electrocute %": 1, "electrocute duration": 1,
+		"damage":2,
+		"physical": 4, "physical %": 5,
+		"fire": 6, "fire %": 7.5,
+		"lightning": 4, "lightning %": 5,
+		"elemental": 3, # "elemental %": 20,
+		"burn": 4, "burn %": 5, "burn duration": 1,
+		"electrocute %": 2, "electrocute duration": 1,
 
 		"weapon damage %":10,
 
 		# "crit damage": ,
 		"damage reflect %": 20,
-		"retaliation":4, 
+		"retaliation":3, 
 		"retaliation %": 20,
 		
 		"stun %":-1,

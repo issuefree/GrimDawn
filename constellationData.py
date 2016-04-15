@@ -28,10 +28,10 @@ c = Star(falcon, b, {"cunning":15})
 d = Star(falcon, c, {"physical %":24})
 e = Star(falcon, d, {})
 # 6 projectiles
-# 100% chance to pierce (assume pierce means on average 2 hits)
-# I'm guestimating I'll get 4 hits per.
+# 150 deg cone 
+# multi hit doesnt stack
 e.addAbility(Ability(
-	"Falcon Swoop", {"type":"attack", "trigger":"attack", "chance":.15, "recharge":1, "targets":3}, 
+	"Falcon Swoop", {"type":"attack", "trigger":"attack", "chance":.15, "recharge":1, "targets":3, "shape":"cone"}, 
 	{"weapon damage %":65, "triggered bleed":[135,3]} ))
 
 shepherd = Constellation("Shepherd's Crook", "1a", "5a")
@@ -186,11 +186,15 @@ g = Star(leviathan, d, {})
 # 3 second recharge
 # 6 second duration
 # 3.5 meter radius
-# decent sized aoe probably 2.5 targets, it lasts and hits stuff that walks in (I assume) so call it another .5
+# ticks per second, cold stacks, fostburn doesnt
+# g.addAbility(Ability(	
+	# "TEST", 
+	# {"type":"attack", "trigger":"attack", "chance":1, "recharge":0, "targets":1, "duration":1}, 
+	# {"triggered cold":100, "duration":{"triggered frostburn":100, "offense":35}} ))
 g.addAbility(Ability(
 	"Whirlpool", 
-	{"type":"attack", "trigger":"attack", "chance":.3, "recharge":3, "targets":2.5, "duration":6}, 
-	{"triggered cold":322, "triggered frostburn":[133,2], "duration":{"slow move":35}} ))
+	{"type":"attack", "trigger":"attack", "chance":.3, "recharge":3, "targets":3, "duration":6}, 
+	{"triggered cold":322*6, "duration":{"triggered frostburn":133, "slow move":35}} ))
 
 oleron = Constellation("Oleron", "20a 7o")
 oleron.id = "oleron"
@@ -201,18 +205,13 @@ d = Star(oleron, c, {"physical resist":4, "health":200})
 e = Star(oleron, d, {"physical":(9+18)/2, "physical %":100})
 f = Star(oleron, d, {"offense":15, "internal":25*5, "internal %":100, "max pierce resist":2})
 g = Star(oleron, d, {})
-# 100% on critical (hrm, call it 15%)
-# 1 second recharge
-# 5 meter pbaoe for 3 targets
-# weird one. There are two duration components with different durations. I can either scale the damage to be over a longer time or scale the others to be shorter.
-# I'll make the damages longer.
+
 # If we assume everything has enough armor for all of the reduce armor to take effect (if they have less and we're doing physical damage they're probably dead already anyway)
 # Then if we know our flat physical we can assume 70% absorb
 g.addAbility(Ability(
 	"Blind Fury", 
-	# .1*3, 
-	{"type":"attack", "trigger":"critical", "chance":1, "recharge":1, "targets":3, },
-	{"weapon damage %":85, "internal":324, "bleed":324, "slow attack":25, "reduce armor":275} ))
+	{"type":"attack", "trigger":"critical", "chance":1, "recharge":1, "duration":5, "targets":2.5, "shape":"pbaoe"},
+	{"weapon damage %":85, "triggered internal":[162,2], "triggered bleed":[162,2], "duration":{"slow attack":25, "reduce armor":275}} ))
 
 tortoise = Constellation("Tortoise", "1o", "2o 3p")
 tortoise.id = "tortoise"
@@ -221,11 +220,8 @@ b = Star(tortoise, a, {"defense":12, "shield physique requirements":-10})
 c = Star(tortoise, b, {"defense":12, "health":100})
 d = Star(tortoise, c, {"health %":4, "defense":10, "armor %":4})
 e = Star(tortoise, c, {})
-# 100% chance at 40% health
-# 30 second recharge
 e.addAbility(Ability(
 	"Turtle Shell", 
-	# 1, 
 	{"type":"shield", "trigger":"low health", "chance":1, "recharge":30},
 	{"health":2700} ))
 
@@ -236,13 +232,9 @@ b = Star(blade, a, {"offense":12})
 c = Star(blade, a, {"bleed %":15, "pierce %":15})
 d = Star(blade, c, {"bleed %":30})
 e = Star(blade, d, {})
-#100% on crit: ~15% on attack
-#15 second duration, so on big targets we'll have nearly 100% uptime. for small stuff it doesn't matter.
-#call it 66%?
 e.addAbility(Ability(
 	"Assassin's Mark", 
-	# .66, 
-	{"type":"buff", "trigger":"critical", "chance":1, "recharge":0, "duration":3},
+	{"type":"buff", "trigger":"critical", "chance":1, "recharge":0, "duration":15},
 	{"reduce physical resist":33, "reduce pierce resist":33} ))
 
 lion = Constellation("Lion", "1o", "3o")
@@ -273,15 +265,8 @@ b = Star(dryad, a, {"energy/s":1, "health":80})
 c = Star(dryad, b, {"reduced poison duration":20, "reduced bleed duration":20})
 d = Star(dryad, c, {"spirit %":5, "jewelry spirit requirements":-10})
 e = Star(dryad, d, {})
-#33% on attack
-#4 second recharge
-#8%+350 health restored
-# how long is a fight? call it... 30 seconds.
-# 1 in 3 attacks triggers it, .5 seconds per attack = 1.5 seconds + 4 seconds recharge = 5.5 seconds. Will trigger ~5 times per fight.
-# lets say half of them aren't used because we're near full health
 e.addAbility(Ability(
 	"Dryad's Blessing", 
-	# 2.5, 
 	{"type":"heal", "trigger":"attack", "chance":.33, "recharge":4},
 	{"health %":8, "health":350, "reduced poison duration":30, "reduced bleed duration":30} ))
 
@@ -326,14 +311,11 @@ d = Star(assassin, b, {"bleed resist":8, "cunning %":5})
 e = Star(assassin, d, {"defense":12, "acid resist":8, "damage human %":15})
 f = Star(assassin, d, {"pierce":6, "pierce %":40})
 g = Star(assassin, f, {})
-#100% on crit: ~15% on hit
-#18 projectiles
-#100% pass through
-# call it 6 hits
-# 4 attacks for recharge, ~6 attacks between hits = .1
+
+# projectiles fire in every direction. I think I'll use pbaoe shape since it's best if surrounded.
 g.addAbility(Ability(
 	"Blades of Wrath", 
-	{"type":"attack", "trigger":"critical", "chance":1, "recharge":2, "targets":6},
+	{"type":"attack", "trigger":"critical", "chance":1, "recharge":2, "targets":4, "shape":"pbaoe"},
 	{"triggered pierce":168, "weapon damage %":25} ))
 
 blades = Constellation("Blades of Nadaan", "10a", "3a 2o")
@@ -356,13 +338,8 @@ d = Star(targo, b, {"health %":5})
 e = Star(targo, d, {"defense":20, "health":300})
 f = Star(targo, d, {"armor %":5, "blocked damage %":20})
 g = Star(targo, f, {})
-#33% on attack (1.5 s to trigger)
-#8 second recharge
-#5 second duration
-#9.5 seconds
 g.addAbility(Ability(
 	"Shield Wall", 
-	# 5/9.5, 
 	{"type":"buff", "trigger":"attack", "chance":.33, "recharge":8, "duration":5},
 	{"damage reflect %":125, "blocked damage %":125, "armor %":30} ))
 
@@ -376,13 +353,8 @@ d = Star(obelisk, a, {"defense %":5, "defense":25})
 e = Star(obelisk, d, {"block %":5, "blocked damage %":30})
 f = Star(obelisk, e, {"reduced stun duration":30, "reduced freeze duration":30, "armor %":4, "max pierce resist":3})
 g = Star(obelisk, f, {})
-#15% on block (1/.15/.75*.5) = 4.44 seconds to trigger
-#12 second recharge
-#8 second duration
-#8/16.4
 g.addAbility(Ability(
 	"Stone Form", 
-	# 8/16.4, 
 	{"type":"buff", "trigger":"block", "chance":.15, "recharge":12, "duration":8},
 	{"armor %":50, "armor absorb":20, "pierce resist":50, "reduced poison duration":50, "reduced bleed duration":50, "retaliation %":70} ))
 
@@ -406,7 +378,6 @@ g = Star(soldier, f, {})
 # 3.3 s to trigger 6 second recharge means 2.5 lifespans in a 30 second fight.
 g.addAbility(Ability(
 	"Living Shadow", 
-	# 2.5, 
 	{"type":"summon", "trigger":"critical", "chance":1, "recharge":6, "lifespan":20},
 	{"triggered bleed":35+(48*2*5), "triggered pierce":68.5+45.5*5} ))
 
@@ -425,7 +396,7 @@ e = Star(scorpion, c, {})
 # doesn't follow. I'm going to divide that by 2.
 e.addAbility(Ability(
 	"Scorpion Sting", 
-	{"type":"attack", "trigger":"attack", "chance":.25, "recharge":1.5, "targets":2, "duration":5},
+	{"type":"attack", "trigger":"attack", "chance":.25, "recharge":1.5, "targets":2, "duration":5, "shape":"pbaoe"},
 	{"triggered poison":[64,5], "duration":{"offense":140/2/2}, "weapon damage %":30} ))
 
 eye = Constellation("Eye of the Guardian", "1e", "3a 3e")
@@ -435,13 +406,12 @@ b = Star(eye, a, {"chaos %":15})
 c = Star(eye, b, {"chaos %":15, "poison %":15})
 d = Star(eye, c, {"poison %":30})
 e = Star(eye, d, {})
-#15% on attack
-#.5 s recharge
-#100% pass through
-#6.6 attacks to trigger 1 attack cooldown
+# this one is pretty cool.
+# when it triggers an eye floats around me in a circle hitting things as it goes.
+# it circles 5 times before disappearing
 e.addAbility(Ability(
 	"Guardian's Gaze", 
-	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":.5},
+	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":.5, "shape":"pbaoe", "targets":2.5},
 	{"weapon damage %":18, "triggered chaos":78, "triggered poison":[78,2]} ))
 
 bat = Constellation("Bat", "1e", "2c 3e")
@@ -859,14 +829,14 @@ b = Star(imp, a, {"spirit":10})
 c = Star(imp, b, {"aether resist":8})
 d = Star(imp, c, {"fire %":24, "aether %":24})
 e = Star(imp, d, {})
-#15% on attack
-#3s duration
-#2.5 radius
-#1.5 targets
+
+#aoe is on target
+#it ticks per second for duration
+#it stacks on itself
 e.addAbility(Ability(
 	"Aetherfire", 
-	{"type":"attack", "trigger":"attack", "chance":.15, "duration":3},
-	{"trigered fire":50, "triggered aether":125, "stun %":33} ))
+	{"type":"attack", "trigger":"attack", "chance":.15, "duration":3, "targets":1.5, "duration":3},
+	{"triggered fire":50*3, "triggered aether":125*3, "stun %":33} ))
 
 tsunami = Constellation("Tsunami", "1p", "5p")
 tsunami.id = "tsunami"

@@ -214,10 +214,11 @@ class Ability:
 		if self.gc("type") == "buff":
 			self.effective = self.getUpTime(model)*targets
 		elif self.gc("type") == "attack":
-			# normalized around 2 attacks per second. If I use actual attack speed we get inverse calculated value to actual value. ie triggered attacks are more valuable to people who attack a lot but dividing by number of attacks devalues it
+			# normalized around 2 attacks per second. If I use actual attack speed we get inverse calculated value to actual value. 
+			# ie triggered attacks are more valuable to people who attack a lot but dividing by number of attacks devalues it
 			self.effective = self.getNumTriggers(model)/(2.0*model.getStat("fight length"))*targets
 
-			# print "nt", self.getNumTriggers(model)
+			print "nt", self.getNumTriggers(model)
 
 			interval = self.triggerTime+self.gc("recharge")
 			for dam in durationDamages:
@@ -230,13 +231,7 @@ class Ability:
 							self.bonuses["triggered "+dam] = damage*interval
 
 			if "duration" in self.bonuses.keys():
-				#find duration based elements (for attacks that include a debuff component)
-				upTime = self.getUpTime(model)
-				# print "up", upTime
-				durationBonuses = self.bonuses["duration"]
-				for bonus in durationBonuses.keys():
-					self.bonuses[bonus] = durationBonuses[bonus]*upTime/self.effective*targets
-				del self.bonuses["duration"]
+				self.setDebuffValue(model)
 
 		elif self.gc("type") == "shield":
 			self.effective = self.getNumTriggers(model)
@@ -245,34 +240,40 @@ class Ability:
 			self.effective = self.getNumTriggers(model)*.5
 
 			if "duration" in self.bonuses.keys():
-				#find duration based elements (for attacks that include a debuff component)
-				upTime = self.getUpTime(model)
-				# print "up", upTime
-				durationBonuses = self.bonuses["duration"]
-				for bonus in durationBonuses.keys():
-					self.bonuses[bonus] = durationBonuses[bonus]*upTime/self.effective*targets
-				del self.bonuses["duration"]
+				self.setDebuffValue(model)
 
 		elif self.gc("type") == "summon":
 			self.effective = self.getUpTime(model)
 
+	def setDebuffValue(self, model):
+		#find duration based elements (for attacks that include a debuff component)
+		targets = max(1, self.gc("targets"))
+		upTime = self.getUpTime(model)
+		print "up", upTime
+		durationBonuses = self.bonuses["duration"]
+		for bonus in durationBonuses.keys():
+			self.bonuses[bonus] = durationBonuses[bonus]*upTime/self.effective*targets
+			if bonus in ["triggered "+damage for damage in damages]:
+				self.bonuses[bonus] = self.bonuses[bonus] / 2
+		del self.bonuses["duration"]
 
 	def calculateTriggerTime(self, model):
 		triggerFrequency = model.getStat(self.gc("trigger")+"s/s")
 		self.triggerTime = 1.0/triggerFrequency * 1.0/self.gc("chance")
+		print "tt", self.triggerTime		
 
 	def getUpTime(self, model):
 		up = 0.0
 		fightRemaining = model.getStat("fight length") - self.triggerTime		
-		while fightRemaining > 0:
+		while fightRemaining >= 0:
 			up += min(max(self.gc("duration"), self.gc("lifespan")), fightRemaining)
-			fightRemaining -= max(self.gc("duration"), self.gc("recharge")) + self.triggerTime
+			fightRemaining -= max(self.gc("duration"), self.gc("recharge")+ self.triggerTime) 
 		return up/model.getStat("fight length")
 
 	def getNumTriggers(self, model):
 		triggers = 0
 		fightRemaining = model.getStat("fight length") - self.triggerTime
-		while fightRemaining > 0:
+		while fightRemaining >= 0:
 			triggers += 1
 			fightRemaining -= self.gc("recharge") + self.triggerTime
 

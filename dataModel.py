@@ -214,18 +214,83 @@ class Ability:
 		if self.gc("type") == "buff":
 			self.effective = self.getUpTime(model)*targets
 		elif self.gc("type") == "attack":
+
+			if self.gc("shape") == "???":
+				print "    Shape unknown for", self.name
+
 			# normalized around 2 attacks per second. If I use actual attack speed we get inverse calculated value to actual value. 
-			if model.getStat("shapeFactors") > 0:
-				if self.gc("shape") in model.getStat("shapeFactors").keys():
-					targets = targets * model.getStat("shapeFactors")[self.gc("shape")]
+			if model.getStat("playStyle") == "ranged":
+				# Characters who try to keep enemies as far away as possible. Often kiting.
+				# Optimal range 10+ yards
+				# Ground target abilities will often miss due to mobility.
+				# Circle is strong due to it hitting the point of the enemy spear where most enemies will clump.
+				# Cone/line abilities may not hit many enemies due to long range.
+				# pbaoe abilities may be of limited value
+				if self.gc("shape") == "cone" or self.gc("shape") == "line":
+					targets = targets * .75
+				elif self.gc("shape") == "ground":
+					targets = targets * .5
+				elif self.gc("shape") == "circle":
+					pass
+				elif self.gc("shape") == "pbaoe":
+					targets = targets * .25
+
+			elif model.getStat("playStyle") == "shortranged":
+				# Characters who have short ranged abilities and try to keep monsters from hittim him but kiting is minimal and mostly for the purposes of clumping.
+				# 	Low mobility and close range tend to make crowd control common. Lots of slows and stuns.
+				# Optimal range 5-10 yards
+				# Ground target abilities are strong due to clumping and funneling.
+				# Circle is strong due to clumping and funneling.
+				# Cone/line abilities should have the desired effect.
+				# pbaoe abilities aren't ideal if they're very short ranged.
+				if self.gc("shape") == "cone" or self.gc("shape") == "line":
+					pass
+				elif self.gc("shape") == "ground":
+					targets = targets * 1.25
+				elif self.gc("shape") == "circle":
+					targets = targets * 1.25
+				elif self.gc("shape") == "pbaoe":
+					targets = targets * .9
+			elif model.getStat("playStyle") == "melee":
+				# Characters who engage in melee but aim to kill fast and minimize getting surrounded or take a beating.
+				# Optimal range is melee but not surrounded.
+				# Ground target abilities are strong due to melee range and not getting surrounded. 
+				#	Mobility is required so value may be somewhat limited.
+				# Circle is strong due to clumping.
+				# Cone/Line abilities are ideal due to keeping enemies close but on one side.
+				# pbaoe abilities are strong but not ideal due to trying not to get surrounded.
+				if self.gc("shape") == "cone" or self.gc("shape") == "line":
+					targets = targets * 1.5
+				elif self.gc("shape") == "ground":
+					pass
+				elif self.gc("shape") == "circle":
+					targets = targets * 1.25
+				elif self.gc("shape") == "pbaoe":
+					pass
+			elif model.getStat("playStyle") == "tank":
+				# Characters who run into the fray and try to take hits. Often retaliation based.
+				# Optimal range is all enemies up close and personal.
+				# Ground target abilities are strong due to low mobility and enemy gathering. Not ideal as surrounding can spread them out.
+				# Circle is strong due to clumping and gathering.
+				# Cone/Line abilities are decent but similar to ground target, enemies can be spread in a lot of directions.
+				# pbaoe are ideal.
+				if self.gc("shape") == "cone" or self.gc("shape") == "line":
+					pass
+				elif self.gc("shape") == "ground":
+					pass
+				elif self.gc("shape") == "circle":
+					pass
+				elif self.gc("shape") == "pbaoe":
+					targets = targets * 2
+
 			self.effective = self.getNumTriggers(model)/(2.0*model.getStat("fight length"))*targets
 
-			print "nt", self.getNumTriggers(model)
+			# print "nt", self.getNumTriggers(model)
 
 			interval = self.triggerTime+self.gc("recharge")
 			for dam in durationDamages:
 				if "triggered "+dam in self.bonuses.keys():
-					if type(self.bonuses["triggered "+dam]) == type([]):
+					if type(self.gb("triggered "+dam)) == type([]):
 						damage, ticks = self.bonuses["triggered "+dam]
 						if ticks < interval:
 							self.bonuses["triggered "+dam] = damage*ticks
@@ -262,7 +327,7 @@ class Ability:
 	def calculateTriggerTime(self, model):
 		triggerFrequency = model.getStat(self.gc("trigger")+"s/s")
 		self.triggerTime = 1.0/triggerFrequency * 1.0/self.gc("chance")
-		print "tt", self.triggerTime		
+		# print "tt", self.triggerTime		
 
 	def getUpTime(self, model):
 		up = 0.0

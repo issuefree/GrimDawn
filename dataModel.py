@@ -215,7 +215,9 @@ class Ability:
 			self.effective = self.getUpTime(model)*targets
 		elif self.gc("type") == "attack":
 			# normalized around 2 attacks per second. If I use actual attack speed we get inverse calculated value to actual value. 
-			# ie triggered attacks are more valuable to people who attack a lot but dividing by number of attacks devalues it
+			if model.getStat("shapeFactors") > 0:
+				if self.gc("shape") in model.getStat("shapeFactors").keys():
+					targets = targets * model.getStat("shapeFactors")[self.gc("shape")]
 			self.effective = self.getNumTriggers(model)/(2.0*model.getStat("fight length"))*targets
 
 			print "nt", self.getNumTriggers(model)

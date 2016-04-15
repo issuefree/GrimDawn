@@ -309,7 +309,7 @@ armitage = Model(
 		"physical": 4, "physical %": 5,
 		"fire": 6, "fire %": 7.5,
 		"lightning": 4, "lightning %": 5,
-		"elemental": 3, # "elemental %": 20,
+		"elemental": 4, # "elemental %": 20,
 		"burn": 4, "burn %": 5, "burn duration": 1,
 		"electrocute %": 2, "electrocute duration": 1,
 

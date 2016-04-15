@@ -411,7 +411,7 @@ e = Star(eye, d, {})
 # it circles 5 times before disappearing
 e.addAbility(Ability(
 	"Guardian's Gaze", 
-	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":.5, "shape":"pbaoe", "targets":2.5},
+	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":.5, "shape":"pbaoe", "targets":2.5*5},
 	{"weapon damage %":18, "triggered chaos":78, "triggered poison":[78,2]} ))
 
 bat = Constellation("Bat", "1e", "2c 3e")
@@ -468,14 +468,14 @@ b = Star(witchblade, a, {"offense":10, "spirit":15})
 c = Star(witchblade, b, {"energy burn %":10, "chaos %":30})
 d = Star(witchblade, c, {"fire %":50, "chaos %":50, "fire resist":15})
 e = Star(witchblade, d, {})
-#15% on attack
-#4 second duration
-# says "spreads wildly among your foes" so there's probably some aoe component but we're treating it as single target
+# says "spreads wildly among your foes"
+# Jumps 4m. I'm going to call it 3 targets for now
+# rapidly reapplying seems to prevent spreading.
+# it doesn't seem to stack
 e.addAbility(Ability(
 	"Eldritch Fire", 
-	#1/6.6, 
-	{"type":"attack", "trigger":"attack", "chance":.15, "duration":5},
-	{"triggered fire":102, "triggered chaos":102, "duration":{"slow move":33, "reduce fire resist":20, "reduce chaos resist":20}} ))
+	{"type":"attack", "trigger":"attack", "chance":.15, "duration":4, "targets":3},
+	{"duration":{"triggered fire":102, "triggered chaos":102, "slow move":33, "reduce fire resist":20, "reduce chaos resist":20}} ))
 
 bonds = Constellation("Bysmiel's Bonds", "4c 6e", "3e")
 bonds.id = "bonds"
@@ -503,18 +503,14 @@ d = Star(magi, c, {"cast speed":5, "burn %":60})
 e = Star(magi, c, {"fire":(6+8)/2, "fire %":40})
 f = Star(magi, c, {"burn":12*3, "burn %":30, "burn duration":30})
 g = Star(magi, f, {})
-#15% on attack
-#1.5 s recharge
-#5 second duration
 # 1 meter radius
-#7 fragments
-# call it 4 targets
-# I haven't seen this but I envistion it as a central point that spits out fireballs for 5 seconds.
-# each fireball does the listed damage. I think 4 targets is reasonable. I'll assume each hit is against a different mob and count the burn full.
+# 7 fragments
+# trigger creates a volcano that spits out 8 volleys of ~7 fireballs about 2m
+# there can be multiples active.
 g.addAbility(Ability(
 	"Fissure", 
-	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":1.5, "duration":5, "targets":4},
-	{"triggered fire":116, "triggered burn":[132,2], "stun %":15} ))
+	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":1.5, "duration":5, "targets":3},
+	{"triggered fire":116*8, "duration":{"triggered burn":132}, "stun %":15} ))
 
 berserker = Constellation("Berserker", "5a 5e", "2c 3e")
 berserker.id = "berserker"
@@ -543,10 +539,6 @@ c = Star(behemoth, b, {"health/s":15, "constitution %":25})
 d = Star(behemoth, b, {"health %":4})
 e = Star(behemoth, b, {"health regeneration":10, "pet health regeneration":20})
 f = Star(behemoth, b, {})
-#15 % when hit
-#30s recharge
-#10s duration
-# will trigger once per 30s fight but will probably overheal
 f.addAbility(Ability(
 	"Giant's Blood", 
 	{"type":"heal", "trigger":"hit", "chance":.15, "recharge":30, "duration":10},
@@ -562,7 +554,7 @@ c = Star(affliction, b, {})
 c.addAbility(Ability(
 	"Fetid Pool", 
 	{"type":"attack", "trigger":"hit", "chance":.33, "recharge":2, "duration":6, "targets":1.5},
-	{"triggered vitality":128, "triggered poison":[68,2], "duration":{"slow move":25}} ))
+	{"triggered vitality":128*6, "duration":{"triggered poison":68, "slow move":25}} ))
 
 d = Star(affliction, c, {"offense":18, "defense":10})
 e = Star(affliction, d, {"crit damage":10, "vitality decay retaliation":360})
@@ -577,14 +569,10 @@ c = Star(manticore, b, {"health %":4})
 d = Star(manticore, c, {"offense":10, "acid resist":25})
 e = Star(manticore, c, {"poison":8*5, "acid %":40, "poison %":40})
 f = Star(manticore, e, {})
-#15% on attack
-#1 second recharge
-#4 meter range
-#call it 1.5 targets
 f.addAbility(Ability(
 	"Acid Spray", 
-	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":1, "duration":5, "targets":1.5},
-	{"triggered acid":148, "triggered poison":[90,2], "duration":{"reduce armor":250/1.5, "reduce resist":30/1.5}} ))
+	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":1, "duration":5, "targets":2},
+	{"triggered acid":148, "triggered poison":[90,2], "duration":{"reduce armor":250/2, "reduce resist":30/2}} ))
 
 abomination = Constellation("Abomination", "8c 18e")
 abomination.id = "abomination"
@@ -593,9 +581,6 @@ b = Star(abomination, a, {"vitality %":80, "acid %":80})
 c = Star(abomination, b, {"offense":40, "acid resist":20, "max acid resist":3})
 d = Star(abomination, c, {"offense":20, "chaos %":80, "health":150})
 e = Star(abomination, d, {})
-#100% on enemy death
-#18 s recharge
-#12 s duration
 e.addAbility(Ability(
 	"Abominable Might",
 	{"type":"buff", "trigger":"kill", "chance":1, "recharge":18, "duration":12},
@@ -604,14 +589,10 @@ e.addAbility(Ability(
 f = Star(abomination, c, {"offense":20, "poison %":80, "health":150})
 g = Star(abomination, f, {"acid %":100, "poison %":100})
 h = Star(abomination, g, {})
-#15% on attack
-#3 second recharge
-#6 attacks recharge, 6.66 attacks trigger
-# 10 meter radius
-# call it 4 targets
+# 10 meter radius (huge)
 h.addAbility(Ability(
 	"Tainted Eruption",
-	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":3, "targets":4, "shape":"pbaoe"},
+	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":3, "targets":5, "shape":"pbaoe"},
 	{"triggered poison":[264,5], "stun %":100} ))
 
 sage = Constellation("Blind Sage", "10a 18e")
@@ -623,15 +604,13 @@ d = Star(sage, c, {"cold resist":20, "cold %":100, "frostburn %":100})
 e = Star(sage, c, {"lightning %":100, "electrocute %":100, "lightning resist":20})
 f = Star(sage, c, {"fire %":100, "burn %":100, "fire resist":20})
 g = Star(sage, f, {})
-#100% on attack
-# 1.5 second recharge
 # 5 s lifespan
-# call it 2 attacks and a detonate each hitting 2 targets
+# call it 3 attacks and a detonate each hitting 2 targets
 # 4 attacks per
 g.addAbility(Ability(
 	"Elemental Seeker",
 	{"type":"summon", "trigger":"attack", "chance":1, "recharge":1.5, "lifespan":5},
-	{"triggered elemental":60*2*2+132*2, "stun %":100} ))
+	{"triggered elemental":60*3*2+132*2, "stun %":100} ))
 
 wolf = Constellation("Mogdrogen the Wolf", "15a 12e")
 wolf.id = "wolf"
@@ -641,14 +620,10 @@ c = Star(wolf, b, {"vitality resist":20, "pet total speed":6})
 d = Star(wolf, c, {"bleed":25*5, "bleed %":80})
 e = Star(wolf, d, {"bleed resist":15, "elemental resist":15, "max bleed resist":3, "pet all damage %":80})
 f = Star(wolf, e, {})
-#20% on attack
-#15 s recharge
-#10 s duration
-# 5 attack trigger = 2.5 s
 f.addAbility(Ability(
 	"Howl of Mogdrogen", 
 	{"type":"buff", "trigger":"attack", "chance":.2, "recharge":15, "duration":10},
-	{"bleed":44*3, "bleed %":200, "offense":120*.15*3/10, "attack speed":15, "pet offense %":15, "pet total speed":35} ))
+	{"bleed":[44,3], "bleed %":200, "offense":120*.15*3/10, "attack speed":15, "pet offense %":15, "pet total speed":35} ))
 
 rat = Constellation("Rat", "1c", "2c 3e")
 rat.id = "rat"
@@ -664,10 +639,6 @@ b = Star(ghoul, a, {"health/s":6, "life leech":15*2})
 c = Star(ghoul, b, {"physique":10, "spirit":10})
 d = Star(ghoul, b, {"health regeneration":15, "lifesteal %":4})
 e = Star(ghoul, d, {})
-# 100% at 33% health
-# 30s recharge
-# 6s duration
-
 e.addAbility(Ability(
 	"Ghoulish Hunger", 
 	{"type":"buff", "trigger":"low health", "chance":1, "recharge":30, "duration":6},
@@ -686,16 +657,12 @@ b = Star(fiend, a, {"spirit":10, "pet fire damage %":25})
 c = Star(fiend, b, {"chaos resist":8})
 d = Star(fiend, c, {"fire %":24, "chaos %":24, "pet fire damage %":40})
 e = Star(fiend, d, {})
-#25% on attack
-#.5 s recharge
 #100% pass through
-# 2 projectiles
-# 2.5 targets
-# 1 attack recharge, 4 attack trigger
+# 2 projectiles (I can't tell if each hits. I'll count like they do.)
 e.addAbility(Ability(
 	"Flame Torrent", 
-	{"type":"attack", "trigger":"attack", "chance":.25, "recharge":.5, "targets":2.5},
-	{"weapon damage %":35, "triggered fire":132, "triggered chaos":56, "triggered burn":[168,3]} ))
+	{"type":"attack", "trigger":"attack", "chance":.25, "recharge":.5, "targets":3, "shape":"pbaoe"},
+	{"weapon damage %":35, "triggered fire":132, "triggered chaos":56, "triggered burn":[168/2,3]} ))
 
 viper = Constellation("Viper", "1c", "2c 3p")
 viper.id = "viper"
@@ -720,15 +687,11 @@ c = Star(wendigo, b, {"cast speed":5, "vitality resist":10})
 d = Star(wendigo, c, {"health %":5, "damage from beasts":-10})
 e = Star(wendigo, d, {"vitality %":50, "vitality decay %":50, "life leech %":50})
 f = Star(wendigo, e, {})
-# 25% on attack
-# 8s duration
-# I have no idea how this one works. I'm guessing vitality damage per second for the duration.
-# this one seems weird. with no cooldown and a ticking damage if I apply this to an aoe skill
-# it should do lots of damage. I'm going to put 3 targets on it.
+#giving it 3 targets since it's 0 recharge I can keep a few going.
 f.addAbility(Ability(
 	"Wendigo's Mark", 
-	{"type":"attack", "trigger":"attack", "chance":1, "recharge":1, "targets":3},
-	{"triggered vitality":186, "attack as health %":90} ))
+	{"type":"attack", "trigger":"attack", "chance":.25, "recharge":0, "duration":8, "targets":3},
+	{"duration":{"triggered vitality":186}, "attack as health %":90} ))
 
 hydra = Constellation("Hydra", "3a 3c 5e", "2c 3e")
 hydra.id = "hydra"
@@ -756,7 +719,7 @@ g = Star(chariot, f, {})
 g.addAbility(Ability(
 	"Wayward Soul", 
 	{"type":"heal", "trigger":"hit", "chance":.1, "recharge":33, "duration":7},
-	{"health %":10, "health":1300, "defense":120} ))
+	{"health %":10, "health":1300, "duration":{"defense":120}} ))
 
 revenant = Constellation("Revenant", "8c", "1c 1p")
 revenant.id = "revenant"
@@ -791,18 +754,16 @@ d = Star(torch, c, {"fire %":100, "fire resist":20})
 e = Star(torch, d, {"burn":25*3, "burn %":100, "max fire resist":3})
 f = Star(torch, c, {"burn %":100, "burn duration":100})
 g = Star(torch, f, {})
-#30% on attack
-#3.5s recharge
-#3 s duration
 #6m area
 #2m radius
 #15 meteors
-#call it 15 hits...
-# 3.3 attacks trigger, 7 attacks recharge
+# large area, call it 6 targets in the area
+# each missile hits a smallish area, let's say each target gets hit 3 times
+# let's say the burn overlaps twice.
 g.addAbility(Ability(
 	"Meteor Shower", 
-	{"type":"attack", "trigger":"attack", "chance":.3, "recharge":3.5, "duration":3, "targets":15},
-	{"triggered fire":90, "triggered physical":90, "triggered burn":[82,2]} ))
+	{"type":"attack", "trigger":"attack", "chance":.3, "recharge":3.5, "duration":3, "targets":6},
+	{"triggered fire":90*3, "triggered physical":90*3, "triggered burn":[82*2,2]} ))
 
 god = Constellation("Dying God", "8c 15p")
 god.id = "god"
@@ -829,7 +790,6 @@ b = Star(imp, a, {"spirit":10})
 c = Star(imp, b, {"aether resist":8})
 d = Star(imp, c, {"fire %":24, "aether %":24})
 e = Star(imp, d, {})
-
 #aoe is on target
 #it ticks per second for duration
 #it stacks on itself
@@ -848,11 +808,10 @@ e = Star(tsunami, d, {})
 #35% on attack
 #1.5s recharge
 #12m range
-# call it 2 targets
-#2.85 attacks trigger, 3 attacks recharge
+# pretty wide line attack from me toward target with 100% pass through
 e.addAbility(Ability(
 	"Tsunami", 
-	{"type":"attack", "trigger":"attack", "chance":.35, "recharge":1.5, "targets":3},
+	{"type":"attack", "trigger":"attack", "chance":.35, "recharge":1.5, "targets":2.5},
 	{"weapon damage %":32, "triggered cold":115, "triggered lightning":51} ))
 
 gallows = Constellation("Gallows", "1p", "5p")

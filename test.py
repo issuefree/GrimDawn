@@ -6,41 +6,41 @@ from models import *
 import os
 
 model = armitage
-model.initialize()
+model.checkModel()
 print model
 
-solution = [
-xC, 
-xO, 
-dryad, 
-tortoise, 
-hound, 
-targo, 
-shieldmaiden, 
-xA, 
-xE, 
-light, 
-wolverine, 
-messenger, 
-behemoth
-]
+# solution = [
+# xC, 
+# xO, 
+# dryad, 
+# tortoise, 
+# hound, 
+# targo, 
+# shieldmaiden, 
+# xA, 
+# xE, 
+# light, 
+# wolverine, 
+# messenger, 
+# behemoth
+# ]
 
-print getSolutionCost(solution)
+# print getSolutionCost(solution)
 
-# checkSolution(solution)
-for c in solution:
-	print c.name, c.evaluate(model)
+# # checkSolution(solution)
+# for c in solution:
+# 	print c.name, c.evaluate(model)
 
-print
-print
+# print
+# print
 
-solByVal = sorted(solution, key=lambda c: c.evaluate(model), reverse=True)
+# solByVal = sorted(solution, key=lambda c: c.evaluate(model), reverse=True)
 
-print solutionPath(solByVal)
-print isGoodSolution(solution)
+# print solutionPath(solByVal)
+# print isGoodSolution(solution)
 
-print
-print
+# print
+# print
 
 # optimizations to try:
 
@@ -62,9 +62,9 @@ print
 #IN GAME:
 	# check if fetid pool ticks damage on targets.
 
-c = eye
+c = torch
 
-c.evaluate(armitage)
+print c.evaluate(armitage)
 
 for star in c.stars:
 	if star.ability:

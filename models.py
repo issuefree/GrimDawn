@@ -313,11 +313,14 @@ armitage = Model(
 		"burn": 4, "burn %": 5, "burn duration": 1,
 		"electrocute %": 2, "electrocute duration": 1,
 
-		"weapon damage %":10,
+		"triggered fire":8,
+		"triggered lightning":5,
+
+		"weapon damage %":12.5,
 
 		# "crit damage": ,
 		"damage reflect %": 20,
-		"retaliation":3, 
+		"retaliation":3.5, 
 		"retaliation %": 20,
 		
 		"stun %":-1,
@@ -325,9 +328,6 @@ armitage = Model(
 		# "lifesteal %": ,
 		"move %": 10,
 
-		# "physique": ,
-		# "reduce elemental resist": ,
-		# "spirit":
 	},
 
 	{

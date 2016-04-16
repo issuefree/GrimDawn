@@ -62,7 +62,7 @@ print model
 #IN GAME:
 	# check if fetid pool ticks damage on targets.
 
-c = torch
+c = wraith
 
 print c.evaluate(armitage)
 

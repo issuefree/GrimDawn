@@ -62,7 +62,7 @@ d = Star(anvil, c, {"defense":15, "constitution %":20})
 e = Star(anvil, d, {"Targo's Hammer":True})
 
 e.addAbility(Ability("Targo's Hammer", 
-	{"type":"attack", "trigger":"block", "chance":.25, "targets":3},
+	{"type":"attack", "trigger":"block", "chance":.25, "targets":3, "shape":"???"},
 	{"stun %":50, "weapon damage %":92, "physical":100, "internal %":145} ))
 
 owl = Constellation("Owl", "1a", "5a")
@@ -122,13 +122,10 @@ d = Star(boar, c, {"physical resist":4, "fire resist":20})
 e = Star(boar, c, {"stun duration":10, "physical retaliation":150})
 f = Star(boar, e, {"bleed retaliation":2100*.1})
 g = Star(boar, e, {})
-# 25% on block
-# ~.75 seconds per block (.5 s per attack)
-# 1 second recharge
 # description sounds like a frontal cone so we'll go with 2 targets avg
 g.addAbility(Ability(
 	"Trample", 
-	{"type":"attack", "trigger":"block", "chance":.25, "recharge":1, "targets":2},
+	{"type":"attack", "trigger":"block", "chance":.25, "recharge":1, "targets":2, "shape":"???"},
 	{"stun %":100, "weapon damage %":80, "internal":404} ))
 
 scythe = Constellation("Harvestman's Scythe", "3a 3o 5p", "3a 3p")
@@ -157,8 +154,6 @@ d = Star(huntress, c, {"pierce resist":8, "damage beast %":15, "health":100})
 e = Star(huntress, c, {"offense %":3, "pet offense %":5})
 f = Star(huntress, e, {"bleed":30, "bleed %":50, "bleed duration":20})
 g = Star(huntress, e, {})
-# 20% on attack, 5 second duration, no recharge
-# calling it .9
 # no stat for reducing opponent offense so we'll call it defense
 
 #halfway between an attack and a buff. Since the debuff doesn't overlap I'm going to set the recharge to the duration.
@@ -170,7 +165,7 @@ g = Star(huntress, e, {})
 # reduced resist only matters when other stuff hits so reducing resist on stuff I'm not hitting doesn't count for anything.
 # remove the multi target component (I'm overcounting defense and undercounting reduced resist a bit).
 g.addAbility(Ability("Rend", 
-	{"type":"attack", "trigger":"attack", "chance":.2, "recharge":0, "duration":5, "targets":3},
+	{"type":"attack", "trigger":"attack", "chance":.2, "recharge":0, "duration":5, "targets":3, "shape":"circle"},
 	{"triggered bleed":[307,5], "duration":{"defense":125/3, "reduce bleed resist":33/3}} ))
 
 leviathan = Constellation("Leviathan", "13a 13e")
@@ -193,7 +188,7 @@ g = Star(leviathan, d, {})
 	# {"triggered cold":100, "duration":{"triggered frostburn":100, "offense":35}} ))
 g.addAbility(Ability(
 	"Whirlpool", 
-	{"type":"attack", "trigger":"attack", "chance":.3, "recharge":3, "targets":3, "duration":6}, 
+	{"type":"attack", "trigger":"attack", "chance":.3, "recharge":3, "targets":3, "duration":6, "shape":"ground"}, 
 	{"triggered cold":322*6, "duration":{"triggered frostburn":133, "slow move":35}} ))
 
 oleron = Constellation("Oleron", "20a 7o")
@@ -289,13 +284,6 @@ d = Star(scales, c, {"energy regeneration":10, "energy/s":2})
 e = Star(scales, b, {"all damage %":30})
 f = Star(scales, e, {})
 # assuming single target
-# 20% when hit
-# 1.5 s recharge
-# I have no idea how to handle the 135% attack damage converted to health
-# assume I get hit 2 times a second so 2.5 seconds + 1.5 seconds = 4 seconds between
-# normalizing to .5 s per attack = 1/8
-# let's say I get... 300 health per, it triggers 3 times in a fight that's 900 health in a fight.
-# multiply by 8 since it's not weapon attack adjusted
 f.addAbility(Ability(
 	"Tip the Scales", 
 	# 1.0/8, 
@@ -424,7 +412,7 @@ e = Star(bat, d, {})
 # two spikes shoot out from you toward what you triggered on. They're pretty narrowly focused and not particularly well aimed. They don't seem to hit a ton. On the fence on 1.5 - 2 targets.
 e.addAbility(Ability(
 	"Twin Fangs", 
-	{"type":"attack", "trigger":"attack", "chance":.2, "recharge":1, "targets":1.5},
+	{"type":"attack", "trigger":"attack", "chance":.2, "recharge":1, "targets":1.5, "shape":"cone"},
 	{"weapon damage %":25, "triggered pierce":116, "triggered vitality":111, "attack as health %":50} ))
 
 spider = Constellation("Spider", "1e", "6e")
@@ -509,7 +497,7 @@ g = Star(magi, f, {})
 # there can be multiples active.
 g.addAbility(Ability(
 	"Fissure", 
-	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":1.5, "duration":5, "targets":3},
+	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":1.5, "duration":5, "targets":3, "shape":"ground"},
 	{"triggered fire":116*8, "duration":{"triggered burn":132}, "stun %":15} ))
 
 berserker = Constellation("Berserker", "5a 5e", "2c 3e")
@@ -553,7 +541,7 @@ c = Star(affliction, b, {})
 # need to check whether the damage ticks.
 c.addAbility(Ability(
 	"Fetid Pool", 
-	{"type":"attack", "trigger":"hit", "chance":.33, "recharge":2, "duration":6, "targets":1.5},
+	{"type":"attack", "trigger":"hit", "chance":.33, "recharge":2, "duration":6, "targets":1.5, "shape":"ground"},
 	{"triggered vitality":128*6, "duration":{"triggered poison":68, "slow move":25}} ))
 
 d = Star(affliction, c, {"offense":18, "defense":10})
@@ -569,9 +557,10 @@ c = Star(manticore, b, {"health %":4})
 d = Star(manticore, c, {"offense":10, "acid resist":25})
 e = Star(manticore, c, {"poison":8*5, "acid %":40, "poison %":40})
 f = Star(manticore, e, {})
+# weird shape. It hits the target and things behind it in a cone. It's pretty strong for any non tank.
 f.addAbility(Ability(
 	"Acid Spray", 
-	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":1, "duration":5, "targets":2},
+	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":1, "duration":5, "targets":3},
 	{"triggered acid":148, "triggered poison":[90,2], "duration":{"reduce armor":250/2, "reduce resist":30/2}} ))
 
 abomination = Constellation("Abomination", "8c 18e")
@@ -623,7 +612,7 @@ f = Star(wolf, e, {})
 f.addAbility(Ability(
 	"Howl of Mogdrogen", 
 	{"type":"buff", "trigger":"attack", "chance":.2, "recharge":15, "duration":10},
-	{"bleed":[44,3], "bleed %":200, "offense":120*.15*3/10, "attack speed":15, "pet offense %":15, "pet total speed":35} ))
+	{"bleed":44*3, "bleed %":200, "offense":120*.15*3/10, "attack speed":15, "pet offense %":15, "pet total speed":35} ))
 
 rat = Constellation("Rat", "1c", "2c 3e")
 rat.id = "rat"
@@ -762,7 +751,7 @@ g = Star(torch, f, {})
 # let's say the burn overlaps twice.
 g.addAbility(Ability(
 	"Meteor Shower", 
-	{"type":"attack", "trigger":"attack", "chance":.3, "recharge":3.5, "duration":3, "targets":6},
+	{"type":"attack", "trigger":"attack", "chance":.3, "recharge":3.5, "duration":3, "targets":6, "shape":"ground"},
 	{"triggered fire":90*3, "triggered physical":90*3, "triggered burn":[82*2,2]} ))
 
 god = Constellation("Dying God", "8c 15p")
@@ -795,7 +784,7 @@ e = Star(imp, d, {})
 #it stacks on itself
 e.addAbility(Ability(
 	"Aetherfire", 
-	{"type":"attack", "trigger":"attack", "chance":.15, "duration":3, "targets":1.5, "duration":3},
+	{"type":"attack", "trigger":"attack", "chance":.15, "duration":3, "targets":1.5, "duration":3, "shape":"ground"},
 	{"triggered fire":50*3, "triggered aether":125*3, "stun %":33} ))
 
 tsunami = Constellation("Tsunami", "1p", "5p")
@@ -811,7 +800,7 @@ e = Star(tsunami, d, {})
 # pretty wide line attack from me toward target with 100% pass through
 e.addAbility(Ability(
 	"Tsunami", 
-	{"type":"attack", "trigger":"attack", "chance":.35, "recharge":1.5, "targets":2.5},
+	{"type":"attack", "trigger":"attack", "chance":.35, "recharge":1.5, "targets":2.5, "shape":"line"},
 	{"weapon damage %":32, "triggered cold":115, "triggered lightning":51} ))
 
 gallows = Constellation("Gallows", "1p", "5p")
@@ -895,17 +884,14 @@ d = Star(tempest, c, {"offense":10, "lightning resist":25})
 e = Star(tempest, d, {"move %":3, "lightning %":200*.3})
 f = Star(tempest, d, {"offense":15, "electrocute %":50, "electrocute duration":30})
 g = Star(tempest, f, {})
-#100% on critical: 15% on attack
-#10s recharge
-#6s duration
 # 3 target max
 # 8 meter radius
 # .5s interval
-# might want to remove the ticks on electrocute since this triggers so fast
+# 12 bolts / electrocute will tick 8 times
 g.addAbility(Ability(
 	"Reckless Tempest", 
-	{"type":"attack", "trigger":"critical", "chance":1, "recharge":10, "duration":6, "targets":36},
-	{"triggered lightning":113.5, "triggered electrocute":[128,2], "stun %":20} ))
+	{"type":"attack", "trigger":"critical", "chance":1, "recharge":10, "duration":6, "targets":3},
+	{"triggered lightning":113.5*12, "triggered electrocute":[128,2*8], "stun %":20} ))
 
 widow = Constellation("Widow", "6e 4p", "3p")
 widow.id = "widow"
@@ -915,14 +901,13 @@ c = Star(widow, b, {"aether %":30, "spirit":10})
 d = Star(widow, c, {"vitality resist":8, "aether resist":18})
 e = Star(widow, d, {"aether %":50, "lightning %":50})
 f = Star(widow, e, {})
-#25% on attack
-#2s recharge
-# 2 targets
-# 4 attack to trigger 4 to recharge
+# reduced offense is a bit tricky. It's like defense if all enemies hitting you are affected.
+# lets say in the average fight 6 are trying to attack you and you hit x targets.
+# so divide the defense stat by 6 and the targets will take care of the numerator.
 f.addAbility(Ability(
 	"Arcane Bomb", 
-	{"type":"attack", "trigger":"attack", "chance":.25, "recharge":2, "targets":2},
-	{"triggered lightning":40, "triggered aether":40, "defense":35, "reduce lightning resist":5, "reduce aether resist":5} ))
+	{"type":"attack", "trigger":"attack", "chance":.25, "recharge":2, "targets":2, "shape":"ground"},
+	{"triggered lightning":88, "triggered aether":88, "defense":80/6, "reduce lightning resist":33/2, "reduce aether resist":33/2} ))
 
 kraken = Constellation("Kraken", "5e 5p", "2c 3p")
 kraken.id = "kraken"
@@ -942,14 +927,11 @@ d = Star(winter, b, {"cold %":50, "frostburn %":50})
 e = Star(winter, d, {"frostburn":12*3, "frostburn %":70})
 f = Star(winter, b, {"offense":15, "frostburn %":30, "frostburn duration":30})
 g = Star(winter, f, {})
-#100% on crit: 15% on attack
-#3.5s recharge
 #1.5m radius
-#6.66 attacks to trigger, 7 attacks to recharge
 #looks like there are multiple missiles but it's not listed
 g.addAbility(Ability(
 	"Blizzard", 
-	{"type":"attack", "trigger":"critical", "chance":1, "recharge":3.5, "targets":4},
+	{"type":"attack", "trigger":"critical", "chance":1, "recharge":3.5, "targets":4, "shape":"???"},
 	{"weapon damage %":10, "triggered cold":165.5, "triggered frostburn":[93,2], "stun %":36, "slow move":54} ))
 
 bear = Constellation("Dire Bear", "5a 5p", "1a 1p")
@@ -960,8 +942,6 @@ c = Star(bear, b, {"constitution %":15, "attack speed":5})
 d = Star(bear, c, {"reduced stun duration":15, "reduced freeze duration":15, "health %":5})
 e = Star(bear, [], {"physical %":50, "internal %":50})
 f = Star(bear, d, {})
-#15% on attack
-#1s recharge
 #4m radius
 f.addAbility(Ability(
 	"Maul", 
@@ -975,15 +955,10 @@ b = Star(ulo, a, {"life leech resist":30, "energy leech resist":30})
 c = Star(ulo, b, {"acid resist":15, "pet acid resist":15})
 d = Star(ulo, b, {"chaos resist":10, "pet chaos resist":10})
 e = Star(ulo, b, {})
-# 100% on attack
-#22s recharge
-#1s duration (actually 8)
 #3m radius
-#2 targets
-# 44 attacks recharge, 1 attack trigger
 e.addAbility(Ability(
 	"Cleansing Waters", 
-	{"type":"attack", "trigger":"attack", "chance":1, "recharge":22, "targets":2},
+	{"type":"attack", "trigger":"attack", "chance":1, "recharge":22, "targets":2, "duration":8},
 	{"slow move":40} ))
 
 watcher = Constellation("Solemn Watcher", "10p", "2o 3p")
@@ -1002,15 +977,11 @@ c = Star(hourglass, b, {"slow resist":50, "aether resist":20})
 d = Star(hourglass, c, {"defense":35, "vitality resist":15, "max vitality resist":4})
 e = Star(hourglass, d, {"avoid melee":6, "avoid ranged":6, "reduced entrapment duration":30, "reflected damage reduction":25})
 f = Star(hourglass, e, {})
-#30 chance when hit
-#3s recharge
 #3m radius
-# 3.33 for trigger, 6 for recharge
-# 1.5 targets
 f.addAbility(Ability(
 	"Time Stop", 
-	{"type":"attack", "trigger":"hit", "chance":.3, "recharge":3, "targets":1.5},
-	{"stun %":100, "slow move":70} ))
+	{"type":"attack", "trigger":"hit", "chance":.3, "recharge":3, "targets":1.5, "duration":3, "shape":"circle"},
+	{"stun %":100, "duration":{"slow move":70}} ))
 
 spear = Constellation("Spear of the Heavens", "7c 20p")
 spear.id = "spear"
@@ -1020,13 +991,10 @@ c = Star(spear, b, {"offense %":5, "aether resist":15})
 d = Star(spear, c, {"crit damage":10, "lightning resist":20})
 e = Star(spear, d, {"aether %":100, "lightning %":100, "max lightning resist":3})
 f = Star(spear, e, {})
-#50% when hit
-#1s recharge
 #.5m radius
-#2 for recharge, 2 for trigger
 f.addAbility(Ability(
 	"Spear of the Heavens", 
-	{"type":"attack", "trigger":"hit", "chance":.5, "recharge":1, "targets":1.5},
+	{"type":"attack", "trigger":"hit", "chance":.5, "recharge":1, "targets":1.5, "shape":"circle"},
 	{"triggered lightning":162, "triggered aether":176, "stun %":100} ))
 
 tree = Constellation("Tree of Life", "7o 20p")

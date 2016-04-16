@@ -263,6 +263,7 @@ nyx = Model(
 
 		"fight length":30,
 
+		"playStyle":"short ranged",
 		"weapons":["offhand"],
 		"blacklist":[
 			sage, 			#seems cool but there's nothing but the ability
@@ -360,8 +361,8 @@ armitage = Model(
 
 		"fight length":45,
 
+		"playStyle":"tank",
 		"weapons":["shield"],
-		"shapeFactors":{"pbaoe":1.5},
 		"blacklist":[
 		]
 	}

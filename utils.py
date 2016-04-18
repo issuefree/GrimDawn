@@ -72,3 +72,19 @@ def getBonuses():
 				else:
 					bonuses[bonus] = s.bonuses[bonus]
 	return bonuses
+
+def evaluateBonuses(model, bonuses):
+	value = 0
+	for bonus in model.keys():
+		if bonus in bonuses.keys():
+			value += model[bonus]*bonuses[bonus]
+	return value
+
+def startsWith(start, complete):
+	if len(start) == 0:
+		return False
+	for i in range(len(start)):
+		if start[i] != complete[i]:
+			return False
+	return True
+

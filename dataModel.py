@@ -74,6 +74,7 @@ def timeMethod(label, startTime):
 		methodTimes[label] = time()-startTime
 
 class Affinity:
+	sh = ["a", "c", "e", "o", "p"] # vectors
 	def __init__(self, ascendant=0, chaos=0, eldritch=0, order=0, primordial=0):
 		self.affinities = [0,0,0,0,0]
 
@@ -172,15 +173,30 @@ class Affinity:
 		return a
 
 	def __str__(self):
-		out = ""
-		sh = ["a", "c", "e", "o", "p"]
+		out = ""		
 		for i in range(len(self.affinities)):
-			out += str(self.affinities[i]) + sh[i] + " "
+			out += str(self.affinities[i]) + Affinity.sh[i] + " "
 		return out
 
+	# a vector is one type of affinity or an affinity set that provides only one type.
+	def isVector(self, vector=None):
+		if self.magnitude() == 0:
+			return False
+
+		if not vector:			
+			for i in range(len(self.affinities)):
+				if self.affinities[i] != 0 and self.affinities[i] != self.magnitude():
+					return False
+			return True
+
+		if self.magnitude() == self.get(vector):
+			return True
+		return False
+
+	def set(self, ac, val):
+		self.affinities[Affinity.sh.index(ac)] = val
 	def get(self, ac):
-		sh = ["a", "c", "e", "o", "p"]
-		return self.affinities[sh.index(ac)]
+		return self.affinities[Affinity.sh.index(ac)]
 
 class Ability:
 	def __init__(self, name, conditions, bonuses):
@@ -422,12 +438,11 @@ class Ability:
 		self.star.bonuses[self.name] = 1		
 
 class Star:
-	def __init__(self, constellation, requires=None, bonuses={}):
+	def __init__(self, constellation, requires=[], bonuses={}):
 		self.constellation = constellation
 
 		self.requires = requires 
 
-		self.active = False
 		self.bonuses = bonuses
 
 		self.name = ""
@@ -439,16 +454,6 @@ class Star:
 
 	def __str__(self):
 		return self.constellation.name + "." + str(self.constellation.stars.index(self)) + ": " + str(self.value)
-
-	def canActivate(self, affinities):
-		if self.active:
-			return False
-		for star in self.requires:
-			if not star.active:
-				return False
-		if affinities < self.constellation.requires:
-			return False
-		return True
 
 	def evaluate(self, model=None):
 		if self.value:
@@ -514,6 +519,7 @@ class Constellation:
 		self.restricts = []
 		self.stars = []
 		self.abilities = []
+
 		self.value = None
 
 		self.redundancies = []
@@ -523,12 +529,6 @@ class Constellation:
 
 	def __str__(self):
 		return self.name + ": (" + str(self.requires) + ")  (" + str(self.provides) + ")"
-
-	def isComplete(self):
-		for star in self.stars:
-			if not star.active:
-				return False
-		return True
 
 	def addStar(self, star):
 		self.stars += [star]
@@ -557,29 +557,38 @@ class Constellation:
 
 		return False
 
-	def buildRedundancies(self, model):
-		if self.requires.magnitude() > 1:
+	def isBetter(self, other, model):
+		if len(self.stars) <= len(other.stars) and self.evaluate(model) >= other.evaluate(model) and self.provides >= other.provides:
+			if len(self.stars) == len(other.stars) and self.evaluate(model) == other.evaluate(model) and self.provides == other.provides:
+				return False
+			else:
+				return True
+		return False
+
+	def isWorse(self, other, model):
+		if len(self.stars) >= len(other.stars) and self.evaluate(model) <= other.evaluate(model) and self.provides <= other.provides:
+			if len(self.stars) == len(other.stars) and self.evaluate(model) == other.evaluate(model) and self.provides == other.provides:
+				return False
+			else:
+				return True
+		return False
+
+	def buildRedundancies(self, model):		
+		if self.getTier() > 1:
 			return
 		for c in Constellation.constellations:
-			if c.requires.magnitude() > 1:
+			if c.getTier() > 1:
 				continue
 			if self.value < c.evaluate(model) and len(self.stars) >= len(c.stars) and self.provides <= c.provides:
 				self.redundancies += [c]
 
 	def canActivate(self, affinities=Affinity(), current=[]):
-		if not self.isComplete() and affinities >= self.requires:
+		if affinities >= self.requires:
 			for conflict in self.conflicts:
 				if conflict in current:
 					return False
 			return True
 		return False
-
-	def activate(self):
-		for s in self.stars:
-			s.active = True
-	def deactivate(self):
-		for s in self.stars:
-			s.active = False
 
 	def addConflicts(self, others):
 		for i in range(len(others)):
@@ -587,3 +596,21 @@ class Constellation:
 			self.conflicts += [other]
 			other.conflicts += [self]			
 			other.addConflicts(others[i+1:])
+
+	# tier 0: a crossroards constellation
+	# tier 1: just like the game defines: requires 1 affinity, provides many affinity.
+	# tier 2: requires many affinity, provides few affinity.
+	# tier 3: requires many affinity, provides NO affinity.
+		# desired subconstellations count as t3 since they provide nothing. They're just "weak" tier 3.
+	def getTier(self):
+		# in theory this is static but if I manipulate the provides or requires this might change and cause unpredictable results.
+		if self.requires.magnitude() == 0:
+			return 0
+
+		if self.provides.magnitude() == 0:
+			return 3
+
+		if self.requires.magnitude() == 1:
+			return 1
+
+		return 2

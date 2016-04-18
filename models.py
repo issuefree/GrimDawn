@@ -123,9 +123,11 @@ class Model:
 			self.set("pet "+b, max(self.get("pet "+b), self.get("pet resist")))
 
 			self.set("reduce "+b, max(self.get("reduce "+b), self.get("reduce resist")))
-		for b in resists:
-			self.set("reduce resist", max(self.get("reduce resist"), self.get("reduce "+b)))
+		self.set("reduce resist", max(self.get("reduce resist"), sum([self.get("reduce "+b) for b in resists])))
+		print "  reduce resist:", self.get("reduce resist")
 
+		elementals = ["fire", "cold", "lightning"]
+		self.set("reduce elemental resist", max(self.get("reduce elemental resist"), sum([self.get("reduce "+b+" resist") for b in elementals])))
 
 		# elemental damage % and resist should be the sum of the individual components
 		self.set("elemental %", max(self.get("elemental %"), sum([self.get(b) for b in ["cold %", "lightning %", "fire %"]])))
@@ -168,8 +170,9 @@ class Model:
 	def filterConstellations(self):
 		print "\n  Checking for weapon restricted constellations..."
 		for c in self.getStat("blacklist"):
-			Constellation.constellations.remove(c)
-			print "    -", c.name, "blacklisted "
+			if c in Constellation.constellations:
+				Constellation.constellations.remove(c)
+				print "    -", c.name, "blacklisted "
 		for c in Constellation.constellations[:]:
 			if c.restricts:
 				satisfied = False
@@ -239,7 +242,7 @@ nyx = Model(
 
 	{
 		"attacks/s":5,
-		"hits/s":1.5,
+		"hits/s":1,
 		"blocks/s":0,
 		"kills/s":1,
 		"crit chance":.12,
@@ -263,7 +266,7 @@ nyx = Model(
 
 		"fight length":30,
 
-		"playStyle":"short ranged",
+		"playStyle":"shortranged",
 		"weapons":["offhand"],
 		"blacklist":[
 			sage, 			#seems cool but there's nothing but the ability
@@ -282,7 +285,7 @@ armitage = Model(
 		"attack speed":10,
 		"cast speed":7.5,
 		
-		"energy": .1, # "energy %": ,
+		"energy": .2, # "energy %": ,
 		"energy absorb": 1,
 		# "energy regeneration": ,
 		# "energy/s": ,
@@ -294,30 +297,30 @@ armitage = Model(
 		"armor": 3, # "armor %": ,
 		"armor absorb": 10,
 		
-		"defense": 0, # "defense %": ,
-		"resist": 10,
+		"defense": 0.5, # "defense %": ,
+		"resist": 15,
 		#"elemental resist": 12.5,
-		"physical resist": 30,
-		"pierce resist":20,
+		"physical resist":35,
+		"pierce resist":25,
 
 		"block %": 75,
 		"blocked damage %":50,
 		"shield recovery":35,
 
-		"offense": 3, # "offense %": ,
+		"offense": 4, # "offense %": ,
 
-		"damage":2,
+		"damage":1,
 		"physical": 4, "physical %": 5,
-		"fire": 6, "fire %": 7.5,
-		"lightning": 4, "lightning %": 5,
-		"elemental": 4, # "elemental %": 20,
-		"burn": 4, "burn %": 5, "burn duration": 1,
-		"electrocute %": 2, "electrocute duration": 1,
+		"fire":5, "fire %": 10,
+		"lightning": 2, "lightning %": 5,
+		"elemental": 2, # "elemental %": 20,
+		"burn": 2, "burn %": 5, "burn duration": 1,
 
-		"triggered fire":8,
-		"triggered lightning":5,
+		"triggered fire":10,
+		"triggered lightning":4,
+		"triggered physical":2,
 
-		"weapon damage %":12.5,
+		"weapon damage %":7.5,
 
 		# "crit damage": ,
 		"damage reflect %": 20,
@@ -329,6 +332,7 @@ armitage = Model(
 		# "lifesteal %": ,
 		"move %": 10,
 
+		"Acid Spray":.75,
 	},
 
 	{
@@ -337,7 +341,7 @@ armitage = Model(
 		"blocks/s":1.5,
 		"kills/s":1,
 		"crit chance":.05,
-		"low healths/s":1.0/30, # total guesswork.
+		"low healths/s":1.0/45, # total guesswork.
 
 		"physique":900,
 		"cunning":400,
@@ -364,7 +368,106 @@ armitage = Model(
 		"playStyle":"tank",
 		"weapons":["shield"],
 		"blacklist":[
+			# manticore, manticoreAcidSpray# I'm not sure it makes sense in this build. Not many attacks to bind it to and the stats on the constellation aren't that good.
 		]
 	}
 )
 
+testModel = Model(
+	"testModel",
+	{
+		"attack speed":10,
+		"cast speed":7.5,
+		
+		"energy": .2, # "energy %": ,
+		"energy absorb": 1,
+		# "energy regeneration": ,
+		# "energy/s": ,
+
+		"health": .66, # "health %": ,
+		"health regeneration": 5,
+		# "health/s": 5,
+
+		"armor": 3, # "armor %": ,
+		"armor absorb": 10,
+		
+		"defense": 0.5, # "defense %": ,
+		"resist": 15,
+		#"elemental resist": 12.5,
+		"physical resist":35,
+		"pierce resist":25,
+
+		"block %": 75,
+		"blocked damage %":50,
+		"shield recovery":35,
+
+		"offense": 4, # "offense %": ,
+
+		"damage":1,
+		"physical": 4, "physical %": 5,
+		"fire":5, "fire %": 10,
+		"lightning": 2, "lightning %": 5,
+		"elemental": 2, # "elemental %": 20,
+		"burn": 2, "burn %": 5, "burn duration": 1,
+
+		"triggered fire":10,
+		"triggered lightning":4,
+		"triggered physical":2,
+
+		"weapon damage %":7.5,
+
+		# "crit damage": ,
+		"damage reflect %": 20,
+		"retaliation":3.5, 
+		"retaliation %": 20,
+		
+		"stun %":-1,
+
+		# "lifesteal %": ,
+		"move %": 10,
+	},
+
+	{
+		"attacks/s":1.5,
+		"hits/s":4,
+		"blocks/s":1.5,
+		"kills/s":1,
+		"crit chance":.05,
+		"low healths/s":1.0/45, # total guesswork.
+
+		"physique":900,
+		"cunning":400,
+		"spirit":450,
+
+		"offense":1200,
+		"defense":1400,
+
+		"health":7500,
+		"health regeneration":25,
+
+		"armor":1000,
+		"energy":2500,
+
+		"physical %":200+150+100,
+		"fire %":400+175+100,
+		"lightning %":200+175+100,
+		"acid %":150+175+100,
+
+		"retaliation %":250+100,
+
+		"fight length":45,
+
+		"playStyle":"tank",
+		"weapons":["shield"],
+		"blacklist":[xE, wolverine, owl, ghoul, eye, crane, blade, guide, falcon, spider, bat, throne, shepherd, vulture, rat, raven
+		]
+	}
+)
+
+
+# [xC, viper, hound, fiend, light, behemothGiantsBlood, manticore, anvil, messengerMessengerofWar, crown, xO, dryad, targoShieldWall],  # 38881
+#  [xC, fiend, viper, hound, light, behemothGiantsBlood, manticore, anvil, messengerMessengerofWar, crown, xO, dryad, targoShieldWall],  # 38881
+#  [xC, fiend, viper, hound, light, behemothGiantsBlood, manticore, anvil, messengerMessengerofWar, crown, xO, dryad, targoShieldWall],  # 38881
+#  [xC, fiend, viper, hound, light, behemothGiantsBlood, manticore, anvil, messengerMessengerofWar, crown, xO, dryad, targoShieldWall],  # 38881
+
+#   [xO, dryad, tortoise, hound, targoShieldWall, wraith, messenger, fiend, light, behemothGiantsBlood, manticore, crown],  # 38340

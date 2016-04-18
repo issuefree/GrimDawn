@@ -178,6 +178,10 @@ class Affinity:
 			out += str(self.affinities[i]) + sh[i] + " "
 		return out
 
+	def get(self, ac):
+		sh = ["a", "c", "e", "o", "p"]
+		return self.affinities[sh.index(ac)]
+
 class Ability:
 	def __init__(self, name, conditions, bonuses):
 		self.name = name		
@@ -194,6 +198,8 @@ class Ability:
 
 		self.triggerTime = 0
 		self.effective = 0		
+
+		self.star = None
 
 	def gc(self, key):
 		if key in self.conditions.keys():
@@ -250,7 +256,7 @@ class Ability:
 				elif self.gc("shape") == "circle":
 					targets = targets * 1.25
 				elif self.gc("shape") == "pbaoe":
-					targets = targets * .9
+					targets = targets * .75
 			elif model.getStat("playStyle") == "melee":
 				# Characters who engage in melee but aim to kill fast and minimize getting surrounded or take a beating.
 				# Optimal range is melee but not surrounded.
@@ -260,7 +266,7 @@ class Ability:
 				# Cone/Line abilities are ideal due to keeping enemies close but on one side.
 				# pbaoe abilities are strong but not ideal due to trying not to get surrounded.
 				if self.gc("shape") == "cone" or self.gc("shape") == "line":
-					targets = targets * 1.5
+					targets = targets * 1.33
 				elif self.gc("shape") == "ground":
 					pass
 				elif self.gc("shape") == "circle":
@@ -281,7 +287,7 @@ class Ability:
 				elif self.gc("shape") == "circle":
 					pass
 				elif self.gc("shape") == "pbaoe":
-					targets = targets * 2
+					targets = targets * 1.5
 
 			self.effective = self.getNumTriggers(model)/(2.0*model.getStat("fight length"))*targets
 
@@ -316,7 +322,7 @@ class Ability:
 		#find duration based elements (for attacks that include a debuff component)
 		targets = max(1, self.gc("targets"))
 		upTime = self.getUpTime(model)
-		print "up", upTime
+		# print "up", upTime
 		durationBonuses = self.bonuses["duration"]
 		for bonus in durationBonuses.keys():
 			self.bonuses[bonus] = durationBonuses[bonus]*upTime/self.effective*targets
@@ -406,19 +412,20 @@ class Ability:
 
 		self.calculateDynamicBonuses(model)
 		
-		self.star.bonuses[self.name] = 1
+		modelFactor = 1
+		self.name
+		if self.name in model.bonuses.keys():
+			modelFactor = model.get(self.name)
+
 		for bonus in self.bonuses.keys():
-			self.star.bonuses[bonus] = self.bonuses[bonus]*self.effective			
+			self.star.bonuses[bonus] = self.bonuses[bonus]*self.effective * modelFactor
+		self.star.bonuses[self.name] = 1		
 
 class Star:
-	def __init__(self, constellation, requires=[], bonuses={}):
+	def __init__(self, constellation, requires=None, bonuses={}):
 		self.constellation = constellation
 
-		#array of stars
-		if type(requires) != type([]):
-			self.requires = [requires]
-		else:
-			self.requires = requires 
+		self.requires = requires 
 
 		self.active = False
 		self.bonuses = bonuses
@@ -443,8 +450,8 @@ class Star:
 			return False
 		return True
 
-	def evaluate(self, model):
-		if self.value != None:
+	def evaluate(self, model=None):
+		if self.value:
 			return self.value
 		value = float(0)
 		if self.ability != None:
@@ -507,9 +514,10 @@ class Constellation:
 		self.restricts = []
 		self.stars = []
 		self.abilities = []
-		self.value = 0
+		self.value = None
 
 		self.redundancies = []
+		self.conflicts = []
 
 		Constellation.constellations += [self]
 
@@ -525,8 +533,11 @@ class Constellation:
 	def addStar(self, star):
 		self.stars += [star]
 
-	def evaluate(self, model):
-		if self.value > 0:
+	def evaluate(self, model=None):		
+		if self.value:
+			return self.value
+		if self in model.getStat("blacklist"):
+			self.value = float(0)
 			return self.value
 		self.value = float(0)
 		for star in self.stars:
@@ -555,8 +566,11 @@ class Constellation:
 			if self.value < c.evaluate(model) and len(self.stars) >= len(c.stars) and self.provides <= c.provides:
 				self.redundancies += [c]
 
-	def canActivate(self, current=Affinity()):
-		if not self.isComplete() and current >= self.requires:
+	def canActivate(self, affinities=Affinity(), current=[]):
+		if not self.isComplete() and affinities >= self.requires:
+			for conflict in self.conflicts:
+				if conflict in current:
+					return False
 			return True
 		return False
 
@@ -566,3 +580,10 @@ class Constellation:
 	def deactivate(self):
 		for s in self.stars:
 			s.active = False
+
+	def addConflicts(self, others):
+		for i in range(len(others)):
+			other = others[i]
+			self.conflicts += [other]
+			other.conflicts += [self]			
+			other.addConflicts(others[i+1:])

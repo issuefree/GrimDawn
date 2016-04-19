@@ -134,7 +134,7 @@ def getWanted(model):
 		c.buildRedundancies(model)
 
 	constellationRanks.sort(key=itemgetter(1), reverse=True)
-	thresh = constellationRanks[len(constellationRanks)/6][1] * .9
+	thresh = constellationRanks[len(constellationRanks)/5][1] * .9
 
 	print "\n  Desired constellations (value > %s):"%thresh
 	wanted = []
@@ -147,7 +147,7 @@ def getWanted(model):
 			print "       - ", int(c[1]), c[0].name
 
 	constellationRanks.sort(key=itemgetter(2), reverse=True)
-	thresh = constellationRanks[len(constellationRanks)/6][2]
+	thresh = constellationRanks[len(constellationRanks)/5][2] * .9
 
 	print "\n  Desired constellations (efficiency > %s):"%thresh
 	wanted = []
@@ -295,14 +295,14 @@ def doMove(model, wanted, points, solution=[], remaining=None, moveStr=""):
 	# print len(possibleMoves)
 	nextMoves = getNextMoves(solution, possibleMoves, affinities, points, model)
 
-	if len(solution) > 0:
-		lastMove = solution[-1]
-		if lastMove.provides.magnitude() == 0:
-			neededAffinities = globalMetadata["globalMaxAffinities"] - affinities
-			for move in nextMoves[:]:
-				provides = move.provides.minAffinities(neededAffinities)
-				if provides.magnitude() > 0:
-					nextMoves.remove(move)
+	# if len(solution) > 0:
+	# 	lastMove = solution[-1]
+	# 	if lastMove.provides.magnitude() == 0:
+	# 		neededAffinities = globalMetadata["globalMaxAffinities"] - affinities
+	# 		for move in nextMoves[:]:
+	# 			provides = move.provides.minAffinities(neededAffinities)
+	# 			if provides.magnitude() > 0:
+	# 				nextMoves.remove(move)
 
 	# nextMoves = sortByLeastProvides(nextMoves, model)
 	nextMoves = sortByScore(nextMoves, model)
@@ -410,7 +410,7 @@ globalMetadata["numCheckedSolutions"] = 0
 globalMetadata["points"] = 50
 
 
-startSearch(nyx)
+startSearch(armitage)
 
 # I think the next step is to look at trying to branch and bound.
 # I think this is pretty nonlinear so I don't have a real good way of doing that.

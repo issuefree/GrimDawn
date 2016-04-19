@@ -12,7 +12,7 @@ model.checkModel()
 
 print "------------------------------"
 
-def evalSol():
+def evalSol(solution):
 	# print getSolutionCost(solution)
 
 	if isGoodSolution(solution):
@@ -36,8 +36,27 @@ def evalCon(c):
 
 
 
-solution = [xO, dryad, tortoise, hound, targoShieldWall, xA, anvil, messenger, fiend, light, behemoth, crown]
+solution = [
+xC,
+fiend,
+light,
+xA,
+anvil,
+crown,
+viper,
+xO,
+dryad,
+tortoise,
+behemothGiantsBlood,
+targoShieldWall,
+xP,
+messenger,
+]
 
-# evalSol(solution)
+# bonuses = getBonuses(solution, model)
+# for bonus in sorted(bonuses.keys(), key=lambda bonus: model.bonuses[bonus]*bonuses[bonus], reverse=True):
+# 	print bonus.ljust(23), str(int(bonuses[bonus])).rjust(4), str(int(model.bonuses[bonus]*bonuses[bonus])).rjust(5)
 
-evalCon(crown)
+evalSol(solution)
+
+evalCon(fiend)

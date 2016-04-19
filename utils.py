@@ -62,11 +62,14 @@ def printBonusList():
 	for key in sorted(bonuses.keys()):
 		print "  "+key
 		
-def getBonuses():
+def getBonuses(constellations=Constellation.constellations, model=None):
 	bonuses = {}
-	for c in Constellation.constellations:
+	for c in constellations:
 		for s in c.stars:
+			s.evaluate(model)
 			for bonus in s.bonuses.keys():
+				if model and not bonus in model.bonuses.keys():
+					continue
 				if bonus in bonuses.keys():
 					bonuses[bonus] += s.bonuses[bonus]
 				else:
@@ -87,4 +90,3 @@ def startsWith(start, complete):
 		if start[i] != complete[i]:
 			return False
 	return True
-

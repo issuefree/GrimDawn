@@ -11,15 +11,9 @@ def getNextMoves(current, possibles, affinities, points, model):
 	moves = []
 	# print solutionPath(current)
 	# print solutionPath(possibles)
-	for c in possibles:
-		if c in current:
-			# print c.name
-			continue
-		if len(c.stars) > points:
-			continue
-		if not c.canActivate(affinities, current):
-			continue
-		moves += [c]
+
+	moves = [c for c in possibles if len(c.stars) <= points and c.canActivate(affinities, current)]
+
 	tempMoves = moves[:]
 	for move in tempMoves:
 		for other in tempMoves:
@@ -57,6 +51,8 @@ def sortConstellationsByProvides(constellations):
 	return out
 
 def getProvidersForVector(possibles, neededAffinities, afV, model):
+	start = time()
+
 	providesV = []
 	for c in possibles:
 		if c.provides.isVector(afV) and c.getTier() == 1:
@@ -92,9 +88,10 @@ def getProvidersForVector(possibles, neededAffinities, afV, model):
 			badProviders = providers[i+1:]
 			break
 
+	timeMethod("getProvidersForVector", start)
 	return (goodProviders, badProviders)
 
-def getNeededConstellations(current, points, wanted, model, affinities=Affinity(0), remaining=None):
+def getNeededConstellations(current, wanted, model, affinities=Affinity(0), remaining=None):
 	global globalMetadata
 	start = time()
 
@@ -134,7 +131,7 @@ def getWanted(model):
 		c.buildRedundancies(model)
 
 	constellationRanks.sort(key=itemgetter(1), reverse=True)
-	thresh = constellationRanks[len(constellationRanks)/5][1] * .9
+	thresh = constellationRanks[len(constellationRanks)/6][1] * .9
 
 	print "\n  Desired constellations (value > %s):"%thresh
 	wanted = []
@@ -147,7 +144,7 @@ def getWanted(model):
 			print "       - ", int(c[1]), c[0].name
 
 	constellationRanks.sort(key=itemgetter(2), reverse=True)
-	thresh = constellationRanks[len(constellationRanks)/5][2] * .9
+	thresh = constellationRanks[len(constellationRanks)/6][2] * .9
 
 	print "\n  Desired constellations (efficiency > %s):"%thresh
 	wanted = []
@@ -159,6 +156,8 @@ def getWanted(model):
 			print "       - ", int(c[2]), c[0].name
 
 	print "  Total:", len(wanted)
+
+	wanted.sort(key=lambda c: c.evaluate(model), reverse=True)
 	return wanted
 
 
@@ -223,17 +222,21 @@ def checkBoundedPath(solution, model):
 def getUpperBoundScore(solution, points, wanted, model):
 	start = time()
 	score = evaluateSolution(solution, model)
-	for c in sorted(wanted, key=lambda c: c.evaluate(model), reverse=True):
-		if not c in solution and len(c.stars) <= points:
+	for c in wanted:
+		if len(c.stars) <= points:
 			score += c.evaluate(model)
 			points -= len(c.stars)
 	timeMethod("getUpperBoundScore", start)
 	return score
 
+def sortDeadSolution(solution, model):
+	return sorted(solution, key=lambda c: c.evaluate(model), reverse=True)
+
 def killSolution(solution, model):
+	global globalMetadata
 	start = time()
 	# print "Killing solution: " + solutionPath(solution)
-	sSol = sorted(solution, key=lambda c: c.evaluate(model))
+	sSol = sortDeadSolution(solution, model)
 	deadNode = globalMetadata["deadSolutions"]
 	for sol in sSol:
 		if sol == sSol[-1]:
@@ -249,7 +252,7 @@ def killSolution(solution, model):
 
 def isDeadSolution(solution, model):
 	start = time()
-	sSol = sorted(solution, key=lambda c: c.evaluate(model))
+	sSol = sortDeadSolution(solution, model)
 	deadNode = globalMetadata["deadSolutions"]
 	for sol in sSol:
 		if not sol.name in deadNode.keys():
@@ -265,7 +268,7 @@ def isDeadSolution(solution, model):
 
 
 
-def doMove(model, wanted, points, solution=[], remaining=None, moveStr=""):	
+def doMove(model, wanted, points, solution=[], affinities=Affinity(), remaining=None, moveStr=""):	
 	global globalMetadata
 	globalMetadata["numCheckedSolutions"] += 1
 
@@ -287,10 +290,8 @@ def doMove(model, wanted, points, solution=[], remaining=None, moveStr=""):
 		# 	killSolution(solution, model)
 		# 	return
 		
-	affinities = getAffinities(solution)
-
 	# if not remaining:
-	remaining = getNeededConstellations(solution, points, wanted, model, affinities, remaining)
+	remaining = getNeededConstellations(solution, wanted, model, affinities, remaining)
 	possibleMoves = wanted + remaining
 	# print len(possibleMoves)
 	nextMoves = getNextMoves(solution, possibleMoves, affinities, points, model)
@@ -317,22 +318,32 @@ def doMove(model, wanted, points, solution=[], remaining=None, moveStr=""):
 		isSolution = False
 		newMoveStr = moveStr + move.id + "("+ str(int(move.evaluate(model))) +")" +" {"+str(nextMoves.index(move)+1)+"/"+str(len(nextMoves))+"}, "
 
-		if move in remaining:
+		try:
 			remaining.remove(move)
+		except:
+			pass
+
 		newWanted = wanted[:]
-		if move in newWanted:
+		try:
 			newWanted.remove(move)
-		doMove(model, newWanted, points-len(move.stars), solution+[move], remaining, newMoveStr)
+		except:
+			pass
+		doMove(model, newWanted, points-len(move.stars), solution+[move], affinities+move.provides, remaining, newMoveStr)
 	
 	# if globalMetadata["boundingRun"]:
 	# 	return
 
-	killSolution(solution, model)
+	# killSolution(solution, model)
 	if len(solution) <= globalMetadata["points"]/9:
 		print "    <-X-  (" + str(getSolutionCost(solution)) + "): " + moveStr[:-2]
 		print "      ", globalMetadata["numCheckedSolutions"]#, "  ", len(globalMetadata["boundedPaths"])
 		# print "    ", str(methodTimes), sum([methodTimes[key] for key in methodTimes.keys()])
 	
+	# if globalMetadata["numCheckedSolutions"] > 20000:
+	# 	print (time() - globalMetadata["startTime"]), "seconds"
+	# 	print "    ", str(methodTimes), sum([methodTimes[key] for key in methodTimes.keys()])
+	# 	sys.exit(0)
+
 	if isSolution:
 		score = evaluateSolution(solution, model)
 		if score >= globalMetadata["bestScore"]:
@@ -356,10 +367,11 @@ def startSearch(model, startingSolution=[]):
 	wanted = getWanted(model)
 
 	# getNeededConstellations(current, points, wanted, affinities=Affinity(0), possibles=Constellation.constellations):
-	needed = getNeededConstellations([], 50, wanted, model)
+	needed = getNeededConstellations([], wanted, model)
 	print solutionPath(needed)
 	print "\nSearch Space: "+str(len(needed))
 	# return
+	wanted.sort(key=lambda c: c.evaluate(model), reverse=True)
 	
 	globalMetadata["bestSolutions"] = [(evaluateSolution(solution, model), solution) for solution in model.seedSolutions]
 	globalMetadata["bestSolutions"].sort(key=itemgetter(0), reverse=True)
@@ -409,7 +421,7 @@ globalMetadata["numCheckedSolutions"] = 0
 
 globalMetadata["points"] = 50
 
-
+globalMetadata["startTime"] = time()
 startSearch(armitage)
 
 # I think the next step is to look at trying to branch and bound.

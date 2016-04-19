@@ -17,17 +17,21 @@ def solutionPath(solution, pre=""):
 	return pre + "["+out+"],"
 
 def evaluateSolution(solution, model):
+	start = time()
 	value = 0
 	for c in solution:
 		value += c.evaluate(model)
+	timeMethod("evaluateSolution", start)
 	return value
 
 # print len(searchConstellations)
 
 def getSolutionCost(solution):
+	start = time()
 	cost = 0
 	for s in solution:
 		cost += len(s.stars)
+	timeMethod("getSolutionCost", start)
 	return cost
 
 def isGoodSolution(solution):

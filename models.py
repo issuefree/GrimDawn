@@ -335,7 +335,7 @@ armitage = Model(
 	},
 
 	{
-		"attacks/s":1.5,
+		"attacks/s":.75,
 		"hits/s":4,
 		"blocks/s":1.5,
 		"kills/s":1,

@@ -286,7 +286,7 @@ armitage = Model(
 		"cast speed":7.5,
 		
 		"energy": .2, # "energy %": ,
-		"energy absorb": 1,
+		"energy absorb": 5,
 		# "energy regeneration": ,
 		# "energy/s": ,
 
@@ -295,37 +295,36 @@ armitage = Model(
 		# "health/s": 5,
 
 		"armor": 3, # "armor %": ,
-		"armor absorb": 10,
+		"armor absorb": 20,
 		
-		"defense": 0.5, # "defense %": ,
+		"defense": 1, # "defense %": ,
 		"resist": 15,
 		#"elemental resist": 12.5,
 		"physical resist":35,
 		"pierce resist":25,
 
 		"block %": 75,
-		"blocked damage %":50,
-		"shield recovery":35,
+		"blocked damage %":45,
+		"shield recovery":50,
 
-		"offense": 4, # "offense %": ,
+		"offense": 5, # "offense %": ,
 
 		"damage":1,
-		"physical": 4, "physical %": 5,
-		"fire":5, "fire %": 10,
+		"physical": 4, "physical %": 6.5,
+		"fire":5, "fire %": 12.5,
 		"lightning": 2, "lightning %": 5,
 		"elemental": 2, # "elemental %": 20,
-		"burn": 2, "burn %": 5, "burn duration": 1,
+		"burn": 2.5, "burn %": 7.5, "burn duration": 1,
 
-		"triggered fire":10,
-		"triggered lightning":4,
-		"triggered physical":2,
+		"triggered fire":7.5,
+		"triggered burn":5,
 
 		"weapon damage %":7.5,
 
 		# "crit damage": ,
-		"damage reflect %": 20,
-		"retaliation":3.5, 
-		"retaliation %": 20,
+		"damage reflect %": 25,
+		"retaliation":7.5, 
+		"retaliation %": 17.5,
 		
 		"stun %":-1,
 

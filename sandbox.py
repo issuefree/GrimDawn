@@ -37,20 +37,20 @@ def evalCon(c):
 
 
 solution = [
-xC,
-fiend,
-light,
-xA,
-anvil,
-crown,
-viper,
 xO,
 dryad,
-tortoise,
-behemothGiantsBlood,
+xC,
+viper,
+hound,
 targoShieldWall,
-xP,
+shieldmaiden,
+xA,
+anvil,
 messenger,
+xE,
+raven,
+crown,
+behemothGiantsBlood,
 ]
 
 # bonuses = getBonuses(solution, model)

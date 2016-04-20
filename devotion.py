@@ -230,7 +230,7 @@ def getUpperBoundScore(solution, points, wanted, model):
 	return score
 
 def sortDeadSolution(solution, model):
-	return sorted(solution, key=lambda c: c.evaluate(model), reverse=True)
+	return sorted(solution, key=lambda c: c.getTier())
 
 def killSolution(solution, model):
 	global globalMetadata
@@ -333,7 +333,7 @@ def doMove(model, wanted, points, solution=[], affinities=Affinity(), remaining=
 	# if globalMetadata["boundingRun"]:
 	# 	return
 
-	# killSolution(solution, model)
+	killSolution(solution, model)
 	if len(solution) <= globalMetadata["points"]/9:
 		print "    <-X-  (" + str(getSolutionCost(solution)) + "): " + moveStr[:-2]
 		print "      ", globalMetadata["numCheckedSolutions"]#, "  ", len(globalMetadata["boundedPaths"])

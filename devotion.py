@@ -144,7 +144,7 @@ def getWanted(model):
 			print "       - ", int(c[1]), c[0].name
 
 	constellationRanks.sort(key=itemgetter(2), reverse=True)
-	thresh = constellationRanks[len(constellationRanks)/6][2] * .9
+	thresh = constellationRanks[len(constellationRanks)/6][2]
 
 	print "\n  Desired constellations (efficiency > %s):"%thresh
 	wanted = []
@@ -230,7 +230,7 @@ def getUpperBoundScore(solution, points, wanted, model):
 	return score
 
 def sortDeadSolution(solution, model):
-	return sorted(solution, key=lambda c: c.getTier())
+	return sorted(solution, key=lambda c: c.evaluate(model))
 
 def killSolution(solution, model):
 	global globalMetadata
@@ -422,7 +422,7 @@ globalMetadata["numCheckedSolutions"] = 0
 globalMetadata["points"] = 50
 
 globalMetadata["startTime"] = time()
-startSearch(armitage)
+startSearch(nyx)
 
 # I think the next step is to look at trying to branch and bound.
 # I think this is pretty nonlinear so I don't have a real good way of doing that.

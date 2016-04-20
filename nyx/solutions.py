@@ -1,5 +1,6 @@
 self.seedSolutions = [
   [xP, gallows, imp, bat, jackal, wendigo, witchblade, revenant, eel, god, manticoreAcidSpray],  # 43155
+  [xP, gallows, imp, bat, jackal, wendigo, manticoreAcidSpray, witchblade, revenant, eel, god],  # 43155
   [xC, fiend, hawk, viper, witchblade, gallows, wendigo, revenant, eel, xP, god, manticoreAcidSpray],  # 43104
   [xE, raven, xC, viper, gallows, jackal, wendigo, witchblade, revenant, eel, xP, god, manticoreAcidSpray],  # 42812
   [xA, xC, viper, gallows, rat, wendigo, hawk, witchblade, revenant, eel, xP, god, manticoreAcidSpray],  # 42617

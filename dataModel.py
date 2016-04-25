@@ -1,4 +1,5 @@
 import re
+import copy
 from operator import *
 from time import time
 
@@ -525,6 +526,7 @@ class Constellation:
 		self.abilities = []
 
 		self.value = None
+		self.apsValue = []
 
 		self.redundancies = []
 		self.conflicts = []
@@ -542,16 +544,33 @@ class Constellation:
 		for star in self.stars:
 			star.value = None
 
-	def evaluate(self, model=None):		
+	def hasAttackTrigger(self):
+		for star in self.abilities:
+			if star.ability.gc("trigger") == "attack" or star.ability.gc("trigger") == "critical":
+				return True
+		return False
+
+	def evaluate(self, model=None, apsIndex=0):		
 		if self.value:
-			return self.value
+			if apsIndex == 0:
+				return self.value
+			else:
+				return self.apsValue[apsIndex]
+
 		if self in model.getStat("blacklist"):
 			self.value = float(0)
 			return self.value
 		self.value = float(0)
 		for star in self.stars:
 			self.value += star.evaluate(model)
-
+		if self.hasAttackTrigger():
+			self.apsValue = [0]*len(model.getStat("allAttacks/s"))
+			for i in range(len(model.getStat("allAttacks/s"))):				
+				self.reset()
+				apsModel = copy.deepcopy(model)
+				apsModel.stats["attacks/s"] = apsModel.stats["allAttacks/s"][i]
+				for star in self.stars:
+					self.apsValue[i] += star.evaluate(apsModel)
 		return self.value
 
 	def needs(self, other, current=Affinity()):

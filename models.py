@@ -52,6 +52,10 @@ class Model:
 	def checkModel(self):
 		print "Checking model..."
 		print "  "+self.name
+
+		if not "allAttacks/s" in self.stats.keys():
+			self.stats["allAttacks/s"] = [self.stats["attacks/s"]]
+
 		if not "fight length" in self.stats.keys():
 			self.stats["fight length"] = 30
 

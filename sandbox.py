@@ -36,37 +36,37 @@ def evalCon(c):
 
 
 
-solution = [
-xC,
-viper,
-hound,
-xO,
-lion,
-targoShieldWall,
-xA,
-anvil,
-messenger,
-xE,
-light,
-behemothGiantsBlood,
-raven,
-crown,
-magiFissure
-]
+# solution = [
+# xC,
+# viper,
+# hound,
+# xO,
+# lion,
+# targoShieldWall,
+# xA,
+# anvil,
+# messenger,
+# xE,
+# light,
+# behemothGiantsBlood,
+# raven,
+# crown,
+# magiFissure
+# ]
 
-print evaluateSolution(solution, model, True)
+# print evaluateSolution(solution, model, True)
 
-solution = [xC, viper, hound, xO, dryad, targoShieldWall, shieldmaiden, xA, anvil, messenger, xE, raven, behemothGiantsBlood, crown]
-print evaluateSolution(solution, model, True)
+# solution = [xC, viper, hound, xO, dryad, targoShieldWall, shieldmaiden, xA, anvil, messenger, xE, raven, behemothGiantsBlood, crown]
+# print evaluateSolution(solution, model, True)
 
-solution = [xC, fiend, viper, light, xO, dryad, tortoise, targoShieldWall, behemothGiantsBlood, xA, anvil, crown, xP, messenger]
-print evaluateSolution(solution, model, True)
+# solution = [xC, fiend, viper, light, xO, dryad, tortoise, targoShieldWall, behemothGiantsBlood, xA, anvil, crown, xP, messenger]
+# print evaluateSolution(solution, model, True)
 
 # bonuses = getBonuses(solution, model)
 # for bonus in sorted(bonuses.keys(), key=lambda bonus: model.bonuses[bonus]*bonuses[bonus], reverse=True):
 # 	print bonus.ljust(23), str(int(bonuses[bonus])).rjust(4), str(int(model.bonuses[bonus]*bonuses[bonus])).rjust(5)
 
-# evalSol(solution)
+aconst = fiend
 
-
-# evalCon(fiend)
+aconst.evaluate(model)
+print aconst.apsValue[3]

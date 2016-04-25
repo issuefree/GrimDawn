@@ -456,6 +456,9 @@ class Star:
 	def __str__(self):
 		return self.constellation.name + "." + str(self.constellation.stars.index(self)) + ": " + str(self.value)
 
+	def reset(self):
+		self.value = None
+
 	def evaluate(self, model=None):
 		if self.value:
 			return self.value
@@ -533,6 +536,11 @@ class Constellation:
 
 	def addStar(self, star):
 		self.stars += [star]
+
+	def reset(self):
+		self.value = None
+		for star in self.stars:
+			star.value = None
 
 	def evaluate(self, model=None):		
 		if self.value:

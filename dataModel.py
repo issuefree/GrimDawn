@@ -404,8 +404,9 @@ class Ability:
 				if dam+" %" in self.bonuses.keys():
 					if model.getStat(dam) <= 0:
 						print "    " +self.name+" requires a defined internal damage _stat_ in the model."
+						model.stats["internal"] = .01
 					else:
-						self.bonuses[dam] = self.gb(dam) + (self.model.getStat(dam) * self.gb("weapon %")/100.0 + self.gb(dam)) * self.gb(dam+" %")/100.0
+						self.bonuses[dam] = self.gb(dam) + (model.getStat(dam) * self.gb("weapon %")/100.0 + self.gb(dam)) * self.gb(dam+" %")/100.0
 
 		# armor reduction is like + physical damage that isn't affected by %damage
 		if self.gb("reduce armor") > 0:
@@ -435,7 +436,7 @@ class Ability:
 
 		for bonus in self.bonuses.keys():
 			self.star.bonuses[bonus] = self.bonuses[bonus]*self.effective * modelFactor
-		self.star.bonuses[self.name] = 1		
+		self.star.bonuses[self.name] = 1
 
 class Star:
 	def __init__(self, constellation, requires=[], bonuses={}):

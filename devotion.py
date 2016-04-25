@@ -230,7 +230,7 @@ def getUpperBoundScore(solution, points, wanted, model):
 	return score
 
 def sortDeadSolution(solution, model):
-	return sorted(solution, key=lambda c: c.evaluate(model))
+	return sorted(solution, key=lambda c: len(c.stars))
 
 def killSolution(solution, model):
 	global globalMetadata
@@ -422,7 +422,7 @@ globalMetadata["numCheckedSolutions"] = 0
 globalMetadata["points"] = 50
 
 globalMetadata["startTime"] = time()
-startSearch(nyx)
+startSearch(armitage)
 
 # I think the next step is to look at trying to branch and bound.
 # I think this is pretty nonlinear so I don't have a real good way of doing that.

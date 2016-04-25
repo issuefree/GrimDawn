@@ -28,65 +28,68 @@ model.checkModel()
 # Some abilities may have pretty different value for melee vs ranged characters. Specifically pbaoe abilities.
 	# consider a pbaoe flag in the ability and adjust the dynamic values based on the characters flag of melee/ranged
 
-def getWanted(model):
-	print "\nEvaluating constellations..."
-	constellationRanks = []
-	for c in Constellation.constellations:
-		constellationRanks += [(c, c.evaluate(model), c.evaluate(model)/len(c.stars))]
-		c.buildRedundancies(model)
+# def getWanted(model):
+# 	print "\nEvaluating constellations..."
+# 	constellationRanks = []
+# 	for c in Constellation.constellations:
+# 		constellationRanks += [(c, c.evaluate(model), c.evaluate(model)/len(c.stars))]
+# 		c.buildRedundancies(model)
 
-	constellationRanks.sort(key=itemgetter(1), reverse=True)
-	thresh = constellationRanks[len(constellationRanks)/5][1] * .9
+# 	constellationRanks.sort(key=itemgetter(1), reverse=True)
+# 	thresh = constellationRanks[len(constellationRanks)/5][1] * .9
 
-	print "\n  Desired constellations (value > %s):"%thresh
-	wanted = []
-	cv = constellationRanks[0][1]
-	for c in constellationRanks:
-		if c[1] > thresh:
-			wanted += [c[0]]
-			print "      ", int(c[1]), c[0].name
-		else:
-			print "       - ", int(c[1]), c[0].name
+# 	print "\n  Desired constellations (value > %s):"%thresh
+# 	wanted = []
+# 	cv = constellationRanks[0][1]
+# 	for c in constellationRanks:
+# 		if c[1] > thresh:
+# 			wanted += [c[0]]
+# 			print "      ", int(c[1]), c[0].name
+# 		else:
+# 			print "       - ", int(c[1]), c[0].name
 
-	constellationRanks.sort(key=itemgetter(2), reverse=True)
-	thresh = constellationRanks[len(constellationRanks)/5][2] * .9
+# 	constellationRanks.sort(key=itemgetter(2), reverse=True)
+# 	thresh = constellationRanks[len(constellationRanks)/5][2] * .9
 
-	print "\n  Desired constellations (efficiency > %s):"%thresh
-	wanted = []
-	for c in constellationRanks:
-		if c[2] > thresh and not c[0] in wanted:
-			wanted += [c[0]]
-			print "      ", int(c[2]), c[0].name
-		else:
-			print "       - ", int(c[2]), c[0].name
+# 	print "\n  Desired constellations (efficiency > %s):"%thresh
+# 	wanted = []
+# 	for c in constellationRanks:
+# 		if c[2] > thresh and not c[0] in wanted:
+# 			wanted += [c[0]]
+# 			print "      ", int(c[2]), c[0].name
+# 		else:
+# 			print "       - ", int(c[2]), c[0].name
 
-	print "  Total:", len(wanted)
+# 	print "  Total:", len(wanted)
 
-	wanted.sort(key=lambda c: c.evaluate(model), reverse=True)
-	return wanted
+# 	wanted.sort(key=lambda c: c.evaluate(model), reverse=True)
+# 	return wanted
 
-constellationRanks = []
-for c in Constellation.constellations:
-	constellationRanks += [(c, c.evaluate(model), c.evaluate(model)/len(c.stars))]
+# constellationRanks = []
+# for c in Constellation.constellations:
+# 	constellationRanks += [(c, c.evaluate(model), c.evaluate(model)/len(c.stars))]
 
-wanted = getWanted(model)
+# wanted = getWanted(model)
 
 
 
-scoreType = 1
-constellationRanks.sort(key=itemgetter(scoreType), reverse=True)
+# scoreType = 1
+# constellationRanks.sort(key=itemgetter(scoreType), reverse=True)
 
-# topQ = [c[scoreType] for c in constellationRanks[:len(constellationRanks)/4]]
-# avg = sum(topQ)/len(topQ)
-# print avg
+# # topQ = [c[scoreType] for c in constellationRanks[:len(constellationRanks)/4]]
+# # avg = sum(topQ)/len(topQ)
+# # print avg
 
-sd = 0
-for i in range(1, len(constellationRanks)):
-	cr = constellationRanks[i-1]
-	crn = constellationRanks[i]
+# sd = 0
+# for i in range(1, len(constellationRanks)):
+# 	cr = constellationRanks[i-1]
+# 	crn = constellationRanks[i]
 
-	r = crn[scoreType]/cr[scoreType]
-	if i > 2:
-		sd += 1-r
+# 	r = crn[scoreType]/cr[scoreType]
+# 	if i > 2:
+# 		sd += 1-r
 
-	print crn[0].id.ljust(25), crn[0].getTier(), str(int(crn[scoreType])).ljust(5), "%0.3f  "%(r), sd
+# 	print crn[0].id.ljust(25), crn[0].getTier(), str(int(crn[scoreType])).ljust(5), "%0.3f  "%(r), sd
+
+
+print [0]*3

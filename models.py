@@ -335,7 +335,13 @@ armitage = Model(
 	},
 
 	{
-		"attacks/s":.75,
+		"attacks/s":1.75,
+		"allAttacks/s":[
+			1.75, #main attack (fire strike)
+			.5, # brutal shield slam: 3s recharge, 3 target max. Call it 2 targets and 4 seconds between = .5 aps
+			.4, #war cry: 7.5 s recharge, big radius, call it 3 hits = 3/7.5 = .4
+			.385, # markovian's advantage: 22% chance = 1.75*.22 = 
+		],
 		"hits/s":4,
 		"blocks/s":1.5,
 		"kills/s":1,
@@ -371,7 +377,8 @@ armitage = Model(
 		]
 	}
 )
-
+  # [xC, viper, hound, xO, dryad, targoShieldWall, shieldmaiden, xA, anvil, messenger, xE, raven, behemothGiantsBlood, crown],  # 39417
+#  [xC, viper, hound, xO, lion, targoShieldWall, xA, anvil, messenger, xE, light, behemothGiantsBlood, raven, crown, magiFissure],  # 38500
 testModel = Model(
 	"testModel",
 	{
@@ -427,7 +434,15 @@ testModel = Model(
 	},
 
 	{
-		"attacks/s":1.5,
+		"attacks/s":1.75,
+		"allAttacks/s":[
+			1.75, #main attack (fire strike)
+			.5, # brutal shield slam: 3s recharge, 3 target max. Call it 2 targets and 4 seconds between = .5 aps
+			.4, #war cry: 7.5 s recharge, big radius, call it 3 hits = 3/7.5 = .4
+			.385, # markovian's advantage: 22% chance = 1.75*.22 = 
+			0,0,0,0,0
+		],
+
 		"hits/s":4,
 		"blocks/s":1.5,
 		"kills/s":1,
@@ -462,11 +477,3 @@ testModel = Model(
 		]
 	}
 )
-
-
-# [xC, viper, hound, fiend, light, behemothGiantsBlood, manticore, anvil, messengerMessengerofWar, crown, xO, dryad, targoShieldWall],  # 38881
-#  [xC, fiend, viper, hound, light, behemothGiantsBlood, manticore, anvil, messengerMessengerofWar, crown, xO, dryad, targoShieldWall],  # 38881
-#  [xC, fiend, viper, hound, light, behemothGiantsBlood, manticore, anvil, messengerMessengerofWar, crown, xO, dryad, targoShieldWall],  # 38881
-#  [xC, fiend, viper, hound, light, behemothGiantsBlood, manticore, anvil, messengerMessengerofWar, crown, xO, dryad, targoShieldWall],  # 38881
-
-#   [xO, dryad, tortoise, hound, targoShieldWall, wraith, messenger, fiend, light, behemothGiantsBlood, manticore, crown],  # 38340

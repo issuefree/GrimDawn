@@ -16,15 +16,42 @@ def solutionPath(solution, pre=""):
 	out = out[:-2]	
 	return pre + "["+out+"],"
 
-def evaluateSolution(solution, model):
+def evaluateSolution(solution, model, verbose=False):
+	if verbose:
+		print "Evaluating solution..."
+		print "  " + solutionPath(solution)
 	start = time()
-	value = 0
+	attackAbilities = []
 	for c in solution:
-		value += c.evaluate(model)
+		for star in c.abilities:
+			if star.ability.gc("trigger") == "attack" or star.ability.gc("trigger") == "critical":
+				attackAbilities += [star]
+	attackAbilities.sort(key=lambda s: s.evaluate(model), reverse=True)	
+	if verbose:
+		print "   ", len(attackAbilities), "attack abilities"
+	value = 0		
+	# if "allAttacks/s" in model.stats.keys() and model.getStat("numAttackAbilities") != numAttackAbilities:
+	# 	model.stats["numAttackAbilities"] = numAttackAbilities
+	# 	if numAttackAbilities > 1:
+	# 		model.stats["attacks/s"] = sum(model.stats["allAttacks/s"][:numAttackAbilities])/numAttackAbilities
+	# 	else:
+	# 		model.stats["attacks/s"] = model.stats["allAttacks/s"][0]
+	# 	if verbose:
+	# 		print "    ", model.stats["attacks/s"], "effective attacks/s"
+	# 	for c in solution:
+	# 		c.value = None
+	# 		for star in c.abilities:
+	# 			star.value = None
+	# 		value += c.evaluate(model)
+	# 		if verbose:
+	# 			print c.name.ljust(25), c.evaluate(model)
+	# else:
+	for c in solution:
+		value += c.evaluate(model)		
+		if verbose:
+			print c.name.ljust(25), c.evaluate(model)
 	timeMethod("evaluateSolution", start)
 	return value
-
-# print len(searchConstellations)
 
 def getSolutionCost(solution):
 	start = time()

@@ -1,13 +1,7 @@
 from dataModel import *
 
 def printSolution(solution, model, pre=""):
-	value = 0
-	out = pre
-	for c in solution:
-		out += c.name + ", "
-		value += c.evaluate(model)
-	out = out[:-2]
-	print int(value),":",out
+	print int(evaluateSolution(solution, model)),":",solutionPath(solution)
 
 def solutionPath(solution, pre=""):
 	out = ""
@@ -21,35 +15,18 @@ def evaluateSolution(solution, model, verbose=False):
 		print "Evaluating solution..."
 		print "  " + solutionPath(solution)
 	start = time()
-	attackAbilities = []
-	for c in solution:
-		for star in c.abilities:
-			if star.ability.gc("trigger") == "attack" or star.ability.gc("trigger") == "critical":
-				attackAbilities += [star]
-	attackAbilities.sort(key=lambda s: s.evaluate(model), reverse=True)	
-	if verbose:
-		print "   ", len(attackAbilities), "attack abilities"
-	value = 0		
-	# if "allAttacks/s" in model.stats.keys() and model.getStat("numAttackAbilities") != numAttackAbilities:
-	# 	model.stats["numAttackAbilities"] = numAttackAbilities
-	# 	if numAttackAbilities > 1:
-	# 		model.stats["attacks/s"] = sum(model.stats["allAttacks/s"][:numAttackAbilities])/numAttackAbilities
-	# 	else:
-	# 		model.stats["attacks/s"] = model.stats["allAttacks/s"][0]
-	# 	if verbose:
-	# 		print "    ", model.stats["attacks/s"], "effective attacks/s"
-	# 	for c in solution:
-	# 		c.value = None
-	# 		for star in c.abilities:
-	# 			star.value = None
-	# 		value += c.evaluate(model)
-	# 		if verbose:
-	# 			print c.name.ljust(25), c.evaluate(model)
-	# else:
-	for c in solution:
-		value += c.evaluate(model)		
+	sSol = sorted(solution, key=lambda c: c.evaluate(model), reverse=True)
+	value = 0
+
+	abilNum = 0
+	for c in sSol:
 		if verbose:
-			print c.name.ljust(25), c.evaluate(model)
+			print c.name.ljust(25), int(c.evaluate(model)), int(c.evaluate(model, abilNum))
+		if c.hasAttackTrigger():
+			value += c.evaluate(model, abilNum)
+			abilNum += 1
+		else:
+			value += c.evaluate(model)
 	timeMethod("evaluateSolution", start)
 	return value
 

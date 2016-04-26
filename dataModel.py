@@ -421,6 +421,7 @@ class Ability:
 			if self.gb("pet "+dam) > 0:
 				if model.getStat("pet all damage %") == 0:
 					print "    " +self.name+" requires a defined stat for pet all damage %."
+					model.stats["pet all damage %"] = .01
 				else:
 					self.bonuses["triggered "+dam] = self.gb("triggered "+dam) + self.gb("pet "+dam)*model.getStat("pet all damage %")/100
 
@@ -550,13 +551,14 @@ class Constellation:
 				return True
 		return False
 
-	def evaluate(self, model=None, apsIndex=0):		
+	def evaluate(self, model=None, apsIndex=0):
 		if self.value:
-			if apsIndex == 0:
+			if apsIndex == 0 or not self.hasAttackTrigger():
 				return self.value
 			else:
+				if apsIndex >= len(self.apsValue):
+					return 0				
 				return self.apsValue[apsIndex]
-
 		if self in model.getStat("blacklist"):
 			self.value = float(0)
 			return self.value
@@ -565,11 +567,11 @@ class Constellation:
 			self.value += star.evaluate(model)
 		if self.hasAttackTrigger():
 			self.apsValue = [0]*len(model.getStat("allAttacks/s"))
-			for i in range(len(model.getStat("allAttacks/s"))):				
-				self.reset()
+			for i in range(len(model.getStat("allAttacks/s"))-1, -1, -1 ):
 				apsModel = copy.deepcopy(model)
 				apsModel.stats["attacks/s"] = apsModel.stats["allAttacks/s"][i]
 				for star in self.stars:
+					star.reset()
 					self.apsValue[i] += star.evaluate(apsModel)
 		return self.value
 

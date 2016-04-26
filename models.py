@@ -117,7 +117,7 @@ class Model:
 		# Testing against dummy is giving me 7.5 increased damage for -10% resist. Using that
 		for damage in primaryDamages:
 			if self.get(damage+" %") > 0:
-				self.set("reduce "+damage+" resist", self.getStat(damage+" %")*.0075*self.get(damage+" %"))
+				self.set("reduce "+damage+" resist", max(self.get("reduce "+damage+" resist"), self.getStat(damage+" %")*.0075*self.get(damage+" %")))
 				print "  reduce "+damage+" resist: " + str(self.get("reduce "+damage+" resist"))
 
 		# handle shorthand sets: resist	
@@ -132,6 +132,7 @@ class Model:
 
 		elementals = ["fire", "cold", "lightning"]
 		self.set("reduce elemental resist", max(self.get("reduce elemental resist"), sum([self.get("reduce "+b+" resist") for b in elementals])))
+		print "  reduce elemental resist", self.get("reduce elemental resist")
 
 		# elemental damage % and resist should be the sum of the individual components
 		self.set("elemental %", max(self.get("elemental %"), sum([self.get(b) for b in ["cold %", "lightning %", "fire %"]])))
@@ -289,16 +290,16 @@ armitage = Model(
 		"attack speed":10,
 		"cast speed":7.5,
 		
-		"energy": .2, # "energy %": ,
+		"energy": .1, # "energy %": ,
 		"energy absorb": 5,
 		# "energy regeneration": ,
 		# "energy/s": ,
 
-		"health": .66, # "health %": ,
+		"health": .55, # "health %": ,
 		"health regeneration": 5,
 		# "health/s": 5,
 
-		"armor": 3, # "armor %": ,
+		"armor": 3.5, # "armor %": ,
 		"armor absorb": 20,
 		
 		"defense": 1, # "defense %": ,
@@ -307,21 +308,23 @@ armitage = Model(
 		"physical resist":35,
 		"pierce resist":25,
 
-		"block %": 75,
-		"blocked damage %":45,
-		"shield recovery":50,
+		"block %": 100,
+		"blocked damage %":50,
+		"shield recovery":75,
 
-		"offense": 5, # "offense %": ,
+		"offense": 10, # "offense %": ,
 
 		"damage":1,
-		"physical": 4, "physical %": 6.5,
+		"physical": 4, "physical %": 7.5,
 		"fire":5, "fire %": 12.5,
 		"lightning": 2, "lightning %": 5,
 		"elemental": 2, # "elemental %": 20,
-		"burn": 2.5, "burn %": 7.5, "burn duration": 1,
+		"burn": 2, "burn %": 6, "burn duration":5,
 
 		"triggered fire":7.5,
 		"triggered burn":5,
+
+		"reduce fire resist":80,
 
 		"weapon damage %":7.5,
 
@@ -342,6 +345,7 @@ armitage = Model(
 		"attacks/s":1.75,
 		"allAttacks/s":[
 			1.75, #main attack (fire strike)
+			1, # thermite mine / mortar
 			.5, # brutal shield slam: 3s recharge, 3 target max. Call it 2 targets and 4 seconds between = .5 aps
 			.4, #war cry: 7.5 s recharge, big radius, call it 3 hits = 3/7.5 = .4
 			.385, # markovian's advantage: 22% chance = 1.75*.22 = 
@@ -356,21 +360,21 @@ armitage = Model(
 		"cunning":400,
 		"spirit":450,
 
-		"offense":1200,
-		"defense":1400,
+		"offense":1500,
+		"defense":1500,
 
-		"health":7500,
-		"health regeneration":25,
+		"health":10000,
+		"health regeneration":100,
 
-		"armor":1000,
+		"armor":1250,
 		"energy":2500,
 
-		"physical %":200+150+100,
-		"fire %":400+175+100,
-		"lightning %":200+175+100,
-		"acid %":150+175+100,
+		"physical %":250+150+100,
+		"fire %":500+175+100,
+		"lightning %":300+175+100,
+		"acid %":100+175+100,
 
-		"retaliation %":250+100,
+		"retaliation %":350+100,
 
 		"fight length":45,
 

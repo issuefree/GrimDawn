@@ -481,3 +481,223 @@ testModel = Model(
 		]
 	}
 )
+
+
+  # Elemental Barrier
+  # Targo's Hammer
+  # acid %
+  # acid resist
+  # aether
+  # aether %
+  # aether resist
+  # all damage %
+  # armor
+  # armor %
+  # armor absorb
+  # armor physique requirements
+  # attack speed
+  # attack speed retaliation
+  # avoid melee
+  # avoid ranged
+  # bleed
+  # bleed %
+  # bleed duration
+  # bleed resist
+  # bleed retaliation
+  # block %
+  # blocked damage %
+  # burn
+  # burn %
+  # burn duration
+  # cast speed
+  # chaos
+  # chaos %
+  # chaos resist
+  # cold
+  # cold %
+  # cold resist
+  # constitution %
+  # crit damage
+  # cunning
+  # cunning %
+  # cunning ranged requirements
+  # damage beast %
+  # damage chthonics %
+  # damage from arachnids
+  # damage from beasts
+  # damage from insectoids
+  # damage from undead
+  # damage human %
+  # damage reflect %
+  # damage undead %
+  # defense
+  # defense %
+  # electrocute %
+  # electrocute duration
+  # elemental
+  # elemental %
+  # elemental resist
+  # energy
+  # energy %
+  # energy absorb
+  # energy burn %
+  # energy leech
+  # energy leech resist
+  # energy regeneration
+  # energy/s
+  # fire
+  # fire %
+  # fire resist
+  # frostburn
+  # frostburn %
+  # frostburn duration
+  # health
+  # health %
+  # health regeneration
+  # health/s
+  # internal
+  # internal %
+  # internal duration
+  # jewelry spirit requirements
+  # life leech
+  # life leech %
+  # life leech resist
+  # life leech retaliation
+  # lifesteal %
+  # lightning
+  # lightning %
+  # lightning resist
+  # max acid resist
+  # max aether resist
+  # max bleed resist
+  # max chaos resist
+  # max fire resist
+  # max lightning resist
+  # max pierce resist
+  # max vitality resist
+  # melee weapon cunning requirements
+  # melee weapon physique requirements
+  # move %
+  # move speed retaliation
+  # offense
+  # offense %
+  # pet acid resist
+  # pet aether resist
+  # pet all damage %
+  # pet attack speed
+  # pet bleed resist
+  # pet chaos resist
+  # pet crit damage
+  # pet defense %
+  # pet elemental %
+  # pet elemental resist
+  # pet fire damage %
+  # pet health %
+  # pet health regeneration
+  # pet health/s
+  # pet lifesteal %
+  # pet lightning damage %
+  # pet max all resist
+  # pet offense %
+  # pet pierce resist
+  # pet pierce retaliation
+  # pet retaliation %
+  # pet total speed
+  # pet vitality resist
+  # physical
+  # physical %
+  # physical resist
+  # physical retaliation
+  # physique
+  # physique %
+  # pierce
+  # pierce %
+  # pierce resist
+  # pierce retaliation
+  # poison
+  # poison %
+  # poison duration
+  # reduce elemental resist
+  # reduced bleed duration
+  # reduced burn duration
+  # reduced electrocute duration
+  # reduced entrapment duration
+  # reduced freeze
+  # reduced freeze duration
+  # reduced frostburn duration
+  # reduced poison duration
+  # reduced stun duration
+  # reflected damage reduction
+  # retaliation %
+  # shield physique requirements
+  # shield recovery
+  # skill cost %
+  # skill disruption protection
+  # slow resist
+  # spirit
+  # spirit %
+  # stun %
+  # stun duration
+  # stun retaliation
+  # vitality
+  # vitality %
+  # vitality decay
+  # vitality decay %
+  # vitality decay retaliation
+  # vitality resist
+  # weapon spirit requirements
+
+newModel = Model(
+	#name
+	"newModel",
+	#bonuses
+	{
+	
+	},
+	#stats
+	{
+		"attacks/s":1.75,
+		"allAttacks/s":[
+			# list of attack skills that can be linked to abilities. remember to include your main attack.
+			1.75, #main attack (fire strike)
+			.5, # brutal shield slam: 3s recharge, 3 target max. Call it 2 targets and 4 seconds between = .5 aps
+			.4, #war cry: 7.5 s recharge, big radius, call it 3 hits = 3/7.5 = .4
+			.385, # markovian's advantage: 22% chance = 1.75*.22 = 
+		],
+		"hits/s":4,
+		"blocks/s":1.5,
+		"kills/s":1,
+		"crit chance":.05,
+		"low healths/s":1.0/45, # total guesswork.
+
+		"physique":900,
+		"cunning":400,
+		"spirit":450,
+
+		"offense":1200,
+		"defense":1400,
+
+		"health":7500,
+		"health regeneration":25,
+
+		"armor":1000,
+		"energy":2500,
+
+		"physical %":200+150+100, # sheet % damage for important damage types.
+		"fire %":400+175+100,
+		"lightning %":200+175+100,
+		"acid %":150+175+100,
+
+		"retaliation %":250+100,
+
+		"fight length":45, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
+
+		"playStyle":"tank", # playstyle for weighting constellation abilities. [ranged/shortranged/melee/tank]
+		"weapons":[
+			# list of weapons used for constellations that have a weapon requirement. E.g. "shield", "sword"
+		],
+		"blacklist":[
+			# list of constellations that I want to manually exclude for some reason.
+		]	
+	}
+	)

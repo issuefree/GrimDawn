@@ -59,7 +59,7 @@ a = Star(anvil, [], {"defense":10})
 b = Star(anvil, a, {"physique":10})
 c = Star(anvil, b, {"armor absorb":3})
 d = Star(anvil, c, {"defense":15, "constitution %":20})
-e = Star(anvil, d, {"Targo's Hammer":True})
+e = Star(anvil, d, {})
 # like the eye. summons a hammer that floats around me smackin shit it hits.
 e.addAbility(Ability("Targo's Hammer", 
 	{"type":"attack", "trigger":"block", "chance":.25, "targets":2, "shape":"pbaoe"},
@@ -98,7 +98,11 @@ crab = Constellation("Crab", "6a 4o", "3a")
 crab.id = "crab"
 a = Star(crab, [], {"constitution %":15, "physique":20})
 b = Star(crab, a, {"elemental %":30, "internal %":70})
-c = Star(crab, b, {"Elemental Barrier":True})
+c = Star(crab, b, {})
+c.addAbility(Ability(
+	"Elemental Barrier",
+	{"type":"shield", "trigger":"block", "chance":.33},
+	{"elemental shield":1150} ))
 d = Star(crab, c, {"pierce resist":18, "defense":10})
 e = Star(crab, d, {"elemental %":40, "elemental resist":15})
 

@@ -369,6 +369,7 @@ armitage = Model(
 		"armor":1250,
 		"energy":2500,
 
+		"internal":1,
 		"physical %":250+150+100,
 		"fire %":500+175+100,
 		"lightning %":300+175+100,

@@ -16,8 +16,10 @@ def evalSol(solution):
 	# print getSolutionCost(solution)
 
 	if isGoodSolution(solution):
+		cost = 0
 		for c in solution:
-			print c.name, c.evaluate(model)
+			cost += len(c.stars)
+			print c.name.ljust(33), str(int(c.evaluate(model))).ljust(5), cost
 	else:
 		print "FAIL"
 
@@ -37,30 +39,30 @@ def evalCon(c):
 
 
 solution = [
+	xA,
+	anvil,
+	xE,
+	raven,
+	crown,
 	xC,
 	viper,
 	hound,
+	messenger,
+	behemothGiantsBlood,
+	light,
 	xO,
 	lion,
 	targoShieldWall,
-	xA,
-	anvil,
-	messenger,
-	xE,
-	light,
-	behemothGiantsBlood,
-	raven,
-	crown,
 	magiFissure
 ]
 
-solution = [xO, dryad, tortoise, hound, targoShieldWall, xA, anvil, messenger, viper, xE, light, behemoth, crown]
+# solution = [xO, dryad, tortoise, hound, targoShieldWall, xA, anvil, messenger, viper, xE, light, behemoth, crown]
 # solution = [xO, dryad, tortoise, hound, targo, shieldmaiden, xA, anvil, messenger, viper, obelisk]
 
 # solution = [xC, fiend, viper, hound, light, behemothGiantsBlood, xO, tortoise, lion, targoShieldWall, xA, anvil, messenger, crown]
 
-# evalSol(solution)
-print evaluateSolution(solution, model, True)
+evalSol(solution)
+# print evaluateSolution(solution, model, True)
 
 
 
@@ -68,4 +70,4 @@ print evaluateSolution(solution, model, True)
 # for bonus in sorted(bonuses.keys(), key=lambda bonus: model.bonuses[bonus]*bonuses[bonus], reverse=True):
 # 	print bonus.ljust(23), str(int(bonuses[bonus])).rjust(4), str(int(model.bonuses[bonus]*bonuses[bonus])).rjust(5)
 
-evalCon(shieldmaiden)
+# evalCon(shieldmaiden)

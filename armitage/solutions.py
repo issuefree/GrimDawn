@@ -1,52 +1,12 @@
 self.seedSolutions = [
   [xC, viper, hound, xO, lion, targoShieldWall, xA, anvil, messenger, xE, light, behemothGiantsBlood, raven, crown, magiFissure],  # 40526
-  [xC, viper, hound, xO, lion, targoShieldWall, xA, anvil, messenger, xE, light, behemothGiantsBlood, raven, magiFissure, crown],  # 40526
-  [xC, viper, hound, xO, lion, xA, anvil, messenger, targoShieldWall, xE, light, behemothGiantsBlood, raven, crown, magiFissure],  # 40526
-  [xC, viper, hound, xO, lion, xA, anvil, messenger, targoShieldWall, xE, light, behemothGiantsBlood, raven, magiFissure, crown],  # 40526
-  [xC, viper, hound, xO, lion, xA, anvil, messenger, xE, light, behemothGiantsBlood, raven, crown, targoShieldWall, magiFissure],  # 40526
-  [xC, viper, hound, xO, lion, xA, anvil, messenger, xE, light, behemothGiantsBlood, raven, crown, magiFissure, targoShieldWall],  # 40526
-  [xC, viper, hound, xO, lion, xA, anvil, messenger, xE, light, behemothGiantsBlood, raven, magiFissure, targoShieldWall, crown],  # 40526
-  [xC, viper, hound, xO, lion, xA, anvil, messenger, xE, light, behemothGiantsBlood, raven, magiFissure, crown, targoShieldWall],  # 40526
-  [xC, viper, hound, xO, lion, targoShieldWall, xA, anvil, messenger, xE, light, behemothGiantsBlood, raven, crown, magiFissure],  # 40526
-  [xC, viper, hound, xO, lion, targoShieldWall, xA, anvil, messenger, xE, light, behemothGiantsBlood, raven, magiFissure, crown],  # 40526
-  [xC, viper, hound, xO, lion, xA, anvil, messenger, targoShieldWall, xE, light, behemothGiantsBlood, raven, crown, magiFissure],  # 40526
-  [xC, viper, hound, xO, lion, xA, anvil, messenger, targoShieldWall, xE, light, behemothGiantsBlood, raven, magiFissure, crown],  # 40526
-  [xC, viper, hound, xO, lion, xA, anvil, messenger, xE, light, behemothGiantsBlood, raven, crown, targoShieldWall, magiFissure],  # 40526
-  [xC, viper, hound, xO, lion, xA, anvil, messenger, xE, light, behemothGiantsBlood, raven, crown, magiFissure, targoShieldWall],  # 40526
-  [xC, viper, hound, xO, lion, xA, anvil, messenger, xE, light, behemothGiantsBlood, raven, magiFissure, targoShieldWall, crown],  # 40526
-  [xC, viper, hound, xO, lion, xA, anvil, messenger, xE, light, behemothGiantsBlood, raven, magiFissure, crown, targoShieldWall],  # 40526
   [xO, dryad, tortoise, hound, targoShieldWall, lion, wraith, messenger, viper, obelisk, xE, light, behemothGiantsBlood],  # 40494
   [xO, dryad, tortoise, hound, targoShieldWall, xA, anvil, messenger, viper, xE, light, behemoth, crown],  # 40036
-  [xO, dryad, tortoise, hound, xA, anvil, messenger, targoShieldWall, viper, xE, light, behemoth, crown],  # 40036
-  [xO, dryad, tortoise, hound, xA, anvil, messenger, viper, xE, light, behemoth, crown, targoShieldWall],  # 40036
   [xC, fiend, viper, hound, light, behemothGiantsBlood, xO, tortoise, lion, targoShieldWall, xA, anvil, messenger, crown],  # 40005
-  [xC, fiend, viper, hound, light, xO, tortoise, lion, behemothGiantsBlood, targoShieldWall, xA, anvil, messenger, crown],  # 40005
-  [xC, fiend, viper, hound, light, behemothGiantsBlood, xO, tortoise, lion, targoShieldWall, xA, anvil, messenger, crown],  # 40005
-  [xC, fiend, viper, hound, light, behemothGiantsBlood, xO, tortoise, lion, xA, anvil, messenger, targoShieldWall, crown],  # 40005
-  [xC, fiend, viper, hound, light, behemothGiantsBlood, xO, tortoise, lion, xA, anvil, messenger, crown, targoShieldWall],  # 40005
-  [xC, fiend, viper, hound, light, xO, tortoise, lion, targoShieldWall, behemothGiantsBlood, xA, anvil, messenger, crown],  # 40005
-  [xC, fiend, viper, hound, light, xO, tortoise, lion, behemothGiantsBlood, xA, anvil, messenger, targoShieldWall, crown],  # 40005
-  [xC, fiend, viper, hound, light, xO, tortoise, lion, behemothGiantsBlood, xA, anvil, messenger, crown, targoShieldWall],  # 40005
-  [xC, fiend, viper, hound, light, behemothGiantsBlood, xO, tortoise, lion, targoShieldWall, xA, anvil, messenger, crown],  # 40005
-  [xC, fiend, viper, hound, light, behemothGiantsBlood, xO, tortoise, lion, xA, anvil, messenger, targoShieldWall, crown],  # 40005
-  [xC, fiend, viper, hound, light, behemothGiantsBlood, xO, tortoise, lion, xA, anvil, messenger, crown, targoShieldWall],  # 40005
-  [xC, fiend, viper, hound, light, xO, tortoise, lion, targoShieldWall, behemothGiantsBlood, xA, anvil, messenger, crown],  # 40005
-  [xC, fiend, viper, hound, light, xO, tortoise, lion, behemothGiantsBlood, xA, anvil, messenger, targoShieldWall, crown],  # 40005
-  [xC, fiend, viper, hound, light, xO, tortoise, lion, behemothGiantsBlood, xA, anvil, messenger, crown, targoShieldWall],  # 40005
   [xC, fiend, viper, hound, light, behemoth, raven, xA, anvil, messenger, crown, torchMeteorShower, torchOffense],  # 39746
-  [xC, fiend, viper, hound, light, behemoth, raven, xA, anvil, messenger, torchOffense, torchMeteorShower, crown],  # 39746
-  [xC, fiend, viper, hound, light, behemoth, raven, xA, anvil, messenger, crown, torchMeteorShower, torchOffense],  # 39746
-  [xC, fiend, viper, hound, light, behemoth, raven, xA, anvil, messenger, torchMeteorShower, crown, torchOffense],  # 39746
-  [xC, fiend, viper, hound, light, raven, xA, anvil, messenger, crown, behemoth, torchMeteorShower, torchOffense],  # 39746
-  [xC, fiend, viper, hound, light, raven, xA, anvil, messenger, behemoth, torchMeteorShower, crown, torchOffense],  # 39746
-  [xC, fiend, viper, hound, light, behemoth, raven, xA, anvil, messenger, crown, torchMeteorShower, torchOffense],  # 39746
-  [xC, fiend, viper, hound, light, behemoth, raven, xA, anvil, messenger, torchMeteorShower, crown, torchOffense],  # 39746
   [xC, fiend, viper, hound, light, behemothGiantsBlood, xO, dryad, targoShieldWall, lion, xA, anvil, messenger, crown],  # 39423
-  [xC, fiend, viper, hound, light, behemoth, xO, dryad, targoShieldWall, xA, anvil, messenger, crown],  # 39293
-  [xC, fiend, viper, hound, light, behemoth, xO, dryad, xA, anvil, messenger, crown, targoShieldWall],  # 39293
   [xC, fiend, viper, hound, light, behemoth, xO, dryad, xA, anvil, messenger, targoShieldWall, crown],  # 39293
   [xC, fiend, viper, hound, light, behemoth, magi, xO, xA, anvil, messenger, crown, xE, torchOffense],  # 38535
-  [xC, fiend, viper, hound, light, behemoth, magi, xO, lion, targoShieldWall, xA, anvil, messenger],  # 37988
   [xC, fiend, viper, hound, light, behemoth, magi, xO, lion, xA, anvil, messenger, targoShieldWall],  # 37988
   [xC, fiend, viper, hound, light, behemoth, magi, jackal, xO, xA, anvil, messenger, crown],  # 36870
   [xC, fiend, viper, hound, light, behemoth, magi, jackal, lizard, xA, anvil, messengerMessengerofWar, crown],  # 34881

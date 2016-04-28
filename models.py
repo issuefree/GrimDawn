@@ -487,9 +487,61 @@ testModel = Model(
 	}
 )
 
+newModel = Model(
+	"Lochlan",
+	{
+	},
+	#stats
+	{
+		# estimate how frequent combat events are for calculating dynamic stats and abilities
+		"attacks/s":1.75,		
+		"allAttacks/s":[
+			# list of attack skills that can be linked to abilities. remember to include your main attack.
+			1.75, #main attack (fire strike)
+			.5, # brutal shield slam: 3s recharge, 3 target max. Call it 2 targets and 4 seconds between = .5 aps
+			.4, #war cry: 7.5 s recharge, big radius, call it 3 hits = 3/7.5 = .4
+			.385, # markovian's advantage: 22% chance = 1.75*.22 = 
+		],		
+		"hits/s":4,
+		"blocks/s":1.5,
+		"kills/s":1,		
+		"crit chance":.05,
+		"low healths/s":1.0/45, # total guesswork.
 
-  # Elemental Barrier
-  # Targo's Hammer
+		"fight length":30, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
+
+		# estimated sheet stats for target level
+		"physique":900,
+		"cunning":400,
+		"spirit":450,
+
+		"offense":1200,
+		"defense":1400,
+
+		"health":7500,
+		"health regeneration":25,
+
+		"armor":1000,
+		"energy":2500,
+		
+		# estimated damage % for target level. add whatever damages are important to your build
+		"physical %":200+150+100, # sheet % damage for important damage types.
+		"fire %":400+175+100,
+		"lightning %":200+175+100,
+		"acid %":150+175+100,
+
+		"retaliation %":250+100,
+
+
+		"playStyle":"tank", # playstyle for weighting constellation abilities. [ranged/shortranged/melee/tank]
+		"weapons":[
+			# list of weapons used for constellations that have a weapon requirement. E.g. "shield", "sword"
+		],
+		"blacklist":[
+			# list of constellations that I want to manually exclude for some reason.
+		]	
+	}
+)
   # acid %
   # acid resist
   # aether
@@ -657,24 +709,53 @@ newModel = Model(
 	"newModel",
 	#bonuses
 	{
-	
+		# select the important bonuses from above and give them a value.
+		# Note some bonuses will be automatically calculated if left blank (and should be unless you want to override):
+		#	health/s <- health, health regeneration, fight length
+		#	energy/s <- energy, energy regeneration, energy length
+
+		#   physique <- health/s, health, defense
+		#   cunning <- appropriate damage %, offense
+		#   spirit <- appropriate damage %, energy, energy/s
+
+		#	perc stats ["physique", "cunning", "spirit", "offense", "defense", "health", "energy", "armor"]
+		#		will be calculated from your stats settings and base (non perc) values
+
+		#   resist reductions <- appropriate damage % stat and bonus
+
+		#   elemental damage and resist <- fire/cold/lightning damage and resist  (includes pets)
+		#   all damage % -< all individual damage % (includes pets)
+		
+		#Note there are a few shorthand notations. An individual setting will override the shorthand setting:
+		#	resist <- sets a value for all resist types
+		#	pet resist <- sets a value for all pet resist types
+		#	reduce resist <- sets a value for all resist reductions
+		#	damage <- sets a value for all on hit damage types
+		#	triggered damage <- sets a value for all ability triggered damage types
+		#		note that if you don't set triggered damage it gets valued at on hit damage of the same type since triggered damage is (roughly) normalized in value to on hit damage
+		#   retaliation <- sets a value for all retaliation damage types
+		#   pet retaliation <- sets a value for all pet retaliation damage types
 	},
 	#stats
 	{
-		"attacks/s":1.75,
+		# estimate how frequent combat events are for calculating dynamic stats and abilities
+		"attacks/s":1.75,		
 		"allAttacks/s":[
 			# list of attack skills that can be linked to abilities. remember to include your main attack.
 			1.75, #main attack (fire strike)
 			.5, # brutal shield slam: 3s recharge, 3 target max. Call it 2 targets and 4 seconds between = .5 aps
 			.4, #war cry: 7.5 s recharge, big radius, call it 3 hits = 3/7.5 = .4
 			.385, # markovian's advantage: 22% chance = 1.75*.22 = 
-		],
+		],		
 		"hits/s":4,
 		"blocks/s":1.5,
-		"kills/s":1,
+		"kills/s":1,		
 		"crit chance":.05,
 		"low healths/s":1.0/45, # total guesswork.
 
+		"fight length":30, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
+
+		# estimated sheet stats for target level
 		"physique":900,
 		"cunning":400,
 		"spirit":450,
@@ -687,7 +768,8 @@ newModel = Model(
 
 		"armor":1000,
 		"energy":2500,
-
+		
+		# estimated damage % for target level. add whatever damages are important to your build
 		"physical %":200+150+100, # sheet % damage for important damage types.
 		"fire %":400+175+100,
 		"lightning %":200+175+100,
@@ -695,7 +777,6 @@ newModel = Model(
 
 		"retaliation %":250+100,
 
-		"fight length":45, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
 
 		"playStyle":"tank", # playstyle for weighting constellation abilities. [ranged/shortranged/melee/tank]
 		"weapons":[
@@ -705,4 +786,4 @@ newModel = Model(
 			# list of constellations that I want to manually exclude for some reason.
 		]	
 	}
-	)
+)

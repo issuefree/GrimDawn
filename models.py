@@ -342,7 +342,7 @@ armitage = Model(
 	},
 
 	{
-		"attacks/s":1.75,
+		"attacks/s":1.5,
 		"allAttacks/s":[
 			1.75, #main attack (fire strike)
 			1, # thermite mine / mortar
@@ -444,14 +444,6 @@ testModel = Model(
 
 	{
 		"attacks/s":1.75,
-		"allAttacks/s":[
-			1.75, #main attack (fire strike)
-			.5, # brutal shield slam: 3s recharge, 3 target max. Call it 2 targets and 4 seconds between = .5 aps
-			.4, #war cry: 7.5 s recharge, big radius, call it 3 hits = 3/7.5 = .4
-			.385, # markovian's advantage: 22% chance = 1.75*.22 = 
-			0,0,0,0,0
-		],
-
 		"hits/s":4,
 		"blocks/s":1.5,
 		"kills/s":1,
@@ -487,222 +479,232 @@ testModel = Model(
 	}
 )
 
-newModel = Model(
+lochlan = Model(
 	"Lochlan",
 	{
+		"armor":2, "armor absorb":10,
+		"attack speed":20,
+		"avoid melee":20, "avoid ranged":15,
+		"cast speed":10,
+		"crit damage":10,
+		"defense":7.5,
+		
+		"elemental":5,
+		"energy":1,
+		"health":.5,
+		"lifesteal %":10,
+
+		"electrocute":5, "electrocute %":7.5, "electrocute duration":2.5,
+		"physical":7.5, "physical %":15,
+		"lightning":10, "lightning %":20,
+
+		"resist":2.5,
+		"physical resist":5,
+
+		"move %":5,
+
+		"offense":15,
 	},
 	#stats
 	{
 		# estimate how frequent combat events are for calculating dynamic stats and abilities
-		"attacks/s":1.75,		
-		"allAttacks/s":[
-			# list of attack skills that can be linked to abilities. remember to include your main attack.
-			1.75, #main attack (fire strike)
-			.5, # brutal shield slam: 3s recharge, 3 target max. Call it 2 targets and 4 seconds between = .5 aps
-			.4, #war cry: 7.5 s recharge, big radius, call it 3 hits = 3/7.5 = .4
-			.385, # markovian's advantage: 22% chance = 1.75*.22 = 
-		],		
-		"hits/s":4,
-		"blocks/s":1.5,
-		"kills/s":1,		
-		"crit chance":.05,
+		"attacks/s":1.5,
+		"hits/s":1.5,
+		"blocks/s":0,
+		"kills/s":1,	
+		"crit chance":.08,
 		"low healths/s":1.0/45, # total guesswork.
 
-		"fight length":30, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
+		"fight length":20, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
 
 		# estimated sheet stats for target level
-		"physique":900,
-		"cunning":400,
-		"spirit":450,
+		"physique":500,
+		"cunning":250,
+		"spirit":350,
 
-		"offense":1200,
-		"defense":1400,
+		"offense":1000,
+		"defense":1000,
 
-		"health":7500,
-		"health regeneration":25,
+		"health":5000,
+		"health regeneration":20,
 
-		"armor":1000,
-		"energy":2500,
+		"armor":500,
+		"energy":1250,
 		
 		# estimated damage % for target level. add whatever damages are important to your build
 		"physical %":200+150+100, # sheet % damage for important damage types.
-		"fire %":400+175+100,
-		"lightning %":200+175+100,
-		"acid %":150+175+100,
+		"lightning %":250+150+100,
 
-		"retaliation %":250+100,
-
-
-		"playStyle":"tank", # playstyle for weighting constellation abilities. [ranged/shortranged/melee/tank]
+		"playStyle":"melee", # playstyle for weighting constellation abilities. [ranged/shortranged/melee/tank]
 		"weapons":[
-			# list of weapons used for constellations that have a weapon requirement. E.g. "shield", "sword"
+			"twohand"
 		],
 		"blacklist":[
 			# list of constellations that I want to manually exclude for some reason.
 		]	
 	}
 )
-  # acid %
-  # acid resist
-  # aether
-  # aether %
-  # aether resist
-  # all damage %
-  # armor
-  # armor %
-  # armor absorb
-  # armor physique requirements
-  # attack speed
-  # attack speed retaliation
-  # avoid melee
-  # avoid ranged
-  # bleed
-  # bleed %
-  # bleed duration
-  # bleed resist
-  # bleed retaliation
-  # block %
-  # blocked damage %
-  # burn
-  # burn %
-  # burn duration
-  # cast speed
-  # chaos
-  # chaos %
-  # chaos resist
-  # cold
-  # cold %
-  # cold resist
-  # constitution %
-  # crit damage
-  # cunning
-  # cunning %
-  # cunning ranged requirements
-  # damage beast %
-  # damage chthonics %
-  # damage from arachnids
-  # damage from beasts
-  # damage from insectoids
-  # damage from undead
-  # damage human %
-  # damage reflect %
-  # damage undead %
-  # defense
-  # defense %
-  # electrocute %
-  # electrocute duration
-  # elemental
-  # elemental %
-  # elemental resist
-  # energy
-  # energy %
-  # energy absorb
-  # energy burn %
-  # energy leech
-  # energy leech resist
-  # energy regeneration
-  # energy/s
-  # fire
-  # fire %
-  # fire resist
-  # frostburn
-  # frostburn %
-  # frostburn duration
-  # health
-  # health %
-  # health regeneration
-  # health/s
-  # internal
-  # internal %
-  # internal duration
-  # jewelry spirit requirements
-  # life leech
-  # life leech %
-  # life leech resist
-  # life leech retaliation
-  # lifesteal %
-  # lightning
-  # lightning %
-  # lightning resist
-  # max acid resist
-  # max aether resist
-  # max bleed resist
-  # max chaos resist
-  # max fire resist
-  # max lightning resist
-  # max pierce resist
-  # max vitality resist
-  # melee weapon cunning requirements
-  # melee weapon physique requirements
-  # move %
-  # move speed retaliation
-  # offense
-  # offense %
-  # pet acid resist
-  # pet aether resist
-  # pet all damage %
-  # pet attack speed
-  # pet bleed resist
-  # pet chaos resist
-  # pet crit damage
-  # pet defense %
-  # pet elemental %
-  # pet elemental resist
-  # pet fire damage %
-  # pet health %
-  # pet health regeneration
-  # pet health/s
-  # pet lifesteal %
-  # pet lightning damage %
-  # pet max all resist
-  # pet offense %
-  # pet pierce resist
-  # pet pierce retaliation
-  # pet retaliation %
-  # pet total speed
-  # pet vitality resist
-  # physical
-  # physical %
-  # physical resist
-  # physical retaliation
-  # physique
-  # physique %
-  # pierce
-  # pierce %
-  # pierce resist
-  # pierce retaliation
-  # poison
-  # poison %
-  # poison duration
-  # reduce elemental resist
-  # reduced bleed duration
-  # reduced burn duration
-  # reduced electrocute duration
-  # reduced entrapment duration
-  # reduced freeze
-  # reduced freeze duration
-  # reduced frostburn duration
-  # reduced poison duration
-  # reduced stun duration
-  # reflected damage reduction
-  # retaliation %
-  # shield physique requirements
-  # shield recovery
-  # skill cost %
-  # skill disruption protection
-  # slow resist
-  # spirit
-  # spirit %
-  # stun %
-  # stun duration
-  # stun retaliation
-  # vitality
-  # vitality %
-  # vitality decay
-  # vitality decay %
-  # vitality decay retaliation
-  # vitality resist
-  # weapon spirit requirements
+ # "acid %":0,
+ # "acid resist":0,
+ # "aether":0,
+ # "aether %":0,
+ # "aether resist":0,
+ # "all damage %":0,
+ # "armor":0,
+ # "armor %":0,
+ # "armor absorb":0,
+ # "armor physique requirements":0,
+ # "attack speed":0,
+ # "attack speed retaliation":0,
+ # "avoid melee":0,
+ # "avoid ranged":0,
+ # "bleed":0,
+ # "bleed %":0,
+ # "bleed duration":0,
+ # "bleed resist":0,
+ # "bleed retaliation":0,
+ # "block %":0,
+ # "blocked damage %":0,
+ # "burn":0,
+ # "burn %":0,
+ # "burn duration":0,
+ # "cast speed":0,
+ # "chaos":0,
+ # "chaos %":0,
+ # "chaos resist":0,
+ # "cold":0,
+ # "cold %":0,
+ # "cold resist":0,
+ # "constitution %":0,
+ # "crit damage":0,
+ # "cunning":0,
+ # "cunning %":0,
+ # "cunning ranged requirements":0,
+ # "damage beast %":0,
+ # "damage chthonics %":0,
+ # "damage from arachnids":0,
+ # "damage from beasts":0,
+ # "damage from insectoids":0,
+ # "damage from undead":0,
+ # "damage human %":0,
+ # "damage reflect %":0,
+ # "damage undead %":0,
+ # "defense":0,
+ # "defense %":0,
+ # "electrocute %":0,
+ # "electrocute duration":0,
+ # "elemental":0,
+ # "elemental %":0,
+ # "elemental resist":0,
+ # "energy":0,
+ # "energy %":0,
+ # "energy absorb":0,
+ # "energy burn %":0,
+ # "energy leech":0,
+ # "energy leech resist":0,
+ # "energy regeneration":0,
+ # "energy/s":0,
+ # "fire":0,
+ # "fire %":0,
+ # "fire resist":0,
+ # "frostburn":0,
+ # "frostburn %":0,
+ # "frostburn duration":0,
+ # "health":0,
+ # "health %":0,
+ # "health regeneration":0,
+ # "health/s":0,
+ # "internal":0,
+ # "internal %":0,
+ # "internal duration":0,
+ # "jewelry spirit requirements":0,
+ # "life leech":0,
+ # "life leech %":0,
+ # "life leech resist":0,
+ # "life leech retaliation":0,
+ # "lifesteal %":0,
+ # "lightning":0,
+ # "lightning %":0,
+ # "lightning resist":0,
+ # "max acid resist":0,
+ # "max aether resist":0,
+ # "max bleed resist":0,
+ # "max chaos resist":0,
+ # "max fire resist":0,
+ # "max lightning resist":0,
+ # "max pierce resist":0,
+ # "max vitality resist":0,
+ # "melee weapon cunning requirements":0,
+ # "melee weapon physique requirements":0,
+ # "move %":0,
+ # "move speed retaliation":0,
+ # "offense":0,
+ # "offense %":0,
+ # "pet acid resist":0,
+ # "pet aether resist":0,
+ # "pet all damage %":0,
+ # "pet attack speed":0,
+ # "pet bleed resist":0,
+ # "pet chaos resist":0,
+ # "pet crit damage":0,
+ # "pet defense %":0,
+ # "pet elemental %":0,
+ # "pet elemental resist":0,
+ # "pet fire damage %":0,
+ # "pet health %":0,
+ # "pet health regeneration":0,
+ # "pet health/s":0,
+ # "pet lifesteal %":0,
+ # "pet lightning damage %":0,
+ # "pet max all resist":0,
+ # "pet offense %":0,
+ # "pet pierce resist":0,
+ # "pet pierce retaliation":0,
+ # "pet retaliation %":0,
+ # "pet total speed":0,
+ # "pet vitality resist":0,
+ # "physical":0,
+ # "physical %":0,
+ # "physical resist":0,
+ # "physical retaliation":0,
+ # "physique":0,
+ # "physique %":0,
+ # "pierce":0,
+ # "pierce %":0,
+ # "pierce resist":0,
+ # "pierce retaliation":0,
+ # "poison":0,
+ # "poison %":0,
+ # "poison duration":0,
+ # "reduce elemental resist":0,
+ # "reduced bleed duration":0,
+ # "reduced burn duration":0,
+ # "reduced electrocute duration":0,
+ # "reduced entrapment duration":0,
+ # "reduced freeze":0,
+ # "reduced freeze duration":0,
+ # "reduced frostburn duration":0,
+ # "reduced poison duration":0,
+ # "reduced stun duration":0,
+ # "reflected damage reduction":0,
+ # "retaliation %":0,
+ # "shield physique requirements":0,
+ # "shield recovery":0,
+ # "skill cost %":0,
+ # "skill disruption protection":0,
+ # "slow resist":0,
+ # "spirit":0,
+ # "spirit %":0,
+ # "stun %":0,
+ # "stun duration":0,
+ # "stun retaliation":0,
+ # "vitality":0,
+ # "vitality %":0,
+ # "vitality decay":0,
+ # "vitality decay %":0,
+ # "vitality decay retaliation":0,
+ # "vitality resist":0,
+ # "weapon spirit requirements":0,
 
 newModel = Model(
 	#name

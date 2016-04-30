@@ -6,7 +6,7 @@ from models import *
 
 import os
 
-model = armitage
+model = lochlan
 model.checkModel()
 # print model
 
@@ -37,37 +37,4 @@ def evalCon(c):
 				print str(bonus).ljust(25), int(star.bonuses[bonus]), "\t", int(model.get(bonus)*star.bonuses[bonus])
 
 
-
-solution = [
-	xA,
-	anvil,
-	xE,
-	raven,
-	crown,
-	xC,
-	viper,
-	hound,
-	messenger,
-	behemothGiantsBlood,
-	light,
-	xO,
-	lion,
-	targoShieldWall,
-	magiFissure
-]
-
-# solution = [xO, dryad, tortoise, hound, targoShieldWall, xA, anvil, messenger, viper, xE, light, behemoth, crown]
-# solution = [xO, dryad, tortoise, hound, targo, shieldmaiden, xA, anvil, messenger, viper, obelisk]
-
-# solution = [xC, fiend, viper, hound, light, behemothGiantsBlood, xO, tortoise, lion, targoShieldWall, xA, anvil, messenger, crown]
-
-evalSol(solution)
-# print evaluateSolution(solution, model, True)
-
-
-
-# bonuses = getBonuses(solution, model)
-# for bonus in sorted(bonuses.keys(), key=lambda bonus: model.bonuses[bonus]*bonuses[bonus], reverse=True):
-# 	print bonus.ljust(23), str(int(bonuses[bonus])).rjust(4), str(int(model.bonuses[bonus]*bonuses[bonus])).rjust(5)
-
-# evalCon(shieldmaiden)
+evalCon(tortoise)

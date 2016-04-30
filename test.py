@@ -91,5 +91,3 @@ model.checkModel()
 
 # 	print crn[0].id.ljust(25), crn[0].getTier(), str(int(crn[scoreType])).ljust(5), "%0.3f  "%(r), sd
 
-
-print [0]*3

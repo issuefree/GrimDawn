@@ -419,10 +419,10 @@ globalMetadata["deadSolutions"] = {}
 
 globalMetadata["numCheckedSolutions"] = 0
 
-globalMetadata["points"] = 50
+globalMetadata["points"] = 25
 
 globalMetadata["startTime"] = time()
-startSearch(armitage)
+startSearch(lochlan)
 
 # I think the next step is to look at trying to branch and bound.
 # I think this is pretty nonlinear so I don't have a real good way of doing that.

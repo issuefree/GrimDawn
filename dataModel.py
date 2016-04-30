@@ -232,6 +232,9 @@ class Ability:
 
 	def calculateEffective(self, model):
 		self.calculateTriggerTime(model)
+		if self.triggerTime == -1:
+			self.effective = 0
+			return
 
 		targets = max(1, self.gc("targets"))
 		if self.gc("type") == "buff":
@@ -349,8 +352,11 @@ class Ability:
 
 	def calculateTriggerTime(self, model):
 		triggerFrequency = model.getStat(self.gc("trigger")+"s/s")
+		if triggerFrequency == 0:
+			self.triggerTime = -1
+			return
 		self.triggerTime = 1.0/triggerFrequency * 1.0/self.gc("chance")
-		# print "tt", self.triggerTime		
+		# print "tt", self.triggerTime
 
 	def getUpTime(self, model):
 		up = 0.0

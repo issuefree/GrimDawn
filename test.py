@@ -7,7 +7,7 @@ from models import *
 import os
 
 
-model = armitage
+model = kieri
 model.checkModel()
 # print model
 
@@ -90,4 +90,6 @@ model.checkModel()
 # 		sd += 1-r
 
 # 	print crn[0].id.ljust(25), crn[0].getTier(), str(int(crn[scoreType])).ljust(5), "%0.3f  "%(r), sd
+
+# print solutionPath(findBonus("lightning %"))
 

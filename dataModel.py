@@ -239,6 +239,7 @@ class Ability:
 		targets = max(1, self.gc("targets"))
 		if self.gc("type") == "buff":
 			self.effective = self.getUpTime(model)*targets
+			# print "buff uptime:", self.getUpTime(model)
 		elif self.gc("type") == "attack":
 
 			if self.gc("shape") == "???":
@@ -309,6 +310,11 @@ class Ability:
 				elif self.gc("shape") == "pbaoe":
 					targets = targets * 1.5
 
+			if self.gc("trigger") == "manual":
+				self.bonuses["attack opportunity cost"] = 100
+				if self.gc("recharge") == 0:
+					self.conditions["recharge"] = 1
+
 			self.effective = self.getNumTriggers(model)/(2.0*model.getStat("fight length"))*targets
 
 			# print "nt", self.getNumTriggers(model)
@@ -351,6 +357,8 @@ class Ability:
 		del self.bonuses["duration"]
 
 	def calculateTriggerTime(self, model):
+		if self.gc("trigger") == "manual":
+			return 0
 		triggerFrequency = model.getStat(self.gc("trigger")+"s/s")
 		if triggerFrequency == 0:
 			self.triggerTime = -1
@@ -358,24 +366,28 @@ class Ability:
 		self.triggerTime = 1.0/triggerFrequency * 1.0/self.gc("chance")
 		# print "tt", self.triggerTime
 
+	#uptime is a percent so we'll use a scalar of fight length to get an average across multiple fights
 	def getUpTime(self, model):
 		up = 0.0
-		fightRemaining = model.getStat("fight length") - self.triggerTime		
+		fightLen = model.getStat("fight length")*5
+		fightRemaining = fightLen - self.triggerTime		
 		while fightRemaining >= 0:
 			up += min(max(self.gc("duration"), self.gc("lifespan")), fightRemaining)
-			fightRemaining -= max(self.gc("duration"), self.gc("recharge")+ self.triggerTime) 
-		return up/model.getStat("fight length")
+			fightRemaining -= max(self.gc("duration"), self.gc("recharge") + self.triggerTime) 
+		return up/fightLen
 
+	#average over a number of fights
 	def getNumTriggers(self, model):
+		numFights = 5.0
 		triggers = 0
-		fightRemaining = model.getStat("fight length") - self.triggerTime
+		fightRemaining = model.getStat("fight length")*numFights - self.triggerTime
 		while fightRemaining >= 0:
 			triggers += 1
 			fightRemaining -= self.gc("recharge") + self.triggerTime
 
 		triggers = max(triggers, 1) # this will usually catch low health events which don't happen often. We'll calculate stats as if they happen once a fight.
 
-		return triggers
+		return triggers/numFights
 
 	def calculateDynamicBonuses(self, model):
 		damages = [
@@ -410,10 +422,10 @@ class Ability:
 				# actually I think only targo's hammer is an attack ability with a %damage increase.
 				if dam+" %" in self.bonuses.keys():
 					if model.getStat(dam) <= 0:
-						print "    " +self.name+" requires a defined internal damage _stat_ in the model."
-						model.stats["internal"] = .01
+						print "    " +self.name+" requires a defined " + dam + " _stat_ in the model."
+						model.stats[dam] = .01
 					else:
-						self.bonuses[dam] = self.gb(dam) + (model.getStat(dam) * self.gb("weapon %")/100.0 + self.gb(dam)) * self.gb(dam+" %")/100.0
+						self.bonuses[dam] = self.gb(dam) + (model.getStat(dam) * self.gb("weapon damage %")/100.0 + self.gb(dam)) * self.gb(dam+" %")/100.0
 
 		# armor reduction is like + physical damage that isn't affected by %damage
 		if self.gb("reduce armor") > 0:
@@ -650,3 +662,63 @@ class Constellation:
 			return 1
 
 		return 2
+
+class Item:
+	armorLocationFactor = {
+		"head":.15,
+		"shoulders":.15,
+		"chest":.26,
+		"arms":.12,
+		"legs":.20,
+		"feet":.12
+	}
+
+	@staticmethod
+	def getByLocation(location, items):
+		locItems = []
+		for item in items:
+			if location in item.location:
+				locItems += [item]
+		return locItems
+
+	def __init__(self, name, bonuses, location, ability=None):
+		self.name = name
+		self.bonuses = bonuses
+		self.location = location
+		self.ability = ability
+
+		self.value = 0
+
+	def __str__(self):
+		return self.name
+
+	def evaluate(self, model, location=None, verbose=False):
+		if verbose:
+			print self.name
+
+		abilityBonuses = {}
+		if self.ability:
+			self.ability.calculateEffective(model)
+			self.ability.calculateDynamicBonuses(model)
+			for bonus in self.ability.bonuses.keys():
+				abilityBonuses[bonus] = self.ability.bonuses[bonus]*self.ability.effective
+
+		value = 0
+		for bonus in model.bonuses.keys():
+			if bonus in self.bonuses.keys():
+				keyBonus = self.bonuses[bonus]
+				if bonus == "armor" and location:
+					try:					
+						keyBonus = self.bonuses["armor"]*Item.armorLocationFactor[location]
+					except:
+						pass
+				if verbose:
+					print "  ", bonus.ljust(20), str(int(keyBonus)).ljust(5), int(model.get(bonus)*keyBonus)
+				value += model.get(bonus)*keyBonus
+			if bonus in abilityBonuses.keys():
+				value += model.get(bonus)*abilityBonuses[bonus]
+				if verbose:
+					print "  ", bonus.ljust(20), str(int(abilityBonuses[bonus])).ljust(5), int(model.get(bonus)*abilityBonuses[bonus])
+		self.value = value
+		return value
+

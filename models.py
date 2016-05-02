@@ -53,6 +53,10 @@ class Model:
 		print "Checking model..."
 		print "  "+self.name
 
+		if self.get("attack opportunity cost") == 0:
+			self.bonuses["attack opportunity cost"] = -self.get("weapon damage %")
+			print "  attack opportunity cost", self.bonuses["attack opportunity cost"]
+
 		if not "allAttacks/s" in self.stats.keys():
 			self.stats["allAttacks/s"] = [self.stats["attacks/s"]]
 
@@ -95,13 +99,26 @@ class Model:
 
 		# spirit grants fire %, burn %, cold %, frostburn %, lightning %, electrocute %, acid %, poison %, vitality %, vitality decay%, aether %, chaos %, energy and energy regen
 		val = 0
-		val += sum([self.get(b) for b in ["elemental %", "acid %", "vitality %", "aether %", "chaos %"]]) * .33
+		val += sum([self.get(b) for b in ["fire %", "cold %", "lightning %", "acid %", "vitality %", "aether %", "chaos %"]]) * .33
 		val += sum([self.get(b) for b in ["burn %", "frostburn %", "electrocute %", "poison %", "vitality decay %"]]) * .333
 		val += self.get("energy") * 2
 		val += self.get("energy/s") * .01
 
 		self.set("spirit", max(self.get("spirit"), val))
 		print "  Spirit:", self.get("spirit")
+
+		# update damage % stats
+		self.stats["physical %"] = self.getStat("physical %") + 100 + self.getStat("cunning")*.33
+		self.stats["pierce %"] = self.getStat("pierce %") + 100 + self.getStat("cunning")*.285
+		self.stats["bleed %"] = self.getStat("bleed %") + 100 + self.getStat("cunning")*.333
+		self.stats["internal %"] = self.getStat("internal %") + 100 + self.getStat("cunning")*.333
+
+		for dam in ["fire %", "cold %", "lightning %", "acid %", "vitality %", "aether %", "chaos %"]:
+			self.stats[dam] = self.getStat(dam) + 100 + self.getStat("spirit")*.33
+
+		for dam in ["burn %", "frostburn %", "electrocute %", "poison %", "vitality decay %"]:
+			self.stats[dam] = self.getStat(dam) + 100 + self.getStat("spirit")*.333
+
 
 		#check stats vs % stats
 		percStats = ["physique", "cunning", "spirit", "offense", "defense", "health", "energy", "armor"]
@@ -114,11 +131,13 @@ class Model:
 		# at that resistance each point of resist reduction resulst in 1.33% more overall damage.
 		# if we have +400% vitality damage (500% total) a 1 percent reduction in resist is worth
 		# 500*.0133 vitality % or 6.65 %
-		# Testing against dummy is giving me 7.5 increased damage for -10% resist. Using that
+		# Testing against dummy is giving me 7.5% increased damage for -10% resist. Using that (.0075)
+		# single target debuffs need to have reduced value. Also applying resist reduction only applies to the next hit
+		# setting value at 1/3
 		for damage in primaryDamages:
 			if self.get(damage+" %") > 0:
-				self.set("reduce "+damage+" resist", max(self.get("reduce "+damage+" resist"), self.getStat(damage+" %")*.0075*self.get(damage+" %")))
-				print "  reduce "+damage+" resist: " + str(self.get("reduce "+damage+" resist"))
+				self.set("reduce "+damage+" resist", max(self.get("reduce "+damage+" resist"), self.getStat(damage+" %")*.0075*self.get(damage+" %")/3))
+				print "  reduce "+damage+" resist: " + str(self.get("reduce "+damage+" resist")/3)
 
 		# handle shorthand sets: resist	
 		#resist types
@@ -148,6 +167,13 @@ class Model:
 		self.set("all damage %", max(self.get("all damage %"), sum([self.get(b) for b in parts])))
 		print "  all damage %:", self.get("all damage %")
 
+		total = 0
+		for damage in damages:
+			total += self.getStat(damage+" %")*self.get(damage+" %")/100
+		
+		self.set("crit damage", max(self.get("crit damage"), total*self.getStat("crit chance")))
+		print "  crit damage:", self.get("crit damage")
+
 		# catch all for flat damage of any type
 		# triggered flat damage should be either specified manually or be equivalent to normal flat damage.
 		# catch all for triggered damage of any type (no triggered damage is useless right?)		
@@ -159,7 +185,7 @@ class Model:
 				factor = .5
 
 			self.set(damage, max(self.get(damage), self.get("damage")*factor))
-			# pet flat damage?
+			self.set("pet "+damage, max(self.get("pet "+damage), self.get("pet damage")*factor))
 
 			self.set("triggered "+damage, max([self.get("triggered "+damage), self.get(damage), self.get("triggered damage")*factor]))
 
@@ -228,6 +254,7 @@ nyx = Model(
 		"pet offense %":50,
 		"pet lifesteal %":2,
 		"pet all damage %":7.5,
+		"pet damage":10,
 		"pet defense %":1,
 		"pet resist":1.5,
 		"pet health %":5,
@@ -264,8 +291,8 @@ nyx = Model(
 		"armor":450,
 		"energy":2500,
 
-		"vitality %":750+350,
-		"chaos %":350+350,
+		"vitality %":750,
+		"chaos %":3507,
 
 		"pet all damage %":200,
 
@@ -295,11 +322,11 @@ armitage = Model(
 		# "energy regeneration": ,
 		# "energy/s": ,
 
-		"health": .55, # "health %": ,
+		"health": .66, # "health %": ,
 		"health regeneration": 5,
 		# "health/s": 5,
 
-		"armor": 3.5, # "armor %": ,
+		"armor": 5, # "armor %": ,
 		"armor absorb": 20,
 		
 		"defense": 1, # "defense %": ,
@@ -315,16 +342,14 @@ armitage = Model(
 		"offense": 10, # "offense %": ,
 
 		"damage":1,
-		"physical": 4, "physical %": 7.5,
-		"fire":5, "fire %": 12.5,
-		"lightning": 2, "lightning %": 5,
-		"elemental": 2, # "elemental %": 20,
-		"burn": 2, "burn %": 6, "burn duration":5,
+		"physical": 5, "physical %": 7.5,
+		"fire":7.5, "fire %": 12.5,
+		"lightning": 2.5, "lightning %": 5,
+		"elemental": 1.5, # "elemental %": 20,
+		"burn": 3, "burn %": 6, "burn duration":5,
 
 		"triggered fire":7.5,
 		"triggered burn":5,
-
-		"reduce fire resist":80,
 
 		"weapon damage %":7.5,
 
@@ -335,14 +360,14 @@ armitage = Model(
 		
 		"stun %":-1,
 
-		# "lifesteal %": ,
+		"lifesteal %":20 ,
 		"move %": 10,
 
 		"Acid Spray":.75,
 	},
 
 	{
-		"attacks/s":1.5,
+		"attacks/s":1.75,
 		"allAttacks/s":[
 			1.75, #main attack (fire strike)
 			1, # thermite mine / mortar
@@ -353,29 +378,29 @@ armitage = Model(
 		"hits/s":4,
 		"blocks/s":1.5,
 		"kills/s":1,
-		"crit chance":.05,
-		"low healths/s":1.0/45, # total guesswork.
+		"crit chance":.08,
+		"low healths/s":1.0/60, # total guesswork.
 
-		"physique":900,
+		"physique":1200,
 		"cunning":400,
-		"spirit":450,
+		"spirit":600,
 
-		"offense":1500,
-		"defense":1500,
+		"offense":1750,
+		"defense":1750,
 
-		"health":10000,
+		"health":7500,
 		"health regeneration":100,
 
-		"armor":1250,
+		"armor":1500,
 		"energy":2500,
 
 		"internal":1,
-		"physical %":250+150+100,
-		"fire %":500+175+100,
-		"lightning %":300+175+100,
-		"acid %":100+175+100,
+		"physical %":300, "physical":700,
+		"fire %":750, "burn %":450,
+		"lightning %":300,
+		"acid %":150,
 
-		"retaliation %":350+100,
+		"retaliation %":400+100,
 
 		"fight length":45,
 
@@ -463,10 +488,10 @@ testModel = Model(
 		"armor":1000,
 		"energy":2500,
 
-		"physical %":200+150+100,
-		"fire %":400+175+100,
-		"lightning %":200+175+100,
-		"acid %":150+175+100,
+		"physical %":200,
+		"fire %":400,
+		"lightning %":200,
+		"acid %":150,
 
 		"retaliation %":250+100,
 
@@ -486,24 +511,33 @@ lochlan = Model(
 		"attack speed":20,
 		"avoid melee":20, "avoid ranged":15,
 		"cast speed":10,
-		"crit damage":10,
+		# "crit damage":20,
 		"defense":7.5,
 		
-		"elemental":5,
-		"energy":1,
-		"health":.5,
-		"lifesteal %":10,
+		"energy":.75,
+		"health":.75,
+		"lifesteal %":20,
 
-		"electrocute":5, "electrocute %":7.5, "electrocute duration":2.5,
-		"physical":7.5, "physical %":15,
-		"lightning":10, "lightning %":20,
+		"offense":15,
+
+		"elemental":5,
+		"electrocute":12.5, "electrocute %":7.5, "electrocute duration":2.5,
+		"physical":15, "physical %":10,
+		"lightning":20, "lightning %":20,
+		"bleed %":2.5,
+		"cold %":2.5,
+		"fire %":2.5,
+
+		"weapon damage %":20, 
 
 		"resist":2.5,
 		"physical resist":5,
 
+		"stun %":10,
+		"stun duration":5,
+
 		"move %":5,
 
-		"offense":15,
 	},
 	#stats
 	{
@@ -511,9 +545,9 @@ lochlan = Model(
 		"attacks/s":1.5,
 		"hits/s":1.5,
 		"blocks/s":0,
-		"kills/s":1,	
-		"crit chance":.08,
-		"low healths/s":1.0/45, # total guesswork.
+		"kills/s":1.5,	
+		"crit chance":.1,
+		"low healths/s":1.0/15, # total guesswork.
 
 		"fight length":20, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
 
@@ -532,8 +566,8 @@ lochlan = Model(
 		"energy":1250,
 		
 		# estimated damage % for target level. add whatever damages are important to your build
-		"physical %":200+150+100, # sheet % damage for important damage types.
-		"lightning %":250+150+100,
+		"physical %":200,
+		"lightning %":250,
 
 		"playStyle":"melee", # playstyle for weighting constellation abilities. [ranged/shortranged/melee/tank]
 		"weapons":[
@@ -544,167 +578,284 @@ lochlan = Model(
 		]	
 	}
 )
- # "acid %":0,
- # "acid resist":0,
- # "aether":0,
- # "aether %":0,
- # "aether resist":0,
- # "all damage %":0,
- # "armor":0,
- # "armor %":0,
- # "armor absorb":0,
- # "armor physique requirements":0,
- # "attack speed":0,
- # "attack speed retaliation":0,
- # "avoid melee":0,
- # "avoid ranged":0,
- # "bleed":0,
- # "bleed %":0,
- # "bleed duration":0,
- # "bleed resist":0,
- # "bleed retaliation":0,
- # "block %":0,
- # "blocked damage %":0,
- # "burn":0,
- # "burn %":0,
- # "burn duration":0,
- # "cast speed":0,
- # "chaos":0,
- # "chaos %":0,
- # "chaos resist":0,
- # "cold":0,
- # "cold %":0,
- # "cold resist":0,
- # "constitution %":0,
- # "crit damage":0,
- # "cunning":0,
- # "cunning %":0,
- # "cunning ranged requirements":0,
- # "damage beast %":0,
- # "damage chthonics %":0,
- # "damage from arachnids":0,
- # "damage from beasts":0,
- # "damage from insectoids":0,
- # "damage from undead":0,
- # "damage human %":0,
- # "damage reflect %":0,
- # "damage undead %":0,
- # "defense":0,
- # "defense %":0,
- # "electrocute %":0,
- # "electrocute duration":0,
- # "elemental":0,
- # "elemental %":0,
- # "elemental resist":0,
- # "energy":0,
- # "energy %":0,
- # "energy absorb":0,
- # "energy burn %":0,
- # "energy leech":0,
- # "energy leech resist":0,
- # "energy regeneration":0,
- # "energy/s":0,
- # "fire":0,
- # "fire %":0,
- # "fire resist":0,
- # "frostburn":0,
- # "frostburn %":0,
- # "frostburn duration":0,
- # "health":0,
- # "health %":0,
- # "health regeneration":0,
- # "health/s":0,
- # "internal":0,
- # "internal %":0,
- # "internal duration":0,
- # "jewelry spirit requirements":0,
- # "life leech":0,
- # "life leech %":0,
- # "life leech resist":0,
- # "life leech retaliation":0,
- # "lifesteal %":0,
- # "lightning":0,
- # "lightning %":0,
- # "lightning resist":0,
- # "max acid resist":0,
- # "max aether resist":0,
- # "max bleed resist":0,
- # "max chaos resist":0,
- # "max fire resist":0,
- # "max lightning resist":0,
- # "max pierce resist":0,
- # "max vitality resist":0,
- # "melee weapon cunning requirements":0,
- # "melee weapon physique requirements":0,
- # "move %":0,
- # "move speed retaliation":0,
- # "offense":0,
- # "offense %":0,
- # "pet acid resist":0,
- # "pet aether resist":0,
- # "pet all damage %":0,
- # "pet attack speed":0,
- # "pet bleed resist":0,
- # "pet chaos resist":0,
- # "pet crit damage":0,
- # "pet defense %":0,
- # "pet elemental %":0,
- # "pet elemental resist":0,
- # "pet fire damage %":0,
- # "pet health %":0,
- # "pet health regeneration":0,
- # "pet health/s":0,
- # "pet lifesteal %":0,
- # "pet lightning damage %":0,
- # "pet max all resist":0,
- # "pet offense %":0,
- # "pet pierce resist":0,
- # "pet pierce retaliation":0,
- # "pet retaliation %":0,
- # "pet total speed":0,
- # "pet vitality resist":0,
- # "physical":0,
- # "physical %":0,
- # "physical resist":0,
- # "physical retaliation":0,
- # "physique":0,
- # "physique %":0,
- # "pierce":0,
- # "pierce %":0,
- # "pierce resist":0,
- # "pierce retaliation":0,
- # "poison":0,
- # "poison %":0,
- # "poison duration":0,
- # "reduce elemental resist":0,
- # "reduced bleed duration":0,
- # "reduced burn duration":0,
- # "reduced electrocute duration":0,
- # "reduced entrapment duration":0,
- # "reduced freeze":0,
- # "reduced freeze duration":0,
- # "reduced frostburn duration":0,
- # "reduced poison duration":0,
- # "reduced stun duration":0,
- # "reflected damage reduction":0,
- # "retaliation %":0,
- # "shield physique requirements":0,
- # "shield recovery":0,
- # "skill cost %":0,
- # "skill disruption protection":0,
- # "slow resist":0,
- # "spirit":0,
- # "spirit %":0,
- # "stun %":0,
- # "stun duration":0,
- # "stun retaliation":0,
- # "vitality":0,
- # "vitality %":0,
- # "vitality decay":0,
- # "vitality decay %":0,
- # "vitality decay retaliation":0,
- # "vitality resist":0,
- # "weapon spirit requirements":0,
+
+kieri = Model(
+	"Kieri",
+	{
+		"armor":.25,
+		"attack speed":40, 
+		"cast speed":10, 
+		
+		"offense":20, 
+
+		"avoid melee":5, "avoid ranged":7.5, 
+		"defense":5, 
+
+		"resist":3,
+		"physical resist":5, 
+
+		"health":.66, 
+		"energy":.5, 
+
+		"damage":1,
+		"physical":10, "physical %":15, 
+		#"pierce":0, "pierce %":0, 
+		"burn":5, "burn %":5, "burn duration":2.5, "triggered burn":7.5,
+		"fire":15, "fire %":20, 
+		"lightning":3, "lightning %":5, 
+		"chaos %":1, 
+		"pierce %":1.5,
+		"elemental":5, 
+
+		"lifesteal %":15, 
+
+		"move %":20, 
+
+		"slow move":10, 
+		"stun %":50, "stun duration":10, 
+
+		"weapon damage %":25, 
+	},
+	#stats
+	{
+		# estimate how frequent combat events are for calculating dynamic stats and abilities
+		"attacks/s":3,		
+		"hits/s":.25,
+		"blocks/s":0,
+		"kills/s":1.5,		
+		"crit chance":.15,
+		"low healths/s":1.0/45, # total guesswork.
+
+		"fight length":20, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
+
+		# estimated sheet stats for target level
+		"physique":450,
+		"cunning":450,
+		"spirit":450,
+
+		"offense":1200,
+		"defense":900,
+
+		"health":3500,
+		"health regeneration":10,
+
+		"armor":250,
+		"energy":2000,
+		
+		# estimated damage % for target level. add whatever damages are important to your build
+		"physical %":150,
+		"fire %":400, "burn %":200,
+		"lightning %":250, "electrocute %":100,
+		"pierce":100,
+		"chaos":100,
+
+		"playStyle":"ranged", # playstyle for weighting constellation abilities. [ranged/shortranged/melee/tank]
+		"weapons":[
+			"ranged"
+		],
+		"blacklist":[
+			# list of constellations that I want to manually exclude for some reason.
+		]	
+	}
+)
+
+		#"acid %":0, 
+		#"acid resist":0, 
+		#"aether":0, 
+		#"aether %":0, 
+		#"aether resist":0, 
+		#"all damage %":0, 
+		#"armor":0, 
+		#"armor %":0, 
+		#"armor absorb":0, 
+		#"armor physique requirements":0, 
+		#"attack as health %":0, 
+		#"attack speed":0, 
+		#"attack speed retaliation":0, 
+		#"avoid melee":0, 
+		#"avoid ranged":0, 
+		#"bleed":0, 
+		#"bleed %":0, 
+		#"bleed duration":0, 
+		#"bleed resist":0, 
+		#"bleed retaliation":0, 
+		#"block %":0, 
+		#"blocked damage %":0, 
+		#"burn":0, 
+		#"burn %":0, 
+		#"burn duration":0, 
+		#"cast speed":0, 
+		#"chaos":0, 
+		#"chaos %":0, 
+		#"chaos resist":0, 
+		#"chaos retaliation":0, 
+		#"cold":0, 
+		#"cold %":0, 
+		#"cold resist":0, 
+		#"constitution %":0, 
+		#"crit damage":0, 
+		#"cunning":0, 
+		#"cunning %":0, 
+		#"cunning ranged requirements":0, 
+		#"damage beast %":0, 
+		#"damage chthonics %":0, 
+		#"damage from arachnids":0, 
+		#"damage from beasts":0, 
+		#"damage from insectoids":0, 
+		#"damage from undead":0, 
+		#"damage human %":0, 
+		#"damage reflect %":0, 
+		#"damage to cthonics":0, 
+		#"damage to undead":0, 
+		#"damage undead %":0, 
+		#"defense":0, 
+		#"defense %":0, 
+		#"duration":0, 
+		#"electrocute %":0, 
+		#"electrocute duration":0, 
+		#"elemental":0, 
+		#"elemental %":0, 
+		#"elemental resist":0, 
+		#"elemental shield":0, 
+		#"energy":0, 
+		#"energy %":0, 
+		#"energy absorb":0, 
+		#"energy burn %":0, 
+		#"energy leech":0, 
+		#"energy leech resist":0, 
+		#"energy regeneration":0, 
+		#"energy/s":0, 
+		#"fire":0, 
+		#"fire %":0, 
+		#"fire resist":0, 
+		#"frostburn":0, 
+		#"frostburn %":0, 
+		#"frostburn duration":0, 
+		#"health":0, 
+		#"health %":0, 
+		#"health regeneration":0, 
+		#"health/s":0, 
+		#"internal":0, 
+		#"internal %":0, 
+		#"internal duration":0, 
+		#"jewelry spirit requirements":0, 
+		#"life leach":0, 
+		#"life leach %":0, 
+		#"life leech":0, 
+		#"life leech %":0, 
+		#"life leech resist":0, 
+		#"life leech retaliation":0, 
+		#"lifesteal %":0, 
+		#"lightning":0, 
+		#"lightning %":0, 
+		#"lightning resist":0, 
+		#"max acid resist":0, 
+		#"max aether resist":0, 
+		#"max bleed resist":0, 
+		#"max chaos resist":0, 
+		#"max fire resist":0, 
+		#"max lightning resist":0, 
+		#"max pierce resist":0, 
+		#"max vitality resist":0, 
+		#"melee weapon cunning requirements":0, 
+		#"melee weapon physique requirements":0, 
+		#"move %":0, 
+		#"move speed retaliation":0, 
+		#"offense":0, 
+		#"offense %":0, 
+		#"pet acid":0, 
+		#"pet acid resist":0, 
+		#"pet aether resist":0, 
+		#"pet all damage %":0, 
+		#"pet attack speed":0, 
+		#"pet bleed resist":0, 
+		#"pet chaos resist":0, 
+		#"pet crit damage":0, 
+		#"pet defense %":0, 
+		#"pet elemental %":0, 
+		#"pet elemental resist":0, 
+		#"pet fire damage %":0, 
+		#"pet health %":0, 
+		#"pet health regeneration":0, 
+		#"pet health/s":0, 
+		#"pet lifesteal %":0, 
+		#"pet lightning damage %":0, 
+		#"pet max all resist":0, 
+		#"pet offense %":0, 
+		#"pet physical":0, 
+		#"pet pierce resist":0, 
+		#"pet pierce retaliation":0, 
+		#"pet poison":0, 
+		#"pet retaliation %":0, 
+		#"pet total speed":0, 
+		#"pet vitality resist":0, 
+		#"physical":0, 
+		#"physical %":0, 
+		#"physical resist":0, 
+		#"physical retaliation":0, 
+		#"physical to chaos":0, 
+		#"physique":0, 
+		#"physique %":0, 
+		#"pierce":0, 
+		#"pierce %":0, 
+		#"pierce resist":0, 
+		#"pierce retaliation":0, 
+		#"poison":0, 
+		#"poison %":0, 
+		#"poison duration":0, 
+		#"reduce aether resist":0, 
+		#"reduce elemental resist":0, 
+		#"reduce lightning resist":0, 
+		#"reduce physical resist":0, 
+		#"reduce pierce resist":0, 
+		#"reduced bleed duration":0, 
+		#"reduced burn duration":0, 
+		#"reduced electrocute duration":0, 
+		#"reduced entrapment duration":0, 
+		#"reduced freeze":0, 
+		#"reduced freeze duration":0, 
+		#"reduced frostburn duration":0, 
+		#"reduced poison duration":0, 
+		#"reduced stun duration":0, 
+		#"reflected damage reduction":0, 
+		#"retaliation %":0, 
+		#"shield physique requirements":0, 
+		#"shield recovery":0, 
+		#"skill cost %":0, 
+		#"skill disruption protection":0, 
+		#"slow move":0, 
+		#"slow resist":0, 
+		#"spirit":0, 
+		#"spirit %":0, 
+		#"stun %":0, 
+		#"stun duration":0, 
+		#"stun retaliation":0, 
+		#"terrify retaliation":0, 
+		#"total speed":0, 
+		#"triggered acid":0, 
+		#"triggered aether":0, 
+		#"triggered bleed":0, 
+		#"triggered burn":0, 
+		#"triggered chaos":0, 
+		#"triggered cold":0, 
+		#"triggered electrocute":0, 
+		#"triggered elemental":0, 
+		#"triggered fire":0, 
+		#"triggered frostburn":0, 
+		#"triggered internal":0, 
+		#"triggered lightning":0, 
+		#"triggered physical":0, 
+		#"triggered pierce":0, 
+		#"triggered poison":0, 
+		#"triggered vitality":0, 
+		#"vitality":0, 
+		#"vitality %":0, 
+		#"vitality decay":0, 
+		#"vitality decay %":0, 
+		#"vitality decay retaliation":0, 
+		#"vitality resist":0, 
+		#"weapon damage %":0, 
+		#"weapon spirit requirements":0, 
 
 newModel = Model(
 	#name
@@ -724,6 +875,7 @@ newModel = Model(
 		#		will be calculated from your stats settings and base (non perc) values
 
 		#   resist reductions <- appropriate damage % stat and bonus
+		#	crit damage <- uses damage % stats and weights and crit chance stat
 
 		#   elemental damage and resist <- fire/cold/lightning damage and resist  (includes pets)
 		#   all damage % -< all individual damage % (includes pets)
@@ -772,10 +924,10 @@ newModel = Model(
 		"energy":2500,
 		
 		# estimated damage % for target level. add whatever damages are important to your build
-		"physical %":200+150+100, # sheet % damage for important damage types.
-		"fire %":400+175+100,
-		"lightning %":200+175+100,
-		"acid %":150+175+100,
+		"physical %":200, # sheet % damage for important damage types.
+		"fire %":400,
+		"lightning %":200,
+		"acid %":150,
 
 		"retaliation %":250+100,
 

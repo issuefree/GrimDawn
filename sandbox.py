@@ -1,12 +1,13 @@
 import sys
 from dataModel import *
 from constellationData import *
+from itemData import *
 from utils import *
 from models import *
 
 import os
 
-model = lochlan
+model = armitage
 model.checkModel()
 # print model
 
@@ -36,5 +37,25 @@ def evalCon(c):
 			if model.get(bonus) != 0:
 				print str(bonus).ljust(25), int(star.bonuses[bonus]), "\t", int(model.get(bonus)*star.bonuses[bonus])
 
+# print solutionPath(findBonus("stun %"))
 
-evalCon(tortoise)
+# print leatheryHide.evaluate(model, True)
+# print sanctifiedBone.evaluate(model, True)
+# print runestone.evaluate(model, True)
+
+
+# for item in arms:
+# 	print item.evaluate(model, "arms", True)
+
+location = "head"
+items = Item.getByLocation(location, augments)
+for item in items:
+	item.evaluate(model, location)
+	# print item.name.ljust(20), item.value
+items.sort(key=lambda i: i.value, reverse=True)
+for item in items:
+	print item.evaluate(model, location, True)
+
+# evalSol([xA, owl, xE, hawk, xP, eel, tempest, kraken])
+
+

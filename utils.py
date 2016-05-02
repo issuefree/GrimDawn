@@ -59,6 +59,23 @@ def getAffinities(constellations):
 	timeMethod("getAffinities", start)
 	return affinities
 
+def findBonus(targetBonuses):
+	if type(targetBonuses) == type(""):
+		targetBonuses = [targetBonuses]
+	targets = []
+	for c in Constellation.constellations:		
+		for s in c.stars:
+			if c in targets:
+				break
+			for targetBonus in targetBonuses:
+				if targetBonus in s.bonuses.keys():
+					targets += [c]
+					break
+				if s.ability:
+					if targetBonus in s.ability.bonuses.keys():
+						targets += [c]
+						break
+	return targets
 
 def printBonusList():
 	print "All constellation bonuses:"
@@ -67,8 +84,12 @@ def printBonusList():
 		for s in c.stars:
 			for bonus in s.bonuses.keys():
 				bonuses[bonus] = True
+			if s.ability:
+				for bonus in s.ability.bonuses.keys():
+					bonuses[bonus] = True
+
 	for key in sorted(bonuses.keys()):
-		print "  "+key
+		print "\t\t#\""+key+"\":0, "
 		
 def getBonuses(constellations=Constellation.constellations, model=None):
 	bonuses = {}

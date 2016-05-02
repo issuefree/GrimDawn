@@ -646,7 +646,7 @@ e = Star(ghoul, d, {})
 e.addAbility(Ability(
 	"Ghoulish Hunger", 
 	{"type":"buff", "trigger":"low health", "chance":1, "recharge":30, "duration":6},
-	{"life leach":94*2, "life leach %":135, "lifesteal %":60, "attack speed":20} ))
+	{"life leech":94*2, "life leech %":135, "lifesteal %":60, "attack speed":20} ))
 
 jackal = Constellation("Jackal", "1c", "3c")
 jackal.id = "jackal"
@@ -898,7 +898,7 @@ f.addAbility(war)
 tempest = Constellation("Tempest", "5a 5p", "1e 1p")
 tempest.id = "tempest"
 a = Star(tempest, [], {"lightning %":40})
-b = Star(tempest, a, {"lightning":(1-24)/2})
+b = Star(tempest, a, {"lightning":(1+24)/2})
 c = Star(tempest, b, {"lightning %":50, "electrocute %":50})
 d = Star(tempest, c, {"offense":10, "lightning resist":25})
 e = Star(tempest, d, {"move %":3, "lightning %":200*.3})

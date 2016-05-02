@@ -47,8 +47,8 @@ def evalCon(c):
 # for item in arms:
 # 	print item.evaluate(model, "arms", True)
 
-location = "head"
-items = Item.getByLocation(location, augments)
+location = "axe"
+items = Item.getByLocation(location, components)
 for item in items:
 	item.evaluate(model, location)
 	# print item.name.ljust(20), item.value

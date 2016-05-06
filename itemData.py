@@ -21,6 +21,13 @@ components = [
 	Item("Leathery Hide", {"health %":5, "armor":24, "reduced stun duration":25}, ["head"]),
 	Item("Sanctified Bone", {"vitality resist":18, "chaos resist":12}, ["chest", "head"]),
 	Item("Runestone", {"elemental %":12, "armor":18, "elemental resist":10}, ["head"]),
+	Item("Prismatic Diamond", {"damage reflect %":20, "elemental":18, "elemental resist":7, "energy absorb":20}, ["head"],
+		Ability(
+			"Prismatic Rage",
+			{"type":"buff", "trigger":"low health", "chance":1, "recharge":30, "duration":8},
+			{"all damage %":50, "total speed":10, "offense":30}
+		)
+	),
 
 	Item("Polished Emerald", {"physique":8, "cunning":8, "spirit":8}, ["shield", "offhand", "ring", "head", "chest"]),
 	Item("Ectoplasm", {"energy %":20, "energy/s":2}, ["head", "ring", "amulet", "medal"]),
@@ -44,6 +51,7 @@ components = [
 			{"weapon damage %":25, "triggered lightning":(54+129)/2, "stun %":100}
 		)
 	),
+	Item("Arcane Spark", {"energy leech":45, "energy regeneration":20, "offense":36}, ["amulet", "medal"]),
 	Item("Aether Soul", {"aether %":10, "aether resist":12, "damage from aetherials":-6}, ["amulet", "medal"]),
 	Item("Black Tallow", {"chaos %":10, "chaos resist":12, "damage from chthonics":-6}, ["amulet", "medal"]),
 	Item("Vicious Jawbone", {"physical %":15, "internal %":20, "cunning":12, "attack speed":3}, ["amulet", "medal"]),
@@ -220,6 +228,20 @@ components = [
 			"Decapitate",
 			{"type":"attack", "trigger":"manual", "recharge":3.5, "targets":2},
 			{"weapon damage %":200, "triggered physical":(164+236)/2, "triggered bleed":720*.35, "crit damage":50}
+		)
+	),
+	Item("Oleron's Blood", {"physical %":25, "internal %":40, "offense":18, "total speed":2}, ["sword", "axe", "mace", "dagger", "twohand"],
+		Ability(
+			"Oleron's Might",
+			{"type":"attack", "trigger":"manual", "recharge":3.5, "targets":1},
+			{"weapon damage %":260, "triggered physical":(174+346)/2, "internal":210, "crit damage":50, "reduced damage":20}
+		)
+	),
+	Item("Shard of Beronath", {"all damage %":15, "elemental":8, "offense":25, "physical to elemental":10}, ["sword", "axe", "mace", "dagger", "twohand"],
+		Ability(
+			"Beronath's Fury",
+			{"type":"attack", "trigger":"manual", "recharge":.5},
+			{"weapon damage %":135, "elemental":23, "all damage %":20, "elemental %":40}
 		)
 	),
 

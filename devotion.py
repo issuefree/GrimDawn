@@ -230,7 +230,7 @@ def getUpperBoundScore(solution, points, wanted, model):
 	return score
 
 def sortDeadSolution(solution, model):
-	return sorted(solution, key=lambda c: len(c.stars))
+	return sorted(solution, key=lambda c: c.evaluate(model))
 
 def killSolution(solution, model):
 	global globalMetadata
@@ -379,6 +379,7 @@ def startSearch(model, startingSolution=[]):
 	print "\nEvaluating seed solutions..."
 	for solution in globalMetadata["bestSolutions"]:
 		printSolution(solution[1], model, "  ")
+		killSolution(solution[1], model)
 		if solution[0] >= globalMetadata["bestScore"]:
 			globalMetadata["bestScore"] = solution[0]
 		# for i in range(1, len(solution[1])):

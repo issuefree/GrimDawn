@@ -508,7 +508,7 @@ g = Star(magi, f, {})
 # there can be multiples active.
 fissure = Ability(
 	"Fissure", 
-	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":1.5, "duration":5, "targets":3, "shape":"ground"},
+	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":1.5, "duration":5, "targets":2.5, "shape":"ground"},
 	{"triggered fire":116*8, "duration":{"triggered burn":132}, "stun %":15} )
 g.addAbility(fissure)
 
@@ -694,7 +694,7 @@ f = Star(wendigo, e, {})
 #giving it 3 targets since it's 0 recharge I can keep a few going.
 f.addAbility(Ability(
 	"Wendigo's Mark", 
-	{"type":"attack", "trigger":"attack", "chance":.25, "recharge":0, "duration":8, "targets":3},
+	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":0, "duration":8, "targets":3},
 	{"duration":{"triggered vitality":186}, "attack as health %":90} ))
 
 hydra = Constellation("Hydra", "3a 3c 5e", "2c 3e")
@@ -1079,3 +1079,4 @@ for c in origConstellations:
 for c in abilityFragments:
 	globals()[c.id] = c
 
+torch.addConflicts([torchMeteorShower])

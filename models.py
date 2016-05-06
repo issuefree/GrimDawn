@@ -230,21 +230,17 @@ class Model:
 			return 0
 
 
-nyx = Model(
-	"nyx",
+lachesis = Model(
+	"lachesis",
 	{
-		"spirit":12.5, 
-		"offense":20, 
-		"crit damage":5,
-		"vitality %":20,
-		"chaos %":7.5,
-		"cast speed":5,
-		"defense":6,
+		"offense":17.5, 
+		"cast speed":25,
+		"defense":7.5,
 		"armor":3.5, 
 		# armor absorb is good vs lots of little hits. This char regens fast with lots of little enemies so there's not much value
-		"armor absorb":2,
-		"health":.6, "health/s":0,
-		"energy":.2, "energy/s":5,
+		"armor absorb":10,
+		"health":.6,
+		"energy":.25,
 		"avoid melee":10, "avoid ranged":15,
 		"resist":7.5,
 
@@ -261,9 +257,11 @@ nyx = Model(
 		"pet health/s":1,
 		"pet retaliation":1, "pet retaliaion %":3,
 
+		"vitality %":25,
+		"chaos %":7.5,
+
 		"triggered vitality":30, "triggered vitality decay":10,
 		"triggered chaos":10,
-		"triggered fire":3,
 		"triggered life leech":3,
 		"triggered damage":1,
 		
@@ -273,28 +271,36 @@ nyx = Model(
 	},
 
 	{
-		"attacks/s":5,
-		"hits/s":1,
+		"attacks/s":3.5,
+		"allAttacks/s":[
+			3.5, # sigil
+			2.5, # lightning totem
+			2.5, # grasping roots
+			1,   # pets/locust
+			1,   # pets/locust
+			1,   # pets/locust
+		],
+		"hits/s":.5,
 		"blocks/s":0,
-		"kills/s":1,
-		"crit chance":.12,
+		"kills/s":1.5,
+		"crit chance":.075,
 		"low healths/s":1.0/30, # total guesswork.
 
 		"physique":650,
 		"cunning":400,
 		"spirit":650,
 
-		"offense":1500,
+		"offense":1250,
 		"defense":1000,
 
-		"health":5000,
-		"armor":450,
-		"energy":2500,
+		"health":5500,
+		"armor":400,
+		"energy":3000,
 
-		"vitality %":750,
-		"chaos %":3507,
+		"vitality %":900, "vitality decay %":200,
+		"chaos %":350,
 
-		"pet all damage %":200,
+		"pet all damage %":150,
 
 		"fight length":30,
 
@@ -317,50 +323,51 @@ armitage = Model(
 		"attack speed":10,
 		"cast speed":7.5,
 		
-		"energy": .1, # "energy %": ,
-		"energy absorb": 5,
+		"energy":.2, # "energy %": ,
+		"energy absorb": 15,
 		# "energy regeneration": ,
 		# "energy/s": ,
 
 		"health": .66, # "health %": ,
-		"health regeneration": 5,
+		# "health regeneration": 5,
 		# "health/s": 5,
 
-		"armor": 5, # "armor %": ,
-		"armor absorb": 20,
+		"armor": 5-1.5, 
+		"armor absorb": 20-15,
 		
-		"defense": 1, # "defense %": ,
-		"resist": 15,
-		#"elemental resist": 12.5,
+		"defense": 1-.5, # "defense %": ,
+		"resist": 15-10,
 		"physical resist":35,
-		"pierce resist":25,
+		"pierce resist":25-15,
+		"aether reist":25,
+		"acid resist":10,
+		"chaos resist":20,
+		"bleed resist":15,
 
 		"block %": 100,
-		"blocked damage %":50,
+		"blocked damage %":50-10,
 		"shield recovery":75,
 
 		"offense": 10, # "offense %": ,
 
 		"damage":1,
-		"physical": 5, "physical %": 7.5,
-		"fire":7.5, "fire %": 12.5,
-		"lightning": 2.5, "lightning %": 5,
-		"elemental": 1.5, # "elemental %": 20,
-		"burn": 3, "burn %": 6, "burn duration":5,
+		"physical": 7.5, "triggered physical":5, "physical %": 7.5,
+		"fire":12.5, "triggered fire":10, "fire %": 15,
+		"burn":7.5, "triggered burn":5, "burn %": 5, "burn duration":5,
+		"lightning": 5, "triggered lightning":2.5, "lightning %":5,
+		"elemental": 2.5, # "elemental %": 20,
 
-		"triggered fire":7.5,
-		"triggered burn":5,
 
 		"weapon damage %":7.5,
 
 		# "crit damage": ,
-		"damage reflect %": 25,
-		"retaliation":7.5, 
-		"retaliation %": 17.5,
+		"damage reflect %": 35,
+		"retaliation":7, 
+		"retaliation %":17,
 		
 		"stun %":-1,
 
-		"lifesteal %":20 ,
+		"lifesteal %":20,
 		"move %": 10,
 
 		"Acid Spray":.75,
@@ -370,7 +377,7 @@ armitage = Model(
 		"attacks/s":1.75,
 		"allAttacks/s":[
 			1.75, #main attack (fire strike)
-			1, # thermite mine / mortar
+			.75, # thermite mine / mortar
 			.5, # brutal shield slam: 3s recharge, 3 target max. Call it 2 targets and 4 seconds between = .5 aps
 			.4, #war cry: 7.5 s recharge, big radius, call it 3 hits = 3/7.5 = .4
 			.385, # markovian's advantage: 22% chance = 1.75*.22 = 
@@ -379,7 +386,7 @@ armitage = Model(
 		"blocks/s":1.5,
 		"kills/s":1,
 		"crit chance":.08,
-		"low healths/s":1.0/60, # total guesswork.
+		"low healths/s":1.0/120, # total guesswork.
 
 		"physique":1200,
 		"cunning":400,
@@ -388,19 +395,18 @@ armitage = Model(
 		"offense":1750,
 		"defense":1750,
 
-		"health":7500,
-		"health regeneration":100,
+		"health":8500,
+		"health regeneration":200,
 
-		"armor":1500,
+		"armor":2500,
 		"energy":2500,
 
-		"internal":1,
-		"physical %":300, "physical":700,
-		"fire %":750, "burn %":450,
-		"lightning %":300,
-		"acid %":150,
+		"physical %":300, "physical":800,
+		"fire %":750, "fire":2000,
+		"burn %":450, "burn":400,
+		"lightning %":400, "lightning":850,
 
-		"retaliation %":400+100,
+		"retaliation %":550+100,
 
 		"fight length":45,
 

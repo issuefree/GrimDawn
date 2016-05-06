@@ -7,7 +7,7 @@ from models import *
 
 import os
 
-model = armitage
+model = lachesis
 model.checkModel()
 # print model
 
@@ -47,8 +47,8 @@ def evalCon(c):
 # for item in arms:
 # 	print item.evaluate(model, "arms", True)
 
-location = "head"
-items = Item.getByLocation(location, augments)
+location = "amulet"
+items = Item.getByLocation(location, components)
 for item in items:
 	item.evaluate(model, location)
 	# print item.name.ljust(20), item.value
@@ -56,6 +56,21 @@ items.sort(key=lambda i: i.value, reverse=True)
 for item in items:
 	print item.evaluate(model, location, True)
 
-# evalSol([xA, owl, xE, hawk, xP, eel, tempest, kraken])
+sol = [
+	xC, 
+	fiend, 
+	light, 
+	raven, 
+	magiFissure, 
+	xA, 
+	anvil, 
+	viper, 
+	hound, 
+	messenger, 
+	behemoth, 
+	torch,
+]
+# evalSol(sol)
 
 
+# evalCon(crown)

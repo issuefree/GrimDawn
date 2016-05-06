@@ -49,7 +49,7 @@ components = [
 	Item("Vicious Jawbone", {"physical %":15, "internal %":20, "cunning":12, "attack speed":3}, ["amulet", "medal"]),
 	Item("Dread Skull", {"pierce %":12, "vitality %":8, "bleed %":30, "bleed duration":15, "attack speed":5, "move speed":3}, ["amulet", "medal"]),
 
-	Item("Resilient Plating", {"defense":14, "armor":24, "pierce resist":10}, ["shield", "offhand", "chest", "shoulder"]),
+	Item("Resilient Plating", {"defense":14, "armor":24, "pierce resist":10}, ["shield", "offhand", "chest", "shoulders"]),
 
 	Item("Ancient Armor Plate", {"physique":18, "armor":35, "armor %":8}, ["chest", "legs"]),
 	Item("Rotten Heart", {"chaos %":25, "poison %":25, "offense":18, "acid retaliation":75}, ["chest"]),	
@@ -208,7 +208,7 @@ components = [
 			{"weapon damage %":220, "triggered chaos":(86+320)/2}
 		)
 	),
-	Item("Blessed Whetstone", {"increase armor pierce":50, "bleed %":25, "offense":18}, ["sword", "axe", "mace", "dagger", "twohand", "shield", "offhand"],
+	Item("Blessed Whetstone", {"increase armor pierce":50, "bleed %":25, "offense":18}, ["sword", "axe", "twohand"],
 		Ability(
 			"Behead",
 			{"type":"attack", "trigger":"manual", "recharge":3.5, "targets":2},
@@ -302,7 +302,7 @@ augments = [
 	Item("Survivor's Ally", {"pet all damage %":8, "pet health %":5, "pet energy regeneration":10}, ["ring", "amulet"]),
 
 	Item("Bladeward Powder", {"pierce resist":10}, ["head", "chest", "shoulders", "arms", "legs", "feet", "waist"]),
-	Item("Mogdrogen's Touch", {"acid resist":10, "vitality resist":10}, ["head", "chest", "shoulders", "arms", "legs", "feet", "waist"]),
+	Item("Mogdrogen's Touch", {"acid resist":10, "vitality resist":7}, ["head", "chest", "shoulders", "arms", "legs", "feet", "waist"]),
 
 	#rovers honored
 	Item("Arkovian Rose Powder", {"elemental %":7, "energy/s":1}, ["ring", "amulet"]),

@@ -47,7 +47,7 @@ def evalCon(c):
 # for item in arms:
 # 	print item.evaluate(model, "arms", True)
 
-location = "amulet"
+location = "sword"
 items = Item.getByLocation(location, components)
 for item in items:
 	item.evaluate(model, location)
@@ -74,3 +74,4 @@ sol = [
 
 
 # evalCon(crown)
+

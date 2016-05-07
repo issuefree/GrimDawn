@@ -390,30 +390,18 @@ class Ability:
 		return triggers/numFights
 
 	def calculateDynamicBonuses(self, model):
-		damages = [
-			"acid", "poison",
-			"aether", 
-			"bleed", 
-			"fire", "burn", 
-			"chaos", 
-			"lightning", "electrocute", 
-			"elemental", 
-			"cold", "frostburn", 
-			"physical", "internal",
-			"pierce",
-			"vitality", "vitality decay",
-			"life leech"
-		]
 		if "attack as health %" in self.bonuses.keys():
 			totalDamage = 0
 			for dam in damages:
 				if "triggered "+dam in self.bonuses.keys():
-					totalDamage += self.bonuses["triggered "+dam]*model.getStat(dam+" %")*self.bonuses["attack as health %"]/100/100.0
+					totalDamage += self.bonuses["triggered "+dam]*model.getStat(dam+" %")/100.0*self.bonuses["attack as health %"]/100
 
-			if "health" in self.bonuses.keys():
-				self.bonuses["health"] += totalDamage
+			# count as half due to overheal
+			if "health" in self.bonuses.keys():				
+				self.bonuses["health"] += totalDamage*.5
 			else:
-				self.bonuses["health"] = totalDamage
+				self.bonuses["health"] = totalDamage*.5
+
 
 		if self.gc("type") == "attack":
 			for dam in damages:

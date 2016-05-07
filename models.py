@@ -239,35 +239,36 @@ lachesis = Model(
 		"armor":3.5, 
 		# armor absorb is good vs lots of little hits. This char regens fast with lots of little enemies so there's not much value
 		"armor absorb":10,
-		"health":.6,
-		"energy":.25,
+		"health":.75,
+		"health/s":5, #downgraded because I lifesteal so much. i really just want a big pool not regen.
+		"energy":.33,
 		"avoid melee":10, "avoid ranged":15,
 		"resist":7.5,
 
 		"pet attack speed":5,
-		"pet total speed":8,
+		"pet total speed":12.5,
 		"pet offense":5,
 		"pet offense %":50,
 		"pet lifesteal %":2,
 		"pet all damage %":7.5,
-		"pet damage":10,
+		"pet damage":5,
 		"pet defense %":1,
 		"pet resist":1.5,
-		"pet health %":5,
-		"pet health/s":1,
+		"pet health %":7.5,
+		"pet health/s":10,
 		"pet retaliation":1, "pet retaliaion %":3,
 
 		"vitality %":25,
 		"chaos %":7.5,
 
-		"triggered vitality":30, "triggered vitality decay":10,
+		"triggered vitality":35, "triggered vitality decay":15,
 		"triggered chaos":10,
-		"triggered life leech":3,
+		"triggered life leech":5,
 		"triggered damage":1,
 		
 		"weapon damage %":1,
-		"slow move":7,
-		"stun %":10
+		"slow move":2.5,
+		"stun %":20
 	},
 
 	{
@@ -283,7 +284,7 @@ lachesis = Model(
 		"hits/s":.5,
 		"blocks/s":0,
 		"kills/s":1.5,
-		"crit chance":.075,
+		"crit chance":.1,
 		"low healths/s":1.0/30, # total guesswork.
 
 		"physique":650,
@@ -293,25 +294,25 @@ lachesis = Model(
 		"offense":1250,
 		"defense":1000,
 
-		"health":5500,
-		"armor":400,
+		"health":6500,
+		"armor":750,
 		"energy":3000,
 
-		"vitality %":900, "vitality decay %":200,
-		"chaos %":350,
+		"vitality %":1000, "vitality decay %":350,
+		"chaos %":400,
 
-		"pet all damage %":150,
+		"pet all damage %":100,
 
 		"fight length":30,
 
 		"playStyle":"shortranged",
 		"weapons":["offhand"],
 		"blacklist":[
-			sage, 			#seems cool but there's nothing but the ability
-			wolf,			#relatively low value for the requirements
-			soldier,			#relatively low value for the requirements
-			tree, spear,
-			falcon, hammer, owl, harpy, throne, wolverine, blade # don't need these. crook will supply all I need.
+			# sage, 			#seems cool but there's nothing but the ability
+			# wolf,			#relatively low value for the requirements
+			# soldier,			#relatively low value for the requirements
+			# tree, spear,
+			# falcon, hammer, owl, harpy, throne, wolverine, blade # don't need these. crook will supply all I need.
 		]
 	}
 )

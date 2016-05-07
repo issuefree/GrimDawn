@@ -611,10 +611,11 @@ g = Star(sage, f, {})
 # 5 s lifespan
 # call it 3 attacks and a detonate each hitting 2 targets
 # 4 attacks per
+# reducing the stun because it's on detonate after 5 seconds etc.
 g.addAbility(Ability(
 	"Elemental Seeker",
 	{"type":"summon", "trigger":"attack", "chance":1, "recharge":1.5, "lifespan":5},
-	{"triggered elemental":60*3*2+132*2, "stun %":100} ))
+	{"triggered elemental":60*3*2+132*2, "stun %":100/2.5} ))
 
 wolf = Constellation("Mogdrogen the Wolf", "15a 12e")
 wolf.id = "wolf"
@@ -733,17 +734,12 @@ f = Star(revenant, e, {})
 #100% on enemy death
 #3 s recharge
 #5 summon limit
-# 25 s lifespan
+# 25 s lifespan *.75 due to getting killed
 # 10 attacks per summon (1/2.5s)
 #scales with pet bonuses which I don't have an answer for
-# 1-26 = 10
-# 5-30 = 10
-# 9-34 = 8
-# 13-38 = 6
-# 17-42 = 5
 f.addAbility(Ability(
 	"Raise the Dead", 
-	{"type":"summon", "trigger":"kill", "chance":1, "recharge":3, "lifespan":25},
+	{"type":"summon", "trigger":"kill", "chance":1, "recharge":3, "lifespan":25*.75},
 	{"pet physical":53*10, "slow move":.25} ))
 
 torch = Constellation("Ulzuin's Torch", "8c 15e")

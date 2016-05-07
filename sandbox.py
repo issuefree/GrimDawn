@@ -25,6 +25,15 @@ def evalSol(solution):
 		print "FAIL"
 
 
+def evalItems(location, itemType):
+	# location = "amulet"
+	items = Item.getByLocation(location, itemType)
+	for item in items:
+		item.evaluate(model, location)
+		# print item.name.ljust(20), item.value
+	items.sort(key=lambda i: i.value, reverse=True)
+	for item in items:
+		print item.evaluate(model, location, True)
 
 
 def evalCon(c):
@@ -47,30 +56,36 @@ def evalCon(c):
 # for item in arms:
 # 	print item.evaluate(model, "arms", True)
 
-location = "amulet"
-items = Item.getByLocation(location, components)
-for item in items:
-	item.evaluate(model, location)
-	# print item.name.ljust(20), item.value
-items.sort(key=lambda i: i.value, reverse=True)
-for item in items:
-	print item.evaluate(model, location, True)
+
+evalItems("mace", components)
+
+# sol = [
+# 	xC, 
+# 	fiend, 
+# 	light, 
+# 	raven, 
+# 	magiFissure, 
+# 	xA, 
+# 	anvil, 
+# 	viper, 
+# 	hound, 
+# 	messenger, 
+# 	behemoth, 
+# 	torch,
+# ]
 
 sol = [
+	xE, 
+	bat, 
+	xP, 
+	gallows, 
+	jackal, 
+	wendigo, 
 	xC, 
-	fiend, 
-	light, 
-	raven, 
-	magiFissure, 
-	xA, 
-	anvil, 
-	viper, 
-	hound, 
-	messenger, 
-	behemoth, 
-	torch,
+	revenant, 
+	behemothGiantsBlood,
 ]
 # evalSol(sol)
 
 
-# evalCon(crown)
+# evalCon(jackal)

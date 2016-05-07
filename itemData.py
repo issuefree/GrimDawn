@@ -80,7 +80,7 @@ components = [
 	Item("Battered Shell", {"physique":15, "block %":10}, ["shield"], 
 		Ability(
 			"Shield Slam",
-			{"type":"attack", "trigger":"manual", "recharge":3, "targets":2},
+			{"type":"attack", "trigger":"manual", "recharge":3, "targets":2, "shape":"melee"},
 			{"weapon damage %":125, "triggered physical":(85+112)/2, "stun %":100}
 		)
 	),
@@ -240,7 +240,7 @@ components = [
 	Item("Shard of Beronath", {"all damage %":15, "elemental":8, "offense":25, "physical to elemental":10}, ["sword", "axe", "mace", "dagger", "twohand"],
 		Ability(
 			"Beronath's Fury",
-			{"type":"attack", "trigger":"manual", "recharge":.5},
+			{"type":"attack", "trigger":"manual", "recharge":.5, "shape":"weapon"},
 			{"weapon damage %":135, "elemental":23, "all damage %":20, "elemental %":40}
 		)
 	),

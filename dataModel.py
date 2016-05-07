@@ -261,6 +261,8 @@ class Ability:
 					pass
 				elif self.gc("shape") == "pbaoe":
 					targets = targets * .25
+				elif self.gc("shape") == "melee":
+					targets = targets * .05
 
 			elif model.getStat("playStyle") == "shortranged":
 				# Characters who have short ranged abilities and try to keep monsters from hittim him but kiting is minimal and mostly for the purposes of clumping.
@@ -278,6 +280,9 @@ class Ability:
 					targets = targets * 1.25
 				elif self.gc("shape") == "pbaoe":
 					targets = targets * .75
+				elif self.gc("shape") == "melee":
+					targets = targets * .1
+
 			elif model.getStat("playStyle") == "melee":
 				# Characters who engage in melee but aim to kill fast and minimize getting surrounded or take a beating.
 				# Optimal range is melee but not surrounded.
@@ -294,6 +299,9 @@ class Ability:
 					targets = targets * 1.25
 				elif self.gc("shape") == "pbaoe":
 					pass
+				elif self.gc("shape") == "melee":
+					pass
+
 			elif model.getStat("playStyle") == "tank":
 				# Characters who run into the fray and try to take hits. Often retaliation based.
 				# Optimal range is all enemies up close and personal.
@@ -309,6 +317,8 @@ class Ability:
 					pass
 				elif self.gc("shape") == "pbaoe":
 					targets = targets * 1.5
+				elif self.gc("shape") == "melee":
+					pass
 
 			if self.gc("trigger") == "manual":
 				self.bonuses["attack opportunity cost"] = 100
@@ -661,6 +671,21 @@ class Item:
 		"feet":.12
 	}
 
+	meleeLocations = [
+		"sword", 
+		"axe", 
+		"mace",
+		"scepter",
+		"dagger", 
+		"twohand"
+	]
+	rangedLocations = [
+		"pisol",
+		"crossbow",
+		"rifle"
+	]
+	weaponLocations = meleeLocations + rangedLocations
+
 	@staticmethod
 	def getByLocation(location, items):
 		locItems = []
@@ -686,6 +711,10 @@ class Item:
 
 		abilityBonuses = {}
 		if self.ability:
+			if self.ability.gc("shape") == "weapon":
+				print location
+				if location in Item.meleeLocations:
+					self.ability.conditions["shape"] = "melee"
 			self.ability.calculateEffective(model)
 			self.ability.calculateDynamicBonuses(model)
 			for bonus in self.ability.bonuses.keys():

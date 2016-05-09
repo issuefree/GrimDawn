@@ -340,7 +340,7 @@ class Ability:
 							self.bonuses["triggered "+dam] = damage*interval
 
 			if "duration" in self.bonuses.keys():
-				self.setDebuffValue(model)
+				self.setDebuffValue(targets, model)
 
 		elif self.gc("type") == "shield":
 			self.effective = self.getNumTriggers(model)
@@ -349,14 +349,13 @@ class Ability:
 			self.effective = self.getNumTriggers(model)*.5
 
 			if "duration" in self.bonuses.keys():
-				self.setDebuffValue(model)
+				self.setDebuffValue(max(1, self.gc("targets")), model)
 
 		elif self.gc("type") == "summon":
 			self.effective = self.getUpTime(model)
 
-	def setDebuffValue(self, model):
+	def setDebuffValue(self, targets, model):
 		#find duration based elements (for attacks that include a debuff component)
-		targets = max(1, self.gc("targets"))
 		upTime = self.getUpTime(model)
 		# print "up", upTime
 		durationBonuses = self.bonuses["duration"]
@@ -690,7 +689,7 @@ class Item:
 	def getByLocation(location, items):
 		locItems = []
 		for item in items:
-			if location in item.location:
+			if not location or location in item.location:
 				locItems += [item]
 		return locItems
 

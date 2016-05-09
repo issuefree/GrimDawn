@@ -178,7 +178,7 @@ components = [
 	Item("Blessed Steel", {"elemental":4, "elemental %":18, "physical to elemental":10, "offense":18}, ["sword", "axe", "mace", "dagger", "pistol", "rifle", "crossbow", "twohand", "shield", "offhand"],
 		Ability(
 			"Sacred Strike",
-			{"type":"attack", "trigger":"manual", "recharge":3, "duration":5},
+			{"type":"attack", "trigger":"manual", "recharge":3, "duration":5, "shape":"weapon"},
 			# reduce resist here is very strong against bosses but almost useless against trash (1/3)
 			{"weapon damage %":250, "triggered elemental":(165+254)/2, "physical to elemental":100, "duration":{"reduce resist":30/3}}
 		)
@@ -191,10 +191,11 @@ components = [
 		)
 	),
 	Item("Symbol of Solael", {"chaos":(2+12)/2, "chaos %":35, "physical to chaos":10, "energy absorb":33}, ["sword", "axe", "mace", "dagger", "pistol", "rifle", "crossbow", "twohand", "shield", "offhand"],
+		# the resist reduction is strong but it seems only powerful vs bosses /2.
 		Ability(
 			"Solael's Flame",
 			{"type":"attack", "trigger":"manual", "recharge":8, "duration":8},
-			{"triggered chaos":(44+136)/2*8, "duration":{"reduce resist":30}}
+			{"triggered chaos":(44+136)/2*8, "duration":{"reduce resist":30/2}}
 		)
 	),
 
@@ -205,7 +206,7 @@ components = [
 	Item("Amber", {"lightning":(2+8)/2, "lightning %":25, "electrocute %":25, "physical to lightning":10}, ["sword", "axe", "mace", "dagger", "twohand", "shield", "offhand"],
 		Ability(
 			"Empowered Lightning Nova",
-			{"type":"attack", "trigger":"manual", "targets":2.5, "shape":"pbaoe"},
+			{"type":"attack", "trigger":"manual", "targets":2, "shape":"pbaoe"},
 			{"weapon damage %":28, "triggered lightning":(69+341)/2}
 		)
 	),
@@ -219,14 +220,14 @@ components = [
 	Item("Blessed Whetstone", {"increase armor pierce":50, "bleed %":25, "offense":18}, ["sword", "axe", "twohand"],
 		Ability(
 			"Behead",
-			{"type":"attack", "trigger":"manual", "recharge":3.5, "targets":2},
+			{"type":"attack", "trigger":"manual", "recharge":3.5, "targets":1.5},
 			{"weapon damage %":190, "triggered physical":(132+202)/2, "triggered bleed":460*.25, "crit damage":50}
 		)
 	),
 	Item("Bloody Whetstone", {"bleed":30, "all damage %":8, "bleed %":30, "bleed duration":20}, ["sword", "axe", "twohand"], #two handed sword and axe
 		Ability(
 			"Decapitate",
-			{"type":"attack", "trigger":"manual", "recharge":3.5, "targets":2},
+			{"type":"attack", "trigger":"manual", "recharge":3.5, "targets":1.5},
 			{"weapon damage %":200, "triggered physical":(164+236)/2, "triggered bleed":720*.35, "crit damage":50}
 		)
 	),

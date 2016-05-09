@@ -7,7 +7,7 @@ from models import *
 
 import os
 
-model = lachesis
+model = lochlan
 model.checkModel()
 # print model
 
@@ -57,7 +57,7 @@ def evalCon(c):
 # 	print item.evaluate(model, "arms", True)
 
 
-evalItems("mace", components)
+evalItems("shoulders", components)
 
 # sol = [
 # 	xC, 

@@ -241,7 +241,7 @@ lachesis = Model(
 		"armor absorb":10,
 		"health":.75,
 		"health/s":5, #downgraded because I lifesteal so much. i really just want a big pool not regen.
-		"energy":.33,
+		"energy":777.5,
 		"avoid melee":10, "avoid ranged":15,
 		"resist":7.5,
 
@@ -267,6 +267,7 @@ lachesis = Model(
 		"triggered damage":1,
 		
 		"weapon damage %":1,
+		"attack opportunity cost":0, # I don't auto attack.
 		"slow move":2.5,
 		"stun %":20
 	},
@@ -515,25 +516,25 @@ lochlan = Model(
 	"Lochlan",
 	{
 		"armor":2, "armor absorb":10,
-		"attack speed":20,
 		"avoid melee":20, "avoid ranged":15,
+
+		"attack speed":25,
 		"cast speed":10,
+
 		# "crit damage":20,
 		"defense":7.5,
 		
-		"energy":.75,
 		"health":.75,
+		"energy":.75,
 		"lifesteal %":20,
 
 		"offense":15,
 
 		"elemental":5,
-		"electrocute":12.5, "electrocute %":7.5, "electrocute duration":2.5,
-		"physical":15, "physical %":10,
-		"lightning":20, "lightning %":20,
-		"bleed %":2.5,
-		"cold %":2.5,
-		"fire %":2.5,
+		"electrocute":12.5, "electrocute %":5, "electrocute duration":2.5,
+		"physical":20, "physical %":15,
+		"lightning":20, "lightning %":25,
+		"bleed %":5,
 
 		"weapon damage %":20, 
 
@@ -543,7 +544,7 @@ lochlan = Model(
 		"stun %":10,
 		"stun duration":5,
 
-		"move %":5,
+		"move %":10,
 
 	},
 	#stats

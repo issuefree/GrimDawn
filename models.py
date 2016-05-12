@@ -231,7 +231,7 @@ class Model:
 
 
 lachesis = Model(
-	"lachesis",
+	"Lachesis",
 	{
 		"offense":17.5, 
 		"cast speed":25,
@@ -241,7 +241,7 @@ lachesis = Model(
 		"armor absorb":10,
 		"health":.75,
 		"health/s":5, #downgraded because I lifesteal so much. i really just want a big pool not regen.
-		"energy":777.5,
+		"energy":.66,
 		"avoid melee":10, "avoid ranged":15,
 		"resist":7.5,
 
@@ -338,9 +338,9 @@ armitage = Model(
 		"armor absorb": 20-15,
 		
 		"defense": 1-.5, # "defense %": ,
-		"resist": 15-10,
+		"resist": 15-12.5,
 		"physical resist":35,
-		"pierce resist":25-15,
+		"pierce resist":25-20,
 		"aether reist":25,
 		"acid resist":10,
 		"chaos resist":20,
@@ -390,20 +390,20 @@ armitage = Model(
 		"crit chance":.08,
 		"low healths/s":1.0/120, # total guesswork.
 
-		"physique":1200,
-		"cunning":400,
-		"spirit":600,
+		"physique":1000,
+		"cunning":350,
+		"spirit":450,
 
-		"offense":1750,
-		"defense":1750,
+		"offense":1900,
+		"defense":1900,
 
 		"health":8500,
-		"health regeneration":200,
+		"health regeneration":250,
 
 		"armor":2500,
-		"energy":2500,
+		"energy":2000,
 
-		"physical %":300, "physical":800,
+		"physical %":300, "physical":900,
 		"fire %":750, "fire":2000,
 		"burn %":450, "burn":400,
 		"lightning %":400, "lightning":850,

@@ -7,7 +7,7 @@ from models import *
 
 import os
 
-model = lochlan
+model = armitage
 model.checkModel()
 # print model
 
@@ -30,7 +30,7 @@ def evalItems(location, itemType):
 	items = Item.getByLocation(location, itemType)
 	for item in items:
 		item.evaluate(model, location)
-		# print item.name.ljust(20), item.value
+		print item.name.ljust(20), item.value
 	items.sort(key=lambda i: i.value, reverse=True)
 	for item in items:
 		print item.evaluate(model, location, True)
@@ -57,7 +57,7 @@ def evalCon(c):
 # 	print item.evaluate(model, "arms", True)
 
 
-evalItems("shoulders", components)
+evalItems("axe", components)
 
 # sol = [
 # 	xC, 

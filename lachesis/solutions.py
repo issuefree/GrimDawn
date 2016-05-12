@@ -1,25 +1,23 @@
 self.seedSolutions = [
-  [xE, bat, jackal, xC, xP, gallows, wendigo, revenant, behemothGiantsBlood],  # 37566
-  [xA, xE, bat, viper, gallows, wendigo, jackal, revenant],  # 36231
-  [xA, shepherd, xC, viper, gallows, jackal, wendigo, revenant],  # 35764
-  [xA, shepherd, xE, xC, viper, jackal, eel, wendigo, revenant],  # 35146
-  [xE, raven, xC, jackal, bonds, xP, eel, wendigo, manticore],  # 34450
-  [xE, bat, hawk, vulture, bonds, witchblade, revenant],  # 32131
-  [xA, xE, bat, jackal, rat, bonds, witchblade, revenant],  # 32120
-  [xA, shepherd, xC, jackal, rat, bat, revenant, bonds],  # 31207
-  [xA, shepherd, xE, bat, jackal, rat, witchblade, revenant],  # 26668
-  [xA, shepherd, xE, bat, viper, afflictionFetidPool, jackal, xC, revenant, xP],  # 26282
-  [xA, shepherd, xE, bat, hawk, vulture, afflictionFetidPool, xC, revenant],  # 26138
-  [xA, shepherd, xE, bat, raven, viper, jackal, xC, revenant],  # 24926
-  [xA, shepherd, xE, bat, scorpion, vulture, xC, revenant, xP],  # 24122
-  [xA, shepherd, xE, bat, scorpion, jackal, bonds, afflictionFetidPool, xC, xP],  # 17787
-  [xA, shepherd, xE, bat, scorpion, viper, bonds, afflictionFetidPool, xC],  # 17716
-  [xA, shepherd, xE, bat, scorpion, jackal, bonds, witchblade],  # 17387
-  [xA, shepherd, xE, bat, scorpion, fiend, bonds, afflictionFetidPool],  # 17352
-  [xA, shepherd, xE, bat, scorpion, raven, jackal, bonds, xC],  # 16430
-  [xA, shepherd, xE, bat, scorpion, raven, viper, bonds],  # 16290
-  [xA, shepherd, xE, bat, scorpion, raven, hawk, jackal, afflictionFetidPool],  # 12233
-  [xA, shepherd, xE, bat, scorpion, raven, spider, xC, afflictionFetidPool],  # 11658
-  [xA, shepherd, xE, bat, scorpion, raven, eye, xC, afflictionFetidPool],  # 11033
-  [xA, shepherd, xE, bat, scorpion, raven, eye, hawk, xC],  # 9590
+  [xE, bat, hawk, jackal, xC, xP, gallows, wendigo, revenant],  # 35915
+  [xA, xE, bat, jackal, viper, gallows, wendigo, revenant],  # 35451
+  [xA, xE, bat, hawk, jackal, xC, xP, eel, wendigo, revenant],  # 35298
+  [xA, shepherd, xC, jackal, viper, gallows, wendigo, revenant],  # 35005
+  [xA, shepherd, xE, xC, jackal, viper, eel, wendigo, revenant],  # 34388
+  [xA, shepherd, xE, raven, xC, jackal, bonds, xP, eel, wendigo],  # 31501
+  [xA, shepherd, xE, bat, jackal, rat, witchblade, revenant],  # 25659
+  [xA, shepherd, xE, bat, jackal, afflictionFetidPool, viper, xC, revenant, xO],  # 25387
+  [xA, shepherd, xE, bat, hawk, vulture, afflictionFetidPool, xC, revenant],  # 25138
+  [xA, shepherd, xE, bat, raven, jackal, viper, xC, revenant],  # 23897
+  [xA, shepherd, harpy, xE, bat, jackal, viper, xC, revenant],  # 22969
+  [xA, shepherd, wolverine, xC, jackal, rat, bat, revenant],  # 22566
+  [xA, shepherd, wolverine, xE, bat, vulture, xC, revenant, xO],  # 22138
+  [xA, shepherd, wolverine, xE, bat, jackal, xP, eel, wendigo],  # 20743
+  [xA, shepherd, wolverine, falcon, xC, jackal, xP, eel, wendigo],  # 18500
+  [xA, shepherd, wolverine, falcon, bat, jackal, bonds, xE],  # 14297
+  [xA, shepherd, wolverine, falcon, bat, hawk, jackal, afflictionFetidPool],  # 10125
+  [xA, shepherd, wolverine, falcon, bat, raven, xE, xC, afflictionFetidPool],  # 9895
+  [xA, shepherd, wolverine, falcon, bat, scorpion, xC, afflictionFetidPool],  # 9543
+  [xA, shepherd, wolverine, falcon, bat, scorpion, hawk, xE],  # 8187
+  [xA, shepherd, wolverine, falcon, bat, scorpion, raven],  # 8053
 ]

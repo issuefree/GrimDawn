@@ -204,6 +204,8 @@ class Ability:
 		self.name = name		
 		self.bonuses = bonuses
 
+		self.dynamicBonuses = {}
+
 		self.conditions = conditions
 		#Conditions
 		# type:[buff, attack, heal, shield]
@@ -229,6 +231,14 @@ class Ability:
 			return self.bonuses[key]
 		else:
 			return 0
+
+	def getTotalBonus(self, key):
+		value = 0
+		if key in self.bonuses.keys():
+			value += self.bonuses[key]
+		if key in self.dynamicBonuses.keys():
+			value += self.dynamicBonuses[key]
+		return value
 
 	def calculateEffective(self, model):
 		self.calculateTriggerTime(model)
@@ -399,6 +409,7 @@ class Ability:
 		return triggers/numFights
 
 	def calculateDynamicBonuses(self, model):
+		self.dynamicBonuses = {}
 		if "attack as health %" in self.bonuses.keys():
 			totalDamage = 0
 			for dam in damages:
@@ -407,9 +418,9 @@ class Ability:
 
 			# count as half due to overheal
 			if "health" in self.bonuses.keys():				
-				self.bonuses["health"] += totalDamage*.5
+				self.dynamicBonuses["health"] += totalDamage*.5
 			else:
-				self.bonuses["health"] = totalDamage*.5
+				self.dynamicBonuses["health"] = totalDamage*.5
 
 
 		if self.gc("type") == "attack":
@@ -422,23 +433,24 @@ class Ability:
 						print "    " +self.name+" requires a defined " + dam + " _stat_ in the model."
 						model.stats[dam] = .01
 					else:
-						self.bonuses[dam] = self.gb(dam) + (model.getStat(dam) * self.gb("weapon damage %")/100.0 + self.gb(dam)) * self.gb(dam+" %")/100.0
+						self.dynamicBonuses[dam] = (model.getStat(dam) * self.gb("weapon damage %")/100.0 + self.gb(dam)) * self.gb(dam+" %")/100.0
 
 		# armor reduction is like + physical damage that isn't affected by %damage
 		if self.gb("reduce armor") > 0:
 			if model.getStat("physical %") <= 0:
 				print "    " +self.name+" requires a defined stat for physical %."
 			else:
-				self.bonuses["physical"] = self.gb("physical") + self.gb("reduce armor")*.7 / (model.getStat("physical %")/100.0)
+				self.dynamicBonuses["physical"] = self.gb("reduce armor")*.7 / (model.getStat("physical %")/100.0)
 
 		# handle damage that scales with pet damage
+		# this one doesn't look right but I'm not sure to what it applies
 		for dam in damages:
 			if self.gb("pet "+dam) > 0:
 				if model.getStat("pet all damage %") == 0:
 					print "    " +self.name+" requires a defined stat for pet all damage %."
 					model.stats["pet all damage %"] = .01
 				else:
-					self.bonuses["triggered "+dam] = self.gb("triggered "+dam) + self.gb("pet "+dam)*model.getStat("pet all damage %")/100
+					self.dynamicBonuses["triggered "+dam] = self.gb("pet "+dam)*model.getStat("pet all damage %")/100
 
 	def calculateValue(self, model):
 		self.calculateEffective(model)
@@ -451,8 +463,8 @@ class Ability:
 		if self.name in model.bonuses.keys():
 			modelFactor = model.get(self.name)
 
-		for bonus in self.bonuses.keys():
-			self.star.bonuses[bonus] = self.bonuses[bonus]*self.effective * modelFactor
+		for bonus in self.bonuses.keys() + self.dynamicBonuses.keys():
+			self.star.bonuses[bonus] = self.getTotalBonus(bonus)*self.effective * modelFactor
 		self.star.bonuses[self.name] = 1
 
 class Star:
@@ -711,13 +723,12 @@ class Item:
 		abilityBonuses = {}
 		if self.ability:
 			if self.ability.gc("shape") == "weapon":
-				print location
 				if location in Item.meleeLocations:
 					self.ability.conditions["shape"] = "melee"
 			self.ability.calculateEffective(model)
 			self.ability.calculateDynamicBonuses(model)
-			for bonus in self.ability.bonuses.keys():
-				abilityBonuses[bonus] = self.ability.bonuses[bonus]*self.ability.effective
+			for bonus in self.ability.bonuses.keys() + self.ability.dynamicBonuses.keys():
+				abilityBonuses[bonus] = self.ability.getTotalBonus(bonus)*self.ability.effective
 
 		value = 0
 		for bonus in model.bonuses.keys():

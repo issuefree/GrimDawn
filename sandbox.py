@@ -30,7 +30,7 @@ def evalItems(location, itemType):
 	items = Item.getByLocation(location, itemType)
 	for item in items:
 		item.evaluate(model, location)
-		print item.name.ljust(20), item.value
+		# print item.name.ljust(20), item.value
 	items.sort(key=lambda i: i.value, reverse=True)
 	for item in items:
 		print item.evaluate(model, location, True)

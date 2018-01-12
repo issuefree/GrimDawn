@@ -1,0 +1,27 @@
+self.seedSolutions = [
+  [xE, hawk, eye, fox, xP, imp, xC, viper, messenger, jackal, torch, ultos, behemothGiantsBlood],  # 73284
+  [xE, quill, spider, raven, hawk, xC, viper, hound, messenger, jackal, torch, ultos, behemothGiantsBlood],  # 74921
+  [xE, quill, spider, raven, hawk, xC, viper, hound, messenger, jackal, torch, ultos, behemothGiantsBlood],  # 74921
+  [xE, quill, spider, raven, hawk, xA, xO, xC, viper, hound, messenger, jackal, ultosHandofUltos, torchMeteorShower, behemothGiantsBlood, crownElementalStorm],  # 64949
+  [xE, quill, wolverine, spider, crown, light, xP, xC, fiend, viper, jackal, sageElementalSeeker, torch, behemothGiantsBlood],  # 64914
+  [xE, quill, wolverine, spider, crown, raven, xO, xP, xC, fiend, viper, jackal, sageElementalSeeker, torchMeteorShower, behemothGiantsBlood],  # 62734
+  [xE, quill, wolverine, spider, crown, raven, hawk, xA, xP, xC, viper, vulture, sageElementalSeeker, torchMeteorShower, behemothGiantsBlood],  # 60116
+  [xE, quill, wolverine, spider, crown, raven, hawk, xA, xO, xC, viper, vulture, sageElementalSeeker, torch],  # 57527
+  [xE, quill, wolverine, spider, crown, raven, hawk, bat, viper, jackal, xC, sageElementalSeeker, torch],  # 57456
+  [xE, quill, wolverine, spider, crown, raven, hawk, eye, xA, xC, vulture, jackal, sageElementalSeeker, torchMeteorShower],  # 53351
+  [xE, quill, wolverine, spider, crown, raven, hawk, eye, xA, xC, viper, sageElementalSeeker, lizard, messenger],  # 45867
+  [xE, quill, wolverine, spider, crown, raven, hawk, eye, xA, xC, viper, hound, sage, messengerMessengerofWar],  # 44865
+  [xE, quill, wolverine, spider, crown, raven, hawk, eye, xA, xO, xP, hound, xC, viper, sageElementalSeeker, messengerMessengerofWar],  # 44830
+  [xE, quill, wolverine, spider, crown, raven, hawk, eye, xA, xO, panther, hound, phoenix, sageElementalSeeker],  # 44423
+  [xE, quill, wolverine, spider, crown, raven, hawk, eye, hammer, xC, viper, hound, sageElementalSeeker, messengerMessengerofWar],  # 44350
+  [xE, quill, wolverine, spider, crown, raven, hawk, eye, owl, xC, viper, hound, sageElementalSeeker, behemothGiantsBlood],  # 42903
+  [xE, quill, wolverine, spider, crown, raven, hawk, eye, owl, xP, hound, lizard, sageElementalSeeker, messengerMessengerofWar],  # 42658
+  [xE, quill, wolverine, spider, crown, raven, hawk, eye, owl, xO, xP, xC, viper, sageElementalSeeker, behemothGiantsBlood],  # 41758
+  [xE, quill, wolverine, spider, crown, raven, hawk, eye, owl, xO, xP, hound, sageElementalSeeker, mirage],  # 40486
+  [xE, quill, wolverine, spider, crown, raven, hawk, eye, owl, xO, panther, sageElementalSeeker, mirage],  # 40193
+  [xE, quill, wolverine, spider, crown, raven, hawk, eye, owl, bat, sageElementalSeeker, mirage],  # 38992
+  [xE, quill, wolverine, spider, crown, raven, hawk, eye, owl, bat, fiend, xO, sageElementalSeeker],  # 37542
+  [xE, quill, wolverine, spider, crown, raven, hawk, eye, owl, bat, fiend, jackal, xC, torchOffense],  # 23314
+  [xE, quill, wolverine, spider, crown, raven, hawk, eye, owl, bat, fiend, viper, xO, xC],  # 23101
+  [xE, quill, wolverine, spider, crown, raven, hawk, eye, owl, bat, fiend, viper, xO, xP],  # 22906
+]

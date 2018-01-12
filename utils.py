@@ -1,4 +1,19 @@
 from dataModel import *
+from solution import *
+
+def getLinks(wanted, affinities=Affinity(0), remaining=None):
+	global globalMetadata
+	start = time()
+
+	neededAffinities = Solution.maxAffinities - affinities
+
+	if remaining == None:
+		remaining = [p for p in Constellation.constellations if p.getTier() <= 1 and not p in wanted]
+
+	possibles = [c for c in remaining if neededAffinities.intersects(c.provides)]
+
+	timeMethod("getNeededConstellations", start)
+	return possibles
 
 def printSolution(solution, model, pre=""):
 	print int(evaluateSolution(solution, model)),":",solutionPath(solution)
@@ -21,7 +36,7 @@ def evaluateSolution(solution, model, verbose=False):
 	abilNum = 0
 	for c in sSol:
 		if verbose:
-			print c.name.ljust(25), int(c.evaluate(model)), int(c.evaluate(model, abilNum))
+			print c.name.ljust(40), int(c.evaluate(model)), int(c.evaluate(model, abilNum))
 		if c.hasAttackTrigger():
 			value += c.evaluate(model, abilNum)
 			abilNum += 1
@@ -105,11 +120,21 @@ def getBonuses(constellations=Constellation.constellations, model=None):
 					bonuses[bonus] = s.bonuses[bonus]
 	return bonuses
 
+def getPathBounds(path, model):
+	score = 0
+	provides = Affinity()
+	points = 0
+	for c in path:
+		score += c.evaluate(model)
+		provides += c.provides
+		points += len(c.stars)
+		print points, score, provides
+
 def evaluateBonuses(model, bonuses):
 	value = 0
 	for bonus in model.keys():
 		if bonus in bonuses.keys():
-			value += model[bonus]*bonuses[bonus]
+			value += model.get(bonus)*bonuses[bonus]
 	return value
 
 def startsWith(start, complete):

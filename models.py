@@ -1,21 +1,29 @@
-import os
+import os, sys
+
 from dataModel import *
 from constellationData import *
 from utils import *
 
-
-class Model:	
-	def __init__(self, name, bonuses, stats):
+class Model:
+	def __init__(self, name, stats, bonuses, points):
 		self.name = name
-		self.bonuses = bonuses
 		self.stats = stats
+		self.bonuses = bonuses
+		self.points = points
 
+	@staticmethod
+	def loadModel(name):
+		file = open(name.lower() + "/" + name.lower() + ".py", "r")
+		exec(file.read(), locals())
+		print locals()["devotionPoints"]
+		return Model(name, locals()["stats"], locals()["weights"], locals()["devotionPoints"] )
 
-	def initialize(self):
+	def initialize(self, loadSeeds=True):
 		self.checkModel()
 
 		self.seedSolutions = []
-		self.readSeedSolutions()
+		if loadSeeds:
+			self.readSeedSolutions()
 
 
 	def __str__(self):
@@ -27,11 +35,11 @@ class Model:
 
 	def saveSeedSolutions(self):
 		try:
-			os.mkdir(self.name)
+			os.mkdir(self.name.lower())
 		except:
 			pass
 
-		file = open(self.name+"/solutions.py", 'w')
+		file = open(self.name.lower()+"/solutions.py", 'w')
 		out = "self.seedSolutions = [\n"
 		for s in sorted(self.seedSolutions, key=lambda c: evaluateSolution(c, self), reverse=True):
 			out += "  "+solutionPath(s)+ "  # " + str(int(evaluateSolution(s, self))) + "\n"
@@ -41,7 +49,7 @@ class Model:
 
 	def readSeedSolutions(self):
 		try:
-			file = open(self.name+"/solutions.py", "r")
+			file = open(self.name.lower()+"/solutions.py", "r")
 			lines = file.read()
 			exec(lines)
 		except:
@@ -52,6 +60,8 @@ class Model:
 	def checkModel(self):
 		print "Checking model..."
 		print "  "+self.name
+
+		self.stats["allAttacks/s"].sort(reverse=True)
 
 		if self.get("attack opportunity cost") == 0:
 			self.bonuses["attack opportunity cost"] = -self.get("weapon damage %")
@@ -71,6 +81,8 @@ class Model:
 		parts = ["health", "energy"]
 		for part in parts:
 			hps = self.get(part) * self.getStat("fight length") * max(1, self.getStat(part+" regeneration")/100)
+			if part == "energy":
+				hps = hps * 2
 			if self.get(part+"/s") > 0:
 				print "  < "+part+"/s:", self.get(part+"/s"), "!=", hps
 			else:
@@ -83,8 +95,8 @@ class Model:
 		val += self.get("health") * 3
 		val += self.get("defense") * .5
 
-		self.set("physique", max(self.get("physique"), val))
-		print "  Physique:", self.get("physique")
+		self.setIfNull("physique", val)
+		print "  physique:", self.get("physique")
 
 		# cunning grants physical %, pierce %, bleed %, internal % and offense.
 		val = 0
@@ -94,8 +106,8 @@ class Model:
 		val += self.get("internal %") * .333
 		val += self.get("offense") * .5
 
-		self.set("cunning", max(self.get("cunning"), val))
-		print "  Cunning:", self.get("cunning")
+		self.setIfNull("cunning", val)
+		print "  cunning:", self.get("cunning")
 
 		# spirit grants fire %, burn %, cold %, frostburn %, lightning %, electrocute %, acid %, poison %, vitality %, vitality decay%, aether %, chaos %, energy and energy regen
 		val = 0
@@ -104,8 +116,8 @@ class Model:
 		val += self.get("energy") * 2
 		val += self.get("energy/s") * .01
 
-		self.set("spirit", max(self.get("spirit"), val))
-		print "  Spirit:", self.get("spirit")
+		self.setIfNull("spirit", val)
+		print "  spirit:", self.get("spirit")
 
 		# update damage % stats
 		self.stats["physical %"] = self.getStat("physical %") + 100 + self.getStat("cunning")*.33
@@ -114,10 +126,12 @@ class Model:
 		self.stats["internal %"] = self.getStat("internal %") + 100 + self.getStat("cunning")*.333
 
 		for dam in ["fire %", "cold %", "lightning %", "acid %", "vitality %", "aether %", "chaos %"]:
-			self.stats[dam] = self.getStat(dam) + 100 + self.getStat("spirit")*.33
+			if self.getStat(dam) > 0:
+				self.stats[dam] = self.getStat(dam) + 100 + self.getStat("spirit")*.33
 
 		for dam in ["burn %", "frostburn %", "electrocute %", "poison %", "vitality decay %"]:
-			self.stats[dam] = self.getStat(dam) + 100 + self.getStat("spirit")*.333
+			if self.getStat(dam) > 0:
+				self.stats[dam] = self.getStat(dam) + 100 + self.getStat("spirit")*.333
 
 
 		#check stats vs % stats
@@ -136,43 +150,54 @@ class Model:
 		# setting value at 1/3
 		for damage in primaryDamages:
 			if self.get(damage+" %") > 0:
-				self.set("reduce "+damage+" resist", max(self.get("reduce "+damage+" resist"), self.getStat(damage+" %")*.0075*self.get(damage+" %")/3))
-				print "  reduce "+damage+" resist: " + str(self.get("reduce "+damage+" resist")/3)
+				self.setIfNull("reduce "+damage+" resist", self.getStat(damage+" %")*.0075*self.get(damage+" %")/3)
+				print "  reduce "+damage+" resist: " + str(self.get("reduce "+damage+" resist"))
 
 		# handle shorthand sets: resist	
 		#resist types
 		for b in resists:
-			self.set(b, max(self.get(b), self.get("resist")))
-			self.set("pet "+b, max(self.get("pet "+b), self.get("pet resist")))
+			self.setIfNull(b, self.get("resist"))
+			self.setIfNull("pet "+b, self.get("pet resist"))
 
-			self.set("reduce "+b, max(self.get("reduce "+b), self.get("reduce resist")))
-		self.set("reduce resist", max(self.get("reduce resist"), sum([self.get("reduce "+b) for b in resists])))
+			self.setIfNull("reduce "+b, self.get("reduce resist"))
+
+		self.setIfNull("reduce resist", sum([self.get("reduce "+b) for b in resists]))
+
 		print "  reduce resist:", self.get("reduce resist")
 
 		elementals = ["fire", "cold", "lightning"]
-		self.set("reduce elemental resist", max(self.get("reduce elemental resist"), sum([self.get("reduce "+b+" resist") for b in elementals])))
+		self.setIfNull("reduce elemental resist", sum([self.get("reduce "+b+" resist") for b in elementals]))
 		print "  reduce elemental resist", self.get("reduce elemental resist")
 
 		# elemental damage % and resist should be the sum of the individual components
-		self.set("elemental %", max(self.get("elemental %"), sum([self.get(b) for b in ["cold %", "lightning %", "fire %"]])))
+		self.setIfNull("elemental %", sum([self.get(b) for b in ["cold %", "lightning %", "fire %"]]))
 		print "  elemental %:", self.get("elemental %")
 
 		# elemental resists are weird. e.g. fire resist protects against burn and elemental resist protects against fire but elemental resist does not protect against burn
-		self.set("elemental resist", max(self.get("elemental resist"), sum([self.get(b) for b in ["cold resist", "lightning resist", "fire resist"]])))
+		self.setIfNull("elemental resist", sum([self.get(b) for b in ["cold resist", "lightning resist", "fire resist"]]))
 		print "  elemental resist:", self.get("elemental resist")
 
 		# all damage should be >= all other damage bonuses (sans retaliation)
 		# don't count cold, lightning, or fire as they're already aggregated under elemental
 		parts = ["acid %", "aether %", "bleed %", "burn %", "chaos %", "electrocute %", "elemental %", "frostburn %", "internal %", "physical %", "pierce %", "poison %", "vitality %", "vitality decay %"]
-		self.set("all damage %", max(self.get("all damage %"), sum([self.get(b) for b in parts])))
+		self.setIfNull("all damage %", sum([self.get(b) for b in parts]))
 		print "  all damage %:", self.get("all damage %")
+
+		self.setIfNull("pet all damage %", sum([self.get("pet " + b) for b in parts]))
+		print "  pet all damage %:", self.get("pet all damage %")
 
 		total = 0
 		for damage in damages:
 			total += self.getStat(damage+" %")*self.get(damage+" %")/100
 		
-		self.set("crit damage", max(self.get("crit damage"), total*self.getStat("crit chance")))
+		self.setIfNull("crit damage", total*self.getStat("crit chance"))
 		print "  crit damage:", self.get("crit damage")
+
+		#calculate elemental damage and triggered elemental damage if not set
+		self.setIfNull("elemental", sum([self.get(elemental) for elemental in elementals])/3.0)
+		print "  elemental:", self.get("elemental")
+		self.setIfNull("triggered elemental", sum([self.get("triggered " + elemental) for elemental in elementals])/3.0)
+		print "  triggered elemental:", self.get("triggered elemental")
 
 		# catch all for flat damage of any type
 		# triggered flat damage should be either specified manually or be equivalent to normal flat damage.
@@ -184,17 +209,18 @@ class Model:
 			if damage in durationDamages:
 				factor = .5
 
-			self.set(damage, max(self.get(damage), self.get("damage")*factor))
-			self.set("pet "+damage, max(self.get("pet "+damage), self.get("pet damage")*factor))
+			self.setIfNull(damage, self.get("damage")*factor)
+			self.setIfNull("pet "+damage, self.get("pet damage")*factor)
 
-			self.set("triggered "+damage, max([self.get("triggered "+damage), self.get(damage), self.get("triggered damage")*factor]))
+			self.setIfNull("triggered "+damage, max([self.get(damage), self.get("triggered damage")*factor]))
 
-			self.set(damage+" retaliation", max(self.get(damage+" retaliation"), self.get("retaliation")*factor))
-			self.set("pet "+damage+" retaliation", max(self.get("pet "+damage+" retaliation"), self.get("pet retaliation")*factor))
+			self.setIfNull(damage+" retaliation", self.get("retaliation")*factor)
+			self.setIfNull("pet "+damage+" retaliation", self.get("pet retaliation")*factor)
 			
-
-
-		#nothing grants total speed
+		total = 0
+		for speed in ["attack speed", "cast speed", "move %"]:
+			total += self.get(speed)
+		self.setIfNull("total speed", total)
 
 		self.filterConstellations()
 
@@ -212,7 +238,7 @@ class Model:
 						satisfied = True
 				if not satisfied:
 					Constellation.constellations.remove(c)
-					print "    -", c.name, "removed <-",str(c.requires)
+					print "    -", c.name, "removed <-",str(c.restricts)
 
 
 	def get(self, key):
@@ -223,449 +249,16 @@ class Model:
 	def set(self, key, value):
 		self.bonuses[key] = value
 
+	def setIfNull(self, key, value):
+		if not key in self.bonuses:
+			self.set(key, value)
+
 	def getStat(self, key):
 		if key in self.stats.keys():
 			return self.stats[key]
 		else:
 			return 0
 
-
-lachesis = Model(
-	"Lachesis",
-	{
-		"offense":17.5, 
-		"cast speed":25,
-		"defense":7.5,
-		"armor":3.5, 
-		# armor absorb is good vs lots of little hits. This char regens fast with lots of little enemies so there's not much value
-		"armor absorb":10,
-		"health":.75,
-		"health/s":5, #downgraded because I lifesteal so much. i really just want a big pool not regen.
-		"energy":.66,
-		"avoid melee":10, "avoid ranged":15,
-		"resist":7.5,
-
-		"pet attack speed":5,
-		"pet total speed":12.5,
-		"pet offense":5,
-		"pet offense %":50,
-		"pet lifesteal %":2,
-		"pet all damage %":7.5,
-		"pet damage":5,
-		"pet defense %":1,
-		"pet resist":1.5,
-		"pet health %":7.5,
-		"pet health/s":10,
-		"pet retaliation":1, "pet retaliaion %":3,
-
-		"vitality %":25,
-		"chaos %":7.5,
-
-		"triggered vitality":35, "triggered vitality decay":15,
-		"triggered chaos":10,
-		"triggered life leech":5,
-		"triggered damage":1,
-		
-		"weapon damage %":1,
-		"attack opportunity cost":0, # I don't auto attack.
-		"slow move":2.5,
-		"stun %":20
-	},
-
-	{
-		"attacks/s":3.5,
-		"allAttacks/s":[
-			3.5, # sigil
-			2.5, # lightning totem
-			2.5, # grasping roots
-			1,   # pets/locust
-			1,   # pets/locust
-			1,   # pets/locust
-		],
-		"hits/s":.5,
-		"blocks/s":0,
-		"kills/s":1.5,
-		"crit chance":.1,
-		"low healths/s":1.0/30, # total guesswork.
-
-		"physique":650,
-		"cunning":400,
-		"spirit":650,
-
-		"offense":1250,
-		"defense":1000,
-
-		"health":6500,
-		"armor":750,
-		"energy":3000,
-
-		"vitality %":1000, "vitality decay %":350,
-		"chaos %":400,
-
-		"pet all damage %":100,
-
-		"fight length":30,
-
-		"playStyle":"shortranged",
-		"weapons":["offhand"],
-		"blacklist":[
-			# sage, 			#seems cool but there's nothing but the ability
-			# wolf,			#relatively low value for the requirements
-			# soldier,			#relatively low value for the requirements
-			# tree, spear,
-			# falcon, hammer, owl, harpy, throne, wolverine, blade # don't need these. crook will supply all I need.
-		]
-	}
-)
-
-
-armitage = Model(
-	"armitage",
-	{
-		"attack speed":10,
-		"cast speed":7.5,
-		
-		"energy":.2, # "energy %": ,
-		"energy absorb": 15,
-		# "energy regeneration": ,
-		# "energy/s": ,
-
-		"health": .66, # "health %": ,
-		# "health regeneration": 5,
-		# "health/s": 5,
-
-		"armor": 5-1.5, 
-		"armor absorb": 20-15,
-		
-		"defense": 1-.5, # "defense %": ,
-		"resist": 15-12.5,
-		"physical resist":35,
-		"pierce resist":25-20,
-		"aether reist":25,
-		"acid resist":10,
-		"chaos resist":20,
-		"bleed resist":15,
-
-		"block %": 100,
-		"blocked damage %":50-10,
-		"shield recovery":75,
-
-		"offense": 10, # "offense %": ,
-
-		"damage":1,
-		"physical": 7.5, "triggered physical":5, "physical %": 7.5,
-		"fire":12.5, "triggered fire":10, "fire %": 15,
-		"burn":7.5, "triggered burn":5, "burn %": 5, "burn duration":5,
-		"lightning": 5, "triggered lightning":2.5, "lightning %":5,
-		"elemental": 2.5, # "elemental %": 20,
-
-
-		"weapon damage %":7.5,
-
-		# "crit damage": ,
-		"damage reflect %": 35,
-		"retaliation":7, 
-		"retaliation %":17,
-		
-		"stun %":-1,
-
-		"lifesteal %":20,
-		"move %": 10,
-
-		"Acid Spray":.75,
-	},
-
-	{
-		"attacks/s":1.75,
-		"allAttacks/s":[
-			1.75, #main attack (fire strike)
-			.75, # thermite mine / mortar
-			.5, # brutal shield slam: 3s recharge, 3 target max. Call it 2 targets and 4 seconds between = .5 aps
-			.4, #war cry: 7.5 s recharge, big radius, call it 3 hits = 3/7.5 = .4
-			.385, # markovian's advantage: 22% chance = 1.75*.22 = 
-		],
-		"hits/s":4,
-		"blocks/s":1.5,
-		"kills/s":1,
-		"crit chance":.08,
-		"low healths/s":1.0/120, # total guesswork.
-
-		"physique":1000,
-		"cunning":350,
-		"spirit":450,
-
-		"offense":1900,
-		"defense":1900,
-
-		"health":8500,
-		"health regeneration":250,
-
-		"armor":2500,
-		"energy":2000,
-
-		"physical %":300, "physical":900,
-		"fire %":750, "fire":2000,
-		"burn %":450, "burn":400,
-		"lightning %":400, "lightning":850,
-
-		"retaliation %":550+100,
-
-		"fight length":45,
-
-		"playStyle":"tank",
-		"weapons":["shield"],
-		"blacklist":[
-			# manticore, manticoreAcidSpray# I'm not sure it makes sense in this build. Not many attacks to bind it to and the stats on the constellation aren't that good.
-		]
-	}
-)
-  # [xC, viper, hound, xO, dryad, targoShieldWall, shieldmaiden, xA, anvil, messenger, xE, raven, behemothGiantsBlood, crown],  # 39417
-#  [xC, viper, hound, xO, lion, targoShieldWall, xA, anvil, messenger, xE, light, behemothGiantsBlood, raven, crown, magiFissure],  # 38500
-testModel = Model(
-	"testModel",
-	{
-		"attack speed":10,
-		"cast speed":7.5,
-		
-		"energy": .2, # "energy %": ,
-		"energy absorb": 1,
-		# "energy regeneration": ,
-		# "energy/s": ,
-
-		"health": .66, # "health %": ,
-		"health regeneration": 5,
-		# "health/s": 5,
-
-		"armor": 3, # "armor %": ,
-		"armor absorb": 10,
-		
-		"defense": 0.5, # "defense %": ,
-		"resist": 15,
-		#"elemental resist": 12.5,
-		"physical resist":35,
-		"pierce resist":25,
-
-		"block %": 75,
-		"blocked damage %":50,
-		"shield recovery":35,
-
-		"offense": 4, # "offense %": ,
-
-		"damage":1,
-		"physical": 4, "physical %": 5,
-		"fire":5, "fire %": 10,
-		"lightning": 2, "lightning %": 5,
-		"elemental": 2, # "elemental %": 20,
-		"burn": 2, "burn %": 5, "burn duration": 1,
-
-		"triggered fire":10,
-		"triggered lightning":4,
-		"triggered physical":2,
-
-		"weapon damage %":7.5,
-
-		# "crit damage": ,
-		"damage reflect %": 20,
-		"retaliation":3.5, 
-		"retaliation %": 20,
-		
-		"stun %":-1,
-
-		# "lifesteal %": ,
-		"move %": 10,
-	},
-
-	{
-		"attacks/s":1.75,
-		"hits/s":4,
-		"blocks/s":1.5,
-		"kills/s":1,
-		"crit chance":.05,
-		"low healths/s":1.0/45, # total guesswork.
-
-		"physique":900,
-		"cunning":400,
-		"spirit":450,
-
-		"offense":1200,
-		"defense":1400,
-
-		"health":7500,
-		"health regeneration":25,
-
-		"armor":1000,
-		"energy":2500,
-
-		"physical %":200,
-		"fire %":400,
-		"lightning %":200,
-		"acid %":150,
-
-		"retaliation %":250+100,
-
-		"fight length":45,
-
-		"playStyle":"tank",
-		"weapons":["shield"],
-		"blacklist":[xE, wolverine, owl, ghoul, eye, crane, blade, guide, falcon, spider, bat, throne, shepherd, vulture, rat, raven
-		]
-	}
-)
-
-lochlan = Model(
-	"Lochlan",
-	{
-		"armor":2, "armor absorb":10,
-		"avoid melee":20, "avoid ranged":15,
-
-		"attack speed":25,
-		"cast speed":10,
-
-		# "crit damage":20,
-		"defense":7.5,
-		
-		"health":.75,
-		"energy":.75,
-		"lifesteal %":20,
-
-		"offense":15,
-
-		"elemental":5,
-		"electrocute":12.5, "electrocute %":5, "electrocute duration":2.5,
-		"physical":20, "physical %":15,
-		"lightning":20, "lightning %":25,
-		"bleed %":5,
-
-		"weapon damage %":20, 
-
-		"resist":2.5,
-		"physical resist":5,
-
-		"stun %":10,
-		"stun duration":5,
-
-		"move %":10,
-
-	},
-	#stats
-	{
-		# estimate how frequent combat events are for calculating dynamic stats and abilities
-		"attacks/s":1.5,
-		"hits/s":1.5,
-		"blocks/s":0,
-		"kills/s":1.5,	
-		"crit chance":.1,
-		"low healths/s":1.0/15, # total guesswork.
-
-		"fight length":20, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
-
-		# estimated sheet stats for target level
-		"physique":500,
-		"cunning":250,
-		"spirit":350,
-
-		"offense":1000,
-		"defense":1000,
-
-		"health":5000,
-		"health regeneration":20,
-
-		"armor":500,
-		"energy":1250,
-		
-		# estimated damage % for target level. add whatever damages are important to your build
-		"physical %":200,
-		"lightning %":250,
-
-		"playStyle":"melee", # playstyle for weighting constellation abilities. [ranged/shortranged/melee/tank]
-		"weapons":[
-			"twohand"
-		],
-		"blacklist":[
-			# list of constellations that I want to manually exclude for some reason.
-		]	
-	}
-)
-
-kieri = Model(
-	"Kieri",
-	{
-		"armor":.25,
-		"attack speed":40, 
-		"cast speed":10, 
-		
-		"offense":20, 
-
-		"avoid melee":5, "avoid ranged":7.5, 
-		"defense":5, 
-
-		"resist":3,
-		"physical resist":5, 
-
-		"health":.66, 
-		"energy":.5, 
-
-		"damage":1,
-		"physical":10, "physical %":15, 
-		#"pierce":0, "pierce %":0, 
-		"burn":5, "burn %":5, "burn duration":2.5, "triggered burn":7.5,
-		"fire":15, "fire %":20, 
-		"lightning":3, "lightning %":5, 
-		"chaos %":1, 
-		"pierce %":1.5,
-		"elemental":5, 
-
-		"lifesteal %":15, 
-
-		"move %":20, 
-
-		"slow move":10, 
-		"stun %":50, "stun duration":10, 
-
-		"weapon damage %":25, 
-	},
-	#stats
-	{
-		# estimate how frequent combat events are for calculating dynamic stats and abilities
-		"attacks/s":3,		
-		"hits/s":.25,
-		"blocks/s":0,
-		"kills/s":1.5,		
-		"crit chance":.15,
-		"low healths/s":1.0/45, # total guesswork.
-
-		"fight length":20, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
-
-		# estimated sheet stats for target level
-		"physique":450,
-		"cunning":450,
-		"spirit":450,
-
-		"offense":1200,
-		"defense":900,
-
-		"health":3500,
-		"health regeneration":10,
-
-		"armor":250,
-		"energy":2000,
-		
-		# estimated damage % for target level. add whatever damages are important to your build
-		"physical %":150,
-		"fire %":400, "burn %":200,
-		"lightning %":250, "electrocute %":100,
-		"pierce":100,
-		"chaos":100,
-
-		"playStyle":"ranged", # playstyle for weighting constellation abilities. [ranged/shortranged/melee/tank]
-		"weapons":[
-			"ranged"
-		],
-		"blacklist":[
-			# list of constellations that I want to manually exclude for some reason.
-		]	
-	}
-)
 
 		#"acid %":0, 
 		#"acid resist":0, 
@@ -705,6 +298,8 @@ kieri = Model(
 		#"cunning":0, 
 		#"cunning %":0, 
 		#"cunning ranged requirements":0, 
+		#"damage absorb":0,						**************
+		#"damage absorb %":0,					**************
 		#"damage beast %":0, 
 		#"damage chthonics %":0, 
 		#"damage from arachnids":0, 
@@ -809,13 +404,15 @@ kieri = Model(
 		#"pierce resist":0, 
 		#"pierce retaliation":0, 
 		#"poison":0, 
-		#"poison %":0, 
+		#"poison %":0, 		
 		#"poison duration":0, 
 		#"reduce aether resist":0, 
 		#"reduce elemental resist":0, 
 		#"reduce lightning resist":0, 
 		#"reduce physical resist":0, 
 		#"reduce pierce resist":0, 
+		#"reduce damage %":0,						****************
+		#"reduce defense":0,
 		#"reduced bleed duration":0, 
 		#"reduced burn duration":0, 
 		#"reduced electrocute duration":0, 
@@ -865,11 +462,7 @@ kieri = Model(
 		#"weapon damage %":0, 
 		#"weapon spirit requirements":0, 
 
-newModel = Model(
-	#name
-	"newModel",
 	#bonuses
-	{
 		# select the important bonuses from above and give them a value.
 		# Note some bonuses will be automatically calculated if left blank (and should be unless you want to override):
 		#	health/s <- health, health regeneration, fight length
@@ -897,55 +490,51 @@ newModel = Model(
 		#		note that if you don't set triggered damage it gets valued at on hit damage of the same type since triggered damage is (roughly) normalized in value to on hit damage
 		#   retaliation <- sets a value for all retaliation damage types
 		#   pet retaliation <- sets a value for all pet retaliation damage types
-	},
 	#stats
-	{
 		# estimate how frequent combat events are for calculating dynamic stats and abilities
-		"attacks/s":1.75,		
-		"allAttacks/s":[
-			# list of attack skills that can be linked to abilities. remember to include your main attack.
-			1.75, #main attack (fire strike)
-			.5, # brutal shield slam: 3s recharge, 3 target max. Call it 2 targets and 4 seconds between = .5 aps
-			.4, #war cry: 7.5 s recharge, big radius, call it 3 hits = 3/7.5 = .4
-			.385, # markovian's advantage: 22% chance = 1.75*.22 = 
-		],		
-		"hits/s":4,
-		"blocks/s":1.5,
-		"kills/s":1,		
-		"crit chance":.05,
-		"low healths/s":1.0/45, # total guesswork.
+		# "attacks/s":1.75,		
+		# "allAttacks/s":[
+		# 	# list of attack skills that can be linked to abilities. remember to include your main attack.
+		# 	1.75, #main attack (fire strike)
+		# 	.5, # brutal shield slam: 3s recharge, 3 target max. Call it 2 targets and 4 seconds between = .5 aps
+		# 	.4, #war cry: 7.5 s recharge, big radius, call it 3 hits = 3/7.5 = .4
+		# 	.385, # markovian's advantage: 22% chance = 1.75*.22 = 
+		# ],		
+		# "hits/s":4,
+		# "blocks/s":1.5,
+		# "kills/s":1,		
+		# "crit chance":.05,
+		# "low healths/s":1.0/45, # total guesswork.
 
-		"fight length":30, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
+		# "fight length":30, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
 
-		# estimated sheet stats for target level
-		"physique":900,
-		"cunning":400,
-		"spirit":450,
+		# # estimated sheet stats for target level
+		# "physique":900,
+		# "cunning":400,
+		# "spirit":450,
 
-		"offense":1200,
-		"defense":1400,
+		# "offense":1200,
+		# "defense":1400,
 
-		"health":7500,
-		"health regeneration":25,
+		# "health":7500,
+		# "health regeneration":25,
 
-		"armor":1000,
-		"energy":2500,
+		# "armor":1000,
+		# "energy":2500,
 		
-		# estimated damage % for target level. add whatever damages are important to your build
-		"physical %":200, # sheet % damage for important damage types.
-		"fire %":400,
-		"lightning %":200,
-		"acid %":150,
+		# # estimated damage % for target level. add whatever damages are important to your build
+		# "physical %":200, # sheet % damage for important damage types.
+		# "fire %":400,
+		# "lightning %":200,
+		# "acid %":150,
 
-		"retaliation %":250+100,
+		# "retaliation %":250+100,
 
 
-		"playStyle":"tank", # playstyle for weighting constellation abilities. [ranged/shortranged/melee/tank]
-		"weapons":[
-			# list of weapons used for constellations that have a weapon requirement. E.g. "shield", "sword"
-		],
-		"blacklist":[
-			# list of constellations that I want to manually exclude for some reason.
-		]	
-	}
-)
+		# "playStyle":"tank", # playstyle for weighting constellation abilities. [ranged/shortranged/melee/tank]
+		# "weapons":[
+		# 	# list of weapons used for constellations that have a weapon requirement. E.g. "shield", "sword"
+		# ],
+		# "blacklist":[
+		# 	# list of constellations that I want to manually exclude for some reason.
+		# ]	

@@ -120,7 +120,7 @@ class Affinity:
 			a.affinities[i] = min(self.affinities[i], other.affinities[i])
 		return a
 
-    # returns true if either affinity has value in any category
+    # returns true if both affinities have value in any category
 	def intersects(self, other):
 		for i in range(len(self.affinities)):
 			if self.affinities[i] > 0 and other.affinities[i] > 0:
@@ -171,6 +171,27 @@ class Affinity:
 		a = Affinity()
 		for i in range(len(self.affinities)):
 			a.affinities[i] = max(self.affinities[i] - other.affinities[i], 0)
+		return a
+
+	def __mul__(self, other):		
+		a = Affinity()
+		if type(other) == type(1.0):
+			for i in range(len(self.affinities)):
+				a.affinities[i] = self.affinities[i]*other
+		elif type(other) == type(self):
+			for i in range(len(self.affinities)):
+				a.affinities[i] = self.affinities[i]*other.affinities[i]
+		return a
+
+
+	def __div__(self, other):
+		a = Affinity()
+		if type(other) == type(1.0):
+			for i in range(len(self.affinities)):
+				a.affinities[i] = self.affinities[i]/other
+		elif type(other) == type(self):
+			for i in range(len(self.affinities)):
+				a.affinities[i] = self.affinities[i]/other.affinities[i]
 		return a
 
 	def __str__(self):
@@ -255,7 +276,6 @@ class Ability:
 			if self.gc("shape") == "???":
 				print "    Shape unknown for", self.name
 
-			# normalized around 2 attacks per second. If I use actual attack speed we get inverse calculated value to actual value. 
 			if model.getStat("playStyle") == "ranged":
 				# Characters who try to keep enemies as far away as possible. Often kiting.
 				# Optimal range 10+ yards
@@ -270,7 +290,7 @@ class Ability:
 				elif self.gc("shape") == "circle":
 					pass
 				elif self.gc("shape") == "pbaoe":
-					targets = targets * .25
+					targets = targets * .125
 				elif self.gc("shape") == "melee":
 					targets = targets * .05
 
@@ -331,11 +351,15 @@ class Ability:
 					pass
 
 			if self.gc("trigger") == "manual":
-				self.bonuses["attack opportunity cost"] = 100
+				self.bonuses["attack opportunity cost"] = 100/targets
 				if self.gc("recharge") == 0:
 					self.conditions["recharge"] = 1
 
-			self.effective = self.getNumTriggers(model)/(2.0*model.getStat("fight length"))*targets
+			# normalized around 2 attacks per second. If I use actual attack speed we get inverse calculated value to actual value. 
+			# 	I'm not sure what this comment means. I'm going to set it to actual attack speed and run some tests.
+			# aps = model.getStat("attacks/s")			
+			aps = 2
+			self.effective = self.getNumTriggers(model)*targets/(aps*model.getStat("fight length"))
 
 			# print "nt", self.getNumTriggers(model)
 
@@ -371,6 +395,7 @@ class Ability:
 		durationBonuses = self.bonuses["duration"]
 		for bonus in durationBonuses.keys():
 			self.bonuses[bonus] = durationBonuses[bonus]*upTime/self.effective*targets
+			#reduce duration based damage as the foe may die due to other effects durring the duration
 			if bonus in ["triggered "+damage for damage in damages]:
 				self.bonuses[bonus] = self.bonuses[bonus] / 2
 		del self.bonuses["duration"]
@@ -397,7 +422,7 @@ class Ability:
 
 	#average over a number of fights
 	def getNumTriggers(self, model):
-		numFights = 5.0
+		numFights = 10.0
 		triggers = 0
 		fightRemaining = model.getStat("fight length")*numFights - self.triggerTime
 		while fightRemaining >= 0:
@@ -414,13 +439,13 @@ class Ability:
 			totalDamage = 0
 			for dam in damages:
 				if "triggered "+dam in self.bonuses.keys():
-					totalDamage += self.bonuses["triggered "+dam]*model.getStat(dam+" %")/100.0*self.bonuses["attack as health %"]/100
-
+					totalDamage += self.bonuses["triggered "+dam]*(model.getStat(dam+" %")+100)/100.0
+			totalDamage = totalDamage*self.bonuses["attack as health %"]/100.0
 			# count as half due to overheal
 			if "health" in self.bonuses.keys():				
-				self.dynamicBonuses["health"] += totalDamage*.5
+				self.dynamicBonuses["health"] += totalDamage
 			else:
-				self.dynamicBonuses["health"] = totalDamage*.5
+				self.dynamicBonuses["health"] = totalDamage
 
 
 		if self.gc("type") == "attack":
@@ -442,15 +467,6 @@ class Ability:
 			else:
 				self.dynamicBonuses["physical"] = self.gb("reduce armor")*.7 / (model.getStat("physical %")/100.0)
 
-		# handle damage that scales with pet damage
-		# this one doesn't look right but I'm not sure to what it applies
-		for dam in damages:
-			if self.gb("pet "+dam) > 0:
-				if model.getStat("pet all damage %") == 0:
-					print "    " +self.name+" requires a defined stat for pet all damage %."
-					model.stats["pet all damage %"] = .01
-				else:
-					self.dynamicBonuses["triggered "+dam] = self.gb("pet "+dam)*model.getStat("pet all damage %")/100
 
 	def calculateValue(self, model):
 		self.calculateEffective(model)
@@ -459,7 +475,6 @@ class Ability:
 		self.calculateDynamicBonuses(model)
 		
 		modelFactor = 1
-		self.name
 		if self.name in model.bonuses.keys():
 			modelFactor = model.get(self.name)
 
@@ -494,7 +509,6 @@ class Star:
 		value = float(0)
 		if self.ability != None:
 			self.ability.calculateValue(model)
-			# print self.ability.bonuses
 		for bonus in model.bonuses.keys():
 			if bonus in self.bonuses.keys():
 				value += model.get(bonus)*self.bonuses[bonus]
@@ -559,6 +573,8 @@ class Constellation:
 		self.redundancies = []
 		self.conflicts = []
 
+		self.index = len(Constellation.constellations)
+
 		Constellation.constellations += [self]
 
 	def __str__(self):
@@ -580,7 +596,7 @@ class Constellation:
 
 	def evaluate(self, model=None, apsIndex=0):
 		if self.value:
-			if apsIndex == 0 or not self.hasAttackTrigger():
+			if not self.hasAttackTrigger():
 				return self.value
 			else:
 				if apsIndex >= len(self.apsValue):
@@ -594,12 +610,15 @@ class Constellation:
 			self.value += star.evaluate(model)
 		if self.hasAttackTrigger():
 			self.apsValue = [0]*len(model.getStat("allAttacks/s"))
-			for i in range(len(model.getStat("allAttacks/s"))-1, -1, -1 ):
+			for i in range(len(model.getStat("allAttacks/s"))):
 				apsModel = copy.deepcopy(model)
 				apsModel.stats["attacks/s"] = apsModel.stats["allAttacks/s"][i]
 				for star in self.stars:
 					star.reset()
 					self.apsValue[i] += star.evaluate(apsModel)
+			if apsIndex >= len(self.apsValue):
+				return 0
+			return self.apsValue[apsIndex]
 		return self.value
 
 	def needs(self, other, current=Affinity()):

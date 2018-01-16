@@ -1,3 +1,5 @@
+devotionPoints = 27
+
 stats = {
 		# estimate how frequent combat events are for calculating dynamic stats and abilities
 		"attacks/s":2.16,
@@ -78,7 +80,7 @@ weights = {
 		"stun %":10,
 		"stun duration":5,
 
-		"move %":20,
+		"move speed":20,
 
 		# scales with pet damage and we're not using that
 		"Bysmiel's Command":0,

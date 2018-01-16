@@ -1,12 +1,14 @@
+from models import *
 from utils import *
 
 class Solution:
 	maxAffinities = None
 	valueVector = None
-	deadSolutions = {}
-	boundedPaths = []
 
 	def __init__(self, constellations, model):
+		self.deadSolutions = {}
+		self.boundedPaths = []
+		self.links = None
 		self.canonicalOrder = sorted(constellations, key=lambda c: c.index/100.0)
 		self.isDead = self.isDeadSolution()
 		if self.isDead:
@@ -49,11 +51,19 @@ class Solution:
 	def __str__(self):
 		out = str(self.cost) + "\t" + str(int(self.score)).rjust(7) + "\t\t"
 		out += solutionPath(self.constellations) + " "
-		out += str(self.provides)
+		# out += str(self.provides)
 		return out
 
+	def getLinks(self):
+		if self.links:
+			return self.links
+		else:
+			self.links = [c for c in self.constellations if c.getTier() <= 1]
+			return self.links
+
+
 	def isDeadSolution(self):
-		deadNode = Solution.deadSolutions
+		deadNode = self.deadSolutions
 		for c in self.canonicalOrder:
 			if not c.id in deadNode.keys():
 				return False
@@ -65,7 +75,7 @@ class Solution:
 	def kill(self, verbose=False):
 		if verbose:
 			print "Killing solution: " + solutionPath(self.canonicalOrder)
-		deadNode = Solution.deadSolutions
+		deadNode = self.deadSolutions
 		for c in self.canonicalOrder:
 			if c == self.canonicalOrder[-1]:
 				deadNode[c.id] = True

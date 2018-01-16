@@ -9,8 +9,12 @@ from solution import *
 
 import os
 
-model = Model.loadModel("Armitage")
-model.checkModel()
+model = Model.loadModel("Lilith")
+
+best = getBestConstellations(model)
+highest, _ = getHighestScoring(best)
+efficient, _ = getMostEfficient(best)
+
 # print model
 
 print "------------------------------"
@@ -71,7 +75,7 @@ def evalCon(c):
 			print star.ability.name, star.ability.effective
 		for bonus in star.bonuses:
 			if model.get(bonus) != 0:
-				print str(bonus).ljust(25), int(star.bonuses[bonus]), "\t", int(model.get(bonus)*star.bonuses[bonus])
+				print str(bonus).ljust(25), str(star.bonuses[bonus]).ljust(8), "\t", int(model.calculateBonus(bonus, star.bonuses[bonus]))
 
 # print solutionPath(findBonus("stun %"))
 
@@ -118,14 +122,16 @@ def evalCon(c):
 
 sol = [raven, hammer, panther, wraith, tempest]
 sol = [hawk, rat, light, eel, jackal, hound, ultosHandofUltos]
-print Solution([xP, xC, eel, hound, viper, imp, light, lizard, raven, rat, hawk, jackal, behemothGiantsBlood, ultosHandofUltos, torch], model)
-# evalSol(sol)
-print Solution([xE, hawk, eye, fox, xP, imp, xC, viper, messenger, jackal, torch, ultos, behemothGiantsBlood], model)
-# sol = [light, eel, kraken, hammer, tempest, behemothGiantsBlood]
-print Solution([xE, light, quill, hammer, xC, toad, raven, wolverine, vulture, fiend, crownElementalStorm, sageElementalSeeker, torch, xO, xA], model)
-# printSol(sol)
-# [xC, jackal, xA, shepherd, toad, raven, bonds]
-print
+# print Solution([xP, xC, eel, hound, viper, imp, light, lizard, raven, rat, hawk, jackal, behemothGiantsBlood, ultosHandofUltos, torch], model)
+# # evalSol(sol)
+# print Solution([xE, hawk, eye, fox, xP, imp, xC, viper, messenger, jackal, torch, ultos, behemothGiantsBlood], model)
+# # sol = [light, eel, kraken, hammer, tempest, behemothGiantsBlood]
+# print Solution([xE, light, quill, hammer, xC, toad, raven, wolverine, vulture, fiend, crownElementalStorm, sageElementalSeeker, torch, xO, xA], model)
+# print Solution([xC, fiend, viper, imp, behemoth, quill, xP, messenger, ultos, magi, torch], model)
+# print Solution([xC, xE, fiend, viper, xP, behemoth, imp, magi, quill, messenger, torch, ultosHandofUltos], model)
+# # printSol(sol)
+# # [xC, jackal, xA, shepherd, toad, raven, bonds]
+# print
 
 # evalCon(torch)
 # print eye.stars[4].ability.bonuses
@@ -143,6 +149,41 @@ print
 
 # print torch.evaluate(model, 3)
 
-import random
+# print len(torch.stars)
 
-print random.sample(Constellation.constellations, 2)
+
+# print Solution([xC, xP, fiend, viper, wraith, light, messenger, behemoth, hawk, magi, torch, ultosHandofUltos], model)
+# print Solution([xP, imp, hound, xA, wolverine, messenger, fiend, quill, behemoth, hawk, magi, sageElementalSeeker, ultosHandofUltos], model)
+# print Solution([xP, imp, quill, wolverine, crown, hound, messenger, fiend, xE, light, behemoth, sage, ultosHandofUltos], model)
+
+# print Solution([xP, imp, hound, xA, wolverine, messenger, fiend, quill, behemoth, hawk, magi, sageElementalSeeker, ultosHandofUltos], model)
+
+# print Solution([xC, fiend, viper, xE, imp, behemoth, xO, xA, lion, targo, shieldmaiden, phoenix, messenger, ultosHandofUltos], model) 
+# print Solution([xO, lion, xC, fiend, viper, eel, targo, shieldmaiden, quill, messenger, behemoth, phoenix, ultosHandofUltos], model)
+# print Solution([xC, xO, fiend, tortoise, panther, quill, targo, behemoth, shieldmaiden, messenger, phoenix, xA, ultosHandofUltos], model)
+
+# print Solution([xE, quill, xA, xO, lion, xC, viper, hound, behemoth, shieldmaiden, phoenix, messenger, ultosHandofUltos, targoShieldWall, magiFissure], model)
+# print Solution([xE, light, xA, xO, lion, xC, viper, hound, behemoth, shieldmaiden, phoenix, messenger, ultos, targoShieldWall, magiFissure], model)
+# print Solution([xE, light, xO, dryad, xC, viper, hound, behemoth, shieldmaiden, phoenix, wolverine, messenger, ultosHandofUltos, targoShieldWall], model)
+# print Solution([xE, spider, xA, xO, lion, xC, fiend, viper, hound, behemoth, phoenix, messenger, targoShieldWall, ultosHandofUltos, torchMeteorShower], model)
+# print Solution([xE, hawk, xO, lion, xC, fiend, viper, hound, phoenix, behemoth, toad, messenger, torchMeteorShower, ultosHandofUltos, targoShieldWall], model)
+# evalCon(obelisk)
+
+# best = getBestConstellations(model)
+# highest, _ = getHighestScoring(best)
+# efficient, _ = getMostEfficient(best)
+
+# wanted = list(set(highest + efficient))
+
+# print Solution([xE, raven, light, xC, viper, eel, jackal, lizard, ultosHandofUltos], model) # 32894
+# print Solution([xE, spider, xC, viper, imp, eel, jackal, ultosHandofUltos], model) # 32003
+# print Solution([xE, spider, xC, viper, rat, eel, wretch, ultosHandofUltos], model) # 31189
+
+# print Solution([xA, xO, lion, xC, fiend, viper, hound, light, behemoth, phoenix, messenger, hawk, targoShieldWall, ultosHandofUltos, torchMeteorShower], model)  # 57740 (56)
+# print Solution([xE, hawk, xO, lion, xC, fiend, viper, hound, phoenix, behemoth, toad, messenger, torchMeteorShower, ultosHandofUltos, targoShieldWall], model)
+
+
+evalCon(winter)
+
+# evalItemMods("head", augments )
+# evalItems(["Necrolord's Shroud", "Beastcaller's Shroud", "Beastcaller's Regalia (4)"])

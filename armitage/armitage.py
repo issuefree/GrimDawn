@@ -1,40 +1,47 @@
-devotionPoints = 52
+devotionPoints = 57
 
 stats = {
 		"attacks/s":2.75,
 		"allAttacks/s":[
-			2.75, #main attack (fire strike)
-			.75, # thermite mine / mortar
-			2.75*.25, # markovian's advantage
+			2, # main attack (fire strike) (taking it down a notch due to using other abilities etc)
+			1, # stormfire - seal of destruction
+			.75, # mortar
+			.75, # thermite mine
+			2*.25, # zolhan's 
+			2*.25, # markovian's advantage
 			.5, # brutal shield slam: 3s recharge, 3 target max. Call it 2 targets and 4 seconds between = .5 aps
 			.4, #war cry: 7.5 s recharge, big radius, call it 3 hits = 3/7.5 = .4
 		],
 		"hits/s":4,
 		"blocks/s":1.5,
 		"kills/s":1,
-		"crit chance":.15,
-		"low healths/s":1.0/120, # total guesswork.
+		"crit chance":.10,
+		"low healths/s":1.0/30, # total guesswork.
 
 		"physique":1000,
-		"cunning":400,
-		"spirit":500,
+		"cunning":475,
+		"spirit":400,
 
 		"offense":2000,
-		"defense":2000,
+		"defense":2400,
 
 		"health":10000,
-		"health regeneration":250,
+		"health/s":275,
 
-		"armor":2250,
-		"energy":2250,
+		"armor":2650,
 
-		"physical %":250, "physical":600,
-		"internal %":275, "internal":1,
-		"fire %":1800, "fire":4250,
-		"burn %":1000, "burn":1500,
-		"lightning %":850, "lightning":1100,
+		"energy":2000,
+		"energy/s":18,
 
-		"retaliation %":500+100,
+		"physical %":400, "physical":900,
+		"internal %":400, "internal":1,
+		"fire %":1300, "fire":1600,
+		"burn %":1000, "burn":500,
+		"lightning %":850, "lightning":69,
+		"electrocute %":650, "electrocute":1,
+		"chaos %":450, "chaos":1,
+
+		"retaliation %":350+100,
 
 		"fight length":30,
 
@@ -50,14 +57,10 @@ weights = {
 		"attack speed":10,
 		"cast speed":7.5,
 		
-		"energy":.5, # "energy %": ,
+		"energy":.75,
 		"energy absorb": 15,
-		# "energy regeneration": ,
-		# "energy/s": ,
 
-		"health": .66, # "health %": ,
-		# "health regeneration": 5,
-		# "health/s": 5,
+		"health": .66,
 
 		"armor": 5-1.5, 
 		"armor absorb": 20,
@@ -104,7 +107,28 @@ weights = {
 		"stun %":-5,
 
 		"lifesteal %":20,
-		"move %": 10,
+		"move speed": 10,
 
 		"Acid Spray":.75,
 	}
+
+
+  # Solution([xA, xO, lion, xC, fiend, viper, hound, quill, phoenix, messenger, behemoth, hawk, torchMeteorShower, ultosHandofUltos, targoShieldWall], self),  # 58044 (57)
+  # Solution([xA, xO, lion, xC, fiend, viper, raven, hound, phoenix, messenger, behemoth, hawk, torchMeteorShower, ultosHandofUltos, targoShieldWall], self),  # 57868 (57)
+  # Solution([xA, xO, lion, xC, fiend, viper, hound, light, phoenix, messenger, behemoth, hawk, torchMeteorShower, ultos, targoShieldWall], self),  # 57830 (57)
+  # Solution([xA, xO, lion, xC, fiend, viper, raven, hound, phoenix, messenger, behemoth, light, torchMeteorShower, ultosHandofUltos, targoShieldWall], self),  # 57656 (57)
+  # Solution([xA, xO, lion, xC, fiend, viper, raven, light, lizard, phoenix, messenger, behemoth, torchMeteorShower, ultosHandofUltos, targoShieldWall], self),  # 57145 (57)
+  # Solution([xE, hawk, xO, lion, xC, fiend, viper, hound, phoenix, behemoth, toad, messenger, torchMeteorShower, ultosHandofUltos, targoShieldWall], self),  # 57095 (57)
+  # Solution([xO, lion, xC, fiend, viper, hound, quill, phoenix, behemoth, toad, messenger, torchMeteorShower, ultosHandofUltos, targoShieldWall], self),  # 56990 (57)
+  # Solution([xO, lion, xC, fiend, viper, raven, hound, phoenix, behemoth, toad, messenger, torchMeteorShower, ultosHandofUltos, targoShieldWall], self),  # 56814 (57)
+  # Solution([xE, hawk, xO, lion, xC, viper, wraith, shieldmaiden, messenger, behemoth, phoenix, crown, targo, ultosHandofUltos], self),  # 55767 (57)
+  # Solution([xE, xO, lion, xP, imp, xC, fiend, behemoth, viper, phoenix, toad, messenger, torchMeteorShower, ultosHandofUltos, targoShieldWall], self),  # 55607 (57)
+  # Solution([xE, quill, xO, lion, xC, viper, wraith, shieldmaiden, messenger, behemoth, phoenix, ultosHandofUltos, chariotWaywardSoul, targoShieldWall], self),  # 55497 (57)
+  # Solution([xO, lion, xC, fiend, viper, quill, wraith, phoenix, shieldmaiden, messenger, crown, ultosHandofUltos, behemothGiantsBlood, targoShieldWall], self),  # 55452 (57)
+  # Solution([xO, panther, wraith, lion, shieldmaiden, messenger, fiend, viper, raven, phoenix, ultosHandofUltos, obeliskStoneForm, targoShieldWall], self),  # 55450 (57)
+  # Solution([xE, xO, lion, xC, fiend, viper, wraith, shieldmaiden, messenger, behemoth, phoenix, crown, ultosHandofUltos, targoShieldWall], self),  # 55317 (57)
+  # Solution([xE, xO, lion, xC, viper, imp, shieldmaiden, behemoth, phoenix, owl, messenger, crown, ultosHandofUltos, targoShieldWall], self),  # 54990 (57)
+  # Solution([xE, raven, xO, lion, xC, fiend, viper, hound, phoenix, shieldmaiden, wolverine, messenger, behemothGiantsBlood, ultosHandofUltos, targoShieldWall], self),  # 54938 (57)
+  # Solution([xO, dryad, xC, fiend, viper, raven, hound, phoenix, wolverine, messenger, crown, ultosHandofUltos, behemothGiantsBlood, targoShieldWall], self),  # 53228 (57)
+  # Solution([xO, panther, imp, lion, shieldmaiden, xC, fiend, phoenix, behemoth, wolverine, messenger, ultosHandofUltos, targoShieldWall], self),  # 52758 (57)
+	

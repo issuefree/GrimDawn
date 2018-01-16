@@ -26,7 +26,7 @@ weights = {
 
 		"lifesteal %":15, 
 
-		"move %":20, 
+		"move speed":20, 
 
 		"slow move":10, 
 		"stun %":50, "stun duration":10, 

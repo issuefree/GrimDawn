@@ -69,7 +69,7 @@ components = [
 		)		
 )	,
 
-	Item("Wardstone", {"move %":3, "elemental resist":7, "bleed resist":15}, ["amulet", "medal"]),
+	Item("Wardstone", {"move speed":3, "elemental resist":7, "bleed resist":15}, ["amulet", "medal"]),
 	Item("Attuned Lodestone", {"all damage %":8, "crit damage":5, "lightning %":20, "electrocute %":20, "lightning retaliation":(1+154)/2}, ["amulet", "medal"],
 		Ability(
 			"Static Charge",
@@ -102,8 +102,8 @@ components = [
 	Item("Bindings of Bysmiel", {"all damage %":8, "defense":25, "energy/s":1, "pet damage %":20, "pet health %":10}, ["chest"]),
 	Item("Hallowed Ground", {"defense":25, "defense %":2, "health/s":6, "elemental resist":12}, ["chest"]),
 
-	Item("Mark of the Traveler", {"health/s":10, "move %":8, "slow resist":10}, ["feet"]),
-	Item("Mark of Mogdrogen", {"health %":4, "health/s":15, "health regeneration":10, "move %":6}, ["feet"]),
+	Item("Mark of the Traveler", {"health/s":10, "move speed":8, "slow resist":10}, ["feet"]),
+	Item("Mark of Mogdrogen", {"health %":4, "health/s":15, "health regeneration":10, "move speed":6}, ["feet"]),
 
 	Item("Battered Shell", {"physique":15, "block %":10}, ["shield"], 
 		Ability(
@@ -441,7 +441,7 @@ augments = [
 	Item("Rhowan's Resolve", {"physical %":30, "armor absorb":2, "acid retaliation":75, "retaliation %":16}, ["ring", "amulet"]),
 	Item("Rhowan's Wisdom", {"elemental %":30, "spirit %":2, "cast speed":2, "elemental resist":12}, ["ring", "amulet"]),
 	Item("Spirit of Vengeance", {"vitality %":30, "health %":4, "vitality retaliation":75, "retaliation %":16}, ["ring", "amulet"]),
-	Item("Traveler's Boon", {"move %":2, "armor":40, "slow resist":15}, ["ring", "amulet"]),
+	Item("Traveler's Boon", {"move speed":2, "armor":40, "slow resist":15}, ["ring", "amulet"]),
 	Item("Winter's Chill", {"cold %":30, "frostburn %":30, "stun %":3}, ["ring", "amulet"]),
 
 	Item("Nightshade Powder", {"pierce resist":7, "cold resist":10}, ["head", "chest", "shoulders", "arms", "legs", "feet", "waist"]),
@@ -668,8 +668,38 @@ equipment["Lifegiver Signet"] = Item( "Lifegiver Signet",
 	) 
 )
 
+# === CHEST ===
+equipment["Necrolord's Shroud"] = Item( "Necrolord's Shroud",
+	{"armor":909, "health":517, "energy/s":6.6, "physical resist":4, "elemental resist":34, "Undead Legion":3, "Will of the Crypt":3, "pet crit damage":9, "pet health %":4, "pet elemental resist":30,
+	 },
+	"chest",
+	Ability("Necrolord's Aura",
+		{"type":"buff", "trigger":"toggle"},
+		{"energy/s":-3, "energy":-150, "vitality %":35, "pet vitality %":35, "vitality decay %":35, "pet vitalisty decay %":35, "health %":8, "pet health %":8}
+	)
+)
+equipment["Beastcaller's Shroud"] = Item( "Beastcaller's Shroud",
+	{"armor":982, "spirit":24, "health":311, "defense":31, "elemental resist":26, "Summon Hellhound":2, "pet health %":12, "pet attack speed":9, "pet armor %":18, "pet elemental resist":29},
+	"chest"
+)
+
 # === SET BONUSES ===
 equipment["Royal Exuberance (2)"] = Item("Royal Exuberance (2)", 
 	{"physique %":5, "cunning %":5, "spirit %":5}, ["set"])
 equipment["Royal Exuberance (3)"] = Item("Royal Exuberance (3)", 
 	{"all skills":1}, ["set"])
+
+equipment["Beastcaller's Regalia (2)"] = Item("Beastcaller's Regalia (2)",
+	{"defense %":5}, ["set"])
+
+equipment["Beastcaller's Regalia (3)"] = Item("Beastcaller's Regalia (3)",
+	{"physical resist":8, "pet crit damage":10, "pet health %":5, "pet offense %":5, "pet aether resist":30, "pet chaos resist":30}, ["set"])
+
+equipment["Beastcaller's Regalia (4)"] = Item("Beastcaller's Regalia (4)",
+	{"Conjure Primal Spirit":3, "Bonds of Bysmiel":3}, 
+	["set"], 
+	Ability( "Bestial Rage", 
+		{"type":"buff", "trigger":"hit", "chance":1, "recharge":15, "duration":6},
+		{"pet total speed":15}
+	)
+)

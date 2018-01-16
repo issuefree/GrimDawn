@@ -1,12 +1,26 @@
 self.seedSolutions = [
-  [xC, viper, xO, panther, staff, lion, xE, raven, bonds, behemothGiantsBlood],  # 10337
-  [xC, viper, xO, panther, staff, xA, shepherd, xE, raven, bonds],  # 10259
-  [xC, jackal, viper, xO, panther, staff, xE, raven, bonds, behemothGiantsBlood],  # 10133
-  [xC, jackal, viper, hound, eel, xO, panther, staff, god],  # 9662
-  [xC, jackal, viper, imp, raven, bonds, xO, lion, staff],  # 9376
-  [xC, jackal, viper, imp, raven, bonds, behemothGiantsBlood, xO, xA, shepherd],  # 7555
-  [xC, jackal, viper, imp, raven, bonds, behemothGiantsBlood, hound, xO, lion],  # 7457
-  [xC, jackal, viper, imp, raven, bonds, witchblade, xO, panther],  # 7252
-  [xC, jackal, viper, imp, raven, bonds, witchblade, behemothGiantsBlood, xO, xA],  # 6913
-  [xC, jackal, viper, imp, raven, bonds, witchblade, behemothGiantsBlood, xO, xE],  # 6913
+  Solution([xC, jackal, xO, panther, imp, staff, raven, bonds, lion, xA, shepherd, xE, rattosh], self),  # 15927 (45)
+  Solution([xC, jackal, xO, panther, imp, staff, raven, bonds, lion, xA, shepherd, rattosh], self),  # 15909 (44)
+  Solution([xC, fiend, raven, viper, bonds, xO, panther, staff, lion, xA, shepherd, rattosh], self),  # 15680 (45)
+  Solution([xC, jackal, xO, lion, xA, shepherd, wolverine, toad, raven, bonds, xE, wolf], self),  # 14246 (39)
+  Solution([xC, xO, panther, imp, raven, lion, bat, staff, bonds, xA, shepherd, wolverine], self),  # 13957 (45)
+  Solution([xC, viper, xO, panther, staff, lion, xA, shepherd, xE, raven, bonds, winterBlizzard], self),  # 13910 (39)
+  Solution([xC, jackal, xO, panther, lion, hound, staff, xA, shepherd, xE, raven, bonds], self),  # 13904 (37)
+  Solution([xC, wretch, xO, panther, staff, lion, xA, shepherd, xE, raven, bonds, winterBlizzard], self),  # 13888 (39)
+  Solution([xC, viper, xO, panther, staff, lion, xA, shepherd, xE, raven, bonds, behemothGiantsBlood], self),  # 13842 (38)
+  Solution([xC, fiend, raven, xO, panther, imp, staff, bonds, lion, xA, shepherd, behemothGiantsBlood], self),  # 13839 (43)
+  Solution([xC, fiend, raven, jackal, bonds, xO, panther, lion, xA, shepherd, wolverine, rattosh], self),  # 13816 (43)
+  Solution([xC, jackal, xO, panther, imp, staff, raven, bonds, lion, xA, shepherd], self),  # 13738 (38)
+  Solution([xC, fiend, raven, xO, panther, lion, hound, staff, bonds, xA, shepherd], self),  # 13671 (38)
+  Solution([xC, rat, raven, xO, panther, lion, hound, staff, bonds, xA, shepherd, xE], self),  # 13666 (38)
+  Solution([xC, rat, raven, xO, panther, lion, hound, staff, bonds, xA, shepherd], self),  # 13648 (37)
+  Solution([xC, fiend, raven, xO, panther, lion, eel, staff, bonds, xA, shepherd], self),  # 13593 (38)
+  Solution([xC, fiend, raven, scorpion, jackal, bonds, xA, shepherd, wolverine, throne, wolf], self),  # 13558 (44)
+  Solution([xC, rat, raven, xO, panther, imp, staff, bonds, lion, xA, shepherd], self),  # 13500 (39)
+  Solution([xC, fiend, raven, wretch, bonds, xO, panther, staff, lion, xA, shepherd], self),  # 13485 (39)
+  Solution([xC, viper, xO, panther, staff, xA, shepherd, typhos, xE, raven, bonds], self),  # 13424 (38)
+  Solution([xC, jackal, rat, raven, bonds, xO, panther, lion, xA, shepherd, rattosh], self),  # 13359 (37)
+  Solution([xC, viper, imp, raven, xO, lion, staff, bonds, xA, shepherd, behemothGiantsBlood], self),  # 13084 (38)
+  Solution([xC, fiend, raven, bat, bonds, witchblade, xO, panther, lion, xA, shepherd, rattosh], self),  # 12962 (45)
+  Solution([xC, rat, raven, viper, bonds, xO, panther, staff, lion, rattosh], self),  # 12537 (38)
 ]

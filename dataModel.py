@@ -256,9 +256,15 @@ class Ability:
 	def getTotalBonus(self, key):
 		value = 0
 		if key in self.bonuses.keys():
-			value += self.bonuses[key]
+			if type(self.bonuses[key]) == type([]) and value == 0:
+				value = self.bonuses[key]
+			else:
+				value += self.bonuses[key]
 		if key in self.dynamicBonuses.keys():
-			value += self.dynamicBonuses[key]
+			if type(self.dynamicBonuses[key]) == type([]) and value == 0:
+				value = self.dynamicBonuses[key]
+			else:
+				value += self.dynamicBonuses[key]
 		return value
 
 	def calculateEffective(self, model):
@@ -401,7 +407,7 @@ class Ability:
 		del self.bonuses["duration"]
 
 	def calculateTriggerTime(self, model):
-		if self.gc("trigger") == "manual":
+		if self.gc("trigger") == "manual" or self.gc("trigger") == "toggle":
 			return 0
 		triggerFrequency = model.getStat(self.gc("trigger")+"s/s")
 		if triggerFrequency == 0:
@@ -412,6 +418,8 @@ class Ability:
 
 	#uptime is a percent so we'll use a scalar of fight length to get an average across multiple fights
 	def getUpTime(self, model):
+		if self.gc("trigger") == "toggle":
+			return 1
 		up = 0.0
 		fightLen = model.getStat("fight length")*5
 		fightRemaining = fightLen - self.triggerTime		
@@ -474,12 +482,18 @@ class Ability:
 
 		self.calculateDynamicBonuses(model)
 		
+		# if the ability has been manually valued in the model
 		modelFactor = 1
 		if self.name in model.bonuses.keys():
 			modelFactor = model.get(self.name)
 
 		for bonus in self.bonuses.keys() + self.dynamicBonuses.keys():
-			self.star.bonuses[bonus] = self.getTotalBonus(bonus)*self.effective * modelFactor
+			total = self.getTotalBonus(bonus)
+			if type(total) == type([]):
+				total = [total[0]*self.effective*modelFactor, total[1]]
+			else:
+				total = total*self.effective * modelFactor
+			self.star.bonuses[bonus] = total
 		self.star.bonuses[self.name] = 1
 
 class Star:
@@ -511,7 +525,7 @@ class Star:
 			self.ability.calculateValue(model)
 		for bonus in model.bonuses.keys():
 			if bonus in self.bonuses.keys():
-				value += model.get(bonus)*self.bonuses[bonus]
+				value += model.calculateBonus(bonus, self.bonuses[bonus])
 		self.value = value
 		return value
 

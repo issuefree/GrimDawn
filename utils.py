@@ -1,18 +1,15 @@
 from dataModel import *
-from solution import *
 
-def getLinks(wanted, affinities=Affinity(0), remaining=None):
-	global globalMetadata
-	start = time()
-
-	neededAffinities = Solution.maxAffinities - affinities
+def getLinks(wanted, remaining=None):
+	maxAffinities = Affinity()
+	for c in wanted:
+		maxAffinities = maxAffinities.maxAffinities(c.requires)
 
 	if remaining == None:
 		remaining = [p for p in Constellation.constellations if p.getTier() <= 1 and not p in wanted]
 
-	possibles = [c for c in remaining if neededAffinities.intersects(c.provides)]
+	possibles = [c for c in remaining if maxAffinities.intersects(c.provides)]
 
-	timeMethod("getNeededConstellations", start)
 	return possibles
 
 def printSolution(solution, model, pre=""):
@@ -144,3 +141,98 @@ def startsWith(start, complete):
 		if start[i] != complete[i]:
 			return False
 	return True
+
+def getHighestScoring(constellationRanks, verbose=True):
+	constellationRanks.sort(key=itemgetter(1), reverse=True)
+	thresh = constellationRanks[len(constellationRanks)/6][1] * .8
+
+	if verbose:
+		print "\n  Desired constellations (value > %s):"%thresh
+	wanted = []
+	cv = constellationRanks[0][1]
+	for c in constellationRanks:
+		if c[1] > thresh:
+			wanted += [c[0]]
+			if verbose:
+				print "         ", str(int(c[1])).rjust(7), c[0].name.ljust(45), c[0].requires
+		else:
+			if verbose:
+				print "       - ", str(int(c[1])).rjust(7), c[0].name.ljust(45), c[0].requires
+
+	return wanted, constellationRanks[0][1]
+
+def getMostEfficient(constellationRanks, verbose=True):
+	constellationRanks.sort(key=itemgetter(2), reverse=True)
+	thresh = constellationRanks[len(constellationRanks)/6][2] * .8
+
+	if verbose:
+		print "\n  Desired constellations (efficiency > %s):"%thresh
+	wanted = []
+	for c in constellationRanks:
+		if c[2] > thresh:
+			wanted += [c[0]]
+			if verbose:
+				print "      ", int(c[2]), c[0].name
+		else:
+			if verbose:
+				print "       - ", int(c[2]), c[0].name
+
+	return wanted, constellationRanks[0][2]
+
+def getBestConstellations(model):
+	print "\nEvaluating constellations..."
+	constellationRanks = []
+	for c in Constellation.constellations:
+		if "[" in c.id:
+			score = 0
+		else:
+			score = c.evaluate(model)		
+		efficiency = c.evaluate(model)/len(c.stars)
+		constellationRanks += [(c, score, efficiency)]
+		c.buildRedundancies(model)
+
+	return constellationRanks
+
+def sortByLeastProvides(constellations, model):
+	start = time()
+
+	out = sorted(constellations, key=lambda c: c.provides.magnitude())
+
+	timeMethod("sortByScore", start)
+	return out
+
+def sortByScore(constellations, model):
+	start = time()
+	out = sorted(constellations, key=lambda c: c.evaluate(model), reverse=True)
+	timeMethod("sortByScore", start)
+	return out
+
+def sortByLowScore(constellations, model):
+	start = time()
+	out = sorted(constellations, key=lambda c: c.evaluate(model), reverse=False)
+	timeMethod("sortByScore", start)
+	return out
+
+def sortByScorePerStar(constellations, model):
+	start = time()
+	out = sorted(constellations, key=lambda c: (c.evaluate(model)/len(c.stars)), reverse=True)
+	timeMethod("sortConstellationsByScorePerStar", start)
+	return out
+
+def sortConstellationsByProvides(constellations):
+	start = time()
+	out = sorted(constellations, key=lambda c: c.provides.magnitude(), reverse=True)
+	timeMethod("sortConstellationsByProvides", start)
+	return out
+
+def sortConstellationsByProvidesValue(constellations):
+	global globalMetadata
+	start = time()
+	out = sorted(constellations, key=lambda c: (c.provides*globalMetadata["providesValue"]).magnitude(), reverse=True)
+	timeMethod("sortConstellationsByProvidesValue", start)
+	return out
+
+def sortConstellationsByProvidesValueScore(constellations, model, valueVector):
+	out = sorted(constellations, key=lambda c: (c.provides*valueVector).magnitude()*c.evaluate(model), reverse=True)
+	return out
+

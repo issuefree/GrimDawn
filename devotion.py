@@ -24,52 +24,6 @@ def getNextMoves(current, possibles, points, model):
 	timeMethod("getNextMoves", start)
 	return moves#, redundantMoves
 
-def sortByLeastProvides(constellations, model):
-	start = time()
-
-	out = sorted(constellations, key=lambda c: c.provides.magnitude())
-
-	timeMethod("sortByScore", start)
-	return out
-
-def sortByScore(constellations, model):
-	start = time()
-	out = sorted(constellations, key=lambda c: c.evaluate(model), reverse=True)
-	timeMethod("sortByScore", start)
-	return out
-
-def sortByLowScore(constellations, model):
-	start = time()
-	out = sorted(constellations, key=lambda c: c.evaluate(model), reverse=False)
-	timeMethod("sortByScore", start)
-	return out
-
-def sortByScorePerStar(constellations, model):
-	start = time()
-	out = sorted(constellations, key=lambda c: (c.evaluate(model)/len(c.stars)), reverse=True)
-	timeMethod("sortConstellationsByScorePerStar", start)
-	return out
-
-def sortConstellationsByProvides(constellations):
-	start = time()
-	out = sorted(constellations, key=lambda c: c.provides.magnitude(), reverse=True)
-	timeMethod("sortConstellationsByProvides", start)
-	return out
-
-def sortConstellationsByProvidesValue(constellations):
-	global globalMetadata
-	start = time()
-	out = sorted(constellations, key=lambda c: (c.provides*globalMetadata["providesValue"]).magnitude(), reverse=True)
-	timeMethod("sortConstellationsByProvidesValue", start)
-	return out
-
-def sortConstellationsByProvidesValueScore(constellations, model):
-	global globalMetadata
-	start = time()
-	out = sorted(constellations, key=lambda c: (c.provides*globalMetadata["providesValue"]).magnitude()*c.evaluate(model), reverse=True)
-	timeMethod("sortConstellationsByProvidesValue", start)
-	return out
-
 def getProvidersForVector(possibles, neededAffinities, afV, model):
 	start = time()
 

@@ -135,9 +135,9 @@ c = Star(jackal, b, {"all damage %":15, "pet attack speed":5})
 rat = Constellation("Rat", "1c", "2c 3e")
 rat.id = "rat"
 a = Star(rat, [], {"cunning":15, "spirit":15})
-b = Star(rat, a, {"poison":8*5, "poison %":24})
+b = Star(rat, a, {"poison":[8,5], "poison %":24})
 c = Star(rat, b, {"acid resist":10, "cunning":20, "spirit":20})
-d = Star(rat, c, {"poison":12*5, "poison %":20, "poison duration":30})
+d = Star(rat, c, {"poison":[12,5], "poison %":20, "poison duration":30})
 
 viper = Constellation("Viper", "1c", "2c 3p")
 viper.id = "viper"
@@ -208,9 +208,9 @@ e.addAbility(Ability(
 fox = Constellation("Fox", "1e", "5e")
 fox.id = "fox"
 a = Star(fox, [], {"cunning":15, "spirit":15})
-b = Star(fox, a, {"bleed":5/3, "bleed %":24})
+b = Star(fox, a, {"bleed":[5,3], "bleed %":24})
 c = Star(fox, b, {"bleed resist":8, "cunning":20})
-d = Star(fox, c, {"bleed":8*3, "bleed %":45})
+d = Star(fox, c, {"bleed":[8,3], "bleed %":45})
 
 hawk = Constellation("Hawk", "1e", "3e")
 hawk.id = "hawk"
@@ -218,7 +218,7 @@ a = Star(hawk, [], {"offense":15})
 b = Star(hawk, a, {"crit damage":8})
 c = Star(hawk, b, {"offense %":3, "cunning ranged requirements":-10})
 
-quill = Constellation("Quill", "1e", "3a 3e")
+quill = Constellation("Quill", "1e", "4e")
 quill.id = "quill"
 a = Star(quill, [], {"elemental %":15})
 b = Star(quill, a, {"aether resist":8})
@@ -281,7 +281,7 @@ e.addAbility(Ability(
 lion = Constellation("Lion", "1o", "3o")
 lion.id = "lion"
 a = Star(lion, [], {"health %":4, "defense":8, "pet health %":3})
-b = Star(lion, a, {"spirit":15, "health":100, "move %":3})
+b = Star(lion, a, {"spirit":15, "health":100, "move speed":3})
 c = Star(lion, b, {"all damage %":15, "pet all damage %":12})
 
 panther = Constellation("Panther", "1o", "2o 3p")
@@ -294,9 +294,9 @@ d = Star(panther, c, {"crit damage":5, "offense":20, "pet crit damage":5})
 stag = Constellation("Stag", "1o", "2o 3p")
 stag.id = "stag"
 a = Star(stag, [], {"physical %":15, "bleed %":15})
-b = Star(stag, a, {"physique":15, "pierce resist":10, "move %":5})
+b = Star(stag, a, {"physique":15, "pierce resist":10, "move speed":5})
 c = Star(stag, b, {"health":80, "defense":15, "retaliation %":25})
-d = Star(stag, c, {"physical":4, "bleed":4*3, "physical %":24, "bleed %":24})
+d = Star(stag, c, {"physical":4, "bleed":[5,3], "physical %":24, "bleed %":24})
 
 tortoise = Constellation("Tortoise", "1o", "2o 3p")
 tortoise.id = "tortoise"
@@ -308,14 +308,14 @@ e = Star(tortoise, c, {})
 e.addAbility(Ability(
 	"Turtle Shell", 
 	{"type":"shield", "trigger":"low health", "chance":1, "recharge":25},
-	{"health":4200} ))
+	{"damage absorb":4200}))
 
 bull = Constellation("Bull", "1p", "2o 3p")
 bull.id = "bull"
 a = Star(bull, [], {"physique":15})
-b = Star(bull, a, {"internal %":24, "internal duration":20, "move %":3})
+b = Star(bull, a, {"internal %":24, "internal duration":20, "move speed":3})
 c = Star(bull, b, {"physique":15, "stun %":8, "stun duration":10})
-d = Star(bull, c, {"internal":12*5, "armor physique requirements":-10})
+d = Star(bull, c, {"internal":[12,5], "armor physique requirements":-10})
 e = Star(bull, d, {})
 #25% on attack
 #.5s recharge
@@ -331,7 +331,7 @@ eel = Constellation("Eel", "1p", "5p")
 eel.id = "eel"
 a = Star(eel, [], {"defense":12, "avoid melee":2})
 b = Star(eel, a, {"defense":15, "avoid ranged":2})
-c = Star(eel, b, {"pierce resist":10, "defense":20, "move %":6})
+c = Star(eel, b, {"pierce resist":10, "defense":20, "move speed":6})
 
 gallows = Constellation("Gallows", "1p", "5p")
 gallows.id = "gallows"
@@ -364,14 +364,14 @@ e.addAbility(Ability(
 lizard = Constellation("Lizard", "1p", "4p")
 lizard.id = "lizard"
 a = Star(lizard, [], {"health/s":6, "constitution %":15})
-b = Star(lizard, a, {"health/s":10, "health":40, "move %":3})
+b = Star(lizard, a, {"health/s":10, "health":40, "move speed":3})
 c = Star(lizard, b, {"constitution %":15, "health":40, "health regeneration":15})
 
 guide = Constellation("Sailor's Guide", "1p", "5p")
 guide.id = "guide"
 a = Star(guide, [], {"physique":15, "defense":8})
 b = Star(guide, a, {"reduced freeze":18, "slow resist":18})
-c = Star(guide, b, {"move %":8, "physique":15})
+c = Star(guide, b, {"move speed":8, "physique":15})
 d = Star(guide, b, {"physical resist":3, "cold resist":15, "lightning resist":15})
 
 tsunami = Constellation("Tsunami", "1p", "5p")
@@ -400,7 +400,7 @@ d = Star(wraith, a, {"aether":4, "aether %":24, "lightning":(1+7)/2, "lightning 
 affliction = Constellation("Affliction", "4a 3c 4e", "1a 1e")
 affliction.id = "affliction"
 a = Star(affliction, [], {"vitality %":40, "poison %":40})
-b = Star(affliction, a, {"spirit":20, "vitality decay":6*3, "vitality decay retaliation":100*3})
+b = Star(affliction, a, {"spirit":20, "vitality decay":[6,3], "vitality decay retaliation":100*3})
 c = Star(affliction, b, {})
 # small enough to not catch multiples.
 c.addAbility(Ability(
@@ -431,7 +431,7 @@ a = Star(winter, [], {"cold %":40})
 b = Star(winter, a, {"health %":4, "defense":15})
 c = Star(winter, b, {"cold resist":25, "defense":30})
 d = Star(winter, b, {"cold %":50, "frostburn %":50, "health":100})
-e = Star(winter, d, {"frostburn":12*3, "cold %":50, "frostburn %":100})
+e = Star(winter, d, {"frostburn":[12,3], "cold %":50, "frostburn %":100})
 f = Star(winter, b, {"offense":25, "frostburn %":50, "frostburn duration":30})
 g = Star(winter, f, {})
 #2m radius
@@ -470,7 +470,7 @@ g = Star(boar, e, {})
 g.addAbility(Ability(
 	"Trample", 
 	{"type":"attack", "trigger":"block", "chance":.25, "recharge":1, "targets":2.5, "shape":"line"},
-	{"stun %":100, "weapon damage %":55, "internal":570} ))
+	{"stun %":100, "weapon damage %":55, "triggered internal":[570/2, 2]} ))
 
 harp = Constellation("Bard's Harp", "6a 3o 6p", "2o 2p")
 harp.id = "harp"
@@ -596,7 +596,7 @@ b = Star(scythe, a, {"health":150, "health/s":12})
 c = Star(scythe, b, {"physique %":4, "constitution %":20})
 d = Star(scythe, c, {"health %":4, "health regeneration":20})
 e = Star(scythe, d, {"energy %":4, "energy regeneration":20})
-f = Star(scythe, e, {"cunning %":4, "spirit %":4, "defense %":2, "move %":6})
+f = Star(scythe, e, {"cunning %":4, "spirit %":4, "defense %":2, "move speed":6})
 
 huntress = Constellation("Huntress", "4a 3c 4e", "1a 1e")
 huntress.id = "huntress"
@@ -605,7 +605,7 @@ b = Star(huntress, a, {"pierce %":35, "cunning":20})
 c = Star(huntress, b, {"bleed %":60, "offense":15})
 d = Star(huntress, c, {"pierce resist":8, "damage beast %":15, "health":100, "pet health %":8})
 e = Star(huntress, c, {"offense %":3, "pet offense %":5})
-f = Star(huntress, e, {"bleed":8*3, "bleed %":50, "bleed duration":20})
+f = Star(huntress, e, {"bleed":[8,3], "bleed %":50, "bleed duration":20})
 g = Star(huntress, e, {})
 # no stat for reducing opponent offense so we'll call it defense
 
@@ -638,7 +638,7 @@ kraken.restricts = ["twohand"]
 a = Star(kraken, [], {"all damage %":35})
 b = Star(kraken, a, {"physical %":40, "attack speed":10})
 c = Star(kraken, a, {"physical %":40, "attack speed":10})
-d = Star(kraken, a, {"all damage %":50, "move %":5})
+d = Star(kraken, a, {"all damage %":50, "move speed":5})
 e = Star(kraken, a, {"all damage %":35, "crit damage":15})
 
 magi = Constellation("Magi", "10e", "3e")
@@ -648,7 +648,7 @@ b = Star(magi, a, {"elemental resist":8, "defense":10})
 c = Star(magi, b, {"fire resist":25, "defense":10})
 d = Star(magi, c, {"cast speed":5, "burn %":100, "physique":15})
 e = Star(magi, c, {"fire":(6+8)/2, "fire %":40})
-f = Star(magi, c, {"burn":12*3, "burn %":50, "burn duration":30})
+f = Star(magi, c, {"burn":[12,3], "burn %":50, "burn duration":30})
 g = Star(magi, f, {})
 # 1 meter radius
 # 7 fragments
@@ -665,7 +665,7 @@ a = Star(manticore, [], {"offense":15})
 b = Star(manticore, a, {"acid %":50, "poison %":50})
 c = Star(manticore, b, {"health %":4})
 d = Star(manticore, c, {"offense":20, "acid resist":25})
-e = Star(manticore, c, {"poison":8, "acid %":40, "poison %":40, "poison duration":30})
+e = Star(manticore, c, {"poison":[8,5], "acid %":40, "poison %":40, "poison duration":30})
 f = Star(manticore, e, {})
 # weird shape. It hits the target and things behind it in a cone. It's pretty strong for any kiter. Shortranged may suffer since the direction will be pretty random in aoe situations.
 f.addAbility(Ability(
@@ -676,7 +676,7 @@ f.addAbility(Ability(
 messenger = Constellation("Messenger of War", "3a 7p", "2c 3p")
 messenger.id = "messenger"
 a = Star(messenger, [], {"pierce retaliation":90, "retaliation %":30})
-b = Star(messenger, a, {"move %":5, "physique":20})
+b = Star(messenger, a, {"move speed":5, "physique":20})
 c = Star(messenger, b, {"armor":50, "retaliation %":50})
 d = Star(messenger, c, {"armor %":8, "pierce retaliation":120})
 e = Star(messenger, b, {"pierce resist":15, "damage reflect %":25})
@@ -687,7 +687,7 @@ f = Star(messenger, e, {})
 f.addAbility(Ability(
 	"Messenger of War", 
 	{"type":"buff", "trigger":"hit", "chance":.2, "recharge":15, "duration":8},
-	{"move %":30, "slow resist":70, "pierce retaliation":980, "retaliation %":250} ))
+	{"move speed":30, "slow resist":70, "pierce retaliation":980, "retaliation %":250} ))
 
 mistress = Constellation("Murmur, Mistress of Rumors", "3c 6e 6p", "2c 2e")
 mistress.id = "mistress"
@@ -752,7 +752,7 @@ scepter.restricts = ["mace"]
 a = Star(scepter, [], {"defense":20})
 b = Star(scepter, a, {"health %":6})
 c = Star(scepter, b, {"physical %":50})
-d = Star(scepter, c, {"internal":180, "internal %":80})
+d = Star(scepter, c, {"internal":[75/5,5], "internal %":80})
 e = Star(scepter, b, {"defense":30})
 f = Star(scepter, e, {"physical":(8+12)/2,"stun %":5, "stun duration":10})
 
@@ -760,7 +760,7 @@ scales = Constellation("Scales of Ulcama", "8o", "2o")
 scales.id = "scales"
 a = Star(scales, [], {"health":250, "energy":300})
 b = Star(scales, a, {"health/s":6, "health regeneration":10})
-c = Star(scales, b, {"health %":6, "move %":4})
+c = Star(scales, b, {"health %":6, "move speed":4})
 d = Star(scales, c, {"energy regeneration":10, "energy/s":2})
 e = Star(scales, b, {"all damage %":30, "physique":20})
 f = Star(scales, e, {})
@@ -777,7 +777,7 @@ shieldmaiden.restricts = ["shield"]
 a = Star(shieldmaiden, [], {"block %":4})
 b = Star(shieldmaiden, a, {"blocked damage %":15})
 c = Star(shieldmaiden, b, {"internal %":50, "retaliation %":50})
-d = Star(shieldmaiden, c, {"internal":12*5, "pierce retaliation":200})
+d = Star(shieldmaiden, c, {"internal":[12,5], "pierce retaliation":200})
 e = Star(shieldmaiden, b, {"reduced stun duration":25, "blocked damage %":20})
 f = Star(shieldmaiden, e, {"shield recovery":15, "blocked damage %":10})
 
@@ -835,7 +835,7 @@ a = Star(tempest, [], {"lightning %":40})
 b = Star(tempest, a, {"lightning":(1+24)/2, "physique":20})
 c = Star(tempest, b, {"lightning %":50, "electrocute %":50})
 d = Star(tempest, c, {"offense":20, "lightning resist":25})
-e = Star(tempest, d, {"move %":3, "lightning %":200*.3})
+e = Star(tempest, d, {"move speed":3, "lightning %":200*.3})
 f = Star(tempest, d, {"offense":20, "electrocute %":50, "electrocute duration":30})
 g = Star(tempest, f, {})
 # 3 target max
@@ -854,7 +854,7 @@ b = Star(typhos, a, {"vitality %":40, "aether %":40})
 c = Star(typhos, b, {"acid resist":15, "pet acid resist":15})
 d = Star(typhos, c, {"physical resist":3, "pet total speed":4, "pet physical resist":8})
 e = Star(typhos, c, {"vitality decay %":100, "health %":5, "pet health %":5})
-f = Star(typhos, e, {"vitality %":50, "aether %":50, "pet vitality %":120})
+f = Star(typhos, e, {"crit damage":5, "vitality %":50, "aether %":50, "pet crit damage %":8})
 
 ulo = Constellation("Ulo the Keeper of the Waters", "4o 6p", "2o 3p")
 ulo.id = "ulo"
@@ -876,7 +876,7 @@ a = Star(wendigo, [], {"vitality %":40, "vitality decay %":40})
 b = Star(wendigo, a, {"spirit":20, "health":100})
 c = Star(wendigo, b, {"cast speed":5, "vitality resist":10})
 d = Star(wendigo, c, {"health %":5, "damage from beasts":-10})
-e = Star(wendigo, d, {"vitality decay":12*3, "vitality %":50, "vitality decay %":50})
+e = Star(wendigo, d, {"vitality decay":[12,3], "vitality %":50, "vitality decay %":50})
 f = Star(wendigo, e, {})
 #giving it 3 targets since it's 0 recharge I can keep a few going.
 f.addAbility(Ability(
@@ -1004,7 +1004,7 @@ b = Star(leviathan, a, {"health %":5, "physique":35})
 c = Star(leviathan, b, {"defense":40, "energy regeneration":20, "energy %":10})
 d = Star(leviathan, c, {"pierce resist":20, "cold resist":20})
 e = Star(leviathan, d, {"cold":(12+16)/2, "cold %":100})
-f = Star(leviathan, d, {"frostburn":15*3, "frostburn %":100, "max cold resist":3})
+f = Star(leviathan, d, {"frostburn":[15,3], "frostburn %":100, "max cold resist":3})
 g = Star(leviathan, d, {})
 # 30% on attack
 # 3 second recharge
@@ -1039,13 +1039,13 @@ wolf.id = "wolf"
 a = Star(wolf, [], {"offense":35, "pet offense %":5})
 b = Star(wolf, a, {"bleed %":80, "pet all damage %":30})
 c = Star(wolf, b, {"defense":30, "vitality resist":20, "pet total speed":6})
-d = Star(wolf, c, {"bleed":54, "bleed %":80, "bleed duration":50})
+d = Star(wolf, c, {"bleed":[54/3,3], "bleed %":80, "bleed duration":50})
 e = Star(wolf, d, {"bleed resist":15, "elemental resist":15, "max bleed resist":3, "pet all damage %":80})
 f = Star(wolf, e, {})
 f.addAbility(Ability(
 	"Howl of Mogdrogen", 
 	{"type":"buff", "trigger":"attack", "chance":.2, "recharge":15, "duration":10},
-	{"bleed":174, "bleed %":275, "offense":132*.15*3/10, "attack speed":18, "pet offense %":15, "pet total speed":40} ))
+	{"bleed":[174/3,3], "pet bleed":174, "bleed %":275, "offense":132*.15*3/10, "attack speed":18, "pet offense %":15, "pet total speed":40} ))
 
 obelisk = Constellation("Obelisk of Menhir", "8o 15p")
 obelisk.id = "obelisk"
@@ -1069,7 +1069,7 @@ b = Star(oleron, a, {"physical %":80, "internal %":80})
 c = Star(oleron, b, {"pierce resist":20, "bleed resist":10, "offense":30})
 d = Star(oleron, c, {"physical resist":4, "health":200})
 e = Star(oleron, d, {"physical":(9+12)/2, "physical %":100})
-f = Star(oleron, d, {"offense":15, "internal":25*5, "internal %":100, "max pierce resist":2})
+f = Star(oleron, d, {"offense":15, "internal":[25,5], "internal %":100, "max pierce resist":2})
 g = Star(oleron, d, {})
 
 # If we assume everything has enough armor for all of the reduce armor to take effect (if they have less and we're doing physical damage they're probably dead already anyway)
@@ -1139,9 +1139,9 @@ torch = Constellation("Ulzuin's Torch", "8c 15e")
 torch.id = "torch"
 a = Star(torch, [], {"offense":20, "fire %":80})
 b = Star(torch, a, {"offense %":5, "chaos resist":15})
-c = Star(torch, b, {"move %":5, "crit damage":10})
+c = Star(torch, b, {"move speed":5, "crit damage":10})
 d = Star(torch, c, {"fire %":100, "fire resist":20})
-e = Star(torch, d, {"burn":25*3, "burn %":100, "max fire resist":3})
+e = Star(torch, d, {"burn":[25,3], "burn %":100, "max fire resist":3})
 f = Star(torch, c, {"burn %":100, "burn duration":100})
 g = Star(torch, f, {})
 #6m area
@@ -1165,7 +1165,7 @@ torch.addConflicts([torchOffense])
 soldier = Constellation("Unknown Soldier", "15a 8o")
 soldier.id = "soldier"
 a = Star(soldier, [], {"offense":15, "pierce %":60})
-b = Star(soldier, a, {"bleed":18*3, "bleed %":80})
+b = Star(soldier, a, {"bleed":[18,3], "bleed %":80})
 c = Star(soldier, b, {"attack speed":5, "health":280})
 d = Star(soldier, b, {"bleed %":80, "pierce %":80})
 e = Star(soldier, d, {"health %":4, "offense":40})
@@ -1223,6 +1223,21 @@ for c in origConstellations:
 			# print "  ", subC
 			abilityFragments += [subC]
 			newFragments += [subC]
+	# for i in range(min(2, len(c.stars))):
+	# 	# for i in range(len(c.stars)):
+	# 	star = c.stars[i]
+	# 	if star.ability != None:
+	# 		continue
+	# 	required = [star] + getRequires(star)
+	# 	if len(required) < len(c.stars):
+	# 		subC = Constellation(c.name + "[" + str(i+1) + "]", c.requires)
+	# 		subC.id = c.id + "[" + str(i+1) + "]"
+	# 		subC.stars = required
+	# 		subC.restricts = c.restricts
+	# 		subC.addConflicts(c.conflicts)
+
+	# 		abilityFragments += [subC]
+	# 		newFragments += [subC]
 	c.addConflicts(newFragments)
 
 for c in abilityFragments:

@@ -267,7 +267,7 @@ class Ability:
 				value += self.dynamicBonuses[key]
 		return value
 
-	def calculateEffective(self, model):
+	def calculateEffective(self, model):		
 		self.calculateTriggerTime(model)
 		if self.triggerTime == -1:
 			self.effective = 0
@@ -614,7 +614,7 @@ class Constellation:
 				return self.value
 			else:
 				if apsIndex >= len(self.apsValue):
-					return 0				
+					return 0
 				return self.apsValue[apsIndex]
 		if self in model.getStat("blacklist"):
 			self.value = float(0)
@@ -624,7 +624,7 @@ class Constellation:
 			self.value += star.evaluate(model)
 		if self.hasAttackTrigger():
 			self.apsValue = [0]*len(model.getStat("allAttacks/s"))
-			for i in range(len(model.getStat("allAttacks/s"))):
+			for i in range(len(model.getStat("allAttacks/s"))-1, -1, -1):
 				apsModel = copy.deepcopy(model)
 				apsModel.stats["attacks/s"] = apsModel.stats["allAttacks/s"][i]
 				for star in self.stars:

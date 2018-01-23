@@ -5,14 +5,16 @@ stats = {
 		"attacks/s":2,
 		"allAttacks/s":[
 			# list of attack skills that can be linked to abilities. remember to include your main attack.
-			# 5, # skeletons (1 per skeleton)
+			# 9, # skeletons (1 per skeleton)
 			# 1, # zombie
 			# 1, # raven
-			2, #curse
-			.2, #reap
-			1, #bone harvest
+			2, #curse can spam
+			1/5.8, #reap 1 target
+			2/2.9, #bone harvest ~2 targets
+			2*.15, # reaping strike
+			2*.15, # necrotic edge
 		],
-		"hits/s":.2,
+		"hits/s":.33,
 		"blocks/s":0,
 		"kills/s":.25,
 		"crit chance":.15,
@@ -49,7 +51,7 @@ stats = {
 
 		"playStyle":"shortranged", # playstyle for weighting constellation abilities. [ranged/shortranged/melee/tank]
 		"weapons":[
-			"offhand"
+			"rifle"
 		],
 		"blacklist":[
 			# list of constellations that I want to manually exclude for some reason.
@@ -112,6 +114,9 @@ weights = {
 
 		"energy":.1,
 
+		"stun %":3,
+		"slow move":3,
+
 		"pet damage":15,
 
 		# "pet all damage %":25, 
@@ -124,9 +129,9 @@ weights = {
 		"pet poison %":1,
 		"pet burn %":1,
 
-		"pet attack speed":20, 
+		"pet attack speed":25,
 		"pet defense":4,
-		"pet defense %":7.5, 
+		"pet defense %":7.5,
 		"pet health %":15, 
 		"pet health regeneration":2.5, 
 		"pet health/s":7.5, 
@@ -168,6 +173,18 @@ weights = {
 		"total speed":15,
 
 		"Bysmiel's Command":2.5, #hard skills to keep active 100%, bonus due to it being a summon
-		"Raise the Dead":.5 #summons scale with player damage not pet damage so they won't be very good
+		"Raise the Dead":0, #summons scale with player damage not pet damage so they won't be very good
+		"Living Shadow":0,
+
+		"Aetherfire":4.5, #this can be tied to skeletons and has no recharge. This number is based on calculated effective since I can't put the pet attacks in allAttacks/s since it will over value things that can't be tied to pets.
+		"Flame Torrent":4.5,
+		"Eldritch Fire":4.5,
+		"Wendigo's Mark":4.5,
+		"Guardian's Gaze":3,
+		"Twin Fangs":2.5,
+		"Rattosh":4.5,
+
+
+
 	}
 

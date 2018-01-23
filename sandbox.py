@@ -11,9 +11,9 @@ import os
 
 model = Model.loadModel("Lilith")
 
-best = getBestConstellations(model)
-highest, _ = getHighestScoring(best)
-efficient, _ = getMostEfficient(best)
+# best = getBestConstellations(model)
+# highest, _ = getHighestScoring(best)
+# efficient, _ = getMostEfficient(best)
 
 # print model
 
@@ -182,8 +182,18 @@ sol = [hawk, rat, light, eel, jackal, hound, ultosHandofUltos]
 # print Solution([xA, xO, lion, xC, fiend, viper, hound, light, behemoth, phoenix, messenger, hawk, targoShieldWall, ultosHandofUltos, torchMeteorShower], model)  # 57740 (56)
 # print Solution([xE, hawk, xO, lion, xC, fiend, viper, hound, phoenix, behemoth, toad, messenger, torchMeteorShower, ultosHandofUltos, targoShieldWall], model)
 
+sol = Solution([xC, jackal, viper, imp, raven, bonds, hound, xO, panther, staff, god], model)
+print(sol)
+sol = Solution([xC, vulture, xO, panther, hound, staff, eel, lion, xE, raven, bonds, xP, god], model)
+print(sol)
 
-evalCon(winter)
+evalCon(wendigo)
 
-# evalItemMods("head", augments )
+# evalItemMods("ring", augments )
 # evalItems(["Necrolord's Shroud", "Beastcaller's Shroud", "Beastcaller's Regalia (4)"])
+
+# for c in Constellation.constellations:
+# 	# if not c.requires.intersects(Affinity("1c")) and c.provides > Affinity("1c"):
+# 	# if not c.requires.intersects(Affinity("1a")) and c.provides > Affinity("1a"):
+# 	if sol.provides > c.requires and len(c.stars) <= 5 and not c in sol.constellations:
+# 		print c.id, c.evaluate(model)

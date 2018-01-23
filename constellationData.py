@@ -1081,11 +1081,11 @@ g.addAbility(Ability(
 
 rattosh = Constellation("Rattosh, the Veilwarden", "6c 10e 6o")
 rattosh.id = "rattosh"
-a = Star(rattosh, [], {"health":150, "pet health %":8})
-b = Star(rattosh, a, {"vitality %":80, "aether %":80, "pet all damage %":30})
+a = Star(rattosh, [], {"health":150, "offense":20})
+b = Star(rattosh, a, {"vitality %":80, "aether %":80})
 c = Star(rattosh, b, {"vitality decay %":150, "health":250, "offense":35})
-d = Star(rattosh, c, {"vitality %":100, "aether %":100, "pet vitality %":100})
-e = Star(rattosh, d, {"health":250, "vitality resist":15, "pet vitality resist":15})
+d = Star(rattosh, c, {"vitality %":100, "aether %":100, "vitality decay":48})
+e = Star(rattosh, d, {"health":250, "vitality resist":15, "pierce resist":15})
 f = Star(rattosh, e, {})
 f.addAbility(Ability(
 	"Will of Rattosh", 

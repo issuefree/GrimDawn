@@ -246,6 +246,7 @@ class Model:
 
 	def initialize(self):
 		self.checkModel()
+		self.filterConstellations()
 
 		self.seedSolutions = []
 		self.readSeedSolutions()
@@ -457,8 +458,6 @@ class Model:
 		for speed in ["attack speed", "cast speed", "move speed"]:
 			total += self.get(speed)
 		self.setCalculated("total speed", total)
-
-		self.filterConstellations()
 
 	def filterConstellations(self):
 		print "\n  Checking for weapon restricted constellations..."

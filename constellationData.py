@@ -85,7 +85,7 @@ e.addAbility(Ability(
 	{"type":"buff", "trigger":"attack", "chance":.25, "duration":4, "recharge":6},
 	{"offense":85, "pet all damage %":210, "pet crit damage":28, "pet retaliation %":300} ))
 
-toad = Constellation("Toad", "1a", "3a, 3e")
+toad = Constellation("Toad", "1a", "3a 3e")
 toad.id = "toad"
 a = Star(toad, [], {"vitality resist":8})
 b = Star(toad, a, {"spirit":15, "offense":10})
@@ -119,7 +119,7 @@ ghoul.id = "ghoul"
 a = Star(ghoul, [], {"physique":15, "defense":8})
 b = Star(ghoul, a, {"health/s":6, "health %":3})
 c = Star(ghoul, b, {"physique":15, "spirit":15, "defense":15})
-d = Star(ghoul, b, {"health regeneration":15, "lifesteal %":4})
+d = Star(ghoul, b, {"health/s %":15, "lifesteal %":4})
 e = Star(ghoul, d, {})
 e.addAbility(Ability(
 	"Ghoulish Hunger", 
@@ -218,7 +218,7 @@ a = Star(hawk, [], {"offense":15})
 b = Star(hawk, a, {"crit damage":8})
 c = Star(hawk, b, {"offense %":3, "cunning ranged requirements":-10})
 
-quill = Constellation("Quill", "1e", "4e")
+quill = Constellation("Quill", "1e", "3a 3e")
 quill.id = "quill"
 a = Star(quill, [], {"elemental %":15})
 b = Star(quill, a, {"aether resist":8})
@@ -288,7 +288,7 @@ panther = Constellation("Panther", "1o", "2o 3p")
 panther.id = "panther"
 a = Star(panther, [], {"offense":12, "pet offense %":2})
 b = Star(panther, a, {"cunning":15, "spirit":15, "pet all damage %":15})
-c = Star(panther, b, {"all damage %":15, "energy regeneration":15, "pet offense %":3})
+c = Star(panther, b, {"all damage %":15, "energy/s %":15, "pet offense %":3})
 d = Star(panther, c, {"crit damage":5, "offense":20, "pet crit damage":5})
 
 stag = Constellation("Stag", "1o", "2o 3p")
@@ -365,7 +365,7 @@ lizard = Constellation("Lizard", "1p", "4p")
 lizard.id = "lizard"
 a = Star(lizard, [], {"health/s":6, "constitution %":15})
 b = Star(lizard, a, {"health/s":10, "health":40, "move speed":3})
-c = Star(lizard, b, {"constitution %":15, "health":40, "health regeneration":15})
+c = Star(lizard, b, {"constitution %":15, "health":40, "health/s %":15})
 
 guide = Constellation("Sailor's Guide", "1p", "5p")
 guide.id = "guide"
@@ -416,7 +416,7 @@ phoenix = Constellation("Alladrah's Phoenix", "6e 3o 6p", "2a 2e")
 phoenix.id = "phoenix"
 a = Star(phoenix, [], {"aether %":40, "elemental %":40})
 b = Star(phoenix, a, {"health":150, "chaos resist":12, "fire retaliation":155})
-c = Star(phoenix, b, {"aether %":30, "elemental %":30, "health regeneration":20})
+c = Star(phoenix, b, {"aether %":30, "elemental %":30, "health/s %":20})
 d = Star(phoenix, c, {"crit damage":5, "fire %":50, "burn %":100})
 e = Star(phoenix, d, {})
 # haven't seen this one in actions so all of these numbers are guestimates
@@ -438,7 +438,7 @@ g = Star(winter, f, {})
 #looks like there are multiple missiles but it's not listed
 g.addAbility(Ability(
 	"Blizzard", 
-	{"type":"attack", "trigger":"critical", "chance":1, "recharge":3.2, "targets":4, "shape":"ground"},
+	{"type":"attack", "trigger":"critical", "chance":1, "recharge":3.2, "targets":3, "shape":"ground"},
 	{"weapon damage %":16, "triggered cold":(358+434)/2, "triggered frostburn":[450/2,2], "stun %":50, "slow move":70} ))
 
 assassin = Constellation("Assassin", "6a 4o", "1a 1o")
@@ -475,7 +475,7 @@ g.addAbility(Ability(
 harp = Constellation("Bard's Harp", "6a 3o 6p", "2o 2p")
 harp.id = "harp"
 a = Star(harp, [], {"health":200, "constitution %":20})
-b = Star(harp, a, {"pierce %":30, "elemental %":40, "energy regeneration":10})
+b = Star(harp, a, {"pierce %":30, "elemental %":40, "energy/s %":10})
 c = Star(harp, b, {"pierce resist":15, "bleed resist":10})
 d = Star(harp, c, {"energy %":10, "energy/s":2})
 e = Star(harp, c, {"pierce %":40, "elemental %":50, "elemental resist":15})
@@ -492,7 +492,7 @@ a = Star(behemoth, [], {"health/s":10})
 b = Star(behemoth, a, {"health":300, "pet health %":5})
 c = Star(behemoth, b, {"health/s":15, "constitution %":25})
 d = Star(behemoth, b, {"health %":4})
-e = Star(behemoth, b, {"health regeneration":10, "pet health regeneration":20})
+e = Star(behemoth, b, {"health/s %":10, "pet health/s %":20})
 f = Star(behemoth, b, {})
 ability = Ability(
 	"Giant's Blood", 
@@ -594,8 +594,8 @@ scythe.id = "scythe"
 a = Star(scythe, [], {"energy":150, "energy/s":2})
 b = Star(scythe, a, {"health":150, "health/s":12})
 c = Star(scythe, b, {"physique %":4, "constitution %":20})
-d = Star(scythe, c, {"health %":4, "health regeneration":20})
-e = Star(scythe, d, {"energy %":4, "energy regeneration":20})
+d = Star(scythe, c, {"health %":4, "health/s %":20})
+e = Star(scythe, d, {"energy %":4, "energy/s %":20})
 f = Star(scythe, e, {"cunning %":4, "spirit %":4, "defense %":2, "move speed":6})
 
 huntress = Constellation("Huntress", "4a 3c 4e", "1a 1e")
@@ -706,7 +706,7 @@ f = Star(mistress, d, {"cold %":50, "acid %":50, "frostburn %":80})
 lantern = Constellation("Oklaine's Lantern", "10e", "3e 2o")
 lantern.id = "lantern"
 lantern.restricts = ["scepter", "dagger", "offhand"]
-a = Star(lantern, [], {"energy regeneration":15})
+a = Star(lantern, [], {"energy/s %":15})
 b = Star(lantern, a, {"offense":25, "defense":20})
 c = Star(lantern, b, {"offense":15, "crit damage":5})
 d = Star(lantern, c, {"all damage %":50, "reduced entrapment duration":25})
@@ -759,9 +759,9 @@ f = Star(scepter, e, {"physical":(8+12)/2,"stun %":5, "stun duration":10})
 scales = Constellation("Scales of Ulcama", "8o", "2o")
 scales.id = "scales"
 a = Star(scales, [], {"health":250, "energy":300})
-b = Star(scales, a, {"health/s":6, "health regeneration":10})
+b = Star(scales, a, {"health/s":6, "health/s %":10})
 c = Star(scales, b, {"health %":6, "move speed":4})
-d = Star(scales, c, {"energy regeneration":10, "energy/s":2})
+d = Star(scales, c, {"energy/s %":10, "energy/s":2})
 e = Star(scales, b, {"all damage %":30, "physique":20})
 f = Star(scales, e, {})
 # assuming single target
@@ -1001,7 +1001,7 @@ leviathan = Constellation("Leviathan", "13a 13e")
 leviathan.id = "leviathan"
 a = Star(leviathan, [], {"cold":8, "cold %":80})
 b = Star(leviathan, a, {"health %":5, "physique":35})
-c = Star(leviathan, b, {"defense":40, "energy regeneration":20, "energy %":10})
+c = Star(leviathan, b, {"defense":40, "energy/s %":20, "energy %":10})
 d = Star(leviathan, c, {"pierce resist":20, "cold resist":20})
 e = Star(leviathan, d, {"cold":(12+16)/2, "cold %":100})
 f = Star(leviathan, d, {"frostburn":[15,3], "frostburn %":100, "max cold resist":3})
@@ -1104,22 +1104,22 @@ f = Star(spear, e, {})
 f.addAbility(Ability(
 	"Spear of the Heavens", 
 	{"type":"attack", "trigger":"hit", "chance":.5, "recharge":1, "targets":1.5, "shape":"circle"},
-	{"weapon damage":60, "triggered lightning":(192+332)/2, "triggered aether":294, "stun %":100} ))
+	{"weapon damage %":60, "triggered lightning":(192+332)/2, "triggered aether":294, "triggered electrocute":[236/2,2], "stun %":100} ))
 
 tree = Constellation("Tree of Life", "7o 20p")
 tree.id = "tree"
 a = Star(tree, [], {"health %":5, "pet health %":5})
-b = Star(tree, a, {"health/s":20, "pet health regeneration":20})
+b = Star(tree, a, {"health/s":20, "pet health/s %":20})
 c = Star(tree, b, {"health %":8, "pet health %":5})
-d = Star(tree, b, {"health/s":15, "defense":30, "pet health regeneration":20})
-e = Star(tree, d, {"health %":4, "health regeneration":20, "pet health/s":50})
+d = Star(tree, b, {"health/s":15, "defense":30, "pet health/s %":20})
+e = Star(tree, d, {"health %":4, "health/s %":20, "pet health/s":50})
 f = Star(tree, d, {})
 #25% when hit
 #12s recharge
 f.addAbility(Ability(
 	"Healing Rain", 
 	{"type":"heal", "trigger":"hit", "chance":.25, "recharge":12, "duration":8},
-	{"duration":{"health/s":100, "energy/s":12, "health regeneration":40, "energy regeneration":55}, "health %":10, "health":700} ))
+	{"duration":{"health/s":100, "energy/s":12, "health/s %":40, "energy/s %":55}, "health %":10, "health":700} ))
 
 ultos = Constellation("Ultos, Shepherd of Storms", "6c 10e 10p")
 ultos.id = "ultos"
@@ -1132,7 +1132,7 @@ f = Star(ultos, e, {})
 # says it'll 10 targets but how often will that actually happen. Dropping to 5.
 f.addAbility(Ability(
 	"Hand of Ultos", 	
-	{"type":"attack", "trigger":"critical", "chance":1, "recharge":1.5, "targets":5, "duration":3},
+	{"type":"attack", "trigger":"critical", "chance":1, "recharge":1.5, "targets":3.5, "duration":3},
 	{"weapon damage %":24, "triggered lightning":(224+434)/2, "triggered electrocute":[696/2,2], "duration":{"reduce elemental resist":25}} ))
 
 torch = Constellation("Ulzuin's Torch", "8c 15e")
@@ -1178,12 +1178,12 @@ g = Star(soldier, f, {})
 # even more guessworky than most others...
 # 2 attacks. shadow strike and shadow blades.
 # I'm assuming strike is an engage and blades is the normal attack
-# lets assume 1 strike and 5 normal attacks in a lifespan
+# lets assume 1 strike and 4 normal attacks in a lifespan
 # 3.3 s to trigger 6 second recharge means 2.5 lifespans in a 30 second fight.
 g.addAbility(Ability(
 	"Living Shadow", 
 	{"type":"summon", "trigger":"critical", "chance":1, "recharge":6, "lifespan":24},
-	{"triggered bleed":178+(320*5), "triggered pierce":(205+273)/2+(172+226)/2*5} ))
+	{"triggered bleed":178+(320*4), "triggered pierce":(205+273)/2+(172+226)/2*4} ))
 
 vire = Constellation("Vire, the Stone Matron", "12a, 18p")
 vire.id = "vire"

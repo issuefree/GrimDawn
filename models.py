@@ -134,12 +134,12 @@ class Model:
 	# ENERGY_BURN_PERC="energy burn %"
 	# ENERGY_LEECH="energy leech"
 	# ENERGY_LEECH_RESIST="energy leech resist"
-	# ENERGY_REGENERATION="energy regeneration"
+	# ENERGY_REGENERATION="energy/s %"
 	# ENERGY_PER_SEC="energy/s"
 	# FIRE_RESIST="fire resist"
 	# HEALTH="health"
 	# HEALTH_PERC="health %"
-	# HEALTH_REGENERATION="health regeneration"
+	# HEALTH_REGENERATION="health/s %"
 	# HEALTH_PER_SEC="health/s"
 	# JEWELRY_SPIRIT_REQUIREMENTS="jewelry spirit requirements"
 	# LIFE_LEECH_RESIST="life leech resist"
@@ -173,7 +173,7 @@ class Model:
 	# PET_ELEMENTAL_RESIST="pet elemental resist"
 	# PET_FIRE_DAMAGE_PERC="pet fire damage %"
 	# PET_HEALTH_PERC="pet health %"
-	# PET_HEALTH_REGENERATION="pet health regeneration"
+	# PET_HEALTH_REGENERATION="pet health/s %"
 	# PET_HEALTH_PER_SEC="pet health/s"
 	# PET_LIFESTEAL_PERC="pet lifesteal %"
 	# PET_LIGHTNING_DAMAGE_PERC="pet lightning damage %"
@@ -239,8 +239,10 @@ class Model:
 	def loadModel(name):
 		file = open(name.lower() + "/" + name.lower() + ".py", "r")
 		exec(file.read(), locals())
-		print locals()["devotionPoints"]
 		model = Model(name, locals()["stats"], locals()["weights"], locals()["devotionPoints"] )
+		model.items = locals()["items"]
+		model.skills = locals()["skills"]
+		model.constellations = locals()["constellations"]
 		model.initialize()
 		return model
 
@@ -324,22 +326,22 @@ class Model:
 		parts = ["health", "energy"]
 		#calculate value of health/s and energy/s
 		for part in parts:
-			hps = self.get(part) * self.getStat("fight length") * self.bonusToPercent(part + " regeneration")
+			hps = self.get(part) * self.getStat("fight length") * self.bonusToPercent(part + "/s %")
 			if part == "energy":
 				hps = hps * energyBonus
-			self.setCalculated(part+"/s", hps)				
+			self.setCalculated(part+"/s", hps)
 		
-		#calculate value of health regeneration and energy regeneration
-		#% Health Regeneration affects ALL flat health regen EXCEPT for that gained from Physique.
+		#calculate value of health/s % and energy/s %
+		#% health/s % affects ALL flat health regen EXCEPT for that gained from Physique.
 		# regen from physique = (P-50)*.04
 
-		# figure how much health/s 1 health regeneration gives
-		# the problem is that health/s is on the sheet as a total i.e. your health regeneration is already factored in.
+		# figure how much health/s 1 health/s % gives
+		# the problem is that health/s is on the sheet as a total i.e. your health/s % is already factored in.
 		# so I need to get the base value first			
 		hpsP = (self.getStat("physique")-50)*.04
 		hpsS = self.getStat("health/s")
-		baseHps = (hpsS - hpsP)/self.bonusToPercent("health regeneration")
-		self.setCalculated("health regeneration", baseHps*.01*self.get("health/s"))
+		baseHps = (hpsS - hpsP)/self.bonusToPercent("health/s %")
+		self.setCalculated("health/s %", baseHps*.01*self.get("health/s"))
 
 		# physique grants health/s, health and defense so this should be accounted for
 		val = 0
@@ -352,7 +354,7 @@ class Model:
 		# cunning grants physical %, pierce %, bleed %, internal % and offense.
 		val = 0
 		val += self.get("physical %") * .41
-		val += self.get("pierce %") * .41
+		val += self.get("pierce %") * .40
 		val += self.get("bleed %") * .46
 		val += self.get("internal %") * .46
 		val += self.get("offense") * .4
@@ -365,7 +367,7 @@ class Model:
 		val += sum([self.get(b) for b in ["burn %", "frostburn %", "electrocute %", "poison %", "vitality decay %"]]) * .5
 		val += self.get("energy") * 2
 		val += self.get("energy/s") * .01
-		val += self.get("energy regeneration") * .26
+		val += self.get("energy/s %") * .26
 
 		self.setCalculated("spirit", val)
 
@@ -431,6 +433,10 @@ class Model:
 			total += (self.getStat(damage+" %")+100)*self.get(damage+" %")/100
 		
 		self.setCalculated("crit damage", total*self.getStat("crit chance"))
+
+		for damage in damages:
+			if damage in self.bonuses.keys():
+				self.setCalculated("triggered "+damage, self.bonuses[damage]/self.getStat("attacks/s"))
 
 		#calculate elemental damage and triggered elemental damage if not set
 		self.setCalculated("elemental", sum([self.get(elemental) for elemental in elementals])/3.0)
@@ -531,8 +537,8 @@ class Model:
 	#bonuses
 		# select the important bonuses from above and give them a value.
 		# Note some bonuses will be automatically calculated if left blank (and should be unless you want to override):
-		#	health/s <- health, health regeneration, fight length
-		#	energy/s <- energy, energy regeneration, energy length
+		#	health/s <- health, health/s %, fight length
+		#	energy/s <- energy, energy/s %, energy length
 
 		#   physique <- health/s, health, defense
 		#   cunning <- appropriate damage %, offense
@@ -583,7 +589,7 @@ class Model:
 		# "defense":1400,
 
 		# "health":7500,
-		# "health regeneration":25,
+		# "health/s %":25,
 
 		# "armor":1000,
 		# "energy":2500,

@@ -54,7 +54,7 @@ weights = {
 		"health":.75,
 		"health/s":5, #downgraded because I lifesteal so much. i really just want a big pool not regen.
 		"energy":.66,
-		"energy regeneration":10,
+		"energy/s %":10,
 		"avoid melee":10, "avoid ranged":15,
 
 		"resist":7.5,

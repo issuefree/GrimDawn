@@ -5,6 +5,23 @@ from time import time
 
 import traceback
 
+damages = [
+	"acid", "poison",
+	"aether", 
+	"bleed", 
+	"fire", "burn", 
+	"chaos", 
+	"lightning", "electrocute", 
+	"cold", "frostburn", 
+	"physical", "internal",
+	"pierce",
+	"vitality", "vitality decay",
+	"life leech",
+
+	"elemental", 
+	"all damage"
+]
+
 primaryDamages = [
 	"acid",
 	"aether", 
@@ -20,21 +37,6 @@ primaryDamages = [
 	"life leech"
 ]
 
-damages = [
-	"acid", "poison",
-	"aether", 
-	"bleed", 
-	"fire", "burn", 
-	"chaos", 
-	"lightning", "electrocute", 
-	"elemental", 
-	"cold", "frostburn", 
-	"physical", "internal",
-	"pierce",
-	"vitality", "vitality decay",
-	"life leech"
-]
-
 durationDamages = [
 	"bleed",
 	"poison",
@@ -43,6 +45,35 @@ durationDamages = [
 	"frostburn",
 	"internal",
 	"vitality decay"
+]
+
+magicalDamage = [
+	"acid",
+	"aether",
+	"fire",
+	"chaos",
+	"lightning",
+	"cold",
+	"vitality",
+	"life leech"
+]
+
+magicalDurationDamage = [
+	"burn",
+	"frostburn",
+	"electrocute",
+	"poison",
+	"vitality decay"
+]
+
+physicalDamage = [
+	"physical",
+	"pierce"
+]
+
+physicalDurationDamage = [
+	"bleed",
+	"internal"
 ]
 
 retaliations = [
@@ -55,11 +86,10 @@ retaliations = [
 ]
 
 resists = [
-	"physical resist", 
+	"physical resist",
 	"fire resist", 
 	"cold resist", 
 	"lightning resist", 
-	"acid resist", 
 	"acid resist", 
 	"vitality resist", 
 	"pierce resist", 
@@ -67,6 +97,13 @@ resists = [
 	"chaos resist",
 	"bleed resist"
 ]
+
+elementals = [
+	"cold",
+	"fire",
+	"lightning"
+]
+
 methodTimes = {}
 def timeMethod(label, startTime):
 	if label in methodTimes.keys():
@@ -277,7 +314,7 @@ class Ability:
 		if self.gc("type") == "buff":
 			self.effective = self.getUpTime(model)*targets
 			# print "buff uptime:", self.getUpTime(model)
-		elif self.gc("type") == "attack":
+		if self.gc("type") == "attack":
 
 			if self.gc("shape") == "???":
 				print "    Shape unknown for", self.name
@@ -361,11 +398,7 @@ class Ability:
 				if self.gc("recharge") == 0:
 					self.conditions["recharge"] = 1
 
-			# normalized around 2 attacks per second. If I use actual attack speed we get inverse calculated value to actual value. 
-			# 	I'm not sure what this comment means. I'm going to set it to actual attack speed and run some tests.
-			# aps = model.getStat("attacks/s")			
-			aps = 2
-			self.effective = self.getNumTriggers(model)*targets/(aps*model.getStat("fight length"))
+			self.effective = self.getNumTriggers(model)*targets/model.getStat("fight length")
 
 			# print "nt", self.getNumTriggers(model)
 
@@ -378,20 +411,29 @@ class Ability:
 							self.bonuses["triggered "+dam] = damage*ticks
 						else:
 							self.bonuses["triggered "+dam] = damage*interval
+				
+		if self.gc("type") == "aar":			
+			self.effective = self.getNumTriggers(model)/model.getStat("fight length")
 
+		if self.gc("type") == "aar" or self.gc("type") == "attack":
 			if "duration" in self.bonuses.keys():
 				self.setDebuffValue(targets, model)
+			# TODO I've removed damage % modifiers from attack abilities as these are only supposed to affect the attack itself not all damage.
+			# this needs to be fixed and this can be removed
+			for damage in damages:
+				if damage+" %" in self.bonuses.keys():
+					del self.bonuses[damage+" %"]
 
-		elif self.gc("type") == "shield":
+		if self.gc("type") == "shield":
 			self.effective = self.getNumTriggers(model)
-		elif self.gc("type") == "heal":
+		if self.gc("type") == "heal":
 			# we're counting half effectiveness due to overheal
 			self.effective = self.getNumTriggers(model)*.5
 
 			if "duration" in self.bonuses.keys():
 				self.setDebuffValue(max(1, self.gc("targets")), model)
 
-		elif self.gc("type") == "summon":
+		if self.gc("type") == "summon":
 			self.effective = self.getUpTime(model)
 
 	def setDebuffValue(self, targets, model):
@@ -407,9 +449,12 @@ class Ability:
 		del self.bonuses["duration"]
 
 	def calculateTriggerTime(self, model):
-		if self.gc("trigger") == "manual" or self.gc("trigger") == "toggle":
+		if self.gc("trigger") == "manual" or self.gc("trigger") == "toggle" or self.gc("trigger") == "passive":
 			return 0
-		triggerFrequency = model.getStat(self.gc("trigger")+"s/s")
+		if self.gc("type") == "aar":
+			triggerFrequency = model.getStat("attacks/s")
+		else:
+			triggerFrequency = model.getStat(self.gc("trigger")+"s/s")
 		if triggerFrequency == 0:
 			self.triggerTime = -1
 			return
@@ -418,7 +463,7 @@ class Ability:
 
 	#uptime is a percent so we'll use a scalar of fight length to get an average across multiple fights
 	def getUpTime(self, model):
-		if self.gc("trigger") == "toggle":
+		if self.gc("trigger") == "toggle" or self.gc("trigger") == "passive":
 			return 1
 		up = 0.0
 		fightLen = model.getStat("fight length")*5
@@ -464,9 +509,11 @@ class Ability:
 				if dam+" %" in self.bonuses.keys():
 					if model.getStat(dam) <= 0:
 						print "    " +self.name+" requires a defined " + dam + " _stat_ in the model."
-						model.stats[dam] = .01
 					else:
 						self.dynamicBonuses[dam] = (model.getStat(dam) * self.gb("weapon damage %")/100.0 + self.gb(dam)) * self.gb(dam+" %")/100.0
+
+		if self.gc("type") == "aar":
+			self.dynamicBonuses["weapon damage %"] = -100
 
 		# armor reduction is like + physical damage that isn't affected by %damage
 		if self.gb("reduce armor") > 0:
@@ -474,6 +521,27 @@ class Ability:
 				print "    " +self.name+" requires a defined stat for physical %."
 			else:
 				self.dynamicBonuses["physical"] = self.gb("reduce armor")*.7 / (model.getStat("physical %")/100.0)
+
+	def getBonuses(self, model):
+		bonuses = {}
+		self.calculateEffective(model)
+		# print "Effective %:", self.name, self.effective
+
+		self.calculateDynamicBonuses(model)
+
+		# if the ability has been manually valued in the model
+		modelFactor = 1
+		if self.name in model.bonuses.keys():
+			modelFactor = model.get(self.name)
+
+		for bonus in self.bonuses.keys() + self.dynamicBonuses.keys():
+			total = self.getTotalBonus(bonus)
+			if type(total) == type([]):
+				total = [total[0]*self.effective*modelFactor, total[1]]
+			else:
+				total = total*self.effective * modelFactor
+			bonuses[bonus] = total
+		return bonuses
 
 
 	def calculateValue(self, model):
@@ -738,9 +806,20 @@ class Item:
 				locItems += [item]
 		return locItems
 
+	@staticmethod
+	def getByName(name, items):
+		for item in items:
+			if item.name == name:
+				return item
+		return 1/0
+
 	def __init__(self, name, bonuses, location, ability=None):
 		self.name = name
 		self.bonuses = bonuses
+
+		if "armor" in bonuses.keys() and location and location in Item.armorLocationFactor.keys():
+			self.bonuses["armor"] = bonuses["armor"]*Item.armorLocationFactor[location]
+
 		self.location = location
 		self.ability = ability
 
@@ -767,11 +846,6 @@ class Item:
 		for bonus in model.bonuses.keys():
 			if bonus in self.bonuses.keys():
 				keyBonus = self.bonuses[bonus]
-				if bonus == "armor" and location:
-					try:					
-						keyBonus = self.bonuses["armor"]*Item.armorLocationFactor[location]
-					except:
-						pass
 				if verbose:
 					print "  ", bonus.ljust(20), str(int(keyBonus)).ljust(5), int(model.get(bonus)*keyBonus)
 				value += model.get(bonus)*keyBonus
@@ -782,3 +856,463 @@ class Item:
 		self.value = value
 		return value
 
+class Skill:
+	skills = {}
+	skillsByClass = {}
+
+	def __init__(self, name, profession, abilities):
+		self.name = name		
+		self.abilities = abilities
+		self.profession = profession
+		Skill.skills[name] = self
+		if not profession in Skill.skillsByClass:
+			Skill.skillsByClass[profession] = []
+		Skill.skillsByClass[profession] += [name]
+
+	def getAbility(self, level):
+		return self.abilities[level]
+
+class Character:
+
+	def __init__(self, model, baseAttributes, skills, constellations, items, stats={}):
+		self.results = {}
+		self.model = model
+		self.baseAttributes = baseAttributes
+		self.stats = {}
+		self.level = model.stats["level"]		
+		self.difficulty = model.stats["difficulty"]
+		self.stats["physique"] = baseAttributes[0]
+		self.stats["cunning"] = baseAttributes[1]
+		self.stats["spirit"] = baseAttributes[2]
+		self.stats["health"] = baseAttributes[3]
+		self.stats["energy"] = baseAttributes[4]
+		
+		self.setMaxes()
+
+		self.setBaseStats(stats)
+
+		self.skills = skills
+		self.constellations = constellations
+		self.items = items
+
+		for item in items:
+			self.process(item.bonuses, [item.ability])
+
+		for constellation in constellations:
+			for star in constellation.stars:
+				if star.ability:
+					print star.ability.name
+					print "  ", star.ability.getBonuses(self.model)
+				self.process(star.bonuses, [star.ability])
+
+		for skill in skills:
+			if not skill in Skill.skills.keys():
+				print "Missing skill definition for:", skill
+				continue
+
+			skillDef = Skill.skills[skill]
+			level = skills[skill] + self.getStat(skill) + self.getStat(skillDef.profession)
+			print skill, skills[skill], "->", level
+
+			if skill in Skill.skills.keys():
+				if len(skillDef.abilities) > level:
+					self.process({}, [Skill.skills[skill].getAbility(level)])
+				else:
+					print skill, "not defined for level", level
+
+		self.calcOADA()
+		self.calcHealth()
+		self.calcEnergy()
+		self.calcBonusDamage()
+		self.calcRegeneration()
+
+		self.processMetaStats()
+
+		self.calculateDamage()
+		self.calculateEffectiveHealth()
+
+	def setMaxes(self):
+		self.maxes = {
+			"attack speed":200,
+			"move speed":135,
+			"cast speed":200,
+			"block %":100,
+			"armor absorb":100,		
+		}
+		for resist in resists:
+			self.maxes[resist] = 80
+
+	def setBaseStats(self, stats):
+		self.stats["attack speed"] = 100
+		self.stats["move speed"] = 100
+		self.stats["cast speed"] = 100
+		self.stats["block %"] = 0
+		self.stats["health/s"] = 0
+		self.stats["energy/s"] = 0
+		self.stats["armor absorb"] = 70
+
+		resistBase = self.difficulty*-25
+		for resist in resists:
+			self.stats[resist] = resistBase
+		self.stats["physical resist"] = 0 #override
+
+		for stat in stats:
+			self.addToStat(stat, stats[stat])
+
+	def calcOADA(self):
+		self.addToStat("offense", 118 + (self.level*12) + self.stats["cunning"]*.5)
+		self.addToStat("defense", 118 + (self.level*12) + self.stats["physique"]*.5)
+
+	def calcHealth(self):
+		self.addToStat("health", 250 + (self.stats["physique"]-50)*2.5)
+
+	def calcEnergy(self):
+		self.addToStat("energy", 250 + (self.stats["spirit"]-50)*2)
+
+	def calcBonusDamage(self):
+		self.addToStat("physical %", self.stats["cunning"]*.416)
+		self.addToStat("pierce %", self.stats["cunning"]*.40)
+		for damage in physicalDurationDamage:
+			self.addToStat(damage + " %", self.stats["cunning"]*.46)
+		for damage in magicalDamage:
+			self.addToStat(damage + " %", self.stats["spirit"]*.47)
+		for damage in magicalDurationDamage:
+			self.addToStat(damage + " %", self.stats["spirit"]*.5)
+
+	def calcRegeneration(self):
+		self.addToStat("base health/s", (self.stats["physique"]-50)*.04)
+		self.addToStat("base energy/s", 6.5+(self.stats["spirit"]-50)*.01)
+		self.addToStat("energy/s %", self.stats["spirit"]*.26)
+
+
+	def process(self, bonuses, abilities):
+		for bonus in bonuses:
+			if bonus.startswith("max ") and bonus.endswith(" resist"):
+				self.maxes[bonus[4:]] += bonuses[bonus]
+			self.addToStat(bonus, bonuses[bonus])			
+		for ability in abilities:
+			if ability != None:
+				ability.calculateEffective(self.model)
+				ability.calculateDynamicBonuses(self.model)
+				for bonus in ability.bonuses.keys() + ability.dynamicBonuses.keys():
+					totalBonus = ability.getTotalBonus(bonus)
+					if type(totalBonus) == type([]):
+						self.addToStat(bonus, [totalBonus[0]*ability.effective, totalBonus[1]])
+					else:
+						self.addToStat(bonus, totalBonus*ability.effective)
+
+	# stats with a % equivalent. I.e. "physique %""
+	metaPercs = [
+		"physique",
+		"cunning",
+		"spirit",
+		"health",
+		"health/s",
+		"energy",
+		"energy/s",
+		"armor",
+		"offense",
+		"defense",
+		"blocked damage",		
+	]
+
+	def processMetaStats(self):
+		baseAttackSpeed = self.stats["attacks/s"]/1.9775
+
+		for perc in Character.metaPercs:
+			if perc + " %" in self.stats:
+				self.stats[perc] = self.stats[perc]*self.getStatPerc(perc + " %")
+				# del self.stats[perc + " %"]
+
+		if "elemental resist" in self.stats:
+			for element in elementals:
+				self.addToStat(element + " resist", self.stats["elemental resist"])
+			del self.stats["elemental resist"]
+
+		if "elemental %" in self.stats:
+			for element in elementals:
+				self.addToStat(element + " %", self.stats["elemental %"])
+			del self.stats["elemental %"]
+
+		if "all damage %" in self.stats:
+			for damage in damages:
+				self.addToStat(damage + " %", self.stats["all damage %"])
+			del self.stats["all damage %"]
+
+		if "retaliation %" in self.stats:
+			for damage in damages:
+				self.addToStat(damage + "retaliation %", self.stats["retaliation %"])
+			del self.stats["retaliation %"]
+
+		for maxStat in self.maxes:
+			self.stats[maxStat] = min(self.stats[maxStat], self.maxes[maxStat])
+
+		self.stats["attacks/s"] = self.stats["attacks/s"]*(self.stats["attack speed"]/100.0)
+		self.stats["attack speed"] = baseAttackSpeed*self.stats["attack speed"]
+
+		self.stats["health/s"] = self.stats["base health/s"] + self.stats["health/s"]
+		del self.stats["base health/s"]		
+		self.stats["energy/s"] = self.stats["base energy/s"] + self.stats["energy/s"] #TODO energy/s costs are currently recorded as -energy/s so energy/s % is applied to costs (which should be) so we get a lower regen than anticipated
+		del self.stats["base energy/s"]
+
+	def calculateDamage(self):
+		dpa = {}
+		triggered = {}
+		# base values
+		for damage in damages:
+			dpa[damage] = self.getStat(damage)
+			# self.stats["triggered "+damage] = self.getStat("triggered "+damage)
+			triggered[damage] = self.getStat("triggered "+damage)
+
+
+		# conversions
+		conversions = {}
+		for fromDamage in damages:
+			if fromDamage in dpa.keys() or fromDamage in triggered.keys():
+				conversions[fromDamage] = {}
+				totalConversion = 0
+				for toDamage in damages:
+					conversionKey = fromDamage + " to " + toDamage
+					if conversionKey in self.stats.keys():
+						print "Found applicable conversion:", conversionKey
+						conversions[fromDamage][toDamage] = self.stats[conversionKey]
+						totalConversion += self.stats[conversionKey]
+
+				if conversions[fromDamage]:
+					print fromDamage, conversions[fromDamage]
+
+				if totalConversion > 100:
+					factor = 100.0/totalConversion
+					for conversion in conversions[fromDamage]:
+						conversions[fromDamage][conversion] *= factor
+					if conversions[fromDamage]:
+						print fromDamage, conversions[fromDamage]
+
+
+		# for fromDamage in conversions:
+		# 	if fromDamage in dpa.keys():
+		# 		for toDamage in conversions[fromDamage]:
+		# 			conversions[fromDamage][toDamage] = dpa[fromDamage]*(conversions[fromDamage][toDamage]/100.0)
+
+		# for fromDamage in conversions:
+		# 	if fromDamage in triggered.keys():
+		# 		for toDamage in conversions[fromDamage]:
+		# 			conversions[fromDamage][toDamage] = triggered[fromDamage]*(conversions[fromDamage][toDamage]/100.0)
+
+		# print
+		# for fromDamage in conversions:
+		# 	for toDamage in conversions[fromDamage]:
+		# 		if conversions[fromDamage][toDamage] > 0:
+		# 			print fromDamage, "->", toDamage, "=", conversions[fromDamage][toDamage]
+
+		self.convertDamage(dpa, conversions)
+		self.convertDamage(triggered, conversions)
+
+
+		if "armor piercing" in self.stats.keys(): # this comes after all other conversions and only applies to weapon damage
+			dpa["pierce"] += dpa["physical"]*self.stats["armor piercing"]/100.0
+			dpa["physical"] = dpa["physical"]*(1-self.stats["armor piercing"]/100.0)
+
+		#scaling
+
+		durationDamage = {}
+		for damage in damages:
+			if type(dpa[damage]) == type([]):
+				durationDamage[damage] = dpa[damage][0]*self.getStatPerc(damage+" %")
+				dpa[damage] = 0
+			else:
+				dpa[damage] = dpa[damage]*self.getStatPerc(damage+" %")
+			triggered[damage] = triggered[damage]*self.getStatPerc(damage+" %")
+
+		#crits
+		oa = self.getStat("offense")
+		da = self.difficulty*150 + ((self.level+3)*20)
+		critMult = getDamageForHitCrit(getPTH(oa, da), self.getStat("crit damage")/100.0)
+		print "crit mult", critMult
+
+
+		triggeredDPS = sum([triggered[key] for key in triggered])
+		triggeredDPS = triggeredDPS*critMult
+
+		self.results["damage per attack"] = sum([dpa[key] for key in dpa])*critMult
+		triggeredDPS += self.getStat("weapon damage %")/100.0*self.results["damage per attack"]
+		self.results["DPS (triggered)"] = triggeredDPS
+		self.results["DPS (AA)"] = self.results["damage per attack"]*self.stats["attacks/s"]+sum([durationDamage[key] for key in durationDamage])
+		self.results["DPS"] = self.results["DPS (triggered)"] + self.results["DPS (AA)"]
+
+	def convertDamage(self, dams, conversions):
+		flat = {}
+		for fromDamage in conversions:
+			if fromDamage in dams.keys():
+				flat[fromDamage] = {}
+				for toDamage in conversions[fromDamage]:
+					flat[fromDamage][toDamage] = dams[fromDamage]*(conversions[fromDamage][toDamage]/100.0)
+
+		for fromDamage in conversions:
+			if fromDamage in dams.keys():
+				for toDamage in conversions[fromDamage]:
+					dams[fromDamage] -= flat[fromDamage][toDamage]
+					if not toDamage in dams.keys():
+						dams[toDamage] = 0
+					dams[toDamage] += flat[fromDamage][toDamage]
+
+	def calculateEffectiveHealth(self):
+		# this one depends A LOT on what's hitting us.
+		# 	lots of small hits favor armor
+		#	BIG hits make armor less valuable
+		#	what element are we getting hit by
+		#	how fast are the hits coming (for block recovery)
+
+		#avoid melee/avoid ranged
+		meleeWeight = .5
+		rangedWeight = 1-meleeWeight
+
+		#TODO adjust melee and ranged weight for playstyle
+
+		meleeWeight = meleeWeight * (1-self.getStat("avoid melee")/100.0)
+		rangedWeight = rangedWeight * (1-self.getStat("avoid ranged")/100.0)
+
+		damageMultiplier = meleeWeight+rangedWeight
+
+		# print "DM avoid", damageMultiplier
+
+
+		# defensive ability
+		# chance to hit since defense affects all attacks
+		# based at looking at some mobs in the mob db it looks like about 20 oa per level plus some base
+		# adding 3 to my level as most things seem to be a bit higher than me (seems better to calculate for non-trivial content)
+		oa = self.difficulty*150 + ((self.level+3)*20)
+		da = self.stats["defense"]
+		damageMultiplier *= getDamageForHitCrit(getPTH(oa, da))
+
+		# print "DM defense", getDamageForHitCrit(getPTH(oa, da))
+
+		# damage absorb %
+		damageMultiplier *= 1-self.getStat("damage absorb %")
+
+		# I'm going to say half of all hits are physical
+		# the other hits are split evenly between all of the remaining attack types.
+		# we don't care about flat vs duration damages as we're just trying to score resistance.
+
+		# hit size does matter for non physical attack as well as I think shields can block any attack (they work best against )
+
+		#armor
+		#hit locations are already taken into account on an item.
+		# ok I'm playing with a formula we will almost certainly need to tweak it: 1.5*(level)^1.5
+		# for normal and ultimate I think I can tweak the scalar to 1 and 2.25
+		# this is based on looking at a couple monsters on elite difficulty in the grim dawn db and plotting the damage for levels
+		# I think I'll run armor 3 times, once for this number, double this number and quadruple this number
+		# Then we'll say 5 normal hits, 3 big hits 1 giant hit is the spread
+
+		scalar = 1		
+		if self.difficulty == 0:
+			scalar = 1
+		elif self.difficulty == 1:
+			scalar = 1.5
+		elif self.difficulty == 2:
+			scalar = 2.25
+
+		hit = scalar*((self.level+5)**1.5)
+		
+		armorMitigation = 0
+		armorMitigation += getArmorMitigation(hit, self.stats["armor"], self.stats["armor absorb"]/100.0)*5
+		armorMitigation += getArmorMitigation(hit*2, self.stats["armor"], self.stats["armor absorb"]/100.0)*3
+		armorMitigation += getArmorMitigation(hit*4, self.stats["armor"], self.stats["armor absorb"]/100.0)
+		armorMitigation /= 9.0
+
+		elementChance = {}
+		elementChance["physical"] = .5 * armorMitigation
+		elementChance["acid"] = .05
+		elementChance["aether"] = .05
+		elementChance["bleed"] = .05
+		elementChance["fire"] = .05
+		elementChance["chaos"] = .05
+		elementChance["lightning"] = .05
+		elementChance["cold"] = .05
+		elementChance["pierce"] = .05
+		elementChance["vitality"] = .05
+
+		resistMultiplier = 0
+		for element in elementChance:
+			resistMultiplier += elementChance[element]*(1-self.getStat(element+" resist")/100.0)
+
+		# print "DM resists", resistMultiplier
+
+		damageMultiplier *= resistMultiplier
+
+
+		#shield
+
+
+		print "DM final", damageMultiplier
+		self.results["effective health"] = (self.stats["health"]+(self.model.stats["fight length"]*self.stats["health/s"]))/damageMultiplier
+
+
+	#add one to the stat in question and run another character to see the difference in values
+	def testStat(self, stat):
+		newCharacter = Character(self.model, self.baseAttributes, self.skills, self.constellations, self.items, {stat:1})
+		print
+		for bonus in sorted(self.results):
+			print bonus.ljust(25), newCharacter.results[bonus] - self.results[bonus]
+
+	def addToStat(self, stat, value):
+		if not stat in self.stats.keys():
+			self.stats[stat] = 0
+
+		if type(self.stats[stat]) == type([]) or type(value) == type([]):
+			self.stats[stat] = addDurationDamages(self.stats[stat], value)
+		else:
+			if stat == "armor absorb":
+				value *= .7
+			self.stats[stat] += value
+
+	def getStatPerc(self, stat):
+		if stat in self.stats.keys():
+			return (self.stats[stat]+100)/100.0
+		return 1
+
+	def getStat(self, stat):
+		if stat in self.stats.keys():
+			return self.stats[stat]
+		return 0
+
+#this will "inflate" duration damages
+def addDurationDamages(a, b):
+	if a == 0:
+		return b
+	if b == 0:
+		return a
+	return [a[0]+b[0], max(a[1],b[1])]
+def subDurationDamages(a, b):
+	return [a[0]-b[0], max(a[1],b[1])]
+
+def getPTH(oa, da):
+	return 3.15*(oa/(3.5*oa+da)) + .0002275*(oa-da) + .2
+
+def getDamageForHitCrit(pth, critDamage=0):	
+	if pth <= .75: # reduced damage on hit
+		return pth * (pth/.75)
+	elif pth <= .90:
+		return pth
+	elif pth < 1:
+		ctc = pth-.9
+		return pth*(1-ctc) + pth*ctc*(1.1+critDamage)
+	elif pth <= 1.05:
+		critFactor = 1.1 + critDamage
+		hd = 1 - (pth-.9)
+		return hd + (pth-.9)*critFactor
+	else:
+		critFactor = 1.1 + critDamage
+		hd = 1-(pth-.9) + .15*critFactor
+		pthr = pth-1.05
+		while pthr > 0:
+			critFactor += .1
+			hd += min(pthr, .2)*critFactor
+			pthr -= .2
+		return hd
+
+def getArmorMitigation(damage, armor, armorAbsorb):
+	over = max(damage-armor, 0)	
+	under = min(damage, armor)
+	under = under*(1-armorAbsorb)
+	return (over+under)/damage

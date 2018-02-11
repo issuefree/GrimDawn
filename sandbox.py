@@ -9,7 +9,7 @@ from solution import *
 
 import os
 
-model = Model.loadModel("Lilith")
+model = Model.loadModel("Lochlan")
 
 # best = getBestConstellations(model)
 # highest, _ = getHighestScoring(best)
@@ -37,10 +37,44 @@ def printSol(sol):
 	bonuses = getBonuses(sol, model)
 	calculatedBonuses = []
 	for bonus in bonuses:
-		calculatedBonuses.append([bonus, int(bonuses[bonus]), int(evaluateBonuses(model.bonuses, {bonus:bonuses[bonus]}))])
+		value = bonuses[bonus]
+		if not type(value) == type([]):
+			value = int(value)
+		calculatedBonuses.append([bonus, value, int(evaluateBonuses(model, {bonus:bonuses[bonus]}))])
 	calculatedBonuses.sort(key = lambda b: b[2], reverse=True)
 	for bonus in calculatedBonuses:
-		print bonus[0].ljust(25), str(bonus[1]).ljust(5), str(bonus[2])
+		print bonus[0].ljust(25), str(bonus[1]).ljust(8), str(bonus[2])
+
+def diffSols(sola, solb):
+	print sola.score, "->", solb.score
+	bonusesa = getBonuses(sola.constellations, model)
+	bonusesb = getBonuses(solb.constellations, model)
+
+	bonusesT = {}
+	for bonus in bonusesa:
+		bonusesT[bonus] = bonusesa[bonus]
+	for bonus in bonusesb:
+		if bonus in bonusesT.keys():
+			if type(bonusesT[bonus]) == type([]):
+				bonusesT[bonus] = subDurationDamages(bonusesT[bonus], bonusesb[bonus])
+			else:
+				bonusesT[bonus] -= bonusesb[bonus]
+		else:
+			if type(bonusesb[bonus]) == type([]):
+				bonusesT[bonus] = [-bonusesb[bonus][0], bonusesb[bonus][1]]
+			else:
+				bonusesT[bonus] = -bonusesb[bonus]
+	calculatedBonuses = []
+	for bonus in bonusesT:
+		value = bonusesT[bonus]
+		if not type(value) == type([]):
+			value = int(value)
+		calculatedBonuses.append([bonus, value, int(evaluateBonuses(model, {bonus:bonusesT[bonus]}))])
+	calculatedBonuses.sort(key = lambda b: b[2], reverse=True)
+	for bonus in calculatedBonuses:
+		if bonus[2] != 0:
+			print bonus[0].ljust(25), str(bonus[1]).ljust(8), str(bonus[2])
+
 
 def evalItemMods(location, itemType):
 	# location = "amulet"
@@ -182,18 +216,84 @@ sol = [hawk, rat, light, eel, jackal, hound, ultosHandofUltos]
 # print Solution([xA, xO, lion, xC, fiend, viper, hound, light, behemoth, phoenix, messenger, hawk, targoShieldWall, ultosHandofUltos, torchMeteorShower], model)  # 57740 (56)
 # print Solution([xE, hawk, xO, lion, xC, fiend, viper, hound, phoenix, behemoth, toad, messenger, torchMeteorShower, ultosHandofUltos, targoShieldWall], model)
 
-sol = Solution([xC, jackal, viper, imp, raven, bonds, hound, xO, panther, staff, god], model)
-print(sol)
-sol = Solution([xC, vulture, xO, panther, hound, staff, eel, lion, xE, raven, bonds, xP, god], model)
-print(sol)
+# sol = Solution([xC, jackal, viper, imp, raven, bonds, hound, xO, panther, staff, god], model)
+# print(sol)
+# sol = Solution([xC, vulture, xO, panther, hound, staff, eel, lion, xE, raven, bonds, xP, god], model)
+# print(sol)
 
-evalCon(wendigo)
+# evalCon(toad)
+# evalCon(eel)
 
 # evalItemMods("ring", augments )
-# evalItems(["Necrolord's Shroud", "Beastcaller's Shroud", "Beastcaller's Regalia (4)"])
+# evalItems(["The Peerless Eye of Beronath", "Empowered Bramblewood Amulet", "Empowered Stormcaller's Gem"])
 
-# for c in Constellation.constellations:
-# 	# if not c.requires.intersects(Affinity("1c")) and c.provides > Affinity("1c"):
-# 	# if not c.requires.intersects(Affinity("1a")) and c.provides > Affinity("1a"):
-# 	if sol.provides > c.requires and len(c.stars) <= 5 and not c in sol.constellations:
-# 		print c.id, c.evaluate(model)
+Item("Beastcaller's Regalia (4)",
+	{"Conjure Primal Spirit":3, "Bonds of Bysmiel":3}, 
+	"set", 
+	Ability( "Bestial Rage", 
+		{"type":"buff", "trigger":"hit", "chance":1, "recharge":15, "duration":6},
+		{"pet total speed":15}
+	)
+)
+
+ma5 = Item("Markovian Advantage",
+	{},
+	"skill",
+	Ability( "Markovian Advantage",
+		{"type":"attack", "trigger":"attack", "chance":.2, "recharge":0},
+		{"weapon damage %":128, "triggered physical":47, "offense":73, "all damage %":55})
+)
+
+ma6 = Item("Markovian Advantage",
+	{},
+	"skill",
+	Ability( "Markovian Advantage",
+		{"type":"attack", "trigger":"attack", "chance":.22, "recharge":0},
+		{"weapon damage %":128, "triggered physical":57, "offense":84, "all damage %":55})
+)
+
+bom = Item( "Badge of Mastery",
+		{"all damage %":23, "offense %":4, "elemental resist":26, "Savagery":3, "Primal Strike":2},
+		"medal",
+		Ability( "Prowess",
+			{"type":"buff", "trigger":"kill", "chance":1, "recharge":15, "duration":10},
+			{"offense":100, "defense":50, "health/s":30}
+		)
+	)
+
+mt = Item( "Mythincal Touch of the Everliving Grove",
+	{"armor":1014, "health":452, "health %":4, "health/s":26, "health/s %":40, "elemental resist":18, "Hearth of the Wild":2, "Oak Skin":2,
+	"pet health %":10, "pet defense %":12, "pet vitality resist":39},
+	"arms",
+	Ability( "Healing WInds",
+		{"type":"heal", "trigger":"attack", "chance":.1, "recharge":6},
+		{"health %":3, "health":1650}
+	)
+)
+
+etb  = 	Item( "Empowered Thundertouch Bracers",
+		{"armor":589, "electrocute":13, "physical %":41, "lightning %":62, "cunning":32, "lightning resist":25, "aether resist":10, "Storm Surge":2, "Brute Force":2},
+		"arms",
+		Ability( "Lightning Bolt",
+			{"type":"attack", "trigger":"attack", "chance":.1, "recharge":2.5, "targets":1},
+			{"triggered lightning":(87+418)/2, "triggered electrocute":[218/2,2], "stun %":100}
+		)
+	)
+
+
+# evalItems([mt, etb])
+
+# evalCon(spear)
+sola = Solution([xA, xC, viper, tsunami, wraith, eel, rat, raven, kraken, hawk, xP, crownElementalStorm, spear, ultosHandofUltos], model)
+# print sol
+# printSol(sol.constellations)
+# print ""
+solb = Solution([xE, quill, hawk, xC, viper, tsunami, kraken, wraith, eel, rat, xP, crownElementalStorm, spear, ultosHandofUltos], model)
+# print sol
+# printSol(sol.constellations)
+# print
+# sol = Solution([xC, rat, viper, light, tsunami, hawk, kraken, ultosHandofUltos], model)
+# print sol
+# printSol(sol.constellations)
+
+# diffSols(sola, solb)

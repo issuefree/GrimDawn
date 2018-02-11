@@ -32,11 +32,11 @@ stats = {
 
 		"health":9834,
 		"health/s":88.38,
-		"health regeneration":0,
+		"health/s %":0,
 
 		"energy":6019/2,
 		"energy/s":52.12,
-		"energy regeneration":0,
+		"energy/s %":0,
 
 		"armor":1199,
 		
@@ -61,8 +61,8 @@ stats = {
 weights = {
 		# select the important bonuses from above and give them a value.
 		# Note some bonuses will be automatically calculated if left blank (and should be unless you want to override):
-		#	health/s <- health, health regeneration, fight length
-		#	energy/s <- energy, energy regeneration, energy length
+		#	health/s <- health, health/s %, fight length
+		#	energy/s <- energy, energy/s %, energy length
 
 		#   physique <- health/s, health, defense
 		#   cunning <- appropriate damage %, offense
@@ -133,7 +133,7 @@ weights = {
 		"pet defense":4,
 		"pet defense %":7.5,
 		"pet health %":15, 
-		"pet health regeneration":2.5, 
+		"pet health/s %":2.5, 
 		"pet health/s":7.5, 
 		
 		"pet resist":1.5,

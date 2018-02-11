@@ -23,7 +23,7 @@ components = [
 	Item("Restless Remains", {"lifesteal %":3, "energy":220, "cast speed":10}, ["arms"]),
 	Item("Spellwoven Threads", {"burn %":30, "frostburn %":30, "electrocute %":30, "spirit":15, "offense":18, "cast speed":8}, ["arms"]),
 	Item("Consecrated Wrappings", {"chaos":3, "chaos %":8, "attack speed":5}, ["arms"]),
-	Item("Unholy Inscription", {"vitality %":15, "vitality decay":15, "offense":15, "vitality resist":10, "bleed resist":15}, ["arms"]),
+	Item("Unholy Inscription", {"vitality %":15, "vitality decay %":15, "offense":15, "vitality resist":10, "bleed resist":15}, ["arms"]),
 
 	Item("Leathery Hide", {"health %":5, "armor":24, "reduced stun duration":25}, ["head"]),
 	Item("Sanctified Bone", {"vitality resist":18, "chaos resist":12, "damage to undead":12, "damage to chthonics":12}, ["chest", "head"]),
@@ -42,7 +42,7 @@ components = [
 	Item("Ectoplasm", {"energy %":20, "energy/s":2}, ["head", "ring", "amulet", "medal"]),
 
 	Item("Roiling Blood", {"physical %":8, "offense":16}, ["ring", "amulet", "medal"]),
-	Item("Corpse Dust", {"health %":3, "health regeneration":18, "vitality resist":6}, ["ring", "amulet", "medal"]),
+	Item("Corpse Dust", {"health %":3, "health/s %":18, "vitality resist":6}, ["ring", "amulet", "medal"]),
 	Item("Soul Shard", {"vitality %":12, "vitality decay %":12, "energy absorb":30, "vitality resist":10, "energy leech resist":25}, ["ring", "amulet", "medal"]),
 	Item("Vengeful Wraith", {"cold %":12, "frostburn %":25, "frostburn duration":15, "offense":8, "cold retaliation":60}, ["ring", "amulet", "medal"]),
 	Item("Bloodied Crystal", {"bleed %":40, "bleed resist":24, "armor %":6}, ["ring", "amulet", "medal"]),
@@ -51,9 +51,9 @@ components = [
 	Item("Frozen Heart", {"health":70, "cold resist":10, "reduced freeze duration":21}, ["ring"]),
 	Item("Mark of Illusions", {"elemental %":15, "spirit":12, "defense":12, "energy/s":1.2}, ["ring", "amulet"]),
 
-	Item("Focusing Prism", {"crit damage":5, "spirit":18, "skill cost":-10}, ["amulet"]),
-	Item("Arcane Lens", {"elemental":(2+6)/2, "elemental %":15, "spirit %":3, "skill cost":-6}, ["amulet"]),
-	Item("Seal of Ancestry", {"health %":5, "energy/s":1.5, "energy regeneration":10, "vitality resist":20}, ["amulet"],
+	Item("Focusing Prism", {"crit damage":5, "spirit":18, "skill cost %":-10}, ["amulet"]),
+	Item("Arcane Lens", {"elemental":(2+6)/2, "elemental %":15, "spirit %":3, "skill cost %":-6}, ["amulet"]),
+	Item("Seal of Ancestry", {"health %":5, "energy/s":1.5, "energy/s %":10, "vitality resist":20}, ["amulet"],
 		Ability(
 			"Ancestral Ward",
 			# I'm not sure how I code up damage shields
@@ -61,13 +61,13 @@ components = [
 			{}
 		)		
 	),
-	Item("Seal of Annihilation", {"spirit":20, "attack speed":5, "cast speed":5, "skill cost":-10}, ["amulet"],
+	Item("Seal of Annihilation", {"spirit":20, "attack speed":5, "cast speed":5, "skill cost %":-10}, ["amulet"],
 		Ability(
 			"Annihilation",
 			{"type":"buff", "trigger":"critical", "chance":.15, "recharge":1, "duration":5},
-			{"reduce health":20, "offense":70, "defense":70, "reduce health regeneration":50}
+			{"reduce health":20, "offense":70, "defense":70, "reduce health/s %":50}
 		)		
-)	,
+	),
 
 	Item("Wardstone", {"move speed":3, "elemental resist":7, "bleed resist":15}, ["amulet", "medal"]),
 	Item("Attuned Lodestone", {"all damage %":8, "crit damage":5, "lightning %":20, "electrocute %":20, "lightning retaliation":(1+154)/2}, ["amulet", "medal"],
@@ -77,7 +77,7 @@ components = [
 			{"weapon damage %":15, "triggered lightning":(54+129)/2, "stun %":100}
 		)
 	),
-	Item("Arcane Spark", {"energy leech":45, "energy regeneration":20, "offense":36}, ["amulet", "medal"]),
+	Item("Arcane Spark", {"energy leech":45, "energy/s %":20, "offense":36}, ["amulet", "medal"]),
 	Item("Aether Soul", {"aether %":10, "aether resist":16, "damage from aetherials":-6}, ["amulet", "medal"]),
 	Item("Black Tallow", {"chaos %":10, "chaos resist":16, "damage from chthonics":-6}, ["amulet", "medal"]),
 	Item("Vicious Jawbone", {"physical %":15, "internal %":20, "cunning":12, "attack speed":3}, ["amulet", "medal"]),
@@ -94,7 +94,7 @@ components = [
 			"Kilrian's Flame",
 			# 3 meter radius
 			{"type":"attack", "trigger":"hit", "chance":.1, "recharge":12, "duration":6, "targets":2, "shape":"pbaoe"},
-			{"attack as health %":33, "duration":{"triggered fire":72, "triggered vitality":72, "triggered vitality decay":80}}
+			{"attack as health %":33, "duration":{"triggered fire":72, "triggered vitality":72, "triggered vitality decay":[80/2,2]}}
 		)
 	),
 	Item("Chains of Oleron", {"all damage %":12, "offense":25, "offense %":2, "reduced entrapment duration":24}, ["chest"]),
@@ -103,7 +103,7 @@ components = [
 	Item("Hallowed Ground", {"defense":25, "defense %":2, "health/s":6, "elemental resist":12}, ["chest"]),
 
 	Item("Mark of the Traveler", {"health/s":10, "move speed":8, "slow resist":10}, ["feet"]),
-	Item("Mark of Mogdrogen", {"health %":4, "health/s":15, "health regeneration":10, "move speed":6}, ["feet"]),
+	Item("Mark of Mogdrogen", {"health %":4, "health/s":15, "health/s %":10, "move speed":6}, ["feet"]),
 
 	Item("Battered Shell", {"physique":15, "block %":10}, ["shield"], 
 		Ability(
@@ -123,7 +123,7 @@ components = [
 		Ability(
 			"Brutal Shield Slam",
 			{"type":"attack", "trigger":"manual", "recharge":3, "targets":2},
-			{"weapon damage %":300, "physical":(105+202)/2, "internal":480*.33, "stun %":1}
+			{"weapon damage %":300, "physical":(105+202)/2, "internal":[480*.33/5,5], "stun %":1}
 		)
 	),
 	Item("Radiant Gem", {"elemental %":10, "physical to elemental":10, "elemental resist":15}, ["shield", "offhand"],
@@ -155,21 +155,21 @@ components = [
 			{"weapon damage %":22, "triggered cold":(63+92)/2, "slow move":20}
 		)
 	),
-	Item("Mutagenic Ichor", {"poison":15, "acid %":10, "poison %":10, "physical to acid":10}, ["sword", "axe", "mace", "dagger", "pistol", "rifle", "crossbow", "twohand", "shield", "offhand"],
+	Item("Mutagenic Ichor", {"poison":[15/5,5], "acid %":10, "poison %":10, "physical to acid":10}, ["sword", "axe", "mace", "dagger", "pistol", "rifle", "crossbow", "twohand", "shield", "offhand"],
 		Ability(
 			"Poison Bomb",
 			{"type":"attack", "trigger":"manual", "targets":2.5, "shape":"pbaoe"},
-			{"weapon damage %":12, "triggered acid":12, "triggered poison":124}
+			{"weapon damage %":12, "triggered acid":12, "triggered poison":[124/2,2]}
 		)
 	),
 	Item("Searing Ember", {"fire":3, "fire %":12, "physical to fire":10}, ["sword", "axe", "mace", "dagger", "pistol", "rifle", "crossbow", "twohand", "shield", "offhand"],
 		Ability(
 			"Fireblast",
 			{"type":"attack", "trigger":"manual","targets":1.5},
-			{"weapon damage %":20, "triggered fire":(52+60)/2, "triggered burn":126}
+			{"weapon damage %":20, "triggered fire":(52+60)/2, "triggered burn":[126/3,3]}
 		)
 	),
-	Item("Serrated Spike", {"pierce":3+5, "bleed":9, "bleed %":12, "energy":-50, "pet pierce":5, "pierce %":25, "pet pierce %":25}, ["sword", "axe", "mace", "dagger", "pistol", "rifle", "crossbow", "twohand", "shield", "offhand"]),
+	Item("Serrated Spike", {"pierce":3+5, "bleed":[9/3,3], "bleed %":12, "energy":-50, "pet pierce":5, "pierce %":25, "pet pierce %":25}, ["sword", "axe", "mace", "dagger", "pistol", "rifle", "crossbow", "twohand", "shield", "offhand"]),
 	Item("Cracked Lodestone", {"lightning":(1+5)/2, "lightning %":12, "physical to lightning":10}, ["sword", "axe", "mace", "dagger", "pistol", "rifle", "crossbow", "twohand", "shield", "offhand"],
 		Ability(
 			"Lightning Nova",
@@ -177,20 +177,20 @@ components = [
 			{"weapon damage %":22, "triggered lightning":(22+108)/2}
 		)
 	),
-	Item("Hollowed Fang", {"vitality decay":18, "vitality %":18, "vitality decay %":18, "lifesteal %":5, "physical to vitality":10}, ["sword", "axe", "mace", "dagger", "pistol", "rifle", "crossbow", "twohand", "shield", "offhand"],
+	Item("Hollowed Fang", {"vitality decay":[18/3,3], "vitality %":18, "vitality decay %":18, "lifesteal %":5, "physical to vitality":10}, ["sword", "axe", "mace", "dagger", "pistol", "rifle", "crossbow", "twohand", "shield", "offhand"],
 		Ability(
 			"Blooddrinker",
 			{"type":"buff", "trigger":"manual", "chance":1, "recharge":26, "duration":8},
-			{"bleed":162*.25, "attack as health %":20}
+			{"bleed":[162/3*.25,3], "attack as health %":20}
 		)
 	),
 	Item("Imbued Silver", {"defense":15, "bleed resist":15, "damage to chthonics":15, "energy":-150, "chaos resist":20, "pet chaos resist":20, "max chaos resist":3, "pet max chaos resist":3}, ["sword", "axe", "mace", "dagger", "pistol", "rifle", "crossbow", "twohand", "shield", "offhand"]),
-	Item("Seal of Blades", {"pierce":10, "lifesteal %":5, "bleed":30, "pierce %":50, "bleed %":50, "pierce resist":15, "armor %":8}, ["sword", "axe", "mace", "dagger", "pistol", "rifle", "crossbow", "twohand", "shield", "offhand"],
+	Item("Seal of Blades", {"pierce":10, "lifesteal %":5, "bleed":[30/3,3], "pierce %":50, "bleed %":50, "pierce resist":15, "armor %":8}, ["sword", "axe", "mace", "dagger", "pistol", "rifle", "crossbow", "twohand", "shield", "offhand"],
 		Ability(
 			"Whirling Blades",
 			# always on but it ticks damage? 1/s?
 			{"type":"attack", "trigger":"attack", "chance":1, "recharge":1, "targets":2.5, "shape":"pbaoe"},
-			{"triggered pierce":144, "triggerd bleed":100}
+			{"triggered pierce":144, "triggered bleed":[100,1]}
 		)
 	),
 	Item("Seal of Blight", {"vitality":(9+12)/2, "crit damage":6, "acid %":50, "vitality %":50, "poison %":50, "vitality decay %":50, "physical to vitality":10}, ["sword", "axe", "mace", "dagger", "pistol", "rifle", "crossbow", "twohand", "shield", "offhand"],
@@ -198,7 +198,7 @@ components = [
 			"Acid Purge",
 			#looks like a sustained attack that triggers 3/s. Shape and targets are total guess
 			{"type":"attack", "trigger":"manual", "recharge":1, "targets":1.5*3, "shape":"cone"},
-			{"weapon damage %":28, "triggered acid":(100+205)/2, "triggered vitality":166, "triggered poison":(950/5)/3, "crit damage":25}
+			{"weapon damage %":28, "triggered acid":(100+205)/2, "triggered vitality":166, "triggered poison":[950/5,5], "crit damage":25}
 		)
 	),
 	Item("Seal of Corruption", {"aether":11, "lightning %":50, "aether %":50, "electrocute %":50, "physical to aether":10, "offense %":3}, ["sword", "axe", "mace", "dagger", "pistol", "rifle", "crossbow", "twohand", "shield", "offhand"],
@@ -214,7 +214,7 @@ components = [
 			"Stormfire",
 			# guessing a lauch that explodes 3-4 fragments (dunno if a target can be hit by mults)
 			{"type":"attack", "trigger":"manual", "targets":3.5, "shape":"circle"},
-			{"triggered fire":(152+242)/2, "triggered lightning":(136+314)/2, "triggered electrocute":330, "crit damage":25}
+			{"triggered fire":(152+242)/2, "triggered lightning":(136+314)/2, "triggered electrocute":[330/3,3], "crit damage":25}
 		)
 	),
 	Item("Seal of Might", {"physical":13, "physical %":50, "internal %":50, "bleed %":50, "aether to physical":25, "health":160, "energy":-300, "physical resist":4, "pierce resist":12, "vitality resist":12, "bleed resist":12, "pet physical resist":4, "pet pierce resist":12, "pet vitality resist":12, "pet bleed resist":12}, ["sword", "axe", "mace", "dagger", "pistol", "rifle", "crossbow", "twohand", "shield", "offhand"]),
@@ -239,7 +239,7 @@ components = [
 			"Chillspikes",
 			# cone? 5 projectiles can multiples hit a single target?
 			{"type":"attack", "trigger":"manual", "targets":3, "shape":"cone"},
-			{"weapon damage %":24, "triggered pierce":116, "triggered cold":(106+184)/2, "triggered frostburn":525, "crit damage":35}
+			{"weapon damage %":24, "triggered pierce":116, "triggered cold":(106+184)/2, "triggered frostburn":[525/3,3], "crit damage":35}
 		)
 	),
 	Item("Seal of the Void", {"chaos":(2+19)/2, "fire %":50, "chaos %":50, "burn %":50, "physical to chaos":10, "cast speed":4}, ["sword", "axe", "mace", "dagger", "pistol", "rifle", "crossbow", "twohand", "shield", "offhand"],
@@ -251,11 +251,11 @@ components = [
 	),
 	
 	# reduce resist applies only to weapon hits (and skills that have a weapon component)
-	Item("Mark of Dreeg", {"poison":50, "acid %":30, "poison %":30, "reduce resist":10, "physical to acid":10, "light radius":6}, ["sword", "axe", "mace", "dagger", "pistol", "rifle", "crossbow", "twohand", "shield", "offhand"],
+	Item("Mark of Dreeg", {"poison":[50/5,5], "acid %":30, "poison %":30, "reduce resist":10, "physical to acid":10, "light radius":6}, ["sword", "axe", "mace", "dagger", "pistol", "rifle", "crossbow", "twohand", "shield", "offhand"],
 		Ability(
 			"Dreeg's Infinite Gaze",
 			{"type":"attack", "trigger":"manual", "recharge":2.5, "targets":2, "shape":"pbaoe"},
-			{"weapon damage %":35, "triggered acid":62, "triggered poison":450}
+			{"weapon damage %":35, "triggered acid":62, "triggered poison":[450/3,3]}
 		)
 	),
 	Item("Vicious Spikes", {"pierce":4+10, "crit damage":4, "pierce %":18+75, "energy":-150, "pet pierce damage":8, "pet pierce damage %":75}, ["sword", "axe", "mace", "dagger", "pistol", "rifle", "crossbow", "twohand", "shield", "offhand"]),
@@ -278,7 +278,7 @@ components = [
 		Ability(
 			"Bloodthirster",
 			{"type":"buff", "trigger":"manual", "recharge":26, "duration":8},
-			{"bleed":276*.25, "lifesteal %":24, "bleed resist":20}
+			{"bleed":[276/3*.25,3], "lifesteal %":24, "bleed resist":20}
 		)
 	),
 	Item("Symbol of Solael", {"chaos":(2+12)/2, "chaos %":35, "physical to chaos":10, "energy absorb":33}, ["sword", "axe", "mace", "dagger", "pistol", "rifle", "crossbow", "twohand", "shield", "offhand"],
@@ -290,10 +290,10 @@ components = [
 		)
 	),
 
-	Item("Enchanted Flint", {"fire":5+10, "fire %":25+75, "burn %":25+75, "physical to fire":10, "energy":-150, "burn":135*.15, "pet fire":8, "pet burn":135*.15, "pet fire %":75, "pet burn %":75}, ["sword", "axe", "mace", "dagger", "twohand", "shield", "offhand"]),
+	Item("Enchanted Flint", {"fire":5+10, "fire %":25+75, "burn %":25+75, "physical to fire":10, "energy":-150, "burn":[.15*135/3,3], "pet fire":8, "pet burn":135*.15, "pet fire %":75, "pet burn %":75}, ["sword", "axe", "mace", "dagger", "twohand", "shield", "offhand"]),
 	Item("Wrathstone", {"aether":5+10, "aether %":25+75, "physical to aether":10, "energy":-150, "aether retaliation":84, "pet aether damage":8, "pet aether %":75, "pet aether retaliation":84}, ["sword", "axe", "mace", "dagger", "twohand", "shield", "offhand"]),
 	Item("Coldstone", {"cold":5+10, "cold %":25+75, "frostburn %":25+75, "physical to cold":10, "energy":-150, "slow move":10, "pet cold":8, "pet cold %":75, "pet frostburn %":75}, ["sword", "axe", "mace", "dagger", "twohand", "shield", "offhand"]),
-	Item("Vitriolic Gallstone", {"acid":4, "poison":20+45, "acid %":25+75, "poison %":25+75, "poison duration":20, "physical to acid":10, "energy":-150, "pet poison":35, "pet acid %":75, "pet poison %":75}, ["sword", "axe", "mace", "dagger", "twohand", "shield", "offhand"]),
+	Item("Vitriolic Gallstone", {"acid":4, "poison":[(20+45)/5,5], "acid %":25+75, "poison %":25+75, "poison duration":20, "physical to acid":10, "energy":-150, "pet poison":35, "pet acid %":75, "pet poison %":75}, ["sword", "axe", "mace", "dagger", "twohand", "shield", "offhand"]),
 	Item("Amber", {"lightning":(2+8)/2, "lightning %":25, "electrocute %":25, "physical to lightning":10}, ["sword", "axe", "mace", "dagger", "twohand", "shield", "offhand"],
 		Ability(
 			"Empowered Lightning Nova",
@@ -311,22 +311,22 @@ components = [
 	Item("Blessed Whetstone", {"pierce %":18, "increase armor pierce":50, "bleed %":25, "offense":18}, ["sword", "axe", "twohand"],
 		Ability(
 			"Behead",
-			{"type":"attack", "trigger":"manual", "recharge":3.5, "targets":2},
-			{"weapon damage %":280, "triggered pierce":(132+202)/2, "triggered bleed":660*.25, "crit damage":50}
+			{"type":"attack", "trigger":"manual", "recharge":3.5, "targets":1.5},
+			{"weapon damage %":280, "triggered pierce":(132+202)/2, "triggered bleed":[660/3*.25,3], "crit damage":50}
 		)
 	),
-	Item("Bloody Whetstone", {"bleed":30, "all damage %":8, "bleed %":30, "bleed duration":20}, ["sword", "axe", "twohand"], #two handed sword and axe
+	Item("Bloody Whetstone", {"bleed":[30/3,3], "all damage %":8, "bleed %":30, "bleed duration":20}, ["sword", "axe", "twohand"], #two handed sword and axe
 		Ability(
 			"Decapitate",
 			{"type":"attack", "trigger":"manual", "recharge":3.5, "targets":1.5},
-			{"weapon damage %":300, "triggered physical":(164+236)/2, "triggered bleed":920*.35, "crit damage":50}
+			{"weapon damage %":300, "triggered physical":(164+236)/2, "triggered bleed":[920/3*.35,3], "crit damage":50}
 		)
 	),
 	Item("Oleron's Blood", {"physical %":25, "internal %":40, "offense":18, "total speed":2}, ["sword", "axe", "mace", "dagger", "twohand", "pistol", "rifle", "crossbow"],
 		Ability(
 			"Oleron's Might",
 			{"type":"attack", "trigger":"manual", "recharge":3.5, "targets":1, "shape":"weapon"},
-			{"weapon damage %":355, "triggered physical":(174+346)/2, "internal":360, "crit damage":50, "reduced damage":20}
+			{"weapon damage %":355, "triggered physical":(174+346)/2, "internal":[360/5,5], "crit damage":50, "reduced damage":20}
 		)
 	),
 	Item("Shard of Beronath", {"elemental":8, "all damage %":18, "elemental":8, "offense":25, "physical to elemental":10}, ["sword", "axe", "mace", "dagger", "twohand"],
@@ -338,11 +338,11 @@ components = [
 		)
 	),
 
-	Item("Flintcore Bolts", {"fire":5, "burn":15, "fire %":25, "burn %":25, "physical to fire":10}, ["pistol", "rifle", "crossbow", "offhand"],
+	Item("Flintcore Bolts", {"fire":5, "burn":[15/3,3], "fire %":25, "burn %":25, "physical to fire":10}, ["pistol", "rifle", "crossbow", "offhand"],
 		Ability(
 			"Greater Fireblast",
 			{"type":"attack", "trigger":"manual", "targets":1.5},
-			{"weapon damage %":28, "triggered fire":(95+124)/2, "triggerd burn":225, "stun %":15}
+			{"weapon damage %":28, "triggered fire":(95+124)/2, "triggerd burn":[225/3,3], "stun %":15}
 		)
 	),
 	Item("Deathchill Bolts", {"cold":5, "cold %":25, "frostburn %":25, "slow move":25*.12, "physical to cold":10}, ["pistol", "rifle", "crossbow", "offhand"],
@@ -366,12 +366,12 @@ components = [
 			{"weapon damage %":12, "triggered chaos":(55+118)/2}
 		)
 	),
-	Item("Hell's Bane Ammo", {"lightning":(1+9)/2+(5+15)/2, "lightning %":25+75, "electrocute":25+75, "physical to lightning":10, "energy":-150, "stun %":12, "pet lightning":(4+12)/2, "pet lightning %":75, "pet electrocute %":75}, ["pistol", "rifle", "crossbow", "offhand"]),
-	Item("Venom-Tipped Ammo", {"acid":4, "poison":20, "acid %":25, "poison %":25, "poison duration":10, "physical to acid":10}, ["pistol", "rifle", "crossbow", "offhand"],
+	Item("Hell's Bane Ammo", {"lightning":(1+9)/2+(5+15)/2, "lightning %":25+75, "electrocute %":25+75, "physical to lightning":10, "energy":-150, "stun %":12, "pet lightning":(4+12)/2, "pet lightning %":75, "pet electrocute %":75}, ["pistol", "rifle", "crossbow", "offhand"]),
+	Item("Venom-Tipped Ammo", {"acid":4, "poison":[20/5,5], "acid %":25, "poison %":25, "poison duration":10, "physical to acid":10}, ["pistol", "rifle", "crossbow", "offhand"],
 		Ability(
 			"Noxious Poison Bomb",
 			{"type":"attack", "trigger":"manual", "targets":1.5, "shape":"circle"},
-			{"weapon damage %":15, "triggered acid":32, "triggered poison":264, "stun %":25, "reduce resist":12}
+			{"weapon damage %":15, "triggered acid":32, "triggered poison":[264/2,2], "stun %":25, "reduce resist":12}
 		)
 	),
 	Item("Aethersteel Bolts", {"aether":5, "aether %":25, "physical to aether":10}, ["pistol", "rifle", "crossbow", "offhand"],
@@ -407,14 +407,14 @@ augments = [
 	Item("Slith Venom", {"acid resist":15, "bleed resist":15, "poison retaliation":210, "retaliation %":10}, ["ring", "amulet"]),
 
 	#devil's crossing revered
-	Item("Cairn's Hope", {"health regeneration":15, "energy regeneration":15, "constitution %":20, "bleed resist":18}, ["ring", "amulet"]),
+	Item("Cairn's Hope", {"health/s %":15, "energy/s %":15, "constitution %":20, "bleed resist":18}, ["ring", "amulet"]),
 	Item("Overseer's Gaze", {"lightning %":30, "stun duration":10, "offense":25, "aether resist":15}, ["ring", "amulet"]),
 	Item("Song of the Elements", {"fire %":30, "cold %":30, "elemental resist":15}, ["ring", "amulet"]),
 	Item("Survivor's Ally", {"elemental resist":12, "pet all damage %":15, "pet health %":12}, ["ring", "amulet"]),
 	Item("Survivor's Ingenuity", {"all damage %":20, "offense %":2, "defense %":2}, ["ring", "amulet"]),
 	Item("Survivor's Perseverence", {"aether %":30, "chaos %":30, "aether resist":12, "chaos resist":12}, ["ring", "amulet"]),
 	Item("Survivor's Resilience", {"health %":3, "block %":3, "blocked damage %":20}, ["ring", "amulet"]),
-	Item("Viloth's Bite", {"poison":80, "poison %":30, "stun %":3, "vitality resist":12}, ["ring", "amulet"]),
+	Item("Viloth's Bite", {"poison":[80/5,5], "poison %":30, "stun %":3, "vitality resist":12}, ["ring", "amulet"]),
 
 	Item("Bladeward Powder", {"pierce resist":10}, ["head", "chest", "shoulders", "arms", "legs", "feet", "waist"]),
 	Item("Mogdrogen's Touch", {"acid resist":10, "vitality resist":7}, ["head", "chest", "shoulders", "arms", "legs", "feet", "waist"]),
@@ -428,13 +428,13 @@ augments = [
 
 	Item("Arkovian Bonemeal", {"vitality":8, "vitality %":25, "damage to undead":8}, ["sword", "axe", "mace", "dagger", "pistol", "shield", "offhand"]),
 	Item("Potent Arkovian Bonemeal", {"vitality":18, "vitality %":60, "damage to undead":16}, ["twohand", "rifle", "crossbow"]),
-	Item("Troll Wart Powder", {"health %":3, "health/s":3, "health regeneration":8}, ["sword", "axe", "mace", "dagger", "pistol", "shield", "offhand"]),
-	Item("Potent Troll Wart Powder", {"health %":7, "health/s":8, "health regeneration":16}, ["twohand", "rifle", "crossbow"]),
+	Item("Troll Wart Powder", {"health %":3, "health/s":3, "health/s %":8}, ["sword", "axe", "mace", "dagger", "pistol", "shield", "offhand"]),
+	Item("Potent Troll Wart Powder", {"health %":7, "health/s":8, "health/s %":16}, ["twohand", "rifle", "crossbow"]),
 	Item("Winterbloom Powder", {"cold %":25, "frostburn %":25, "offense":18}, ["sword", "axe", "mace", "dagger", "pistol", "shield", "offhand"]),
 	Item("Potent Winterbloom Powder", {"cold %":60, "frostburn %":60, "offense":40}, ["twohand", "rifle", "crossbow"]),
 
 	#rovers revered
-	Item("Breath of Life", {"health %":4, "health regeneration":10, "vitality resist":15}, ["ring", "amulet"]),
+	Item("Breath of Life", {"health %":4, "health/s %":10, "vitality resist":15}, ["ring", "amulet"]),
 	Item("Mogdrogen's Blessing", {"pet crit damage":10, "pet offense %":3, "pet attack speed":5}, ["ring", "amulet"]),
 	Item("Mogdrogen's Security", {"health":180, "health/s":5, "elemental resist":12}, ["ring", "amulet"]),
 	Item("Nature's Wrath", {"acid %":30, "poison %":30, "offense %":2}, ["ring", "amulet"]),
@@ -455,8 +455,8 @@ augments = [
 	Item("Storm Powder", {"health":100, "lightning resist":15, "lightning retaliation":(1+107)/2, "retaliation %":10}, ["ring", "amulet"]),
 
 	#kymon's revered
-	Item("Empyrion's Touch", {"electrocute":30, "electrocute %":100, "health/s":8, "energy absorb":10}, ["ring", "amulet"]),
-	Item("Infernal Dust", {"burn":30, "burn %":100, "elemental resist":12}, ["ring", "amulet"]),
+	Item("Empyrion's Touch", {"electrocute":[30/3,3], "electrocute %":100, "health/s":8, "energy absorb":10}, ["ring", "amulet"]),
+	Item("Infernal Dust", {"burn":[30/3,3], "burn %":100, "elemental resist":12}, ["ring", "amulet"]),
 	Item("Kymon's Fury", {"physical %":30, "bleed %":30, "defense %":2}, ["ring", "amulet"]),
 	Item("Kymon's Vision", {"lightning %":30, "electrocute %":30, "offense":25, "chaos resist":12}, ["ring", "amulet"]),
 	Item("Kymon's Will", {"fire %":30, "burn %":30, "reduce damage":10*.15, "defense %":2}, ["ring", "amulet"]),
@@ -470,8 +470,8 @@ augments = [
 	Item("Potent Aether Dust", {"aether":18, "aether %":60, "damage to aetherials":10}, ["twohand", "rifle", "crossbow"]),
 	Item("Blacksteel Powder", {"physical %":25, "fire %":25, "offense":18}, ["sword", "axe", "mace", "dagger", "pistol", "shield", "offhand"]),
 	Item("Potent Blacksteel Powder", {"physical %":60, "fire %":60, "offense":40}, ["twohand", "rifle", "crossbow"]),
-	Item("Manticore Venom", {"poison":40, "poison %":25, "damage to chthonics":5}, ["sword", "axe", "mace", "dagger", "pistol", "shield", "offhand"]),
-	Item("Potent Manticore Venom", {"poison":90, "poison %":60, "damage to chthonics":10}, ["twohand", "rifle", "crossbow"]),
+	Item("Manticore Venom", {"poison":[40/5,5], "poison %":25, "damage to chthonics":5}, ["sword", "axe", "mace", "dagger", "pistol", "shield", "offhand"]),
+	Item("Potent Manticore Venom", {"poison":[90/5,5], "poison %":60, "damage to chthonics":10}, ["twohand", "rifle", "crossbow"]),
 	Item("Voidbeast Powder", {"vitality %":25, "chaos %":25, "offense":18}, ["sword", "axe", "mace", "dagger", "pistol", "shield", "offhand"]),
 	Item("Potent Voidbeast Powder", {"vitality %":60, "chaos %":60, "offense":40}, ["twohand", "rifle", "crossbow"]),
 	Item("Witch's Powder", {"pet offense %":3, "pet attack speed":6}, ["sword", "axe", "mace", "dagger", "pistol", "shield", "offhand"]),
@@ -545,12 +545,12 @@ augments = [
 	Item("Binding Dust", {"health %":8, "vitality resist":15}, ["ring", "amulet"]),
 	Item("Chillheart Powder", {"frostburn %":35, "cold resist":15, "vitality resist":10}, ["ring", "amulet"]),
 	Item("Mortal Coil", {"cold %":25, "frostburn %":25, "health":150}, ["ring", "amulet"]),
-	Item("Necrotic Flesh", {"vitality %":25, "vitality decay":15, "bleed resist":15}, ["ring", "amulet"]),
+	Item("Necrotic Flesh", {"vitality %":25, "vitality decay %":15, "bleed resist":15}, ["ring", "amulet"]),
 	Item("Ritual Salts", {"burn %":70, "frostburn %":70, "electrocute %":70}, ["ring", "amulet"]),
 
 	#death's vigil revered?
 	Item("Keeper's Binding Dust", {"vitality %":30, "pet vitality resist":18}, ["ring", "amulet"]),
-	Item("Malkadarr's Chillbane", {"frostburn":30, "frostburn %":100, "health":150, "offense":25}, ["ring", "amulet"]),
+	Item("Malkadarr's Chillbane", {"frostburn":[30/3,3], "frostburn %":100, "health":150, "offense":25}, ["ring", "amulet"]),
 	Item("Uroboruuk's Anguish", {"vitality %":30, "chaos %":30, "health":200}, ["ring", "amulet"]),
 	Item("Uroboruuk's Path", {"aether %":30, "health %":4, "energy/s":1.2}, ["ring", "amulet"]),
 	Item("Uroboruuk's Word", {"cold %":30, "vitality %":30, "defense":18, "bleed resist":18}, ["ring", "amulet"]),
@@ -560,9 +560,9 @@ augments = [
 	Item("Wraithtouch Powder", {"cold resist":15}, ["head", "chest", "shoulders", "arms", "legs", "feet", "waist"]),
 
 	#malmouth resistance honored?
-	Item("Blazecore Powder", {"burn":36, "fire %":36, "lightning %":36, "burn %":36, "electrocute %":36}, ["ring", "amulet"]),
+	Item("Blazecore Powder", {"burn":[36/3,3], "fire %":36, "lightning %":36, "burn %":36, "electrocute %":36}, ["ring", "amulet"]),
 	Item("Colossus Spine", {"physique":30, "armor %":4, "armor absorb":2}, ["ring", "amulet"]),
-	Item("Fleshwarp Powder", {"internal":60, "physical %":36, "aether %":36, "internal":36}, ["ring", "amulet"]),
+	Item("Fleshwarp Powder", {"internal":[60/5,5], "physical %":36, "aether %":36, "internal %":36}, ["ring", "amulet"]),
 	Item("Mender's Powder", {"pet health %":10, "pet aether resist":20, "pet chaos resist":20}, ["ring", "amulet"]),
 	Item("Nightsteel Polish", {"pierce":10, "pierce %":36, "cold %":36, "frostburn %":36}, ["ring", "amulet"]),
 	Item("Void Ash", {"chaos":10, "acid %":36, "chaos %":36, "poison %":36}, ["ring", "amulet"]),
@@ -594,7 +594,7 @@ augments = [
 	Item("Malmouth's Will", {"physical %":55, "lightning %":55, "internal %:":55, "electrocute %":55, "health":250, "vitality resist":10}, ["sword", "axe", "mace", "dagger", "pistol", "shield", "offhand"]),
 	Item("Potent Malmouth's Will", {"physical %":120, "lightning %":120, "internal %":120, "electrocute %":120, "health":550, "vitality resist":20}, ["twohand", "rifle", "crossbow"]),
 
-	Item("Malmouth Fortifying Powder", {"health regeneration":3, "vitality resist":8}, ["head", "chest", "shoulders", "arms", "legs", "feet", "waist"]),
+	Item("Malmouth Fortifying Powder", {"health/s %":3, "vitality resist":8}, ["head", "chest", "shoulders", "arms", "legs", "feet", "waist"]),
 	Item("Malmouth Soulguard Powder", {"pierce resist":8, "aether resist":8}, ["head", "chest", "shoulders", "arms", "legs", "feet", "waist"]),
 	Item("Malmouth Woundsear Powder", {"vitality resist":8, "bleed resist":8}, ["head", "chest", "shoulders", "arms", "legs", "feet", "waist"]),
 
@@ -625,7 +625,7 @@ equipment = {}
 # === ONE HAND MELEE WEAPONS ===
 # --- 50 ---
 equipment["Black Scourge"] = Item( "Black Scourge",
-	{"chaos":(49+88)/2, "chaos %":122, "health":154, "offense":20, "defense":4, "pet all damage %":54, "pet offence %":5, "pet attack speed":5, "pet chaos resist":25}, 
+	{"chaos":(38+77)/2.0, "chaos %":120, "health":140, "offense":22, "reduce cooldown":4, "pet all damage %":45, "pet offence %":6, "pet attack speed":4, "pet chaos resist":30}, 
 	["scepter"],
 	Ability(
 		"Conjure Black Scourge",
@@ -634,7 +634,7 @@ equipment["Black Scourge"] = Item( "Black Scourge",
 	)
 )
 equipment["Death Omen"] = Item( "Death Omen",
-	{"physical":(54+146)/2, "vitality":13, "vitality %":83, "vitality decay %":75, "lifesteal %":7, "physical to vitality":13, "health":249, "health regeneration":5, "attack speed":13},
+	{"physical":(54+146)/2, "vitality":13, "vitality %":83, "vitality decay %":75, "lifesteal %":7, "physical to vitality":13, "health":249, "health/s %":5, "attack speed":13},
 	["mace"],
 	Ability( "Mark of Death",
 		{"type":"attack", "trigger":"hit", "chance":1, "recharge":2, "duration":5},
@@ -646,6 +646,23 @@ equipment["Death Omen"] = Item( "Death Omen",
 # --- 40 ---
 equipment["Rhowari Lifecaller"] = Item( "Rhowari Lifecaller", 
 	{"vitality %":36, "health":178, "offense":50, "pet all damage %":15, "pet crit damage":9, "pet attack speed":6}, ["amulet"] )
+equipment["The Peerless Eye of Beronath"] = Item( "The Peerless Eye of Beronath",
+	{"crit damage":8, "offense":75, "health/s %":11, "light radius":20, "elemental resist":15, "all skills":1}, ["amulet"],
+	# Ability( "Gaze of Beronath",
+	# 	{"type":"attack", "trigger":"manual", "recharge":6, "duration":8, "targets":3, "shape":"pbaoe"},
+	# 	{"stun %":20, "defense":70/3} 
+	# )
+)
+equipment["Empowered Bramblewood Amulet"] = Item( "Empowered Bramblewood Amulet",
+	{"lightning %":65, "health":355, "acid resist":60, "max acid resist":5, "pierce retaliation":354, "all retaliation %":30, "shaman skills":1, "pet all damage %":43}, ["amulet"] )
+equipment["Empowered Stormcaller's Gem"] = Item( "Empowered Stormcaller's Gem",
+	{"lightning":(1+17)/2, "lightning %":49, "elemental resist":20, "lightning retaliation":(26+285)/2, "lightning retaliation %":100, "reduce cooldown":5, "storm totem":2, "stormcaller's pact":2}, 
+	["amulet"],
+	Ability("Lightning Bolt",
+		{"type":"attack", "trigger":"attack", "chance":.1, "recharge":2.5, "targets":1.5, "shape":"circle"},
+		{"triggered lightning":(78+376)/2.0, "triggered electrocute":[192/2.0,2], "stun %":100})
+)
+
 
 # --- 50 ---
 equipment["Pendant of the Royal Crown"] = Item( "Pendant of the Royal Crown", # SET(Royal Exuberance)
@@ -654,7 +671,7 @@ equipment["Pendant of the Royal Crown"] = Item( "Pendant of the Royal Crown", # 
 # === RINGS ===
 # --- 40 ---
 equipment["Rhowari Void Seal"] = Item( "Rhowari Void Seal",
-	{"chaos":(1+11)/2, "vitality %":21, "chaos %":42, "offense":44, "energy regeneration":9, "elemental resist":9}, ["ring"] )
+	{"chaos":(1+11)/2, "vitality %":21, "chaos %":42, "offense":44, "energy/s %":9, "elemental resist":9}, ["ring"] )
 
 # --- 50 ---
 equipment["Seal of the Royal Crown"] = Item( "Seal of the Royal Crown", # SET(Royal Exuberance)
@@ -670,7 +687,7 @@ equipment["Lifegiver Signet"] = Item( "Lifegiver Signet",
 
 # === CHEST ===
 equipment["Necrolord's Shroud"] = Item( "Necrolord's Shroud",
-	{"armor":909, "health":517, "energy/s":6.6, "physical resist":4, "elemental resist":34, "Undead Legion":3, "Will of the Crypt":3, "pet crit damage":9, "pet health %":4, "pet elemental resist":30,
+	{"armor":909, "health":550, "energy/s":6.6, "physical resist":3, "elemental resist":33, "Undead Legion":3, "Will of the Crypt":3, "pet crit damage":8, "pet health %":5, "pet elemental resist":35,
 	 },
 	"chest",
 	Ability("Necrolord's Aura",

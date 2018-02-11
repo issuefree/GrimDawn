@@ -53,7 +53,7 @@ stats =	{
 		"defense":900,
 
 		"health":3500,
-		"health regeneration":10,
+		"health/s %":10,
 
 		"armor":250,
 		"energy":2000,

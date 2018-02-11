@@ -112,10 +112,19 @@ def getBonuses(constellations=Constellation.constellations, model=None):
 				if model and not bonus in model.bonuses.keys():
 					continue
 				if bonus in bonuses.keys():
-					bonuses[bonus] += s.bonuses[bonus]
+					if type(s.bonuses[bonus]) == type([]):
+						bonuses[bonus] = addDurationDamages(bonuses[bonus], s.bonuses[bonus])
+					else:
+						bonuses[bonus] += s.bonuses[bonus]
 				else:
 					bonuses[bonus] = s.bonuses[bonus]
 	return bonuses
+
+#this will "inflate" duration damages
+def addDurationDamages(a, b):
+	return [a[0]+b[0], max(a[1],b[1])]
+def subDurationDamages(a, b):
+	return [a[0]-b[0], max(a[1],b[1])]
 
 def getPathBounds(path, model):
 	score = 0
@@ -129,9 +138,9 @@ def getPathBounds(path, model):
 
 def evaluateBonuses(model, bonuses):
 	value = 0
-	for bonus in model.keys():
-		if bonus in bonuses.keys():
-			value += model.get(bonus)*bonuses[bonus]
+	for bonus in model.bonuses.keys():
+		if bonus in bonuses.keys():			
+			value += model.calculateBonus(bonus, bonuses[bonus])
 	return value
 
 def startsWith(start, complete):
@@ -235,4 +244,3 @@ def sortConstellationsByProvidesValue(constellations):
 def sortConstellationsByProvidesValueScore(constellations, model, valueVector):
 	out = sorted(constellations, key=lambda c: (c.provides*valueVector).magnitude()*c.evaluate(model), reverse=True)
 	return out
-

@@ -284,10 +284,10 @@ etb  = 	Item( "Empowered Thundertouch Bracers",
 # evalItems([mt, etb])
 
 # evalCon(spear)
-sola = Solution([xA, xC, viper, tsunami, wraith, eel, rat, raven, kraken, hawk, xP, crownElementalStorm, spear, ultosHandofUltos], model)
-# print sol
-# printSol(sol.constellations)
-# print ""
+sola = Solution([xC, fiend, viper, tsunami, raven, kraken, hawk, eel, lizard, xO, winterBlizzard, behemothGiantsBlood, spear, ultos], model)
+print sola
+printSol(sola.constellations)
+print ""
 solb = Solution([xE, quill, hawk, xC, viper, tsunami, kraken, wraith, eel, rat, xP, crownElementalStorm, spear, ultosHandofUltos], model)
 # print sol
 # printSol(sol.constellations)

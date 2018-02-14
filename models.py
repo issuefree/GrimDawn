@@ -315,7 +315,7 @@ class Model:
 		if not "fight length" in self.stats.keys():
 			self.stats["fight length"] = 30
 
-		self.stats["criticals/s"] = self.getStat("attacks/s")*self.getStat("crit chance")
+		self.stats["criticals/s"] = getTriggerChance(self.getStat("crit chance"), self.getStat("attacks/s"))		
 
 		# /s stats can be calculated based on fight length and the value of the stat
 

@@ -120,6 +120,9 @@ def getBonuses(constellations=Constellation.constellations, model=None):
 					bonuses[bonus] = s.bonuses[bonus]
 	return bonuses
 
+def getTriggerChance(chance, tps):
+	return 1-(1-chance)**tps
+
 #this will "inflate" duration damages
 def addDurationDamages(a, b):
 	return [a[0]+b[0], max(a[1],b[1])]

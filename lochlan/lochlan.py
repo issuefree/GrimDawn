@@ -2,7 +2,7 @@ from dataModel import *
 from itemData import *
 from constellationData import *
 
-devotionPoints = 52
+devotionPoints = 53
 
 stats = {
 		"level":85,
@@ -21,7 +21,7 @@ stats = {
 		"crit chance":.2,
 		"low healths/s":1.0/20, # total guesswork.
 
-		"fight length":10, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
+		"fight length":20, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
 
 		# estimated sheet stats for target level
 		"physique":842,
@@ -84,8 +84,8 @@ weights = {
 		"physical to lightning":5,
 		"physical to elemental":1,
 
-		"weapon damage %":200, 
-		"attack opportunity cost":-250-100-50, # I like basic attacks since they stack my savagery plus the auto attack replacements
+		"weapon damage %":100, 
+		"attack opportunity cost":-150-100-50, # I like basic attacks since they stack my savagery plus the auto attack replacements
 
 		"resist":5,
 		"physical resist":125,
@@ -200,10 +200,10 @@ items = [
 	# 	)
 	# ),
 	Item( "Mythical Touch of the Everliving Grove",
-		{"armor":1014, "health":452, "health %":4, "health/s":26, "health/s %":40, "elemental resist":18, "Hearth of the Wild":2, "Oak Skin":2,
+		{"armor":1014, "health":452, "health %":4, "health/s":26, "health/s %":40, "elemental resist":18, "Heart of the Wild":2, "Oak Skin":2,
 		"pet health %":10, "pet defense %":12, "pet vitality resist":39},
 		"arms",
-		Ability( "Healing WInds",
+		Ability( "Healing Winds",
 			{"type":"heal", "trigger":"attack", "chance":.1, "recharge":6},
 			{"health %":3, "health":1650}
 		)
@@ -282,46 +282,65 @@ items = [
 	),
 ]
 
-skills = {
-	"Markovian's Advantage":6,
-	"Fighting Spirit":4,
-	"Menhir's Will":4,
-	"Military Conditioning":5,
-	"Zolhan's Technique":7,
-	"Blitz":1,
-	"Veterancy":1,
-	"War Cry":3,
-	"Field Command":9,
-	"Terrify":3,
-	"Decorated Soldier":1,
-	"Blindside":2,
-	"Squad Tactics":4,
-	"Break Morale":1,
-	"Counter Strike":1,
-	"Scars of Battle":2,
+# items = [	Item( "Ultos' Stormseeker",
+# 		{"physical":(270+386)/2, "attacks/s":1.45, "lightning":(5+53)/2, "lightning %":203, "electrocute %":203, "physical to lightning":45, "offense":18, "attack speed":16, "cast speed":16, "reduce cooldown":16, "Stormcaller's Pact":3},
+# 		"twohand",
+# 	),
+# 	Item( "Mythical Touch of the Everliving Grove",
+# 		{"armor":1014, "health":452, "health %":4, "health/s":26, "health/s %":40, "elemental resist":18, "Hearth of the Wild":2, "Oak Skin":2,
+# 		"pet health %":10, "pet defense %":12, "pet vitality resist":39},
+# 		"arms",
+# 		Ability( "Healing Winds",
+# 			{"type":"heal", "trigger":"attack", "chance":.1, "recharge":6},
+# 			{"health %":3, "health":1650}
+# 		)
+# 	),
 
-	"Brute Force":1,
-	"Savagery":9,
-	"Primal Strike":6,
-	"Might of the Bear":3,
-	"Mogdrogen's Pact":2,
-	"Feral Hunger":5,
-	"Wind Devil":1,
-	"Summon Briarthorn":1,
-	"Torrent":4,
-	"Tenacity of the Boar":3,
-	"Heart of the Wild":5,
-	"Wendigo Totem":2,
-	"Raging Tempest":7,
-	"Storm Surge":4,
-	"Oak Skin":1,
-	"Storm Totem":6,
-	"Storm Touched":5,
-	"Blood Pact":1,
-	"Maelstrom":2,
-	"Emboldening Presence":1,
-	"Stormcaller's Pact":8,
-	"Conjure Primal Spirit":1,
-}
+# ]
+
+skills = [
+	{"Markovian's Advantage":6},
+	{"Fighting Spirit":4},
+	{"Menhir's Will":4},
+	{"Military Conditioning":5},
+	{"Zolhan's Technique":7},
+	{"Blitz":1},
+	{"Veterancy":1},
+	{"War Cry":3},
+	{"Field Command":9},
+	{"Terrify":3},
+	{"Decorated Soldier":1},
+	{"Blindside":2},
+	{"Squad Tactics":4},
+	{"Break Morale":1},
+	{"Counter Strike":1},
+	{"Scars of Battle":2},
+
+	{"Brute Force":1},
+	{"Savagery":9},
+	{"Primal Strike":6},
+	{"Might of the Bear":3},
+	{"Mogdrogen's Pact":2},
+	{"Feral Hunger":5},
+	{"Wind Devil":1},
+	{"Summon Briarthorn":1},
+	{"Torrent":4},
+	{"Tenacity of the Boar":3},
+	{"Heart of the Wild":5},
+	{"Wendigo Totem":2},
+	{"Raging Tempest":7},
+	{"Storm Surge":4},
+	{"Oak Skin":1},
+	{"Storm Totem":6},
+	{"Storm Touched":5},
+	{"Blood Pact":1},
+	{"Maelstrom":2},
+	{"Emboldening Presence":1},
+	{"Stormcaller's Pact":8},
+	{"Conjure Primal Spirit":1},
+]
+
+# skills = {}
 
 constellations = [xC, fiend, viper, tsunami, wraith, quill, kraken, tempest, hawk, eel, ultosHandofUltos, spear]
+# constellations = [ultos]

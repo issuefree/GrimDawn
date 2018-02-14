@@ -1,7 +1,9 @@
 import itertools
 import string
 from dataModel import *
+from utils import *
 
-spirit = 170+60+150
-print spirit
-print spirit*1.06
+a = {"foo":1, "bar":2}
+b = {"bar":2, "baz":1}
+
+print mergeBonuses(a, b)

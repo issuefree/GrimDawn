@@ -258,6 +258,8 @@ class Affinity:
 		return self.affinities[Affinity.sh.index(ac)]
 
 class Ability:
+	minTriggerTime = .25  # there are gaps between skills etc
+
 	def __init__(self, name, conditions, bonuses):
 		self.name = name		
 		self.bonuses = bonuses
@@ -278,6 +280,9 @@ class Ability:
 
 		self.star = None
 
+	def copy(self):
+		return Ability(self.name, copy.deepcopy(self.conditions), copy.deepcopy(self.bonuses))
+
 	def gc(self, key):
 		if key in self.conditions.keys():
 			return self.conditions[key]
@@ -296,6 +301,10 @@ class Ability:
 			if type(self.bonuses[key]) == type([]) and value == 0:
 				value = self.bonuses[key]
 			else:
+				# print self.name
+				# print self.bonuses
+				# print key
+				# print value
 				value += self.bonuses[key]
 		if key in self.dynamicBonuses.keys():
 			if type(self.dynamicBonuses[key]) == type([]) and value == 0:
@@ -304,8 +313,8 @@ class Ability:
 				value += self.dynamicBonuses[key]
 		return value
 
-	def calculateEffective(self, model):		
-		self.calculateTriggerTime(model)
+	def calculateEffective(self, model, verbose=False):
+		self.calculateTriggerTime(model, verbose)
 		if self.triggerTime == -1:
 			self.effective = 0
 			return
@@ -314,7 +323,7 @@ class Ability:
 		if self.gc("type") == "buff":
 			self.effective = self.getUpTime(model)*targets
 			# print "buff uptime:", self.getUpTime(model)
-		if self.gc("type") == "attack":
+		if self.gc("type") == "attack" or self.gc("type") == "aar":
 
 			if self.gc("shape") == "???":
 				print "    Shape unknown for", self.name
@@ -398,9 +407,19 @@ class Ability:
 				if self.gc("recharge") == 0:
 					self.conditions["recharge"] = 1
 
-			self.effective = self.getNumTriggers(model)*targets/model.getStat("fight length")
+			self.effective = self.getNumTriggers(model, verbose)*targets/model.getStat("fight length")
 
-			# print "nt", self.getNumTriggers(model)
+			if verbose:
+				print "nt", self.getNumTriggers(model)
+
+			if "duration" in self.bonuses.keys():
+				self.setDebuffValue(targets, model)
+			# TODO I've removed damage % modifiers from attack abilities as these are only supposed to affect the attack itself not all damage.
+			# this needs to be fixed and this can be removed
+			for damage in damages:
+				if damage+" %" in self.bonuses.keys():
+					del self.bonuses[damage+" %"]
+
 
 			interval = self.triggerTime+self.gc("recharge")
 			for dam in durationDamages:
@@ -412,18 +431,6 @@ class Ability:
 						else:
 							self.bonuses["triggered "+dam] = damage*interval
 				
-		if self.gc("type") == "aar":			
-			self.effective = self.getNumTriggers(model)/model.getStat("fight length")
-
-		if self.gc("type") == "aar" or self.gc("type") == "attack":
-			if "duration" in self.bonuses.keys():
-				self.setDebuffValue(targets, model)
-			# TODO I've removed damage % modifiers from attack abilities as these are only supposed to affect the attack itself not all damage.
-			# this needs to be fixed and this can be removed
-			for damage in damages:
-				if damage+" %" in self.bonuses.keys():
-					del self.bonuses[damage+" %"]
-
 		if self.gc("type") == "shield":
 			self.effective = self.getNumTriggers(model)
 		if self.gc("type") == "heal":
@@ -448,9 +455,13 @@ class Ability:
 				self.bonuses[bonus] = self.bonuses[bonus] / 2
 		del self.bonuses["duration"]
 
-	def calculateTriggerTime(self, model):
-		if self.gc("trigger") == "manual" or self.gc("trigger") == "toggle" or self.gc("trigger") == "passive":
-			return 0
+	def calculateTriggerTime(self, model, verbose=False):
+		if self.gc("trigger") == "manual" or self.gc("trigger") == "parent":
+			self.triggerTime = Ability.minTriggerTime
+			return
+		if self.gc("trigger") == "toggle" or self.gc("trigger") == "passive":
+			self.triggerTime = 0
+			return
 		if self.gc("type") == "aar":
 			triggerFrequency = model.getStat("attacks/s")
 		else:
@@ -458,6 +469,7 @@ class Ability:
 		if triggerFrequency == 0:
 			self.triggerTime = -1
 			return
+		
 		self.triggerTime = 1.0/triggerFrequency * 1.0/self.gc("chance")
 		# print "tt", self.triggerTime
 
@@ -474,15 +486,23 @@ class Ability:
 		return up/fightLen
 
 	#average over a number of fights
-	def getNumTriggers(self, model):
+	def getNumTriggers(self, model, verbose=False):
 		numFights = 10.0
 		triggers = 0
-		fightRemaining = model.getStat("fight length")*numFights - self.triggerTime
+		fightRemaining = model.getStat("fight length")*numFights - self.triggerTime		
 		while fightRemaining >= 0:
 			triggers += 1
 			fightRemaining -= self.gc("recharge") + self.triggerTime
 
 		triggers = max(triggers, 1) # this will usually catch low health events which don't happen often. We'll calculate stats as if they happen once a fight.
+
+		if verbose:
+			print self.name, "getNumTriggers"
+			print "   recharge", self.gc("recharge")
+			print "   triggerTime", self.triggerTime
+			print "   fight length", model.stats["fight length"]
+			print "   total triggers", triggers
+			print "   nt", triggers/numFights
 
 		return triggers/numFights
 
@@ -563,6 +583,34 @@ class Ability:
 				total = total*self.effective * modelFactor
 			self.star.bonuses[bonus] = total
 		self.star.bonuses[self.name] = 1
+
+	def augment(self, ability, verbose=False):
+		# augmenting abilities can affect conditions. Targets come to mind. I'm going to handle it as a one off for now.
+		if "targets" in ability.conditions:
+			self.conditions["targets"] = self.gc("targets") + ability.conditions["targets"]
+		if "ability damage %" in ability.bonuses.keys():
+			for damage in damages+["weapon damage %"]:
+				if damage in self.bonuses.keys():
+					if type(self.bonuses[damage]) == type([]):						
+						self.bonuses[damage] = [self.bonuses[damage][0]*(1+ability.bonuses["ability damage %"]/100.0), self.bonuses[damage][1]]
+					else:
+						self.bonuses[damage] *= 1+ability.bonuses["ability damage %"]/100.0
+			del ability.bonuses["ability damage %"]
+		for bonus in ability.bonuses:
+			if type(ability.bonuses[bonus]) == type([]):
+				if bonus in self.bonuses.keys():					
+					self.bonuses[bonus] = addDurationDamages(self.bonuses[bonus], ability.bonuses[bonus])
+				else:
+					self.bonuses[bonus] = ability.bonuses[bonus]
+			elif type(ability.bonuses[bonus]) == type({}):
+				if bonus in self.bonuses.keys():
+					self.bonuses[bonus] = mergeBonuses(self.bonuses[bonus], ability.bonuses[bonus])
+				else:
+					self.bonuses[bonus] = ability.bonuses[bonus]
+			else:
+				if verbose:
+					print bonus, self.gb(bonus)
+				self.bonuses[bonus] = self.gb(bonus) + ability.bonuses[bonus]
 
 class Star:
 	def __init__(self, constellation, requires=[], bonuses={}):
@@ -837,8 +885,8 @@ class Item:
 			if self.ability.gc("shape") == "weapon":
 				if location in Item.meleeLocations:
 					self.ability.conditions["shape"] = "melee"
-			self.ability.calculateEffective(model)
-			self.ability.calculateDynamicBonuses(model)
+			self.ability.calculateEffective(model, verbose)
+			self.ability.calculateDynamicBonuses(model, verbose)
 			for bonus in self.ability.bonuses.keys() + self.ability.dynamicBonuses.keys():
 				abilityBonuses[bonus] = self.ability.getTotalBonus(bonus)*self.ability.effective
 
@@ -860,24 +908,50 @@ class Skill:
 	skills = {}
 	skillsByClass = {}
 
-	def __init__(self, name, profession, abilities):
+	def __init__(self, name, profession, levels, parentSkillName=None):
 		self.name = name		
-		self.abilities = abilities
+		self.levels = levels
+		self.maxLevel = levels[0]
 		self.profession = profession
+		self.parentSkillName = parentSkillName
+		self.childSkills = []
+
 		Skill.skills[name] = self
 		if not profession in Skill.skillsByClass:
 			Skill.skillsByClass[profession] = []
 		Skill.skillsByClass[profession] += [name]
 
-	def getAbility(self, level):
-		return self.abilities[level]
+		if parentSkillName:
+			Skill.skills[parentSkillName].addChildSkill(self)
+
+	def getAbility(self, level, verbose=False):
+		level = min(self.maxLevel, level)
+		if verbose:
+			print "getAbility", self.name, level
+		if level > len(self.levels):
+			print self.name, "undefined for level:", level
+		ability = self.levels[level].copy()
+		ability.name = self.name + "(" + ability.name + ")"
+		if verbose:
+			print ability.bonuses
+		return ability
+
+	def addChildSkill(self, skill):
+		self.childSkills += [skill]
 
 class Character:
+	verbose = False
 
 	def __init__(self, model, baseAttributes, skills, constellations, items, stats={}):
 		self.results = {}
 		self.model = model
 		self.baseAttributes = baseAttributes
+
+		self.skills = {}
+		for skillLevel in skills:
+			skill = skillLevel.keys()[0]
+			self.skills[skill] = skillLevel[skill]
+
 		self.stats = {}
 		self.level = model.stats["level"]		
 		self.difficulty = model.stats["difficulty"]
@@ -891,7 +965,6 @@ class Character:
 
 		self.setBaseStats(stats)
 
-		self.skills = skills
 		self.constellations = constellations
 		self.items = items
 
@@ -900,25 +973,49 @@ class Character:
 
 		for constellation in constellations:
 			for star in constellation.stars:
-				if star.ability:
-					print star.ability.name
-					print "  ", star.ability.getBonuses(self.model)
 				self.process(star.bonuses, [star.ability])
 
-		for skill in skills:
+
+		for skillLevel in skills:
+			skill = skillLevel.keys()[0]
 			if not skill in Skill.skills.keys():
 				print "Missing skill definition for:", skill
 				continue
 
 			skillDef = Skill.skills[skill]
-			level = skills[skill] + self.getStat(skill) + self.getStat(skillDef.profession)
-			print skill, skills[skill], "->", level
+			
+			if skillDef.parentSkillName:
+				# if a skill has a parent then it should be processed with the parent not on it's own
+				continue
 
-			if skill in Skill.skills.keys():
-				if len(skillDef.abilities) > level:
-					self.process({}, [Skill.skills[skill].getAbility(level)])
-				else:
-					print skill, "not defined for level", level
+			level = self.getSkillLevel(skill)
+			if Character.verbose:
+				print skill, self.skills[skill], "->", level
+
+			ability = Skill.skills[skill].getAbility(level)
+			if Character.verbose:
+				print ability.name
+			abilities = [ability]
+
+			#augment ability with any child skills
+			for childSkill in skillDef.childSkills:
+				childAbility = childSkill.getAbility(self.getSkillLevel(childSkill.name))
+
+				if Character.verbose:
+					print "  childAbility:", childSkill.name, "-", childAbility.name
+					print "    "+str(childAbility.bonuses)
+					print
+
+				if childAbility.gc("type") == "modifier":
+					ability.augment(childAbility)
+					if Character.verbose:
+						print "->", str(ability.bonuses)
+				elif childAbility.gc("trigger") == "parent":
+					childAbility.conditions["recharge"] = ability.gc("recharge")
+					abilities += [childAbility]
+
+
+			self.process({}, abilities)
 
 		self.calcOADA()
 		self.calcHealth()
@@ -930,6 +1027,9 @@ class Character:
 
 		self.calculateDamage()
 		self.calculateEffectiveHealth()
+
+	def getSkillLevel(self, skill):
+		return self.skills[skill] + self.getStat(skill) + self.getStat(Skill.skills[skill].profession)
 
 	def setMaxes(self):
 		self.maxes = {
@@ -985,14 +1085,24 @@ class Character:
 		self.addToStat("energy/s %", self.stats["spirit"]*.26)
 
 
-	def process(self, bonuses, abilities):
+	def process(self, bonuses, abilities, verbose=False):
+		if verbose:
+			print "process"
+			print "  bonuses", str(bonuses)
+			print "  abilities"
+			for ability in abilities:
+				if ability != None:
+					print "   ", ability.name, ability.bonuses
 		for bonus in bonuses:
 			if bonus.startswith("max ") and bonus.endswith(" resist"):
 				self.maxes[bonus[4:]] += bonuses[bonus]
-			self.addToStat(bonus, bonuses[bonus])			
+
+			self.addToStat(bonus, bonuses[bonus])
 		for ability in abilities:
 			if ability != None:
 				ability.calculateEffective(self.model)
+				if verbose:
+					print "effective", ability.effective
 				ability.calculateDynamicBonuses(self.model)
 				for bonus in ability.bonuses.keys() + ability.dynamicBonuses.keys():
 					totalBonus = ability.getTotalBonus(bonus)
@@ -1055,15 +1165,17 @@ class Character:
 		self.stats["energy/s"] = self.stats["base energy/s"] + self.stats["energy/s"] #TODO energy/s costs are currently recorded as -energy/s so energy/s % is applied to costs (which should be) so we get a lower regen than anticipated
 		del self.stats["base energy/s"]
 
-	def calculateDamage(self):
+	def calculateDamage(self, verbose=False):
 		dpa = {}
 		triggered = {}
 		# base values
 		for damage in damages:
 			dpa[damage] = self.getStat(damage)
+			# TODO dunno what this's for
 			# self.stats["triggered "+damage] = self.getStat("triggered "+damage)
 			triggered[damage] = self.getStat("triggered "+damage)
 
+		# print triggered
 
 		# conversions
 		conversions = {}
@@ -1074,19 +1186,22 @@ class Character:
 				for toDamage in damages:
 					conversionKey = fromDamage + " to " + toDamage
 					if conversionKey in self.stats.keys():
-						print "Found applicable conversion:", conversionKey
+						if verbose:
+							print "Found applicable conversion:", conversionKey
 						conversions[fromDamage][toDamage] = self.stats[conversionKey]
 						totalConversion += self.stats[conversionKey]
 
-				if conversions[fromDamage]:
-					print fromDamage, conversions[fromDamage]
+				if verbose:
+					if conversions[fromDamage]:
+						print fromDamage, conversions[fromDamage]
 
 				if totalConversion > 100:
 					factor = 100.0/totalConversion
 					for conversion in conversions[fromDamage]:
 						conversions[fromDamage][conversion] *= factor
 					if conversions[fromDamage]:
-						print fromDamage, conversions[fromDamage]
+						if verbose:
+							print fromDamage, conversions[fromDamage]
 
 
 		# for fromDamage in conversions:
@@ -1124,17 +1239,27 @@ class Character:
 				dpa[damage] = dpa[damage]*self.getStatPerc(damage+" %")
 			triggered[damage] = triggered[damage]*self.getStatPerc(damage+" %")
 
+		# print triggered
+
+
 		#crits
 		oa = self.getStat("offense")
 		da = self.difficulty*150 + ((self.level+3)*20)
 		critMult = getDamageForHitCrit(getPTH(oa, da), self.getStat("crit damage")/100.0)
-		print "crit mult", critMult
+		self.results["critical multiplier"] = critMult
 
+		for damage in durationDamage:
+			durationDamage[damage] *= critMult
+		for damage in dpa:
+			dpa[damage] *= critMult
+		for damage in triggered:
+			triggered[damage] *= critMult
+
+		# print triggered
 
 		triggeredDPS = sum([triggered[key] for key in triggered])
-		triggeredDPS = triggeredDPS*critMult
 
-		self.results["damage per attack"] = sum([dpa[key] for key in dpa])*critMult
+		self.results["damage per attack"] = sum([dpa[key] for key in dpa])
 		triggeredDPS += self.getStat("weapon damage %")/100.0*self.results["damage per attack"]
 		self.results["DPS (triggered)"] = triggeredDPS
 		self.results["DPS (AA)"] = self.results["damage per attack"]*self.stats["attacks/s"]+sum([durationDamage[key] for key in durationDamage])
@@ -1250,7 +1375,7 @@ class Character:
 
 	#add one to the stat in question and run another character to see the difference in values
 	def testStat(self, stat):
-		newCharacter = Character(self.model, self.baseAttributes, self.skills, self.constellations, self.items, {stat:1})
+		newCharacter = Character(self.model, self.baseAttributes, self.model.skills, self.model.constellations, self.model.items, {stat:1})
 		print
 		for bonus in sorted(self.results):
 			print bonus.ljust(25), newCharacter.results[bonus] - self.results[bonus]
@@ -1316,3 +1441,15 @@ def getArmorMitigation(damage, armor, armorAbsorb):
 	under = min(damage, armor)
 	under = under*(1-armorAbsorb)
 	return (over+under)/damage
+
+def mergeBonuses(bonusesA, bonusesB):
+	bonusesC = {}
+	for bonus in bonusesA:
+		if bonus in bonusesB.keys():
+			bonusesC[bonus] = bonusesA[bonus] + bonusesB[bonus]
+		else:
+			bonusesC[bonus] = bonusesA[bonus]
+	for bonus in bonusesB:
+		if not bonus in bonusesA.keys():
+			bonusesC[bonus] = bonusesB[bonus]
+	return bonusesC

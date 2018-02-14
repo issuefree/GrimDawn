@@ -154,5 +154,5 @@ def run(size):
 				print "  " + str(pop)
 			break
 
-model.points = 53
+model.points = 55
 run(12)

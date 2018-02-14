@@ -13,17 +13,19 @@ model = Model.loadModel("Lochlan")
 
 char = Character(model, [570+200+200, 90+140+150, 170+60+150, 1120+1300, 400+600], model.skills, model.constellations, model.items)
 
-for bonus in sorted(char.stats):
-	if char.stats[bonus] != 0:
-		print bonus.ljust(25), char.stats[bonus]
+# for bonus in sorted(char.stats):
+# 	if char.stats[bonus] != 0:
+# 		print bonus.ljust(25), char.stats[bonus]
 print
 for bonus in sorted(char.results):
 	print bonus.ljust(25), char.results[bonus]
 
-# char.testStat("Savagery")
+char.testStat("Soldier")
 
 # print Skill.skills["Field Command"].getAbility(4).getBonuses(model)
-# print Skill.skills["Markovian's Advantage"].getAbility(1).getBonuses(model)
+
+# print
+# print Skill.skills["Savagery"].getAbility(1).getBonuses(model)
 
 # def addToStat(stat, value):
 # 	global stats

@@ -91,6 +91,18 @@ def compareGear(*names):
 	gearcompare.compare(model, names)
 
 
+def dumpGear(*names):
+	"""Print pieces as Item literals, ready to paste into a python file.
+
+		dumpGear("thundertouch", "everliving grove")
+
+	Useful for tinkering with a piece you do not own yet, or for pinning one
+	down so it stops changing under you when the game is patched.
+	"""
+	import gearcompare
+	gearcompare.source(names)
+
+
 def bestInSlot(slot, pool=None, count=3):
 	"""The best few things this character could put in one slot.
 

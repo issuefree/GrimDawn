@@ -125,6 +125,34 @@ def fromDatabase(names):
     return out
 
 
+def source(names):
+    """Print each piece as an Item literal, ready to paste into a file.
+
+    Same text the generator writes into itemData.py, so it can be pasted into
+    sandbox.py to tinker with, or into a model file, or anywhere an Item is
+    wanted. Give it a variable name yourself; this prints the value.
+    """
+    import itemgen
+    from gddata import Database
+
+    gear = gearIndex()
+    db = Database()
+    for name in names:
+        wanted = _key(name)
+        hit = gear.get(wanted)
+        if hit is None:
+            candidates = [v for k, v in gear.items() if wanted in k]
+            hit = min(candidates, key=lambda v: len(v[0])) if candidates else None
+        if not hit:
+            print("  no item found called %r" % name)
+            continue
+        full, path = hit
+        record = db.read(path)
+        print(itemgen.itemLiteral(full, itemgen.itemBonuses(record, db),
+                                  itemgen.CLASS_SLOTS.get(record.get("Class"), "") or [],
+                                  itemgen.grantedAbility(record, db)))
+
+
 def _ability(spec):
     if not spec:
         return None

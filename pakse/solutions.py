@@ -1,0 +1,17 @@
+self.seedSolutions = [
+  Solution([xP, wraith, hound, messenger, scarab, lion, targo], self),  # 40552 (28)
+  Solution([xC, xO, crane, xP, wraith, hound, messenger, targo], self),  # 40083 (28)
+  Solution([xC, xO, dryad, xP, wraith, hound, messenger, targo], self),  # 39748 (28)
+  Solution([xC, xO, lion, xA, xP, wraith, hound, messenger, targo], self),  # 39452 (27)
+  Solution([xC, xO, lion, xE, xP, wraith, hound, messenger, targo], self),  # 39452 (27)
+  Solution([xC, wretch, wraith, xO, lion, targo, xP, messenger], self),  # 38928 (27)
+  Solution([xC, wretch, wraith, hound, messengerMessengerofWar, xO, lion, targo], self),  # 37457 (27)
+  Solution([xC, wretch, wraith, hound, messenger, xO, lion, targoShieldWall], self),  # 36817 (27)
+  Solution([xC, rat, scorpion, wretch, wraith, hound, messenger], self),  # 32313 (27)
+  Solution([xC, rat, scorpionScorpionSting, eye, wretch, hound, messenger], self),  # 31916 (27)
+  Solution([xC, wretch, wraith, xE, scorpion, xP, messenger, bonds], self),  # 31416 (27)
+  Solution([xC, rat, scorpion, eye, xP, wraith, hound, messengerMessengerofWar], self),  # 29347 (27)
+  Solution([xC, rat, scorpion, eye, wretch, hound, messengerMessengerofWar, xO], self),  # 29033 (27)
+  Solution([xC, rat, scorpion, eye, wolverine, affliction], self),  # 23523 (27)
+  Solution([xC, rat, scorpion, eye, wretch, bonds, hound], self),  # 19894 (27)
+]

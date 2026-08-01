@@ -55,17 +55,18 @@ class Search:
 		nextMoves = self.getNextMoves(solution, possibleMoves, points)
 
 		if self.getRandomSolution:
-			method = random.randint(1,3)
-			if method == 1:
+			method = random.randint(1,4)
+			if method <= 2:
 				random.shuffle(nextMoves)
-			elif method == 2:
+			elif method == 3:
 				nextMoves = sortByScore(nextMoves, Search.model)
 				nextMoves = nextMoves[:int(len(nextMoves)*.75)]
-			elif method == 3:
+			elif method == 4:
 				nextMoves = sortConstellationsByProvidesValueScore(nextMoves, Search.model, Solution.valueVector)
 				nextMoves = nextMoves[:int(len(nextMoves)*.75)]
 			
 		else:
+			nextMoves = random.sample(nextMoves, int(len(nextMoves)*.75))
 			nextMoves = sortConstellationsByProvidesValueScore(nextMoves, Search.model, Solution.valueVector)
 
 

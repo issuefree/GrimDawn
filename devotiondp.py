@@ -16,7 +16,7 @@ def getUpperBound(sol, totalPoints):
 
 
 
-model = Model.loadModel("Armitage")
+model = Model.loadModel("Fenris")
 model.initialize()
 
 

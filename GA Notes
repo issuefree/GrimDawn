@@ -1,0 +1,14 @@
+GA Notes
+
+For a GA we need:
+	A state that can be evaluated
+	A state that can be bred/mutated
+
+Getting a state that can be evaluated is easy (any solution). Having that state mutatable is tricky since each constellation depends on the constellations before it.
+
+What I'm thinking is that the state can be the set of links that are used to chase the wanted and the evaluation is the best solution that can be found with those links. If the number of links is relatively small we may be able to find the solution for that state quickly (remains to be determined)
+
+For one model there are 22 wanted and ~24 links.
+
+What I'm thinking is that we'll generate a random solution. We'll look at the links used in that solution and call that a state for the GA.
+When we breed two states we'll take all of the links that they share and a random set of the others.

@@ -11,7 +11,7 @@ import os
 
 model = Model.loadModel("Lochlan")
 
-char = Character(model, [570+200+200, 90+140+150, 170+60+150, 1120+1300, 400+600], model.skills, model.constellations, model.items)
+char = Character(model, [610+200+200, 90+140+150, 170+60+150, 1120+1300, 400+600], model.skills, model.constellations, model.items)
 
 # for bonus in sorted(char.stats):
 # 	if char.stats[bonus] != 0:
@@ -20,7 +20,19 @@ print
 for bonus in sorted(char.results):
 	print bonus.ljust(25), char.results[bonus]
 
-char.testStat("Soldier")
+# char.testStat("Menhir's Will") # 1291
+# char.testStat("Military Conditioning") # 474
+# char.testStat("Veterancy") # 766
+# char.testStat("Field Command") # 540
+# char.testStat("Decorated Soldier") # 0
+# char.testStat("Scars of Battle") # 2601
+
+# char.testStat("Mogdrogen's Pact") # 766
+# char.testStat("Tenacity of the Boar") # 999
+# char.testStat("Oak Skin") # 1170
+# char.testStat("Emboldening Presence") # 1098
+
+
 
 # print Skill.skills["Field Command"].getAbility(4).getBonuses(model)
 

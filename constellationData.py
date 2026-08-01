@@ -1117,7 +1117,7 @@ g = Star(oleron, d, {})
 g.addAbility(Ability(
 	"Blind Fury", 
 	{"type":"attack", "trigger":"critical", "chance":1, "recharge":1, "duration":5, "targets":2.5, "shape":"pbaoe"},
-	{"weapon damage %":75, "triggered pierce":85, "triggered internal":[335,5], "triggered bleed":[335,5], "duration":{"slow attack":30, "reduce physical resist":12*3/5}} ))
+	{"weapon damage %":75, "triggered pierce":85, "triggered internal":[335,5], "triggered bleed":[335,5], "duration":{"slow attack":30}} ))
 
 rattosh = Constellation("Rattosh, the Veilwarden", "6c 10e 6o")
 rattosh.id = "rattosh"

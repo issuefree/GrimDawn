@@ -1,0 +1,178 @@
+"""Generate skillData.py from the Grim Dawn database.
+
+A mastery's skills hang off records/ui/skills/class<NN>/skill<MM>.dbr, each of
+which names one skill record, and every number on that record is an array
+running from the first point spent upwards. The optimiser wants one Ability per
+level, so each level is read as its own record through gddata.atLevel and put
+through the same bonus extraction the devotion procs use.
+
+What kind of thing a skill is comes from its class, and that also settles how it
+is triggered:
+
+  Skill_Passive, Skill_Modifier, Skill_Transmuter   always on
+  ...Toggled                                        a stance you leave running
+  Skill_PassiveOn<something>BuffSelf                fires on that something
+  Skill_WeaponPool_*, Skill_WPAttack_*              a weapon-pool attack, which
+                                                    replaces an ordinary swing
+  everything else                                   a button you press
+
+    python devotion.py --regenerate
+"""
+import re
+
+from gddata import Database, atLevel, lastValue, procRecords
+from devotiongen import dictLiteral, procBonuses
+
+MASTERY = re.compile(r"/_classtraining_class(\d+)\.dbr$")
+
+# class fragment -> (type, trigger). First match wins, so the specific
+# PassiveOn... forms have to come before plain Passive.
+KINDS = (
+	("PassiveOnLife", ("buff", "low health")),
+	("PassiveOnCrit", ("buff", "critical")),
+	("PassiveOnHit", ("buff", "hit")),
+	("PassiveOnKill", ("buff", "kill")),
+	("PassiveOnBlock", ("buff", "block")),
+	("Toggled", ("buff", "toggle")),
+	("Passive", ("buff", "passive")),
+	("Modifier", ("buff", "passive")),
+	("Transmuter", ("buff", "passive")),
+	("Shapeshift", ("buff", "toggle")),
+	# Two kinds of weapon attack and the difference matters. A WPAttack is one of
+	# the pool that sometimes replaces a swing, so the optimiser charges it
+	# -100% weapon damage: the swing it replaced was already counted. A
+	# WeaponPool skill - Savagery, Cadence - is the swing, and is not.
+	("WPAttack", ("wps", "attack")),
+	("WeaponPool", ("aar", "attack")),
+	("SpellBeam", ("aar", "attack")),
+	("SpellDrain", ("aar", "attack")),
+	("SpawnPet", ("summon", "manual")),
+	("Attack", ("attack", "manual")),
+	("Buff", ("buff", "manual")),
+)
+# A skill states its own chance under one of these, and they mean different
+# things: a weapon pool skill's weight is its percentage chance to replace a
+# swing, and an on-hit passive states its activation chance outright.
+CHANCE_FIELDS = ("skillChanceWeight", "onHitActivationChance")
+
+
+def kindOf(skillClass):
+	for fragment, kind in KINDS:
+		if fragment.lower() in skillClass.lower():
+			return kind
+	return "buff", "passive"
+
+
+def masteries(db):
+	"""class number -> mastery name, e.g. 1 -> Soldier."""
+	out = {}
+	for path in db.under("records/skills/playerclass"):
+		match = MASTERY.search(path)
+		if match:
+			name = db.name(db.read(path))
+			if name:
+				out[int(match.group(1))] = name
+	return out
+
+
+def skillsOf(db, classNumber):
+	"""Every named skill in one mastery's tree, in the order the tree lists it.
+
+	An aura keeps its name on the buff record it delegates to rather than on the
+	skill the tree points at, so the name is taken from the first record that has
+	one - without that, Field Command and Mogdrogen's Pact have no name at all.
+	"""
+	out = []
+	for index in range(1, 40):
+		button = db.read("records/ui/skills/class%02d/skill%02d.dbr" % (classNumber, index))
+		path = button.get("skillName") if button else None
+		skill = db.read(path) if path else None
+		if not skill:
+			continue
+		skill = resolve(skill, db)
+		name = next((db.name(r) for r in procRecords(skill, db) if db.name(r)), "")
+		if name and not any(name == other for other, _ in out):
+			out.append((name, skill))
+	return out
+
+
+def resolve(skill, db):
+	"""The record a tree node's numbers actually live on.
+
+	A pet modifier node holds nothing but a pointer to one of the pet's own
+	skills, and that is where both its name and its payload are. Some of those
+	are auras the pet radiates over you - Emboldening Presence is the Briarthorn
+	buffing its owner - and some are the pet's own attacks.
+	"""
+	target = skill.get("petSkillName") if "PetModifier" in (skill.get("Class") or "") else None
+	nested = db.read(target) if target else None
+	return nested or skill
+
+
+def levelAbility(skill, db, level):
+	"""What one skill looks like at one level."""
+	view = atLevel(skill, level)
+	skillClass = skill.get("Class", "")
+	kind, trigger = kindOf(skillClass)
+	conditions = {"type": kind, "trigger": trigger, "skillClass": skillClass}
+
+	chance = 0
+	for field in CHANCE_FIELDS:
+		chance = lastValue(view.get(field, 0)) or 0
+		if chance:
+			break
+	conditions["chance"] = round(float(chance) / 100.0, 3) if chance else 1
+	for field, name in (("skillCooldownTime", "recharge"), ("skillActiveDuration", "duration")):
+		value = lastValue(view.get(field, 0)) or 0
+		if value:
+			conditions[name] = round(float(value), 2)
+
+	# A buff hands you damage to put on your own attacks; an attack deals it
+	# itself. Same distinction the devotion procs make. A weapon attack sits with
+	# the buffs: its flat damage is damage your swing does, which is what the
+	# models weight when they weight "physical" rather than "triggered physical".
+	# Every record in the chain is levelled, not just the top one: a toggled
+	# aura keeps its numbers on the buff it delegates to, and reading that at
+	# full rank gave every point in Emboldening Presence its level 22 value.
+	records = [atLevel(nested, level) for nested in procRecords(skill, db)]
+	bonuses = procBonuses(records, db, triggered=kind in ("attack", "summon"))
+	return conditions, bonuses
+
+
+def generate(path="skillData.py", root=None):
+	db = Database(root) if root else Database()
+	lines = ['"""Generated from the Grim Dawn database - do not edit.',
+			 "",
+			 "Regenerate after a game patch with:  python devotion.py --regenerate",
+			 "",
+			 "One Ability per point spent, indexed by level, so levels[3] is the skill",
+			 "with three points in it. Level 0 is the empty string: no points, no skill.",
+			 '"""',
+			 "from dataModel import Skill",
+			 "from ability import Ability",
+			 ""]
+	skillCount = 0
+	for classNumber, mastery in sorted(masteries(db).items()):
+		lines.append("# === %s ===" % mastery)
+		for name, skill in skillsOf(db, classNumber):
+			top = int(lastValue(skill.get("skillUltimateLevel", 0))
+					  or lastValue(skill.get("skillMaxLevel", 0)) or 1)
+			levels = []
+			for level in range(1, top + 1):
+				conditions, bonuses = levelAbility(skill, db, level)
+				if not bonuses:
+					continue
+				levels.append("\t\tAbility(%r, %s, %s),"
+							  % (str(level), dictLiteral(conditions), dictLiteral(bonuses)))
+			if not levels:
+				continue
+			lines.append("Skill(%r, %r, [" % (name, mastery))
+			lines.append('\t\t"",')
+			lines.extend(levels)
+			lines.append("\t])")
+			skillCount += 1
+		lines.append("")
+
+	with open(path, "w", encoding="utf-8") as handle:
+		handle.write("\n".join(lines) + "\n")
+	return len(masteries(db)), skillCount

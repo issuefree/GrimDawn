@@ -379,15 +379,17 @@ if __name__ == "__main__":
 	modelName = names[0] if names else DEFAULT_MODEL
 
 	if regenerate:
-		import devotiongen, itemgen
+		import devotiongen, itemgen, skillgen
 		try:
 			count, procs = devotiongen.generate()
 			items = itemgen.generate()
+			masteries, skills = skillgen.generate()
 		except FileNotFoundError as e:
 			sys.exit("Could not read the Grim Dawn database: %s. Set GRIM_DAWN_DIR if the game is installed elsewhere." % e)
 		print("Wrote constellationData.py: %d constellations, %d procs" % (count, procs))
 		print("Wrote itemData.py: %d components, %d augments, %d named pieces"
 			  % (items["components"], items["augments"], items["equipment"]))
+		print("Wrote skillData.py: %d skills across %d masteries" % (skills, masteries))
 		if items["missing"]:
 			print("  not found in the game files, check the spelling in equipmentWanted.py:")
 			for name in items["missing"]:

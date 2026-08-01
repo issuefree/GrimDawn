@@ -152,7 +152,8 @@ CONVERT = {"Physical": "physical", "Pierce": "pierce", "Fire": "fire", "Cold": "
            "Bleeding": "bleed", "Vitality": "vitality"}
 # Life the skill costs you every second it is running. Same units as a
 # regeneration bonus, opposite sign.
-COSTS = {"skillActiveLifeCost": "health/s", "skillActiveManaCost": "energy/s"}
+COSTS = {"skillActiveLifeCost": "health/s", "skillActiveManaCost": "energy/s",
+         "skillManaCost": "energy"}
 # Fields the game states as a reduction and the models as a negative bonus.
 NEGATED = {"skillManaCostReduction": "skill cost %"}
 # Crowd control the data states as a duration in seconds. The hand-written file
@@ -220,6 +221,8 @@ class Database:
 
     def name(self, record):
         """What a record is called in the game, or "" if it has no name tag."""
+        if not record:
+            return ""
         for field in ("itemNameTag", "description", "skillDisplayName", "FileDescription"):
             tag = record.get(field)
             if isinstance(tag, str) and tag:
@@ -248,6 +251,24 @@ class Database:
                          if "/devotion/constellations/constellation" in n
                          and "background" not in n)
         return sorted(names)
+
+
+def atLevel(record, level):
+    """A view of a record with every per-level array collapsed to one level.
+
+    Skills, and set bonuses counted by pieces worn, both state their numbers as
+    arrays running from the first level upwards. Reading one level is then the
+    same job as reading a record with no levels at all, which is what everything
+    downstream already knows how to do. Levels past the end of an array keep its
+    last value, which is how a skill pushed past its own maximum behaves.
+    """
+    out = {}
+    for key, value in record.items():
+        if isinstance(value, list) and value and not isinstance(value[0], str):
+            out[key] = value[min(max(level, 1), len(value)) - 1]
+        else:
+            out[key] = value
+    return out
 
 
 def lastValue(value):

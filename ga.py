@@ -94,7 +94,8 @@ class Population:
 
 def breed(a, b):
 	links = [c for c in a.getLinks() if c in b.getLinks()]
-	other = [c for c in a.getLinks() + b.getLinks() if c not in links]
+	links = random.sample(links, int(len(links)*.75))
+	other = [c for c in a.getLinks() + b.getLinks() if c not in a.getLinks() or not c in b.getLinks()]
 	links += random.sample(other, int(len(other)*.75))
 	return Search(links)
 	# return Search(a.getLinks() + b.getLinks())

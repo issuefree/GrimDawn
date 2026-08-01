@@ -90,15 +90,20 @@ weights = {
 		"resist":5,
 		"physical resist":125,
 
-		"pierce resist":20,
+		# 0-25 = 50
+		# 25-50 = 33
+		# 50-60 = 25
+		# 60-75 = 20
+		# 75-85 = 10		
+		"pierce resist":25,
 		"fire resist":0, 
 		"cold resist":0, 
 		"lightning resist":0, 
 		"bleed resist":20,
-		"acid resist":5,
-		"aether resist":1,
+		"acid resist":20,
+		"aether resist":0,
 		"chaos resist":25,
-		"vitality resist":10,
+		"vitality resist":0,
 
 		"stun %":25,
 		"stun duration":5,
@@ -314,28 +319,28 @@ skills = [
 	{"Squad Tactics":4},
 	{"Break Morale":1},
 	{"Counter Strike":1},
-	{"Scars of Battle":2},
+	{"Scars of Battle":3},
 
 	{"Brute Force":1},
 	{"Savagery":9},
 	{"Primal Strike":6},
 	{"Might of the Bear":3},
-	{"Mogdrogen's Pact":2},
+	{"Mogdrogen's Pact":3},
 	{"Feral Hunger":5},
 	{"Wind Devil":1},
 	{"Summon Briarthorn":1},
 	{"Torrent":4},
-	{"Tenacity of the Boar":3},
+	{"Tenacity of the Boar":5},
 	{"Heart of the Wild":5},
 	{"Wendigo Totem":2},
-	{"Raging Tempest":7},
+	{"Raging Tempest":8},
 	{"Storm Surge":4},
 	{"Oak Skin":1},
 	{"Storm Totem":6},
 	{"Storm Touched":5},
 	{"Blood Pact":1},
 	{"Maelstrom":2},
-	{"Emboldening Presence":1},
+	{"Emboldening Presence":2},
 	{"Stormcaller's Pact":8},
 	{"Conjure Primal Spirit":1},
 ]

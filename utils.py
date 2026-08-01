@@ -13,7 +13,7 @@ def getLinks(wanted, remaining=None):
 	return possibles
 
 def printSolution(solution, model, pre=""):
-	print int(evaluateSolution(solution, model)),":",solutionPath(solution)
+	print(int(evaluateSolution(solution, model)),":",solutionPath(solution))
 
 def solutionPath(solution, pre=""):
 	out = ""
@@ -24,8 +24,8 @@ def solutionPath(solution, pre=""):
 
 def evaluateSolution(solution, model, verbose=False):
 	if verbose:
-		print "Evaluating solution..."
-		print "  " + solutionPath(solution)
+		print("Evaluating solution...")
+		print("  " + solutionPath(solution))
 	start = time()
 	sSol = sorted(solution, key=lambda c: c.evaluate(model), reverse=True)
 	value = 0
@@ -33,7 +33,7 @@ def evaluateSolution(solution, model, verbose=False):
 	abilNum = 0
 	for c in sSol:
 		if verbose:
-			print c.name.ljust(40), int(c.evaluate(model)), int(c.evaluate(model, abilNum))
+			print(c.name.ljust(40), int(c.evaluate(model)), int(c.evaluate(model, abilNum)))
 		if c.hasAttackTrigger():
 			value += c.evaluate(model, abilNum)
 			abilNum += 1
@@ -58,7 +58,7 @@ def isGoodSolution(solution):
 			sol += [c]
 			affinities = getAffinities(sol)
 		else:
-			print c.name
+			print(c.name)
 			return False
 	return True
 
@@ -90,7 +90,7 @@ def findBonus(targetBonuses):
 	return targets
 
 def printBonusList():
-	print "All constellation bonuses:"
+	print("All constellation bonuses:")
 	bonuses = {}
 	for c in Constellation.constellations:
 		for s in c.stars:
@@ -101,7 +101,7 @@ def printBonusList():
 					bonuses[bonus] = True
 
 	for key in sorted(bonuses.keys()):
-		print "\t\t#\""+key+"\":0, "
+		print("\t\t#\""+key+"\":0, ")
 		
 def getBonuses(constellations=Constellation.constellations, model=None):
 	bonuses = {}
@@ -123,12 +123,6 @@ def getBonuses(constellations=Constellation.constellations, model=None):
 def getTriggerChance(chance, tps):
 	return 1-(1-chance)**tps
 
-#this will "inflate" duration damages
-def addDurationDamages(a, b):
-	return [a[0]+b[0], max(a[1],b[1])]
-def subDurationDamages(a, b):
-	return [a[0]-b[0], max(a[1],b[1])]
-
 def getPathBounds(path, model):
 	score = 0
 	provides = Affinity()
@@ -137,7 +131,7 @@ def getPathBounds(path, model):
 		score += c.evaluate(model)
 		provides += c.provides
 		points += len(c.stars)
-		print points, score, provides
+		print(points, score, provides)
 
 def evaluateBonuses(model, bonuses):
 	value = 0
@@ -156,49 +150,48 @@ def startsWith(start, complete):
 
 def getHighestScoring(constellationRanks, verbose=True):
 	constellationRanks.sort(key=itemgetter(1), reverse=True)
-	thresh = constellationRanks[len(constellationRanks)/6][1] * .8
+	thresh = constellationRanks[len(constellationRanks)//6][1] * .8
 
 	if verbose:
-		print "\n  Desired constellations (value > %s):"%thresh
+		print("\n  Desired constellations (value > %s):"%thresh)
 	wanted = []
-	cv = constellationRanks[0][1]
 	for c in constellationRanks:
 		if c[1] > thresh:
 			wanted += [c[0]]
 			if verbose:
-				print "         ", str(int(c[1])).rjust(7), c[0].name.ljust(45), c[0].requires
+				print("         ", str(int(c[1])).rjust(7), c[0].name.ljust(45), c[0].requires)
 		else:
 			if verbose:
-				print "       - ", str(int(c[1])).rjust(7), c[0].name.ljust(45), c[0].requires
+				print("       - ", str(int(c[1])).rjust(7), c[0].name.ljust(45), c[0].requires)
 
 	return wanted, constellationRanks[0][1]
 
 def getMostEfficient(constellationRanks, verbose=True):
 	constellationRanks.sort(key=itemgetter(2), reverse=True)
-	thresh = constellationRanks[len(constellationRanks)/6][2] * .8
+	thresh = constellationRanks[len(constellationRanks)//6][2] * .8
 
 	if verbose:
-		print "\n  Desired constellations (efficiency > %s):"%thresh
+		print("\n  Desired constellations (efficiency > %s):"%thresh)
 	wanted = []
 	for c in constellationRanks:
 		if c[2] > thresh:
 			wanted += [c[0]]
 			if verbose:
-				print "      ", int(c[2]), c[0].name
+				print("      ", int(c[2]), c[0].name)
 		else:
 			if verbose:
-				print "       - ", int(c[2]), c[0].name
+				print("       - ", int(c[2]), c[0].name)
 
 	return wanted, constellationRanks[0][2]
 
 def getBestConstellations(model):
-	print "\nEvaluating constellations..."
+	print("\nEvaluating constellations...")
 	constellationRanks = []
 	for c in Constellation.constellations:
 		if "[" in c.id:
 			score = 0
 		else:
-			score = c.evaluate(model)		
+			score = c.evaluate(model, True)		
 		efficiency = c.evaluate(model)/len(c.stars)
 		constellationRanks += [(c, score, efficiency)]
 		c.buildRedundancies(model)
@@ -238,7 +231,6 @@ def sortConstellationsByProvides(constellations):
 	return out
 
 def sortConstellationsByProvidesValue(constellations):
-	global globalMetadata
 	start = time()
 	out = sorted(constellations, key=lambda c: (c.provides*globalMetadata["providesValue"]).magnitude(), reverse=True)
 	timeMethod("sortConstellationsByProvidesValue", start)

@@ -1,4 +1,4 @@
-import os, sys
+import os
 
 from dataModel import *
 from constellationData import *
@@ -234,19 +234,29 @@ class Model:
 		self.stats = stats
 		self.bonuses = bonuses
 		self.points = points
+		self.initialized = False
 
 	@staticmethod
 	def loadModel(name):
 		file = open(name.lower() + "/" + name.lower() + ".py", "r")
 		exec(file.read(), locals())
 		model = Model(name, locals()["stats"], locals()["weights"], locals()["devotionPoints"] )
-		model.items = locals()["items"]
-		model.skills = locals()["skills"]
-		model.constellations = locals()["constellations"]
+		# model.items = locals()["items"]
+		# model.skills = locals()["skills"]
+		# model.constellations = locals()["constellations"]
 		model.initialize()
 		return model
 
-	def initialize(self):
+	# checkModel is NOT idempotent: it folds attribute-derived bonuses straight into
+	# self.stats (physical %, pierce %, bleed %, internal %, the elemental/duration
+	# damage types), so running it twice adds cunning/spirit scaling twice and
+	# inflates every damage stat. loadModel() already initializes, so a second call
+	# from startSearch() used to silently corrupt the model it was optimizing.
+	def initialize(self, force=False):
+		if self.initialized and not force:
+			return
+		self.initialized = True
+
 		self.checkModel()
 		self.filterConstellations()
 
@@ -266,31 +276,38 @@ class Model:
 		self.seedSolutions.sort(key=lambda s: s.score, reverse=True)
 
 	def saveSeedSolutions(self):
-		try:
-			os.mkdir(self.name.lower())
-		except:
-			pass
+		os.makedirs(self.name.lower(), exist_ok=True)
 
-		file = open(self.name.lower()+"/solutions.py", 'w')
 		out = "self.seedSolutions = [\n"
 		for s in sorted(self.seedSolutions, key=lambda s: s.score, reverse=True):
 			out += "  Solution("+solutionPath(s.constellations)+ " self),  # " + str(int(s.score)) + " (" + str(s.cost) + ")\n"
 		out += "]"
-		file.write(out)
-		file.close()
+		with open(self.name.lower()+"/solutions.py", 'w') as file:
+			file.write(out)
 
 	def readSeedSolutions(self):
+		path = self.name.lower()+"/solutions.py"
 		try:
-			file = open(self.name.lower()+"/solutions.py", "r")
-			lines = file.read()
-			file.close()
+			with open(path, "r") as file:
+				lines = file.read()
+		except FileNotFoundError:
+			self.saveSeedSolutions() # start a fresh seed file
+			return
+
+		# a malformed seed file used to be swallowed silently and look like "no seeds",
+		# and was then overwritten with an empty list. Warn and leave the file alone.
+		try:
 			exec(lines)
 			self.seedSolutions = sorted(list(set(self.seedSolutions)), key=lambda s:s.score, reverse=True)
-			print "Reading seed solutions:"
-			for s in self.seedSolutions:
-				print "  " + str(s)
-		except:
-			pass
+		except Exception as e:
+			print("  WARNING: could not read seed solutions from %s: %s: %s"%(path, type(e).__name__, e))
+			print("  Leaving the file untouched; fix or delete it to continue seeding.")
+			self.seedSolutions = []
+			return
+
+		print("Reading seed solutions:")
+		for s in self.seedSolutions:
+			print("  " + str(s))
 
 		self.saveSeedSolutions()
 
@@ -299,18 +316,18 @@ class Model:
 		return (1+self.getStat(bonus)/100.0)
 
 	def checkModel(self):
-		print "Checking model..."
-		print "  "+self.name
-
-		self.stats["allAttacks/s"].sort(reverse=True)
+		print("Checking model...")
+		print("  "+self.name)
 
 		if not "allAttacks/s" in self.stats.keys():
 			self.stats["allAttacks/s"] = [self.stats["attacks/s"]]
 
+		self.stats["allAttacks/s"].sort(reverse=True)
+
 		# this should eventually be calculated
 		if self.get("attack opportunity cost") == 0:
 			self.bonuses["attack opportunity cost"] = -self.get("weapon damage %")
-			print "  attack opportunity cost", self.bonuses["attack opportunity cost"]
+			print("  attack opportunity cost", self.bonuses["attack opportunity cost"])
 
 		if not "fight length" in self.stats.keys():
 			self.stats["fight length"] = 30
@@ -466,11 +483,11 @@ class Model:
 		self.setCalculated("total speed", total)
 
 	def filterConstellations(self):
-		print "\n  Checking for weapon restricted constellations..."
+		print("\n  Checking for weapon restricted constellations...")
 		for c in self.getStat("blacklist"):
 			if c in Constellation.constellations:
 				Constellation.constellations.remove(c)
-				print "    -", c.name, "blacklisted "
+				print("    -", c.name, "blacklisted ")
 		for c in Constellation.constellations[:]:
 			if c.restricts:
 				satisfied = False
@@ -479,7 +496,7 @@ class Model:
 						satisfied = True
 				if not satisfied:
 					Constellation.constellations.remove(c)
-					print "    -", c.name, "removed <-",str(c.restricts)
+					print("    -", c.name, "removed <-",str(c.restricts))
 
 	def calculateBonus(self, bonus, value):
 		#handle flat duration damages being overwritten.
@@ -494,11 +511,10 @@ class Model:
 		# this would be handled in the value of the stat.
 		# skills with a weapon component will tend to mess this calculation up.
 		# so if your build is based on skills with a weapon component with a significant cooldown that would be handled in the value of the stat
-		if bonus in durationDamages:			
-			if type(value) == type([]):
-				aps = float(self.getStat("attacks/s"))
-				dotDps = value[0] # the duration doesn't really matter since you're unlikely to have an attack speed less than the total duration of the dot (e.g. you won't have an aps of < .5 which is the shortest dot)
-				return dotDps / aps * self.get(bonus)
+		if type(value) == type([]):
+			aps = float(self.getStat("attacks/s"))
+			dotDps = value[0] # the duration doesn't really matter since you're unlikely to have an attack speed less than the total duration of the dot (e.g. you won't have an aps of < .5 which is the shortest dot)
+			return dotDps / aps * self.get(bonus)
 
 		# TODO pet dot damage is hard to figure since we don't know pet attack speed (it doesn't seem very fast)
 		# for now assuming pets attack real slow and deal full duration damage
@@ -519,9 +535,9 @@ class Model:
 		out = key + ": " 
 		if not key in self.bonuses:
 			self.set(key, value)
-			print "  " + out + str(self.get(key))
+			print("  " + out + str(self.get(key)))
 		else:
-			print "* " + out + str(self.get(key)) + " (" + str(value) + ")"
+			print("* " + out + str(self.get(key)) + " (" + str(value) + ")")
 
 	def setIfNull(self, key, value):
 		if not key in self.bonuses:

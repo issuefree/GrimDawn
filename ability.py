@@ -1,0 +1,385 @@
+import copy
+from itertools import chain
+from constants import *
+
+class Ability:
+	minTriggerTime = .25  # there are gaps between skills etc
+
+	def __init__(self, name, conditions, bonuses):
+		self.name = name		
+		self.bonuses = bonuses
+
+		self.dynamicBonuses = {}
+
+		self.conditions = conditions
+		#Conditions
+		# type:[buff, attack, heal, shield]
+		# trigger:[attack,critical,hit,block]
+		# chance:[0-1]
+		# recharge:[seconds]
+		# duration:[seconds]
+		# targets[number of things an attack will likely hit]
+
+		self.triggerTime = 0
+		self.effective = 0		
+
+		self.star = None
+
+	def copy(self):
+		return Ability(self.name, copy.deepcopy(self.conditions), copy.deepcopy(self.bonuses))
+
+	def gc(self, key):
+		if key in self.conditions.keys():
+			return self.conditions[key]
+		else:
+			return 0
+
+	def gb(self, key):
+		if key in self.bonuses.keys():
+			return self.bonuses[key]
+		else:
+			return 0
+
+	def mergeBonuses(self, bonusesA, bonusesB):
+		bonusesC = {}
+		for bonus in bonusesA:
+			if bonus in bonusesB.keys():
+				bonusesC[bonus] = bonusesA[bonus] + bonusesB[bonus]
+			else:
+				bonusesC[bonus] = bonusesA[bonus]
+		for bonus in bonusesB:
+			if not bonus in bonusesA.keys():
+				bonusesC[bonus] = bonusesB[bonus]
+		return bonusesC
+
+	def getTotalBonuses(self):
+		return self.mergeBonuses(self.bonuses, self.dynamicBonuses)
+
+	def getTotalBonus(self, key):
+		value = 0
+		if key in self.bonuses:
+			if type(self.bonuses[key]) == type([]) and value == 0:
+				value = self.bonuses[key]
+			else:
+				# print(self.name)
+				# print(self.bonuses)
+				# print(key)
+				# print(value)
+				value += self.bonuses[key]
+		if key in self.dynamicBonuses.keys():
+			if type(self.dynamicBonuses[key]) == type([]) and value == 0:
+				value = self.dynamicBonuses[key]
+			else:
+				value += self.dynamicBonuses[key]
+		return value
+
+	def calculateEffective(self, model, verbose=False):
+		self.calculateTriggerTime(model, verbose)
+		if self.triggerTime == -1:
+			self.effective = 0
+			if "duration" in self.bonuses.keys():
+				del self.bonuses["duration"]
+			return
+
+		targets = max(1, self.gc("targets"))
+		if self.gc("type") == "buff":
+			self.effective = self.getUpTime(model)*targets
+			# print("buff uptime:", self.getUpTime(model))
+		if self.gc("type") == "attack" or self.gc("type") == "wps" or self.gc("type") == "aar":
+
+			if self.gc("shape") == "???":
+				print("    Shape unknown for", self.name)
+
+			if model.getStat("playStyle") == "ranged":
+				# Characters who try to keep enemies as far away as possible. Often kiting.
+				# Optimal range 10+ yards
+				# Ground target abilities will often miss due to mobility.
+				# Circle is strong due to it hitting the point of the enemy spear where most enemies will clump.
+				# Cone/line abilities may not hit many enemies due to long range.
+				# pbaoe abilities may be of limited value
+				if self.gc("shape") == "cone" or self.gc("shape") == "line":
+					targets = targets * .75
+				elif self.gc("shape") == "ground":
+					targets = targets * .5
+				elif self.gc("shape") == "circle":
+					pass
+				elif self.gc("shape") == "pbaoe":
+					targets = targets * .125
+				elif self.gc("shape") == "melee":
+					targets = targets * .05
+
+			elif model.getStat("playStyle") == "shortranged":
+				# Characters who have short ranged abilities and try to keep monsters from hittim him but kiting is minimal and mostly for the purposes of clumping.
+				# 	Low mobility and close range tend to make crowd control common. Lots of slows and stuns.
+				# Optimal range 5-10 yards
+				# Ground target abilities are strong due to clumping and funneling.
+				# Circle is strong due to clumping and funneling.
+				# Cone/line abilities should have the desired effect.
+				# pbaoe abilities aren't ideal if they're very short ranged.
+				if self.gc("shape") == "cone" or self.gc("shape") == "line":
+					pass
+				elif self.gc("shape") == "ground":
+					targets = targets * 1.25
+				elif self.gc("shape") == "circle":
+					targets = targets * 1.25
+				elif self.gc("shape") == "pbaoe":
+					targets = targets * .75
+				elif self.gc("shape") == "melee":
+					targets = targets * .1
+
+			elif model.getStat("playStyle") == "melee":
+				# Characters who engage in melee but aim to kill fast and minimize getting surrounded or take a beating.
+				# Optimal range is melee but not surrounded.
+				# Ground target abilities are strong due to melee range and not getting surrounded. 
+				#	Mobility is required so value may be somewhat limited.
+				# Circle is strong due to clumping.
+				# Cone/Line abilities are ideal due to keeping enemies close but on one side.
+				# pbaoe abilities are strong but not ideal due to trying not to get surrounded.
+				if self.gc("shape") == "cone" or self.gc("shape") == "line":
+					targets = targets * 1.33
+				elif self.gc("shape") == "ground":
+					pass
+				elif self.gc("shape") == "circle":
+					targets = targets * 1.25
+				elif self.gc("shape") == "pbaoe":
+					pass
+				elif self.gc("shape") == "melee":
+					pass
+
+			elif model.getStat("playStyle") == "tank":
+				# Characters who run into the fray and try to take hits. Often retaliation based.
+				# Optimal range is all enemies up close and personal.
+				# Ground target abilities are strong due to low mobility and enemy gathering. Not ideal as surrounding can spread them out.
+				# Circle is strong due to clumping and gathering.
+				# Cone/Line abilities are decent but similar to ground target, enemies can be spread in a lot of directions.
+				# pbaoe are ideal.
+				if self.gc("shape") == "cone" or self.gc("shape") == "line":
+					pass
+				elif self.gc("shape") == "ground":
+					pass
+				elif self.gc("shape") == "circle":
+					pass
+				elif self.gc("shape") == "pbaoe":
+					targets = targets * 1.5
+				elif self.gc("shape") == "melee":
+					pass
+
+			if self.gc("trigger") == "manual":
+				self.bonuses["attack opportunity cost"] = 100/targets
+				if self.gc("recharge") == 0:
+					self.conditions["recharge"] = 1
+
+			self.effective = self.getNumTriggers(model, verbose)*targets/model.getStat("fight length")
+
+			if verbose:
+				print("nt", self.getNumTriggers(model))
+				print("effective", self.effective)
+
+			if "duration" in self.bonuses.keys():
+				self.setDebuffValue(targets, model)
+			# TODO I've removed damage % modifiers from attack abilities as these are only supposed to affect the attack itself not all damage.
+			# this needs to be fixed and this can be removed
+			for damage in damages:
+				if damage+" %" in self.bonuses.keys():
+					del self.bonuses[damage+" %"]
+
+
+			interval = self.triggerTime+self.gc("recharge")
+			for dam in durationDamages:
+				if "triggered "+dam in self.bonuses.keys():
+					if type(self.gb("triggered "+dam)) == type([]):
+						damage, ticks = self.bonuses["triggered "+dam]
+						if ticks < interval:
+							self.bonuses["triggered "+dam] = damage*ticks
+						else:
+							self.bonuses["triggered "+dam] = damage*interval
+				
+		if self.gc("type") == "shield":
+			self.effective = self.getNumTriggers(model)
+		if self.gc("type") == "heal":
+			# we're counting half effectiveness due to overheal
+			self.effective = self.getNumTriggers(model)*.5
+
+			if "duration" in self.bonuses.keys():
+				self.setDebuffValue(max(1, self.gc("targets")), model)
+
+		if self.gc("type") == "summon":
+			self.effective = self.getUpTime(model)
+
+	def setDebuffValue(self, targets, model, verbose=False):
+		#find duration based elements (for attacks that include a debuff component)
+		upTime = self.getUpTime(model)
+		if verbose:
+			print("setDebuffValue", self.name)
+			print("  upTime", upTime)
+			print("  effective", self.effective)
+		durationBonuses = self.bonuses["duration"]
+		interval = self.triggerTime + self.gc("recharge")
+		for bonus in durationBonuses.keys():
+			value = durationBonuses[bonus]
+			if type(value) == type([]):
+				damage, ticks = value
+				value = damage*ticks if ticks < interval else damage*interval
+			self.bonuses[bonus] = value*self.effective
+			#reduce duration based damage as the foe may die due to other effects durring the duration
+			if bonus in ["triggered "+damage for damage in damages]:
+				self.bonuses[bonus] = self.bonuses[bonus] / 2
+		del self.bonuses["duration"]
+
+	def calculateTriggerTime(self, model, verbose=False):
+		if self.gc("trigger") == "manual" or self.gc("trigger") == "parent":
+			self.triggerTime = Ability.minTriggerTime
+			return
+		if self.gc("trigger") == "toggle" or self.gc("trigger") == "passive":
+			self.triggerTime = 0
+			return
+		if self.gc("type") == "wps" or self.gc("type") == "aar":
+			triggerFrequency = model.getStat("attacks/s")
+		else:
+			triggerFrequency = model.getStat(self.gc("trigger")+"s/s")
+		if triggerFrequency == 0:
+			self.triggerTime = -1
+			return
+		
+		self.triggerTime = 1.0/triggerFrequency * 1.0/self.gc("chance")
+		# print("tt", self.triggerTime)
+
+	#uptime is a percent so we'll use a scalar of fight length to get an average across multiple fights
+	def getUpTime(self, model):
+		if self.gc("trigger") == "toggle" or self.gc("trigger") == "passive":
+			return 1
+		up = 0.0
+		fightLen = model.getStat("fight length")*5
+		fightRemaining = fightLen - self.triggerTime		
+		while fightRemaining >= 0:
+			up += min(max(self.gc("duration"), self.gc("lifespan")), fightRemaining)
+			fightRemaining -= max(self.gc("duration"), self.gc("recharge") + self.triggerTime) 
+		return up/fightLen
+
+	#average over a number of fights
+	def getNumTriggers(self, model, verbose=False):
+		numFights = 10.0
+		triggers = 0
+		fightRemaining = model.getStat("fight length")*numFights - self.triggerTime		
+		while fightRemaining >= 0:
+			triggers += 1
+			fightRemaining -= self.gc("recharge") + self.triggerTime
+
+		triggers = max(triggers, 1) # this will usually catch low health events which don't happen often. We'll calculate stats as if they happen once a fight.
+
+		if verbose:
+			print(self.name, "getNumTriggers")
+			print("   recharge", self.gc("recharge"))
+			print("   triggerTime", self.triggerTime)
+			print("   fight length", model.stats["fight length"])
+			print("   total triggers", triggers)
+			print("   nt", triggers/numFights)
+
+		return triggers/numFights
+
+	def calculateDynamicBonuses(self, model):
+		self.dynamicBonuses = {}
+		if "attack as health %" in self.bonuses.keys():
+			totalDamage = 0
+			for dam in damages:
+				if "triggered "+dam in self.bonuses.keys():
+					totalDamage += self.bonuses["triggered "+dam]*(model.getStat(dam+" %")+100)/100.0
+			totalDamage = totalDamage*self.bonuses["attack as health %"]/100.0
+			# count as half due to overheal
+			if "health" in self.bonuses.keys():				
+				self.dynamicBonuses["health"] += totalDamage
+			else:
+				self.dynamicBonuses["health"] = totalDamage
+
+
+		if self.gc("type") == "attack":
+			for dam in damages:
+				# % damage depends on a weapon component and a flat damage component to be meaningful
+				# technically it could depend on a triggered component of the spell as well but I don't think that scenario exists.
+				# actually I think only targo's hammer is an attack ability with a %damage increase.
+				if dam+" %" in self.bonuses.keys():
+					if model.getStat(dam) <= 0:
+						print("    " +self.name+" requires a defined " + dam + " _stat_ in the model.")
+					else:
+						self.dynamicBonuses[dam] = (model.getStat(dam) * self.gb("weapon damage %")/100.0 + self.gb(dam)) * self.gb(dam+" %")/100.0
+
+		if self.gc("type") == "wps":
+			self.dynamicBonuses["weapon damage %"] = -100
+
+		# armor reduction is like + physical damage that isn't affected by %damage
+		if self.gb("reduce armor") > 0:
+			if model.getStat("physical %") <= 0:
+				print("    " +self.name+" requires a defined stat for physical %.")
+			else:
+				self.dynamicBonuses["physical"] = self.gb("reduce armor")*.7 / (model.getStat("physical %")/100.0)
+
+	def getBonuses(self, model):
+		bonuses = {}
+		self.calculateEffective(model)
+		# print("Effective %:", self.name, self.effective)
+
+		self.calculateDynamicBonuses(model)
+
+		# if the ability has been manually valued in the model
+		modelFactor = 1
+		if self.name in model.bonuses.keys():
+			modelFactor = model.get(self.name)
+
+		for bonus in chain(self.bonuses.keys(), self.dynamicBonuses.keys()):
+			total = self.getTotalBonus(bonus)
+			if type(total) == type([]):
+				total = [total[0]*self.effective*modelFactor, total[1]]
+			else:
+				total = total*self.effective * modelFactor
+			bonuses[bonus] = total
+		return bonuses
+
+
+	def calculateValue(self, model):
+		self.calculateEffective(model)
+		# print("Effective %:", self.name, self.effective)
+
+		self.calculateDynamicBonuses(model)
+		
+		# if the ability has been manually valued in the model
+		modelFactor = 1
+		if self.name in model.bonuses.keys():
+			modelFactor = model.get(self.name)
+
+		for bonus in chain(self.bonuses.keys(), self.dynamicBonuses.keys()):
+			total = self.getTotalBonus(bonus)
+			if type(total) == type([]):
+				total = [total[0]*self.effective*modelFactor, total[1]]
+			else:
+				total = total*self.effective * modelFactor
+			self.star.bonuses[bonus] = total
+		self.star.bonuses[self.name] = 1
+
+	def augment(self, ability, verbose=False):
+		# augmenting abilities can affect conditions. Targets come to mind. I'm going to handle it as a one off for now.
+		if "targets" in ability.conditions:
+			self.conditions["targets"] = self.gc("targets") + ability.conditions["targets"]
+		if "ability damage %" in ability.bonuses.keys():
+			for damage in damages+["weapon damage %"]:
+				if damage in self.bonuses.keys():
+					if type(self.bonuses[damage]) == type([]):						
+						self.bonuses[damage] = [self.bonuses[damage][0]*(1+ability.bonuses["ability damage %"]/100.0), self.bonuses[damage][1]]
+					else:
+						self.bonuses[damage] *= 1+ability.bonuses["ability damage %"]/100.0
+			del ability.bonuses["ability damage %"]
+		for bonus in ability.bonuses:
+			if type(ability.bonuses[bonus]) == type([]):
+				if bonus in self.bonuses.keys():					
+					self.bonuses[bonus] = addDurationDamages(self.bonuses[bonus], ability.bonuses[bonus])
+				else:
+					self.bonuses[bonus] = ability.bonuses[bonus]
+			elif type(ability.bonuses[bonus]) == type({}):
+				if bonus in self.bonuses.keys():
+					self.bonuses[bonus] = self.mergeBonuses(self.bonuses[bonus], ability.bonuses[bonus])
+				else:
+					self.bonuses[bonus] = ability.bonuses[bonus]
+			else:
+				if verbose:
+					print(bonus, self.gb(bonus))
+				self.bonuses[bonus] = self.gb(bonus) + ability.bonuses[bonus]
+

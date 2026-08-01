@@ -4,43 +4,43 @@ from dataModel import *
 Skill("Markovian's Advantage", "Soldier",
 	["",
 		Ability("1",
-			{"type":"aar", "chance":.08, "recharge":0, "duration":5},
+			{"type":"wps", "chance":.08, "recharge":0, "duration":5},
 			{"weapon damage %":128, "physical":10, "all damage %":15, "duration":{"reduce defense":30}}
 		),
 		Ability("2",
-			{"type":"aar", "chance":.12, "recharge":0, "duration":5},
+			{"type":"wps", "chance":.12, "recharge":0, "duration":5},
 			{"weapon damage %":128, "physical":19, "all damage %":25, "duration":{"reduce defense":40}}
 		),
 		Ability("3",
-			{"type":"aar", "chance":.15, "recharge":0, "duration":5},
+			{"type":"wps", "chance":.15, "recharge":0, "duration":5},
 			{"weapon damage %":128, "physical":28, "all damage %":35, "duration":{"reduce defense":51}}
 		),
 		Ability("4",
-			{"type":"aar", "chance":.18, "recharge":0, "duration":5},
+			{"type":"wps", "chance":.18, "recharge":0, "duration":5},
 			{"weapon damage %":128, "physical":38, "all damage %":45, "duration":{"reduce defense":62}}
 		),
 		Ability("5",
-			{"type":"aar", "chance":.20, "recharge":0, "duration":5},
+			{"type":"wps", "chance":.20, "recharge":0, "duration":5},
 			{"weapon damage %":128, "physical":47, "all damage %":55, "duration":{"reduce defense":73}}
 		),
 		Ability("6",
-			{"type":"aar", "chance":.22, "recharge":0, "duration":5},
+			{"type":"wps", "chance":.22, "recharge":0, "duration":5},
 			{"weapon damage %":128, "physical":57, "all damage %":65, "duration":{"reduce defense":84}}
 		),
 		Ability("7",
-			{"type":"aar", "chance":.23, "recharge":0, "duration":5},
+			{"type":"wps", "chance":.23, "recharge":0, "duration":5},
 			{"weapon damage %":128, "physical":66, "all damage %":75, "duration":{"reduce defense":95}}
 		),
 		Ability("8",
-			{"type":"aar", "chance":.24, "recharge":0, "duration":5},
+			{"type":"wps", "chance":.24, "recharge":0, "duration":5},
 			{"weapon damage %":128, "physical":76, "all damage %":85, "duration":{"reduce defense":106}}
 		),
 		Ability("9",
-			{"type":"aar", "chance":.25, "recharge":0, "duration":5},
+			{"type":"wps", "chance":.25, "recharge":0, "duration":5},
 			{"weapon damage %":128, "physical":86, "all damage %":95, "duration":{"reduce defense":117}}
 		),
 		Ability("10",
-			{"type":"aar", "chance":.25, "recharge":0, "duration":5},
+			{"type":"wps", "chance":.25, "recharge":0, "duration":5},
 			{"weapon damage %":128, "physical":97, "all damage %":105, "duration":{"reduce defense":128}}
 		),
 	]
@@ -236,51 +236,51 @@ Skill( "Military Conditioning", "Soldier",
 Skill( "Zolhan's Technique", "Soldier", 
 	["",
 		Ability("1",
-			{"type":"aar", "chance":.08, "recharge":0, "duration":2.8, "targets":2},
+			{"type":"wps", "chance":.08, "recharge":0, "duration":2.8, "targets":2},
 			{"weapon damage %":110, "internal":[44/2,2], "duration":{"reduce attack speed":15}}
 		),
 		Ability("2",
-			{"type":"aar", "chance":.12, "recharge":0, "duration":3.6, "targets":2},
+			{"type":"wps", "chance":.12, "recharge":0, "duration":3.6, "targets":2},
 			{"weapon damage %":116, "internal":[54/2,2], "duration":{"reduce attack speed":18}}
 		),
 		Ability("3",
-			{"type":"aar", "chance":.15, "recharge":0, "duration":4.3, "targets":2},
+			{"type":"wps", "chance":.15, "recharge":0, "duration":4.3, "targets":2},
 			{"weapon damage %":122, "internal":[66/2,2], "duration":{"reduce attack speed":21}}
 		),
 		Ability("4",
-			{"type":"aar", "chance":.18, "recharge":0, "duration":5.0, "targets":2},
+			{"type":"wps", "chance":.18, "recharge":0, "duration":5.0, "targets":2},
 			{"weapon damage %":128, "internal":[78/2,2], "duration":{"reduce attack speed":23}}
 		),
 		Ability("5",
-			{"type":"aar", "chance":.20, "recharge":0, "duration":5.6, "targets":2},
+			{"type":"wps", "chance":.20, "recharge":0, "duration":5.6, "targets":2},
 			{"weapon damage %":134, "internal":[88/2,2], "duration":{"reduce attack speed":25}}
 		),
 		Ability("6",
-			{"type":"aar", "chance":.22, "recharge":0, "duration":6.2, "targets":2},
+			{"type":"wps", "chance":.22, "recharge":0, "duration":6.2, "targets":2},
 			{"weapon damage %":140, "internal":[96/2,2], "duration":{"reduce attack speed":27}}
 		),
 		Ability("7",
-			{"type":"aar", "chance":.23, "recharge":0, "duration":6.8, "targets":2},
+			{"type":"wps", "chance":.23, "recharge":0, "duration":6.8, "targets":2},
 			{"weapon damage %":146, "internal":[106/2,2], "duration":{"reduce attack speed":28}}
 		),
 		Ability("8",
-			{"type":"aar", "chance":.24, "recharge":0, "duration":7.4, "targets":2},
+			{"type":"wps", "chance":.24, "recharge":0, "duration":7.4, "targets":2},
 			{"weapon damage %":152, "internal":[116/2,2], "duration":{"reduce attack speed":29}}
 		),
 		Ability("9",
-			{"type":"aar", "chance":.25, "recharge":0, "duration":8.0, "targets":2},
+			{"type":"wps", "chance":.25, "recharge":0, "duration":8.0, "targets":2},
 			{"weapon damage %":158, "internal":[126/2,2], "duration":{"reduce attack speed":30}}
 		),
 		Ability("10",
-			{"type":"aar", "chance":.25, "recharge":0, "duration":8.6, "targets":2},
+			{"type":"wps", "chance":.25, "recharge":0, "duration":8.6, "targets":2},
 			{"weapon damage %":164, "internal":[140/2,2], "duration":{"reduce attack speed":31}}
 		),
 		Ability("11",
-			{"type":"aar", "chance":.25, "recharge":0, "duration":9.2, "targets":2},
+			{"type":"wps", "chance":.25, "recharge":0, "duration":9.2, "targets":2},
 			{"weapon damage %":170, "internal":[152/2,2], "duration":{"reduce attack speed":32}}
 		),
 		Ability("12",
-			{"type":"aar", "chance":.25, "recharge":0, "duration":10, "targets":2},
+			{"type":"wps", "chance":.25, "recharge":0, "duration":10, "targets":2},
 			{"weapon damage %":175, "internal":[168/2,2], "duration":{"reduce attack speed":33}}
 		),
 	]
@@ -881,43 +881,43 @@ Skill("Mogdrogen's Pact", "Shaman",
 Skill("Feral Hunger", "Shaman",
 	["",
 		Ability("1",
-			{"type":"aar", "chance":.08, "targets":2},
+			{"type":"wps", "chance":.08, "targets":2},
 			{"weapon damage %":110, "bleed":[28/2,2], "lifesteal %":10}
 		),
 		Ability("2",
-			{"type":"aar", "chance":.12, "targets":2},
+			{"type":"wps", "chance":.12, "targets":2},
 			{"weapon damage %":116, "bleed":[48/2,2], "lifesteal %":14}
 		),
 		Ability("3",
-			{"type":"aar", "chance":.15, "targets":2},
+			{"type":"wps", "chance":.15, "targets":2},
 			{"weapon damage %":121, "bleed":[68/2,2], "lifesteal %":17}
 		),
 		Ability("4",
-			{"type":"aar", "chance":.18, "targets":2},
+			{"type":"wps", "chance":.18, "targets":2},
 			{"weapon damage %":127, "bleed":[88/2,2], "lifesteal %":20}
 		),
 		Ability("5",
-			{"type":"aar", "chance":.20, "targets":2},
+			{"type":"wps", "chance":.20, "targets":2},
 			{"weapon damage %":132, "bleed":[108/2,2], "lifesteal %":23}
 		),
 		Ability("6",
-			{"type":"aar", "chance":.22, "targets":2},
+			{"type":"wps", "chance":.22, "targets":2},
 			{"weapon damage %":138, "bleed":[124/2,2], "lifesteal %":25}
 		),
 		Ability("7",
-			{"type":"aar", "chance":.23, "targets":2},
+			{"type":"wps", "chance":.23, "targets":2},
 			{"weapon damage %":143, "bleed":[146/2,2], "lifesteal %":27}
 		),
 		Ability("8",
-			{"type":"aar", "chance":.25, "targets":2},
+			{"type":"wps", "chance":.25, "targets":2},
 			{"weapon damage %":149, "bleed":[164/2,2], "lifesteal %":29}
 		),
 		Ability("9",
-			{"type":"aar", "chance":.25, "targets":2},
+			{"type":"wps", "chance":.25, "targets":2},
 			{"weapon damage %":154, "bleed":[184/2,2], "lifesteal %":31}
 		),
 		Ability("10",
-			{"type":"aar", "chance":.25, "targets":2},
+			{"type":"wps", "chance":.25, "targets":2},
 			{"weapon damage %":160, "bleed":[204/2,2], "lifesteal %":33}
 		),
 	]
@@ -1026,6 +1026,22 @@ Skill("Tenacity of the Boar", "Shaman",
 		Ability("8",
 			{"type":"modifier"},
 			{"energy":-2, "duration":{"offense":71, "defense":55, "health/s %":68, "slow resist":19}}
+		),
+		Ability("9",
+			{"type":"modifier"},
+			{"energy":-2, "duration":{"offense":80, "defense":62, "health/s %":76, "slow resist":21}}
+		),
+		Ability("10",
+			{"type":"modifier"},
+			{"energy":-2, "duration":{"offense":89, "defense":69, "health/s %":84, "slow resist":22}}
+		),
+		Ability("11",
+			{"type":"modifier"},
+			{"energy":-2, "duration":{"offense":98, "defense":76, "health/s %":92, "slow resist":23}}
+		),
+		Ability("12",
+			{"type":"modifier"},
+			{"energy":-2, "duration":{"offense":107, "defense":83, "health/s %":100, "slow resist":24}}
 		),
 	],
 	"Savagery"

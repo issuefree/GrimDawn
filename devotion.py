@@ -339,10 +339,16 @@ def fastSearch(model, budget, seeds):
 	print("\n  saved to %s/solutions.py" % model.name.lower())
 
 if __name__ == "__main__":
-	# usage: python devotion.py [modelName] [--fast [--budget S] [--seeds N]]
-	#   e.g. python devotion.py armitage --fast
+	# usage: python devotion.py [modelName] [--budget S] [--seeds N] [--exhaustive]
+	#   e.g. python devotion.py armitage
+	#
+	# The heuristic solver is the default: it returns in seconds and matches the
+	# exhaustive search on every model where that search terminates. --exhaustive
+	# runs the old branch-and-bound, which does not terminate on large models.
 	argv = sys.argv[1:]
-	fast = "--fast" in argv
+	exhaustive = "--exhaustive" in argv
+	if "--fast" in argv:
+		argv.remove("--fast") # now the default; accepted so old invocations still work
 	budget = 1.0
 	seeds = 5
 	for flag, cast in (("--budget", float), ("--seeds", int)):
@@ -362,10 +368,10 @@ if __name__ == "__main__":
 	names = [a for a in argv if not a.startswith("-")]
 	modelName = names[0] if names else DEFAULT_MODEL
 
-	if fast:
-		fastSearch(Model.loadModel(modelName), budget, seeds)
-	else:
+	if exhaustive:
 		startSearch(Model.loadModel(modelName))
+	else:
+		fastSearch(Model.loadModel(modelName), budget, seeds)
 
 
 # I think the next step is to look at trying to branch and bound.

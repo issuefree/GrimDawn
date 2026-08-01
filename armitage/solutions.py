@@ -1,3 +1,3 @@
 self.seedSolutions = [
-  Solution([xE, xO, lion, panther, wraith, lizard, shieldmaiden, targoShieldWall, hound, messenger, empyrion, tree, fiend, behemothGiantsBlood], self),  # 86604 (57)
+  Solution([xE, xO, dryad, panther, wraith, lizard, targoShieldWall, shieldmaiden, hound, messenger, treeHealingRain, empyrion, fiend, behemothGiantsBlood], self),  # 87671 (57)
 ]

@@ -339,7 +339,7 @@ etb  = 	Item( "Empowered Thundertouch Bracers",
 # evalItemMods(["sword", "axe", "mace", "dagger"], augments )
 # evalCon(direBear)
 
-# compareGear("thundertouch", "everliving grove")
+compareGear("thundertouch", "everliving grove")
 # bestInSlot("ring")
 # bestInSlot("head", components)
-bestAugments()
+# bestAugments()

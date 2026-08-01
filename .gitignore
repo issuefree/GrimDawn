@@ -51,3 +51,4 @@ Temporary Items
 # fast solver regenerates seeds from scratch in a few seconds.
 */solutions.py
 */solutions.py.bak*
+.gearindex.json

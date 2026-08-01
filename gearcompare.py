@@ -9,6 +9,8 @@ Names are matched loosely - case and punctuation are ignored, and a name that is
 not an exact match is looked up as a substring, so "thundertouch" finds
 Empowered Thundertouch Bracers.
 """
+import json
+import os
 import re
 
 from dataModel import Item
@@ -33,30 +35,94 @@ def index():
     return out
 
 
-def fromDatabase(name):
-    """Build an Item for any gear record the game has, named or not in itemData.
+CACHE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".gearindex.json")
 
-    equipmentWanted.py only lists the pieces worth keeping in the data file.
-    Anything else in the game can still be asked about here without editing it.
+
+def _databaseStamp():
+    """What the cache is keyed on: the archives it was built from."""
+    import gddata
+    stamp = []
+    for rel in gddata.LAYERS + gddata.TEXT_LAYERS:
+        path = os.path.join(gddata.GD, rel)
+        if os.path.exists(path):
+            stamp.append("%s:%d" % (rel, os.path.getmtime(path)))
+    return "|".join(stamp)
+
+
+def gearIndex():
+    """Simplified name -> record path, for every named piece of gear.
+
+    Finding this out means reading every one of some eight thousand gear
+    records, which is half a minute, so it is done once and kept. The cache is
+    keyed on the archives it was built from, so a game patch rebuilds it and
+    nothing else does.
     """
+    stamp = _databaseStamp()
+    try:
+        with open(CACHE, encoding="utf-8") as handle:
+            cached = json.load(handle)
+        if cached.get("stamp") == stamp:
+            return cached["gear"]
+    except (OSError, ValueError, KeyError):
+        pass
+
+    import itemgen
+    from gddata import Database
+
+    print("  building the gear index (once per game patch)...")
+    db = Database()
+    best = {}
+    for path in db.ofClass(*itemgen.GEAR_CLASSES):
+        record = db.read(path)
+        name = db.name(record)
+        if not name:
+            continue
+        style = db.tags.get(record.get("itemStyleTag") or "", "")
+        full = ("%s %s" % (style, name)).strip()
+        level = float(record.get("itemLevel") or 0)
+        if full not in best or level > best[full][0]:
+            best[full] = (level, path)
+    gear = {_key(full): [full, path] for full, (_, path) in best.items()}
+    try:
+        with open(CACHE, "w", encoding="utf-8") as handle:
+            json.dump({"stamp": stamp, "gear": gear}, handle)
+    except OSError:
+        pass       # a read-only checkout is slower, not broken
+    return gear
+
+
+def fromDatabase(names):
+    """Build Items for gear the data files do not carry, one lookup each.
+
+    equipmentWanted.py only lists the pieces worth keeping in itemData.py.
+    Anything else in the game can still be asked about without editing it.
+    """
+    gear = gearIndex()
+    matched = {}
+    for name in names:
+        wanted = _key(name)
+        hit = gear.get(wanted)
+        if hit is None:
+            candidates = [v for k, v in gear.items() if wanted in k]
+            hit = min(candidates, key=lambda v: len(v[0])) if candidates else None
+        if hit:
+            matched[name] = hit
+    if not matched:
+        return {}
+
     import itemgen
     from gddata import Database
 
     db = Database()
-    wanted = _key(name)
-    best = None
-    for full, record in itemgen.collect(db, *itemgen.GEAR_CLASSES).items():
-        key = _key(full)
-        if key == wanted or wanted in key:
-            if best is None or key == wanted or len(key) < len(_key(best[0])):
-                best = (full, record)
-    if not best:
-        return None
-    full, record = best
-    ability = itemgen.grantedAbility(record, db)
-    return Item(full, itemgen.itemBonuses(record, db),
-                itemgen.CLASS_SLOTS.get(record.get("Class"), "") or [],
-                _ability(ability))
+    out = {}
+    for name, (full, path) in matched.items():
+        record = db.read(path)
+        if not record:
+            continue
+        out[name] = Item(full, itemgen.itemBonuses(record, db),
+                         itemgen.CLASS_SLOTS.get(record.get("Class"), "") or [],
+                         _ability(itemgen.grantedAbility(record, db)))
+    return out
 
 
 def _ability(spec):
@@ -70,17 +136,22 @@ def _ability(spec):
 def resolve(names):
     """Turn what the user typed into Items, reporting anything not found."""
     known = index()
-    found, missing = [], []
+    found, missing, unknown = [], [], []
     for name in names:
         item = known.get(_key(name))
         if item is None:
             item = next((v for k, v in known.items() if _key(name) in k), None)
         if item is None:
-            item = fromDatabase(name)
-        if item is None:
-            missing.append(name)
+            unknown.append(name)
         else:
             found.append(item)
+    # one pass over the database for everything the data files did not have
+    built = fromDatabase(unknown) if unknown else {}
+    for name in unknown:
+        if name in built:
+            found.append(built[name])
+        else:
+            missing.append(name)
     return found, missing
 
 

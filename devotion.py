@@ -342,12 +342,14 @@ if __name__ == "__main__":
 	# usage: python devotion.py [modelName] [--budget S] [--seeds N] [--exhaustive]
 	#   e.g. python devotion.py armitage
 	#
+	# constellationData.py is generated from the installed game; rebuild it after
+	# a patch with --regenerate.
+	#
 	# The heuristic solver is the default: it returns in seconds and matches the
 	# exhaustive search on every model where that search terminates. --exhaustive
 	# runs the old branch-and-bound, which does not terminate on large models.
 	argv = sys.argv[1:]
 	exhaustive = "--exhaustive" in argv
-	checkData = "--check-data" in argv
 	regenerate = "--regenerate" in argv
 	if "--fast" in argv:
 		argv.remove("--fast") # now the default; accepted so old invocations still work
@@ -378,18 +380,11 @@ if __name__ == "__main__":
 
 	if regenerate:
 		import devotiongen
-		count, procs = devotiongen.generate()
-		print("Wrote constellationData_generated.py: %d constellations, %d procs"
-			  % (count, procs))
-		print("  This is what constellationData.py imports, so the change is live.")
-		print("  Compare against the old hand-written file with:  python devotion.py --check-data")
-	elif checkData:
-		import gddata
 		try:
-			for line in gddata.compareToHandMaintained():
-				print(line)
+			count, procs = devotiongen.generate()
 		except FileNotFoundError as e:
 			sys.exit("Could not read the Grim Dawn database: %s. Set GRIM_DAWN_DIR if the game is installed elsewhere." % e)
+		print("Wrote constellationData.py: %d constellations, %d procs" % (count, procs))
 	elif newModel:
 		import modelspec
 		try:

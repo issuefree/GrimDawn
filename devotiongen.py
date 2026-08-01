@@ -1,4 +1,4 @@
-"""Generate constellationData_generated.py from the Grim Dawn database.
+"""Generate constellationData.py from the Grim Dawn database.
 
 The output is meant to be raw game values. Anything judgemental - how many
 enemies a proc hits, what shape it covers, whether a ground effect's damage
@@ -20,7 +20,7 @@ import re
 
 from constants import damages, durationDamages
 from gddata import (Database, starBonuses, geometryFor, lastValue, firstOf,
-					procRecords, summonFor, AFFINITY)
+					procRecords, summonFor, weaponRestricts, AFFINITY)
 
 # skill class -> the ability "type" the optimiser reasons about
 TYPE_BY_CLASS = (
@@ -46,17 +46,15 @@ TRIGGERS = (
 	("onkill", "kill"),
 )
 
-FLAT_TO_TRIGGERED = True # proc damage is scored as "triggered <type>"
 
+def identifier(name):
+	"""Short stable id, the name models refer to a constellation by.
 
-def identifier(name, provides):
-	"""Short stable id. Crossroads all share a FileDescription, so split them
-	by the affinity they grant, matching the xA/xC/xE/xO/xP the models use."""
+	Crossroads all share one FileDescription and are told apart by the affinity
+	they grant, which the caller knows and this does not, so they return None.
+	"""
 	if name.lower().startswith("crossroads"):
-		for label, letter in AFFINITY.items():
-			if provides.startswith(label[0]) or label.lower() in name.lower():
-				pass
-		return None # resolved by the caller, which knows the affinity granted
+		return None
 	ident = re.sub(r"[^0-9a-zA-Z]+", "", name)
 	return ident[0].lower() + ident[1:] if ident else None
 
@@ -83,8 +81,6 @@ def triggerAndChance(records):
 	Skills that delegate to a buff record (Huntress, Dire Bear, Dying God) carry
 	templateAutoCast on the buff, not on the star's own skill.
 	"""
-	if isinstance(records, dict):
-		records = [records]
 	cast = ""
 	for record in records:
 		cast = (record.get("templateAutoCast") or "").lower()
@@ -133,8 +129,6 @@ def procBonuses(records, db, summon=False, triggered=True):
 	you bleed damage, it does not bleed anything itself.
 	"""
 	from gddata import FLAT, DIRECT, DEBUFF, ENEMY_FLAT, COSTS, STUNS, STUN_SCALE, isDebuff
-	if isinstance(records, dict):
-		records = [records]
 	# (record, "" | "pet ") - a petBonusName record repeats the same field names
 	# but aims them at your pets, which the optimiser names with a "pet " prefix
 	pieces = []
@@ -245,14 +239,15 @@ def dictLiteral(mapping):
 	return "{" + ", ".join(parts) + "}"
 
 
-def generate(path="constellationData_generated.py", root=None):
+def generate(path="constellationData.py", root=None):
 	db = Database(root) if root else Database()
 	lines = ['"""Generated from the Grim Dawn database - do not edit.',
 			 "",
-			 "Regenerate with:  python devotion.py --regenerate",
+			 "Regenerate after a game patch with:  python devotion.py --regenerate",
 			 "",
-			 "Values are raw game numbers. Proc shape, target count and duration",
-			 "scaling are derived at scoring time by devotionderive.py.",
+			 "Values are raw game numbers. Proc shape, target count, how many ticks",
+			 "an enemy takes and how often a summon swings are all derived at scoring",
+			 "time by devotionderive.py, which is where that judgement belongs.",
 			 '"""',
 			 "from dataModel import Constellation, Star",
 			 "from ability import Ability",
@@ -279,7 +274,7 @@ def generate(path="constellationData_generated.py", root=None):
 			name = "Crossroads " + {"a": "Ascendant", "c": "Chaos", "e": "Eldritch",
 									"o": "Order", "p": "Primordial"}.get(letter, letter)
 		else:
-			ident = identifier(name, provides)
+			ident = identifier(name)
 		if not ident or ident in used:
 			continue
 		used.add(ident)
@@ -301,7 +296,7 @@ def generate(path="constellationData_generated.py", root=None):
 			continue
 
 		restricts = sorted({tag for _, _, skill in stars if skill
-							for field, tag in _WEAPONS.items() if skill.get(field)})
+							for tag in weaponRestricts(skill)})
 
 		lines.append("%s = Constellation(%r, %r, %r)" % (ident, name, requires, provides))
 		lines.append("%s.id = %r" % (ident, ident))
@@ -322,7 +317,7 @@ def generate(path="constellationData_generated.py", root=None):
 			trigger, chance = triggerAndChance(records)
 			if not trigger:
 				continue
-			geometry = geometryFor(skill, db)
+			geometry = geometryFor(records)
 			conditions = {"type": abilityType(skill.get("Class", "")),
 						  "trigger": trigger, "chance": chance,
 						  "skillClass": skill.get("Class", "")}
@@ -346,7 +341,7 @@ def generate(path="constellationData_generated.py", root=None):
 					continue
 				conditions.update(summonConditions(summon))
 				payload = summon["records"]
-				geometry = geometryFor(payload[0], db)
+				geometry = geometryFor(payload)
 				for key in ("radius", "waveDistance", "waveStartWidth", "waveEndWidth"):
 					if geometry.get(key):
 						conditions[key] = round(float(geometry[key]), 2)
@@ -366,9 +361,3 @@ def generate(path="constellationData_generated.py", root=None):
 	with open(path, "w", encoding="utf-8") as handle:
 		handle.write("\n".join(lines) + "\n")
 	return count, procs
-
-
-_WEAPONS = {"Sword": "sword", "Sword2h": "2h-sword", "Axe": "axe", "Axe2h": "2h-axe",
-			"Mace": "mace", "Mace2h": "2h-mace", "Spear": "spear", "Staff": "staff",
-			"Dagger": "dagger", "Scepter": "scepter", "Shield": "shield",
-			"Offhand": "offhand", "Ranged1h": "ranged", "Ranged2h": "ranged"}

@@ -194,17 +194,6 @@ class Database:
         return sorted(names)
 
 
-def affinityString(record, kind):
-    """kind is 'Required' or 'Given' -> e.g. '3a 2e'."""
-    parts = []
-    for i in (1, 2, 3):
-        amount = record.get("affinity%s%d" % (kind, i), 0) or 0
-        label = record.get("affinity%sName%d" % (kind, i), "")
-        if amount and label in AFFINITY:
-            parts.append("%d%s" % (amount, AFFINITY[label]))
-    return " ".join(parts)
-
-
 def lastValue(value):
     """Devotion stats are per-level arrays; the final entry is the maxed value."""
     if isinstance(value, list):
@@ -261,6 +250,7 @@ def starBonuses(skill, db=None):
 
 
 def weaponRestricts(skill):
+    """Weapon types a star demands, as the tags the optimiser filters on."""
     return sorted({tag for field, tag in WEAPON_FLAGS.items() if skill.get(field)})
 
 
@@ -294,78 +284,6 @@ def firstOf(records, field, default=None):
         if value:
             return value
     return default
-
-
-def compareToHandMaintained():
-    """Report where constellationData_hand.py has drifted from the game files.
-
-    Returns a list of human-readable lines. Star bonuses are compared as
-    multisets of (name, value) so a difference in star ordering between the two
-    sources is not mistaken for a change in the data.
-
-    Constellations register themselves on import, and the caller has already
-    imported the generated set, so only the entries this import adds count as
-    the hand-written side.
-    """
-    from dataModel import Constellation
-    before = len(Constellation.constellations)
-    import constellationData_hand
-    assert constellationData_hand  # imported for its side effect: it registers
-
-    hand = {c.name: c for c in Constellation.constellations[before:]}
-    if not hand:
-        return ["constellationData_hand.py was already loaded; run --check-data "
-                "in a fresh process."]
-
-    db = Database()
-    lines, absent, changed = [], [], []
-
-    for path in db.constellations():
-        record = db.read(path)
-        name = record.get("FileDescription", "")
-        if not name:
-            continue
-        if name not in hand:
-            absent.append(name)
-            continue
-        current = hand[name]
-        gameStars = [i for i in range(1, 9) if record.get("devotionButton%d" % i)]
-        if len(gameStars) != len(current.stars):
-            changed.append("%s: %d stars in game, %d here"
-                           % (name, len(gameStars), len(current.stars)))
-            continue
-        gameTotals, handTotals = {}, {}
-        for index in gameStars:
-            skillPath = db.read(record["devotionButton%d" % index]).get("skillName")
-            if not skillPath:
-                continue
-            skill = db.read(skillPath)
-            if skill.get("templateAutoCast"):
-                continue # a triggered proc, not a passive star bonus
-            for key, value in starBonuses(skill, db).items():
-                if isinstance(value, list):
-                    continue  # duration damage, skipped on both sides
-                gameTotals[key] = gameTotals.get(key, 0) + value
-        for star in current.stars:
-            for key, value in star.bonuses.items():
-                if isinstance(value, list):
-                    continue
-                handTotals[key] = handTotals.get(key, 0) + value
-        for key in sorted(set(gameTotals) & set(handTotals)):
-            if abs(gameTotals[key] - handTotals[key]) > 0.51:
-                changed.append("%s: %s is %g in game, %g here"
-                               % (name, key, gameTotals[key], handTotals[key]))
-
-    if absent:
-        lines.append("%d constellation(s) in the game files but not in constellationData_hand.py:"
-                     % len(absent))
-        lines.extend("    " + n for n in sorted(absent))
-    if changed:
-        lines.append("%d value(s) differ from the game files:" % len(changed))
-        lines.extend("    " + c for c in sorted(changed))
-    if not lines:
-        lines.append("constellationData_hand.py matches the game files.")
-    return lines
 
 
 def hasFlatDamage(record):
@@ -461,29 +379,23 @@ GEOMETRY_FIELDS = ("projectileExplosionRadius", "skillTargetRadius", "skillRadiu
                    "skillActiveDuration", "skillCooldownTime")
 
 
-def geometryFor(skill, db=None, depth=0):
-    """Raw geometry for a proc, following the sub-record some classes delegate to."""
+def geometryFor(records):
+    """Raw geometry for a proc, read across every record it is made of.
+
+    Skill_AttackBuffRadius and friends keep their radius on the buff record
+    rather than on the star's own skill, which is the same indirection
+    procRecords already resolves - so this just reads the list it is given,
+    first record to state a field wins.
+    """
     out = {}
-    for field in GEOMETRY_FIELDS:
-        value = lastValue(skill.get(field, 0)) or 0
-        if value:
-            out[field] = float(value)
+    for record in records:
+        for field in GEOMETRY_FIELDS:
+            value = lastValue(record.get(field, 0)) or 0
+            if value and field not in out:
+                out[field] = float(value)
     out["radius"] = max(out.get("projectileExplosionRadius", 0),
                         out.get("skillTargetRadius", 0),
                         out.get("skillRadius", 0))
     out["projectiles"] = (out.get("projectileLaunchNumber", 0)
                           or out.get("skillProjectileMaximumNumber", 0))
-    # Skill_AttackBuffRadius and friends hold their numbers one record along
-    if depth < 2 and not out["radius"] and not out["projectiles"]:
-        for link in ("buffSkillName", "petSkillName", "skillSecondaryName"):
-            target = skill.get(link)
-            if target and db is not None:
-                nested = db.read(target)
-                if nested:
-                    merged = geometryFor(nested, db, depth + 1)
-                    for key, value in merged.items():
-                        out.setdefault(key, value)
-                        if key in ("radius", "projectiles") and value:
-                            out[key] = out[key] or value
-                    break
     return out

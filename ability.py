@@ -21,7 +21,8 @@ class Ability:
 		# targets[number of things an attack will likely hit]
 
 		self.triggerTime = 0
-		self.effective = 0		
+		self.effective = 0
+		self.derived = False # set by resolveDerived on first evaluation
 
 		self.star = None
 
@@ -73,7 +74,46 @@ class Ability:
 				value += self.dynamicBonuses[key]
 		return value
 
+	def resolveDerived(self, model):
+		"""Fill in shape, targets and duration scaling from the raw game geometry.
+
+		Generated constellation data carries the skill's class and geometry
+		rather than a hand-picked shape and target count, so those are worked
+		out here - by rule, identically for identical geometry. Abilities that
+		still state shape or targets explicitly keep what they state.
+
+		Runs once per ability. Enemy density is a property of the character, so
+		this assumes one model per process, which is how the tools drive it.
+		"""
+		if self.derived or not self.gc("skillClass"):
+			self.derived = True
+			return
+		self.derived = True
+		import devotionderive
+
+		skillClass = self.gc("skillClass")
+		if "shape" not in self.conditions:
+			self.conditions["shape"] = devotionderive.shapeFor(skillClass)
+		if "targets" not in self.conditions:
+			density = model.getStat("enemy density") or None
+			geometry = {k: self.gc(k) for k in
+						("radius", "projectiles", "sparkMaxNumber", "waveDistance",
+						 "waveStartWidth", "waveEndWidth") if self.gc(k)}
+			self.conditions["targets"] = devotionderive.targetsFor(
+				skillClass, geometry.get("radius", 0), geometry.get("projectiles", 0),
+				density, geometry)
+
+		# A ground effect lists damage per tick and applies for its whole
+		# duration. The old data baked this in for some abilities and not
+		# others; now it is applied uniformly from the duration the game states.
+		scale = devotionderive.durationScale(self.gc("activeDuration"))
+		if scale > 1:
+			for key in list(self.bonuses):
+				if key.startswith("triggered ") and not isinstance(self.bonuses[key], (list, dict)):
+					self.bonuses[key] = round(self.bonuses[key] * scale, 2)
+
 	def calculateEffective(self, model, verbose=False):
+		self.resolveDerived(model)
 		self.calculateTriggerTime(model, verbose)
 		if self.triggerTime == -1:
 			self.effective = 0

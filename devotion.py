@@ -348,6 +348,7 @@ if __name__ == "__main__":
 	argv = sys.argv[1:]
 	exhaustive = "--exhaustive" in argv
 	checkData = "--check-data" in argv
+	regenerate = "--regenerate" in argv
 	if "--fast" in argv:
 		argv.remove("--fast") # now the default; accepted so old invocations still work
 	budget = 1.0
@@ -375,7 +376,15 @@ if __name__ == "__main__":
 	names = [a for a in argv if not a.startswith("-")]
 	modelName = names[0] if names else DEFAULT_MODEL
 
-	if checkData:
+	if regenerate:
+		import devotiongen
+		count, procs = devotiongen.generate()
+		print("Wrote constellationData_generated.py: %d constellations, %d procs"
+			  % (count, procs))
+		print("  NOT yet wired in: duration damage and timed debuffs are still")
+		print("  missing, so this data scores about 22% low. constellationData.py")
+		print("  remains the hand-maintained file until that gap is closed.")
+	elif checkData:
 		import gddata
 		try:
 			for line in gddata.compareToHandMaintained():

@@ -11,13 +11,23 @@ import os
 
 model = Model.loadModel("Pakse")
 
-best = getBestConstellations(model)
-highest, _ = getHighestScoring(best)
-efficient, _ = getMostEfficient(best)
-
-# print(model)
+# getBestConstellations/getHighestScoring/getMostEfficient used to run here and
+# print the whole ranked list on every start. Nothing below reads any of it -
+# it was there to watch the branch-and-bound prune, and that search is gone.
+# Call them by hand if you want the ranking:
+#     printRanking()
 
 print("------------------------------")
+
+
+def printRanking(threshold=0):
+	"""Every constellation ranked by value and by value per star."""
+	ranks = [(c.evaluate(model), c.evaluate(model) / len(c.stars), c)
+			 for c in Constellation.constellations]
+	print("\n  %-42s %8s %8s" % ("", "score", "/star"))
+	for score, perStar, c in sorted(ranks, reverse=True, key=lambda r: r[0]):
+		if score > threshold:
+			print("  %-42s %8d %8d" % (c.name, score, perStar))
 
 def evalSol(solution):
 	# print(getSolutionCost(solution))
@@ -277,60 +287,6 @@ sol = [hawk, rat, lightofEmpyrion, eel, jackal, hound, ultosHandofUltos]
 # evalItemMods("ring", augments )
 # evalItems(["The Peerless Eye of Beronath", "Empowered Bramblewood Amulet", "Empowered Stormcaller's Gem"])
 
-Item("Beastcaller's Regalia (4)",
-	{"Conjure Primal Spirit":3, "Bonds of Bysmiel":3}, 
-	"set", 
-	Ability( "Bestial Rage", 
-		{"type":"buff", "trigger":"hit", "chance":1, "recharge":15, "duration":6},
-		{"pet total speed":15}
-	)
-)
-
-ma5 = Item("Markovian Advantage",
-	{},
-	"skill",
-	Ability( "Markovian Advantage",
-		{"type":"attack", "trigger":"attack", "chance":.2, "recharge":0},
-		{"weapon damage %":128, "triggered physical":47, "offense":73, "all damage %":55})
-)
-
-ma6 = Item("Markovian Advantage",
-	{},
-	"skill",
-	Ability( "Markovian Advantage",
-		{"type":"attack", "trigger":"attack", "chance":.22, "recharge":0},
-		{"weapon damage %":128, "triggered physical":57, "offense":84, "all damage %":55})
-)
-
-bom = Item( "Badge of Mastery",
-		{"all damage %":23, "offense %":4, "elemental resist":26, "Savagery":3, "Primal Strike":2},
-		"medal",
-		Ability( "Prowess",
-			{"type":"buff", "trigger":"kill", "chance":1, "recharge":15, "duration":10},
-			{"offense":100, "defense":50, "health/s":30}
-		)
-	)
-
-mt = Item( "Mythincal Touch of the Everliving Grove",
-	{"armor":1014, "health":452, "health %":4, "health/s":26, "health/s %":40, "elemental resist":18, "Hearth of the Wild":2, "Oak Skin":2,
-	"pet health %":10, "pet defense %":12, "pet vitality resist":39},
-	"arms",
-	Ability( "Healing WInds",
-		{"type":"heal", "trigger":"attack", "chance":.1, "recharge":6},
-		{"health %":3, "health":1650}
-	)
-)
-
-etb  = 	Item( "Empowered Thundertouch Bracers",
-		{"armor":589, "electrocute":13, "physical %":41, "lightning %":62, "cunning":32, "lightning resist":25, "aether resist":10, "Storm Surge":2, "Brute Force":2},
-		"arms",
-		Ability( "Lightning Bolt",
-			{"type":"attack", "trigger":"attack", "chance":.1, "recharge":2.5, "targets":1},
-			{"triggered lightning":(87+418)/2, "triggered electrocute":[218/2,2], "stun %":100}
-		)
-	)
-
-
 # evalItems([mt, etb])
 
 # evalCon(spear)
@@ -351,7 +307,9 @@ etb  = 	Item( "Empowered Thundertouch Bracers",
 # evalItemMods(["sword", "axe", "mace", "dagger"], augments )
 # evalCon(direBear)
 
-compareGear("thundertouch", "everliving grove")
+# compareGear("thundertouch", "everliving grove")
 # bestInSlot("ring")
 # bestInSlot("head", components)
 # bestAugments()
+evalCon(falcon)
+evalCon(owl)

@@ -5,6 +5,7 @@ base -> GDX1 -> GDX2 -> GDX3 and the last definition wins.
 """
 import os
 
+from constants import durationDamages
 from gdarz import Arz
 
 # Override with the GRIM_DAWN_DIR environment variable if installed elsewhere.
@@ -30,6 +31,10 @@ FLAT = {
     "offensiveSlowFire": "burn", "offensiveSlowCold": "frostburn",
     "offensiveSlowLightning": "electrocute", "offensiveSlowPoison": "poison",
     "offensiveSlowLife": "vitality decay",
+    # resist reduction carries a Min suffix in the data, both forms
+    "offensiveTotalResistanceReductionAbsolute": "reduce resist",
+    "offensiveElementalResistanceReductionAbsolute": "reduce elemental resist",
+    "offensivePhysicalResistanceReductionAbsolute": "reduce physical resist",
     # percent-based resist reduction is expressed as a Min/Max pair
     "offensiveElementalResistanceReductionPercent": "reduce elemental resist",
     "offensivePhysicalResistanceReductionPercent": "reduce physical resist",
@@ -107,8 +112,6 @@ DIRECT = {
     "defensiveBleeding": "bleed resist",
     "skillCooldownReduction": "skill recharge",
     "offensiveFumbleModifier": "fumble", "offensiveTotalResistanceReductionAbsolute": "reduce resist",
-    "offensiveElementalResistanceReductionAbsolute": "reduce elemental resist",
-    "offensivePhysicalResistanceReductionAbsolute": "reduce physical resist",
 }
 WEAPON_FLAGS = {"Sword": "sword", "Sword2h": "2h-sword", "Axe": "axe", "Axe2h": "2h-axe",
                 "Mace": "mace", "Mace2h": "2h-mace", "Spear": "spear", "Staff": "staff",
@@ -200,8 +203,16 @@ def starBonuses(skill, db=None):
     for prefix, name in FLAT.items():
         lo = lastValue(skill.get(prefix + "Min", 0)) or 0
         hi = lastValue(skill.get(prefix + "Max", 0)) or 0
-        if lo or hi:
-            out[name] = out.get(name, 0) + round((float(lo) + float(hi or lo)) / 2.0, 3)
+        if not (lo or hi):
+            continue
+        value = round((float(lo) + float(hi or lo)) / 2.0, 3)
+        seconds = lastValue(skill.get(prefix + "DurationMin", 0)) or 0
+        if seconds and name in durationDamages:
+            # damage over time is [damage per second, seconds]; calculateBonus
+            # and Ability both expect that pair rather than a flat total
+            out[name] = [value, round(float(seconds), 2)]
+        elif not isinstance(out.get(name), list):
+            out[name] = out.get(name, 0) + value
     return out
 
 

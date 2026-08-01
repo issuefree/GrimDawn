@@ -10,6 +10,7 @@ their skill class and geometry rather than with a hand-picked targets number.
 """
 import re
 
+from constants import damages, durationDamages
 from gddata import Database, starBonuses, geometryFor, lastValue, AFFINITY
 
 # skill class -> the ability "type" the optimiser reasons about
@@ -69,21 +70,48 @@ def triggerAndChance(skill):
 
 
 def procBonuses(skill, db):
-	"""Proc output, as raw game numbers. Min/Max stay separate - averaging is a
-	modelling choice and belongs with the rest of them in the analysis code."""
+	"""Proc output as raw game numbers.
+
+	Two shapes matter beyond plain scalars:
+
+	* Damage over time is stored as damage-per-second plus a duration, and is
+	  emitted as [dps, seconds]. ability.py then charges dps * min(duration,
+	  retrigger interval), because a DoT reapplied by the same source refreshes
+	  rather than stacking. The hand-written data put the *total* in the dps
+	  slot - Elemental Storm carried [196, 2] where the game says 98 over 2s -
+	  so it counted those twice.
+
+	* Anything with a matching <field>DurationMin is a timed debuff (resist
+	  reduction, slows) and goes in the nested "duration" dict, which
+	  setDebuffValue scales by how often the proc lands.
+	"""
 	from gddata import FLAT, DIRECT
-	out = {}
+	out, timed = {}, {}
 	for prefix, name in FLAT.items():
 		lo = lastValue(skill.get(prefix + "Min", 0)) or 0
 		hi = lastValue(skill.get(prefix + "Max", 0)) or 0
 		if not (lo or hi):
 			continue
-		key = name if name in ("lifesteal %",) else "triggered " + name
-		out[key] = round((float(lo) + float(hi or lo)) / 2.0, 2)
+		value = round((float(lo) + float(hi or lo)) / 2.0, 2)
+		# only actual damage is scored as "triggered"; resist reduction and the
+		# like keep their own name
+		key = ("triggered " + name) if name in damages else name
+		seconds = lastValue(skill.get(prefix + "DurationMin", 0)) or 0
+		if seconds and name in durationDamages:
+			out[key] = [value, round(float(seconds), 2)]
+		elif seconds:
+			timed[key] = timed.get(key, 0) + value
+		elif not isinstance(out.get(key), list):
+			out[key] = out.get(key, 0) + value
 	for field, name in DIRECT.items():
 		value = lastValue(skill.get(field, 0)) or 0
-		if value:
-			out[name] = out.get(name, 0) + round(float(value), 2)
+		if not value:
+			continue
+		seconds = lastValue(skill.get(field.replace("Min", "") + "DurationMin", 0)) or 				  lastValue(skill.get(field + "DurationMin", 0)) or 0
+		target = timed if seconds else out
+		target[name] = target.get(name, 0) + round(float(value), 2)
+	if timed:
+		out["duration"] = timed
 	return out
 
 
@@ -94,7 +122,15 @@ def literal(value):
 
 
 def dictLiteral(mapping):
-	return "{" + ", ".join('"%s":%s' % (k, literal(v)) for k, v in sorted(mapping.items())) + "}"
+	parts = []
+	for key, value in sorted(mapping.items()):
+		if isinstance(value, dict):
+			parts.append('"%s":%s' % (key, dictLiteral(value)))
+		elif isinstance(value, list):
+			parts.append('"%s":[%s]' % (key, ", ".join(literal(v) for v in value)))
+		else:
+			parts.append('"%s":%s' % (key, literal(value)))
+	return "{" + ", ".join(parts) + "}"
 
 
 def generate(path="constellationData_generated.py", root=None):

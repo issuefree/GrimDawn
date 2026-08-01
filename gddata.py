@@ -1,11 +1,15 @@
-"""Pull devotion constellation data out of the Grim Dawn .arz databases.
+"""Pull game data out of the Grim Dawn .arz databases.
 
 Expansions override the base database, so records are layered
 base -> GDX1 -> GDX2 -> GDX3 and the last definition wins.
+
+Records name things by tag rather than in words - an item says it is called
+tagCompB018Name - so the text archives are layered the same way alongside.
 """
 import os
 
 from constants import damages, durationDamages
+from gdarc import readTags
 from gdarz import Arz
 
 # Override with the GRIM_DAWN_DIR environment variable if installed elsewhere.
@@ -13,6 +17,10 @@ GD = os.environ.get("GRIM_DAWN_DIR",
                     r"C:/Program Files (x86)/Steam/steamapps/common/Grim Dawn")
 LAYERS = ["database/database.arz", "gdx1/database/GDX1.arz",
           "gdx2/database/GDX2.arz", "gdx3/database/GDX3.arz"]
+TEXT_LAYERS = ["resources/Text_EN.arc", "gdx1/resources/Text_EN.arc",
+               "gdx2/resources/Text_EN.arc", "gdx3/resources/Text_EN.arc"]
+# the only tag files worth decompressing; the rest is story and UI text
+TEXT_FILES = ("items", "skills")
 
 # Grim Dawn's internal field names -> the optimiser's bonus vocabulary.
 # The naming is treacherous: offensiveLife is vitality, offensivePoison is acid,
@@ -55,6 +63,7 @@ FLAT = {
     # does; the optimiser has one stat for being slowed and both land on it.
     "offensiveSlowRunSpeed": "slow move",
     "offensiveSlowTotalSpeed": "slow move",
+    "offensiveSlowManaLeach": "energy leech",
     "offensiveSlowOffensiveAbility": "defense",
     "offensiveSlowDefensiveAbility": "offense",
 }
@@ -131,10 +140,21 @@ DIRECT = {
     "damageAbsorption": "damage absorb", "damageAbsorptionPercent": "damage absorb %",
     # Heals that restore a lump plus a fraction of your maximum.
     "skillLifeBonus": "health", "skillLifePercent": "health %",
+    # Item-only spellings of things the devotion records name differently.
+    "offensiveDamageMultModifier": "all damage %",
+    "defensiveBonusProtection": "armor",
+    "characterLightRadius": "light radius",
 }
+# Damage type names as the records spell them, for the conversion fields.
+CONVERT = {"Physical": "physical", "Pierce": "pierce", "Fire": "fire", "Cold": "cold",
+           "Lightning": "lightning", "Poison": "acid", "Life": "vitality",
+           "Aether": "aether", "Chaos": "chaos", "Elemental": "elemental",
+           "Bleeding": "bleed", "Vitality": "vitality"}
 # Life the skill costs you every second it is running. Same units as a
 # regeneration bonus, opposite sign.
 COSTS = {"skillActiveLifeCost": "health/s", "skillActiveManaCost": "energy/s"}
+# Fields the game states as a reduction and the models as a negative bonus.
+NEGATED = {"skillManaCostReduction": "skill cost %"}
 # Crowd control the data states as a duration in seconds. The hand-written file
 # scored these out of 100 and picked the number by feel - Magi's 1.5s stun was
 # worth 25 and Spear of the Heavens' 1.0s was worth 100. One second is taken as
@@ -168,12 +188,14 @@ class Database:
     """Layered view of the four .arz files."""
 
     def __init__(self, root=GD):
+        self.root = root
         self.layers = []
         for rel in LAYERS:
             path = os.path.join(root, rel)
             if os.path.exists(path):
                 self.layers.append(Arz(path))
         self.cache = {}
+        self._tags = None
 
     def read(self, name):
         if name in self.cache:
@@ -184,6 +206,40 @@ class Database:
                 merged = layer.read(name)
         self.cache[name] = merged
         return merged
+
+    @property
+    def tags(self):
+        """tag -> display text, layered like the records and loaded on demand."""
+        if self._tags is None:
+            self._tags = {}
+            for rel in TEXT_LAYERS:
+                path = os.path.join(self.root, rel)
+                if os.path.exists(path):
+                    self._tags.update(readTags(path, TEXT_FILES))
+        return self._tags
+
+    def name(self, record):
+        """What a record is called in the game, or "" if it has no name tag."""
+        for field in ("itemNameTag", "description", "skillDisplayName", "FileDescription"):
+            tag = record.get(field)
+            if isinstance(tag, str) and tag:
+                return self.tags.get(tag, "" if tag.startswith("tag") else tag)
+        return ""
+
+    def under(self, prefix):
+        """Record paths beneath one folder."""
+        names = set()
+        for layer in self.layers:
+            names.update(n for n in layer.records if n.startswith(prefix))
+        return sorted(names)
+
+    def ofClass(self, *classes):
+        """Record paths whose type is one of these, newest layer winning."""
+        wanted = set(classes)
+        names = set()
+        for layer in self.layers:
+            names.update(n for n, entry in layer.records.items() if entry[0] in wanted)
+        return sorted(names)
 
     def constellations(self):
         names = set()
@@ -221,11 +277,17 @@ def starBonuses(skill, db=None):
         if bonus:
             for key, value in starBonuses(bonus).items():
                 key = key if key.startswith("pet ") else "pet " + key
-                out[key] = out.get(key, 0) + value
+                # damage over time arrives as [per second, seconds] and does not
+                # add to a scalar; nothing carries the same stat both ways
+                out[key] = value if isinstance(value, list) else out.get(key, 0) + value
     for field, name in DIRECT.items():
         v = lastValue(skill.get(field, 0))
         if v:
             out[name] = out.get(name, 0) + round(float(v), 3)
+    for field, name in NEGATED.items():
+        v = lastValue(skill.get(field, 0))
+        if v:
+            out[name] = out.get(name, 0) - round(float(v), 3)
     races = skill.get("racialBonusRace")
     racial = lastValue(skill.get("racialBonusPercentDamage", 0)) or 0
     if racial and races:
@@ -252,6 +314,42 @@ def starBonuses(skill, db=None):
 def weaponRestricts(skill):
     """Weapon types a star demands, as the tags the optimiser filters on."""
     return sorted({tag for field, tag in WEAPON_FLAGS.items() if skill.get(field)})
+
+
+def itemExtras(record, db):
+    """Item bonuses that take several fields to express, rather than one.
+
+    Damage conversion is a triple (in type, out type, percentage), and skill
+    points are a name-and-level pair naming a mastery, a single skill, or all of
+    them at once. Both are written the way the models already spell them:
+    "physical to chaos", "shaman skills", "storm totem".
+    """
+    out = {}
+    inType = record.get("conversionInType")
+    outType = record.get("conversionOutType")
+    percent = lastValue(record.get("conversionPercentage", 0)) or 0
+    if percent and inType in CONVERT and outType in CONVERT:
+        out["%s to %s" % (CONVERT[inType], CONVERT[outType])] = round(float(percent), 2)
+
+    level = lastValue(record.get("augmentAllLevel", 0)) or 0
+    if level:
+        out["all skills"] = out.get("all skills", 0) + int(level)
+    for field, mastery in (("augmentMasteryName%d", True), ("augmentSkillName%d", False)):
+        for index in (1, 2, 3, 4):
+            path = record.get(field % index)
+            level = lastValue(record.get((field % index).replace("Name", "Level"), 0)) or 0
+            if not path or not level:
+                continue
+            target = db.read(path)
+            name = db.name(target) if target else ""
+            if not name:
+                continue
+            # A single skill keeps the name the game shows, because that is what
+            # the models write: {"Storm Totem": 6}. A mastery record is just
+            # called "Shaman", and points in it are "shaman skills".
+            name = name.lower() + " skills" if mastery else name
+            out[name] = out.get(name, 0) + int(level)
+    return out
 
 
 def isDebuff(record):

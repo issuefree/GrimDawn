@@ -199,14 +199,14 @@ yugol_5.addAbility(Ability('Black Blood of Yugol', {"burst":1, "chance":0.3, "li
 owl = Constellation('Owl', '1a', '5a')
 owl.id = 'owl'
 owl_0 = Star(owl, [], {"cunning":15, "spirit":15})
-owl_1 = Star(owl, owl_0, {"elemental resist":8})
+owl_1 = Star(owl, owl_0, {"elemental resist":8, "skill cost %":-5})
 owl_2 = Star(owl, owl_1, {"bleed %":50, "bleed duration":50, "burn %":50, "burn duration":50, "electrocute %":50, "electrocute duration":50, "frostburn %":50, "frostburn duration":50, "internal %":50, "internal duration":50, "poison %":50, "poison duration":50, "vitality decay %":50, "vitality decay duration":50})
 owl_3 = Star(owl, owl_1, {"all damage %":30, "defense":15, "reflected damage reduction":15})
 
 viper = Constellation('Viper', '1c', '3p 2c')
 viper.id = 'viper'
 viper_0 = Star(viper, [], {"cunning":15, "spirit":15})
-viper_1 = Star(viper, viper_0, {"energy absorb":10})
+viper_1 = Star(viper, viper_0, {"energy absorb":10, "energy leech":18})
 viper_2 = Star(viper, viper_1, {"vitality resist":10})
 viper_3 = Star(viper, viper_2, {"offense %":3, "reduce elemental resist":20})
 
@@ -393,7 +393,7 @@ scalesofUlcama_2 = Star(scalesofUlcama, scalesofUlcama_1, {"energy/s":2.5, "ener
 scalesofUlcama_3 = Star(scalesofUlcama, scalesofUlcama_2, {"health/s":30, "health/s %":33, "lifesteal %":5})
 scalesofUlcama_4 = Star(scalesofUlcama, scalesofUlcama_1, {"defense":45, "physique":20})
 scalesofUlcama_5 = Star(scalesofUlcama, scalesofUlcama_4, {})
-scalesofUlcama_5.addAbility(Ability('Tip the Scales', {"chance":0.33, "recharge":1, "skillClass":'Skill_AttackSpell', "trigger":'hit', "type":'attack'}, {"duration":{"reduce resist":20}, "lifesteal %":132, "triggered vitality":310, "weapon damage %":33}))
+scalesofUlcama_5.addAbility(Ability('Tip the Scales', {"chance":0.33, "recharge":1, "skillClass":'Skill_AttackSpell', "trigger":'hit', "type":'attack'}, {"duration":{"energy leech":200, "reduce resist":20}, "lifesteal %":132, "triggered vitality":310, "weapon damage %":33}))
 
 wendigo = Constellation('Wendigo', '6p 4c', '2c')
 wendigo.id = 'wendigo'
@@ -471,7 +471,7 @@ widow_5.addAbility(Ability('Arcane Bomb', {"chance":0.25, "radius":6, "recharge"
 
 revenant = Constellation('Revenant', '8c', '1p 1c')
 revenant.id = 'revenant'
-revenant_0 = Star(revenant, [], {"energy absorb":15})
+revenant_0 = Star(revenant, [], {"energy absorb":15, "energy leech":20})
 revenant_1 = Star(revenant, revenant_0, {"health %":6})
 revenant_2 = Star(revenant, revenant_1, {"stun resist":20, "vitality resist":24})
 revenant_3 = Star(revenant, revenant_2, {"health":250, "lifesteal %":6, "vitality %":60})

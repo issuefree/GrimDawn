@@ -36,29 +36,45 @@ stats = {
 		"fight length":30,
 
 		"playStyle":"tank",
+		# Kept deliberately: this excludes shield and ranged constellations.
+		# Omitting it defaults to every weapon type, which is not the same thing.
 		"weapons":["sword", "axe", "dagger", "mace", "scepter", "spear", "twohand"],
-		"blacklist":[
-			# manticore, manticoreAcidSpray# I'm not sure it makes sense in this build. Not many attacks to bind it to and the stats on the constellation aren't that good.
-		]
+		# blacklist omitted - defaults to empty
+	}
+
+# One number per damage type saying how much you care about it. The flat vs %
+# split is derived from the sheet above, which prices them very differently to
+# the old 1:1 weights:
+#   pierce  350 flat / 200%  ->  a % point is worth a little more than a flat one
+#   bleed   275 flat / 300%  ->  a flat point is worth ~1.45x a % point
+#   cold     20 flat /  50%  ->  a flat point is worth 7.5x a % point,
+#                                there being almost no cold damage to scale up
+damagePriority = {
+		"pierce": 15,
+		"bleed": 10,
+		"cold": 7.5,
 	}
 
 weights = {
 		"attack opportunity cost":-100,
 		"attack speed":10,
 		"cast speed":7.5,
-		
-		"offense": 10, # "offense %": ,
+
+		"offense": 5, # "offense %": ,
 
 		"damage":1,
+
+		# No physical on the sheet, so the flat/% split cannot be derived and
+		# these stay explicit. If this character does carry physical damage, add
+		# it to stats above and move this into damagePriority.
 		"physical": 10, "physical %": 10,
-		"pierce": 15, "pierce %": 15,
-		"bleed":15, "bleed %": 15, "bleed duration":5,
-		"cold":10, "cold %": 10, 
+
+		"bleed duration":5,
 
 		"weapon damage %":7.5,
 
 		"crit damage": 1,
-		
+
 		# "lifesteal %":33,
 		"move speed": 10,
 	}

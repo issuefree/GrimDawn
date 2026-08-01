@@ -18,7 +18,8 @@ class Solution:
 
 	def __init__(self, constellations, model):
 		self.links = None
-		self.canonicalOrder = sorted(constellations, key=lambda c: c.index/100.0)
+		# /100.0 did not affect ordering, it just cost a float division per element
+		self.canonicalOrder = sorted(constellations, key=attrgetter("index"))
 		self.isDead = self.isDeadSolution()
 		if self.isDead:
 			return
@@ -30,32 +31,33 @@ class Solution:
 
 		self.cappingAffinity = Affinity()
 		if Solution.maxAffinities:
-			for ac in Affinity.sh:
-				if self.provides.get(ac) > Solution.maxAffinities.get(ac):
-					self.provides.set(ac, Solution.maxAffinities.get(ac))
-					self.cappingAffinity.set(ac, 99)
+			# index the lists directly rather than going through get/set per axis
+			provides = self.provides.affinities
+			maxes = Solution.maxAffinities.affinities
+			capping = self.cappingAffinity.affinities
+			for i in range(5):
+				if provides[i] > maxes[i]:
+					provides[i] = maxes[i]
+					capping[i] = 99
 
 	# we're only comparing solutions to see if they should replace an optimal solution for a given point cost
 	# so we're greater than if the cost is the same (or less) and either the provides or the score is greater
 	# We'll ignore the equals case for now since it doesn't really matter (the score is unlikely to be EXACTLY the same and if it is then there's no downside to replacing the old one)
+	# scalar comparisons first - `provides` is an Affinity compare and much dearer
 	def __ge__(self, other):
-		if self.cost <= other.cost and self.provides >= other.provides and self.score >= other.score:
-			return True
-
-		return False
+		return self.cost <= other.cost and self.score >= other.score and self.provides >= other.provides
 
 	def __le__(self, other):
-		if self.cost >= other.cost and self.provides <= other.provides and self.score <= other.score:
-			return True
-
-		return False
+		return self.cost >= other.cost and self.score <= other.score and self.provides <= other.provides
 
 	#true equality would be the same constellations but we only care about score, provides and cost (for now?)
 	def __eq__(self, other):
 		return self.cost == other.cost and self.provides == other.provides and self.score == other.score
 
+	# Hash on the same fields __eq__ compares. Formatting these into a string was
+	# costing a full Affinity.__str__ per call, and this runs over a million times.
 	def __hash__(self):
-		return (str(self.cost)+str(self.provides)+str(self.score)).__hash__()
+		return hash((self.cost, tuple(self.provides.affinities), self.score))
 
 	def __str__(self):
 		out = str(self.cost) + "\t" + str(int(self.score)).rjust(7) + "\t\t"

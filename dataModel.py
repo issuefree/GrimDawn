@@ -9,13 +9,14 @@ from ability import *
 
 methodTimes = {}
 def timeMethod(label, startTime):
-	if label in methodTimes.keys():
+	if label in methodTimes:
 		methodTimes[label] += time()-startTime
 	else:
 		methodTimes[label] = time()-startTime
 
 class Affinity:
 	sh = ["a", "c", "e", "o", "p"] # vectors
+	idx = {"a": 0, "c": 1, "e": 2, "o": 3, "p": 4}
 	def __init__(self, ascendant=0, chaos=0, eldritch=0, order=0, primordial=0):
 		self.affinities = [0,0,0,0,0]
 
@@ -79,13 +80,12 @@ class Affinity:
 			if self.affinities[i] <= other.affinities[i]:
 				return False
 		return True
+	# The both-zero `continue` that __gt__/__lt__ need is a no-op here (0 < 0 is
+	# already False), so this is a plain element-wise >=. Unrolled and short
+	# circuiting: this is one of the hottest calls in the search.
 	def __ge__(self, other):
-		for i in range(len(self.affinities)):
-			if self.affinities[i] == 0 and other.affinities[i] == 0:
-				continue
-			if self.affinities[i] < other.affinities[i]:
-				return False
-		return True
+		a, b = self.affinities, other.affinities
+		return a[0] >= b[0] and a[1] >= b[1] and a[2] >= b[2] and a[3] >= b[3] and a[4] >= b[4]
 	def __lt__(self, other):
 		for i in range(len(self.affinities)):
 			if self.affinities[i] == 0 and other.affinities[i] == 0:
@@ -94,12 +94,8 @@ class Affinity:
 				return False
 		return True
 	def __le__(self, other):
-		for i in range(len(self.affinities)):
-			if self.affinities[i] == 0 and other.affinities[i] == 0:
-				continue
-			if self.affinities[i] > other.affinities[i]:
-				return False
-		return True
+		a, b = self.affinities, other.affinities
+		return a[0] <= b[0] and a[1] <= b[1] and a[2] <= b[2] and a[3] <= b[3] and a[4] <= b[4]
 
 	def __add__(self, other):
 		a = Affinity()
@@ -161,10 +157,11 @@ class Affinity:
 			return True
 		return False
 
+	# dict lookup rather than a linear scan of sh - these run over a million times
 	def set(self, ac, val):
-		self.affinities[Affinity.sh.index(ac)] = val
+		self.affinities[Affinity.idx[ac]] = val
 	def get(self, ac):
-		return self.affinities[Affinity.sh.index(ac)]
+		return self.affinities[Affinity.idx[ac]]
 
 class Star:
 	def __init__(self, constellation, requires=[], bonuses={}):
@@ -193,8 +190,10 @@ class Star:
 		value = float(0)
 		if self.ability != None:
 			self.ability.calculateValue(model)
-		for bonus in model.bonuses.keys():
-			if bonus in self.bonuses.keys():
+		# Iterate the star's bonuses (typically ~2) rather than the model's (~154).
+		# Same intersection, two orders of magnitude fewer iterations.
+		for bonus in self.bonuses:
+			if bonus in model.bonuses:
 				value += model.calculateBonus(bonus, self.bonuses[bonus])
 		self.value = value
 		return value
@@ -219,17 +218,18 @@ class Star:
 	#   In our bleed based melee build lets say we have a weapon that does massive bleed damage on attack. A triggered ability with % bleed damage and a weapon component might be pretty valuable. It's like the weapon damage component * the % damage * the flat damage number (not triggered) so if I value flat bleed at say 100 (for easy math) and my ability has a 30% weapon component and increases bleed damage by 40% I should value that stat at 100*40*.3 = 120
 
 	def addAbility(self, ability, perc=0, bonuses={}):
-		if type(ability) == type(""):			
+		if type(ability) == type(""):
 			self.name = ability
 			self.bonuses[self.name] = 1
-			for bonus in bonuses.keys():
+			for bonus in bonuses:
 				self.bonuses[bonus] = bonuses[bonus]*perc
 			self.constellation.abilities += [self]
 		else:
 			ability.star = self
 			self.name = ability.name
-			self.ability = ability	
+			self.ability = ability
 			self.constellation.abilities += [self]
+		self.constellation.attackTrigger = None # invalidate cached hasAttackTrigger
 
 class Constellation:
 
@@ -257,6 +257,8 @@ class Constellation:
 		self.redundancies = []
 		self.conflicts = []
 
+		self.attackTrigger = None # lazily cached by hasAttackTrigger()
+
 		self.index = len(Constellation.constellations)
 
 		Constellation.constellations += [self]
@@ -272,11 +274,17 @@ class Constellation:
 		for star in self.stars:
 			star.value = None
 
+	# Fixed once the data files finish loading, but this is called millions of times
+	# during a search, so cache it. addAbility() invalidates.
 	def hasAttackTrigger(self):
-		for star in self.abilities:
-			if star.ability.gc("trigger") == "attack" or star.ability.gc("trigger") == "critical":
-				return True
-		return False
+		if self.attackTrigger is None:
+			self.attackTrigger = False
+			for star in self.abilities:
+				trigger = star.ability.gc("trigger")
+				if trigger == "attack" or trigger == "critical":
+					self.attackTrigger = True
+					break
+		return self.attackTrigger
 
 	def evaluate(self, model=None, apsIndex=0):
 		if self.value:
@@ -293,10 +301,16 @@ class Constellation:
 		for star in self.stars:
 			self.value += star.evaluate(model)
 		if self.hasAttackTrigger():
-			self.apsValue = [0]*len(model.getStat("allAttacks/s"))
-			for i in range(len(model.getStat("allAttacks/s"))-1, -1, -1):
-				apsModel = copy.deepcopy(model)
-				apsModel.stats["attacks/s"] = apsModel.stats["allAttacks/s"][i]
+			allAps = model.getStat("allAttacks/s")
+			self.apsValue = [0]*len(allAps)
+			for i in range(len(allAps)-1, -1, -1):
+				# Only stats["attacks/s"] differs per aps index, and evaluation reads
+				# the model without mutating it, so a shallow copy with its own stats
+				# dict is enough - deepcopying the whole model here was the single
+				# most expensive thing in the search.
+				apsModel = copy.copy(model)
+				apsModel.stats = dict(model.stats)
+				apsModel.stats["attacks/s"] = allAps[i]
 				for star in self.stars:
 					star.reset()
 					self.apsValue[i] += star.evaluate(apsModel)
@@ -444,15 +458,15 @@ class Item:
 				abilityBonuses[bonus] = self.ability.getTotalBonus(bonus)*self.ability.effective
 
 		value = 0
-		for bonus in model.bonuses.keys():
-			if bonus in self.bonuses.keys():
+		for bonus in model.bonuses:
+			if bonus in self.bonuses:
 				keyBonus = self.bonuses[bonus]
 				if isinstance(keyBonus, list):
 					keyBonus = keyBonus[0] # just use the total duration damage
 				if verbose:
 					print("  ", bonus.ljust(20), str(int(keyBonus)).ljust(5), int(model.get(bonus)*keyBonus))
 				value += model.get(bonus)*keyBonus
-			if bonus in abilityBonuses.keys():
+			if bonus in abilityBonuses:
 				value += model.get(bonus)*abilityBonuses[bonus]
 				if verbose:
 					print("  ", bonus.ljust(20), str(int(abilityBonuses[bonus])).ljust(5), int(model.get(bonus)*abilityBonuses[bonus]))
@@ -535,7 +549,7 @@ class Character:
 
 		for skillLevel in skills:
 			skill = list(skillLevel.keys())[0]
-			if not skill in Skill.skills.keys():
+			if not skill in Skill.skills:
 				print("Missing skill definition for:", skill)
 				continue
 
@@ -744,12 +758,12 @@ class Character:
 		# conversions
 		conversions = {}
 		for fromDamage in damages:
-			if fromDamage in weapon.keys() or fromDamage in triggered.keys():
+			if fromDamage in weapon or fromDamage in triggered:
 				conversions[fromDamage] = {}
 				totalConversion = 0
 				for toDamage in damages:
 					conversionKey = fromDamage + " to " + toDamage
-					if conversionKey in self.stats.keys():
+					if conversionKey in self.stats:
 						if verbose:
 							print("Found applicable conversion:", conversionKey)
 						conversions[fromDamage][toDamage] = self.stats[conversionKey]
@@ -772,7 +786,7 @@ class Character:
 		self.convertDamage(triggered, conversions)
 
 
-		if "armor piercing" in self.stats.keys(): # this comes after all other conversions and only applies to weapon damage
+		if "armor piercing" in self.stats: # this comes after all other conversions and only applies to weapon damage
 			weapon["pierce"] += weapon["physical"]*self.stats["armor piercing"]/100.0
 			weapon["physical"] = weapon["physical"]*(1-self.stats["armor piercing"]/100.0)
 
@@ -816,16 +830,16 @@ class Character:
 	def convertDamage(self, dams, conversions):
 		flat = {}
 		for fromDamage in conversions:
-			if fromDamage in dams.keys():
+			if fromDamage in dams:
 				flat[fromDamage] = {}
 				for toDamage in conversions[fromDamage]:
 					flat[fromDamage][toDamage] = dams[fromDamage]*(conversions[fromDamage][toDamage]/100.0)
 
 		for fromDamage in conversions:
-			if fromDamage in dams.keys():
+			if fromDamage in dams:
 				for toDamage in conversions[fromDamage]:
 					dams[fromDamage] -= flat[fromDamage][toDamage]
-					if not toDamage in dams.keys():
+					if not toDamage in dams:
 						dams[toDamage] = 0
 					dams[toDamage] += flat[fromDamage][toDamage]
 
@@ -933,7 +947,7 @@ class Character:
 		print
 
 	def addToStat(self, stat, value):
-		if not stat in self.stats.keys():
+		if not stat in self.stats:
 			self.stats[stat] = 0
 
 		if type(self.stats[stat]) == type([]) or type(value) == type([]):
@@ -944,12 +958,12 @@ class Character:
 			self.stats[stat] += value
 
 	def getStatPerc(self, stat):
-		if stat in self.stats.keys():
+		if stat in self.stats:
 			return (self.stats[stat]+100)/100.0
 		return 1
 
 	def getStat(self, stat):
-		if stat in self.stats.keys():
+		if stat in self.stats:
 			return self.stats[stat]
 		return 0
 

@@ -298,12 +298,30 @@ class Model:
 		# and was then overwritten with an empty list. Warn and leave the file alone.
 		try:
 			exec(lines)
-			self.seedSolutions = sorted(list(set(self.seedSolutions)), key=lambda s:s.score, reverse=True)
+			# dict.fromkeys dedupes like set() but keeps file order, so equal-scoring
+			# seeds no longer land in a hash-dependent order on every run
+			self.seedSolutions = sorted(dict.fromkeys(self.seedSolutions), key=lambda s:s.score, reverse=True)
 		except Exception as e:
 			print("  WARNING: could not read seed solutions from %s: %s: %s"%(path, type(e).__name__, e))
 			print("  Leaving the file untouched; fix or delete it to continue seeding.")
 			self.seedSolutions = []
 			return
+
+		# Seeds outlive the model that produced them. When gear changes,
+		# filterConstellations() drops constellations this character can no longer
+		# use, but the saved file still names them - so an unusable solution would
+		# be re-scored as if valid, and its score would seed bestScore and prune
+		# away legitimate ones. filterConstellations() has already run by now.
+		usable = set(id(c) for c in Constellation.constellations)
+		kept = []
+		for s in self.seedSolutions:
+			stale = [c for c in getattr(s, "constellations", []) if id(c) not in usable]
+			if stale:
+				print("  DISCARDING stale seed (no longer available: %s): %s"
+					  % (", ".join(c.name for c in stale), solutionPath(s.constellations)))
+			else:
+				kept.append(s)
+		self.seedSolutions = kept
 
 		print("Reading seed solutions:")
 		for s in self.seedSolutions:
@@ -319,7 +337,7 @@ class Model:
 		print("Checking model...")
 		print("  "+self.name)
 
-		if not "allAttacks/s" in self.stats.keys():
+		if not "allAttacks/s" in self.stats:
 			self.stats["allAttacks/s"] = [self.stats["attacks/s"]]
 
 		self.stats["allAttacks/s"].sort(reverse=True)
@@ -329,7 +347,7 @@ class Model:
 			self.bonuses["attack opportunity cost"] = -self.get("weapon damage %")
 			print("  attack opportunity cost", self.bonuses["attack opportunity cost"])
 
-		if not "fight length" in self.stats.keys():
+		if not "fight length" in self.stats:
 			self.stats["fight length"] = 30
 
 		self.stats["criticals/s"] = getTriggerChance(self.getStat("crit chance"), self.getStat("attacks/s"))		
@@ -452,7 +470,7 @@ class Model:
 		self.setCalculated("crit damage", total*self.getStat("crit chance"))
 
 		for damage in damages:
-			if damage in self.bonuses.keys():
+			if damage in self.bonuses:
 				self.setCalculated("triggered "+damage, self.bonuses[damage]/self.getStat("attacks/s"))
 
 		#calculate elemental damage and triggered elemental damage if not set
@@ -524,7 +542,7 @@ class Model:
 		return self.get(bonus)*value
 
 	def get(self, key):
-		if key in self.bonuses.keys():
+		if key in self.bonuses:
 			return self.bonuses[key]
 		else:
 			return 0
@@ -544,7 +562,7 @@ class Model:
 			self.set(key, value)
 
 	def getStat(self, key):
-		if key in self.stats.keys():
+		if key in self.stats:
 			return self.stats[key]
 		else:
 			return 0

@@ -29,13 +29,13 @@ class Ability:
 		return Ability(self.name, copy.deepcopy(self.conditions), copy.deepcopy(self.bonuses))
 
 	def gc(self, key):
-		if key in self.conditions.keys():
+		if key in self.conditions:
 			return self.conditions[key]
 		else:
 			return 0
 
 	def gb(self, key):
-		if key in self.bonuses.keys():
+		if key in self.bonuses:
 			return self.bonuses[key]
 		else:
 			return 0
@@ -43,12 +43,12 @@ class Ability:
 	def mergeBonuses(self, bonusesA, bonusesB):
 		bonusesC = {}
 		for bonus in bonusesA:
-			if bonus in bonusesB.keys():
+			if bonus in bonusesB:
 				bonusesC[bonus] = bonusesA[bonus] + bonusesB[bonus]
 			else:
 				bonusesC[bonus] = bonusesA[bonus]
 		for bonus in bonusesB:
-			if not bonus in bonusesA.keys():
+			if not bonus in bonusesA:
 				bonusesC[bonus] = bonusesB[bonus]
 		return bonusesC
 
@@ -66,7 +66,7 @@ class Ability:
 				# print(key)
 				# print(value)
 				value += self.bonuses[key]
-		if key in self.dynamicBonuses.keys():
+		if key in self.dynamicBonuses:
 			if type(self.dynamicBonuses[key]) == type([]) and value == 0:
 				value = self.dynamicBonuses[key]
 			else:
@@ -77,7 +77,7 @@ class Ability:
 		self.calculateTriggerTime(model, verbose)
 		if self.triggerTime == -1:
 			self.effective = 0
-			if "duration" in self.bonuses.keys():
+			if "duration" in self.bonuses:
 				del self.bonuses["duration"]
 			return
 
@@ -175,18 +175,18 @@ class Ability:
 				print("nt", self.getNumTriggers(model))
 				print("effective", self.effective)
 
-			if "duration" in self.bonuses.keys():
+			if "duration" in self.bonuses:
 				self.setDebuffValue(targets, model)
 			# TODO I've removed damage % modifiers from attack abilities as these are only supposed to affect the attack itself not all damage.
 			# this needs to be fixed and this can be removed
 			for damage in damages:
-				if damage+" %" in self.bonuses.keys():
+				if damage+" %" in self.bonuses:
 					del self.bonuses[damage+" %"]
 
 
 			interval = self.triggerTime+self.gc("recharge")
 			for dam in durationDamages:
-				if "triggered "+dam in self.bonuses.keys():
+				if "triggered "+dam in self.bonuses:
 					if type(self.gb("triggered "+dam)) == type([]):
 						damage, ticks = self.bonuses["triggered "+dam]
 						if ticks < interval:
@@ -200,7 +200,7 @@ class Ability:
 			# we're counting half effectiveness due to overheal
 			self.effective = self.getNumTriggers(model)*.5
 
-			if "duration" in self.bonuses.keys():
+			if "duration" in self.bonuses:
 				self.setDebuffValue(max(1, self.gc("targets")), model)
 
 		if self.gc("type") == "summon":
@@ -215,7 +215,7 @@ class Ability:
 			print("  effective", self.effective)
 		durationBonuses = self.bonuses["duration"]
 		interval = self.triggerTime + self.gc("recharge")
-		for bonus in durationBonuses.keys():
+		for bonus in durationBonuses:
 			value = durationBonuses[bonus]
 			if type(value) == type([]):
 				damage, ticks = value
@@ -279,14 +279,14 @@ class Ability:
 
 	def calculateDynamicBonuses(self, model):
 		self.dynamicBonuses = {}
-		if "attack as health %" in self.bonuses.keys():
+		if "attack as health %" in self.bonuses:
 			totalDamage = 0
 			for dam in damages:
-				if "triggered "+dam in self.bonuses.keys():
+				if "triggered "+dam in self.bonuses:
 					totalDamage += self.bonuses["triggered "+dam]*(model.getStat(dam+" %")+100)/100.0
 			totalDamage = totalDamage*self.bonuses["attack as health %"]/100.0
 			# count as half due to overheal
-			if "health" in self.bonuses.keys():				
+			if "health" in self.bonuses:				
 				self.dynamicBonuses["health"] += totalDamage
 			else:
 				self.dynamicBonuses["health"] = totalDamage
@@ -297,7 +297,7 @@ class Ability:
 				# % damage depends on a weapon component and a flat damage component to be meaningful
 				# technically it could depend on a triggered component of the spell as well but I don't think that scenario exists.
 				# actually I think only targo's hammer is an attack ability with a %damage increase.
-				if dam+" %" in self.bonuses.keys():
+				if dam+" %" in self.bonuses:
 					if model.getStat(dam) <= 0:
 						print("    " +self.name+" requires a defined " + dam + " _stat_ in the model.")
 					else:
@@ -322,7 +322,7 @@ class Ability:
 
 		# if the ability has been manually valued in the model
 		modelFactor = 1
-		if self.name in model.bonuses.keys():
+		if self.name in model.bonuses:
 			modelFactor = model.get(self.name)
 
 		for bonus in chain(self.bonuses.keys(), self.dynamicBonuses.keys()):
@@ -343,7 +343,7 @@ class Ability:
 		
 		# if the ability has been manually valued in the model
 		modelFactor = 1
-		if self.name in model.bonuses.keys():
+		if self.name in model.bonuses:
 			modelFactor = model.get(self.name)
 
 		for bonus in chain(self.bonuses.keys(), self.dynamicBonuses.keys()):
@@ -359,9 +359,9 @@ class Ability:
 		# augmenting abilities can affect conditions. Targets come to mind. I'm going to handle it as a one off for now.
 		if "targets" in ability.conditions:
 			self.conditions["targets"] = self.gc("targets") + ability.conditions["targets"]
-		if "ability damage %" in ability.bonuses.keys():
+		if "ability damage %" in ability.bonuses:
 			for damage in damages+["weapon damage %"]:
-				if damage in self.bonuses.keys():
+				if damage in self.bonuses:
 					if type(self.bonuses[damage]) == type([]):						
 						self.bonuses[damage] = [self.bonuses[damage][0]*(1+ability.bonuses["ability damage %"]/100.0), self.bonuses[damage][1]]
 					else:
@@ -369,12 +369,12 @@ class Ability:
 			del ability.bonuses["ability damage %"]
 		for bonus in ability.bonuses:
 			if type(ability.bonuses[bonus]) == type([]):
-				if bonus in self.bonuses.keys():					
+				if bonus in self.bonuses:					
 					self.bonuses[bonus] = addDurationDamages(self.bonuses[bonus], ability.bonuses[bonus])
 				else:
 					self.bonuses[bonus] = ability.bonuses[bonus]
 			elif type(ability.bonuses[bonus]) == type({}):
-				if bonus in self.bonuses.keys():
+				if bonus in self.bonuses:
 					self.bonuses[bonus] = self.mergeBonuses(self.bonuses[bonus], ability.bonuses[bonus])
 				else:
 					self.bonuses[bonus] = ability.bonuses[bonus]

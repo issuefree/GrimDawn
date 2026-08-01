@@ -27,18 +27,20 @@ def evaluateSolution(solution, model, verbose=False):
 		print("Evaluating solution...")
 		print("  " + solutionPath(solution))
 	start = time()
-	sSol = sorted(solution, key=lambda c: c.evaluate(model), reverse=True)
+	# Decorate with the sort key so the base value can be reused below instead of
+	# calling evaluate a second time for every constellation.
+	sSol = sorted(((c.evaluate(model), c) for c in solution), key=itemgetter(0), reverse=True)
 	value = 0
 
 	abilNum = 0
-	for c in sSol:
+	for base, c in sSol:
 		if verbose:
-			print(c.name.ljust(40), int(c.evaluate(model)), int(c.evaluate(model, abilNum)))
+			print(c.name.ljust(40), int(base), int(c.evaluate(model, abilNum)))
 		if c.hasAttackTrigger():
 			value += c.evaluate(model, abilNum)
 			abilNum += 1
 		else:
-			value += c.evaluate(model)
+			value += base
 	timeMethod("evaluateSolution", start)
 	return value
 
@@ -65,9 +67,18 @@ def isGoodSolution(solution):
 # cache if performance becomes an issue
 def getAffinities(constellations):
 	start = time()
-	affinities = Affinity()
+	# Accumulate into a plain list: `affinities += c.provides` allocated a fresh
+	# Affinity per constellation, which dominated Solution construction.
+	total = [0, 0, 0, 0, 0]
 	for c in constellations:
-		affinities += c.provides
+		p = c.provides.affinities
+		total[0] += p[0]
+		total[1] += p[1]
+		total[2] += p[2]
+		total[3] += p[3]
+		total[4] += p[4]
+	affinities = Affinity()
+	affinities.affinities = total
 	timeMethod("getAffinities", start)
 	return affinities
 
@@ -80,11 +91,11 @@ def findBonus(targetBonuses):
 			if c in targets:
 				break
 			for targetBonus in targetBonuses:
-				if targetBonus in s.bonuses.keys():
+				if targetBonus in s.bonuses:
 					targets += [c]
 					break
 				if s.ability:
-					if targetBonus in s.ability.bonuses.keys():
+					if targetBonus in s.ability.bonuses:
 						targets += [c]
 						break
 	return targets
@@ -94,10 +105,10 @@ def printBonusList():
 	bonuses = {}
 	for c in Constellation.constellations:
 		for s in c.stars:
-			for bonus in s.bonuses.keys():
+			for bonus in s.bonuses:
 				bonuses[bonus] = True
 			if s.ability:
-				for bonus in s.ability.bonuses.keys():
+				for bonus in s.ability.bonuses:
 					bonuses[bonus] = True
 
 	for key in sorted(bonuses.keys()):
@@ -108,10 +119,10 @@ def getBonuses(constellations=Constellation.constellations, model=None):
 	for c in constellations:
 		for s in c.stars:
 			s.evaluate(model)
-			for bonus in s.bonuses.keys():
-				if model and not bonus in model.bonuses.keys():
+			for bonus in s.bonuses:
+				if model and not bonus in model.bonuses:
 					continue
-				if bonus in bonuses.keys():
+				if bonus in bonuses:
 					if type(s.bonuses[bonus]) == type([]):
 						bonuses[bonus] = addDurationDamages(bonuses[bonus], s.bonuses[bonus])
 					else:
@@ -135,8 +146,8 @@ def getPathBounds(path, model):
 
 def evaluateBonuses(model, bonuses):
 	value = 0
-	for bonus in model.bonuses.keys():
-		if bonus in bonuses.keys():			
+	for bonus in model.bonuses:
+		if bonus in bonuses:			
 			value += model.calculateBonus(bonus, bonuses[bonus])
 	return value
 

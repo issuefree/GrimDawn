@@ -97,29 +97,31 @@ def getWanted(model):
 
 
 def checkBoundedPath(solution):
-	if len(solution.constellations) > globalMetadata["boundedPathLengthMax"]:
+	maxLen = globalMetadata["boundedPathLengthMax"]
+	if len(solution.constellations) > maxLen:
 		return False
 
 	start = time()
 
-	for bpi in range(len(globalMetadata["boundedPaths"])-1, -1, -1):
-		bp = globalMetadata["boundedPaths"][bpi]
+	boundedPaths = globalMetadata["boundedPaths"]
+	# Duplicates can only be introduced by the overwrite below: appending `solution`
+	# is only reachable when no entry equalled it (equality implies >=, which
+	# overwrites instead). So the dedupe is a no-op unless we actually overwrote,
+	# and running it unconditionally was rehashing the whole list on every call.
+	overwrote = False
+
+	for bpi in range(len(boundedPaths)-1, -1, -1):
+		bp = boundedPaths[bpi]
 		if solution <= bp and not solution == bp:
 			timeMethod("checkBoundedPath", start)
 			return True
 		elif solution >= bp:
-			# print("    -->>  "+str(solution))
-			# print("      ->  "+str(bp))
-			
-			globalMetadata["boundedPaths"][bpi] = solution
+			boundedPaths[bpi] = solution
+			overwrote = True
 
-			timeMethod("checkBoundedPath", start)
-
-
-	if len(solution.constellations) <= globalMetadata["boundedPathLengthMax"]:
-		# print("    -+->  "+str(solution))
-		globalMetadata["boundedPaths"] += [solution]
-	globalMetadata["boundedPaths"] = list(set(globalMetadata["boundedPaths"]))
+	boundedPaths.append(solution)
+	if overwrote:
+		globalMetadata["boundedPaths"] = list(set(boundedPaths))
 
 	timeMethod("checkBoundedPath", start)
 	return False
@@ -167,9 +169,11 @@ def doMove(model, wanted, points, solution, remainingLinks, moveStr=""):
 	newWanted = wanted[:]
 	links = remainingLinks[:]
 
-	for move in nextMoves:
+	numMoves = len(nextMoves)
+	for moveNum, move in enumerate(nextMoves, 1):
 		isSolution = False
-		newMoveStr = moveStr + move.id + "("+ str(int(move.evaluate(model))) +")" +" {"+str(nextMoves.index(move)+1)+"/"+str(len(nextMoves))+"}, "
+		# enumerate rather than nextMoves.index(move), which rescanned the list
+		newMoveStr = moveStr + move.id + "("+ str(int(move.evaluate(model))) +")" +" {"+str(moveNum)+"/"+str(numMoves)+"}, "
 
 		try:
 			links.remove(move)
@@ -192,7 +196,7 @@ def doMove(model, wanted, points, solution, remainingLinks, moveStr=""):
 	if len(solution.constellations) <= model.points/8.0:
 		print("    <-X-  (" + str(solution.cost) + "): " + moveStr[:-2])
 		print("      ", globalMetadata["numCheckedSolutions"])#, "  ", len(globalMetadata["boundedPaths"]))
-		# print("    ", str(methodTimes), sum([methodTimes[key] for key in methodTimes.keys()]))
+		# print("    ", str(methodTimes), sum([methodTimes[key] for key in methodTimes]))
 
 	if isSolution:
 		if solution.score >= globalMetadata["bestScore"]:
@@ -300,11 +304,68 @@ globalMetadata["numCheckedSolutions"] = 0
 
 globalMetadata["startTime"] = time()
 
-DEFAULT_MODEL = "fenris"
+DEFAULT_MODEL = "morena"
+
+def fastSearch(model, budget, seeds):
+	from fastsolve import solveModel
+
+	print("\nFast solve: %s   (%d points, %.1fs x %d seeds)" % (model.name, model.points, budget, seeds))
+	start = time()
+	prob, constellations, score, restarts = solveModel(model, budget, seeds)
+	elapsed = time() - start
+
+	# re-verify through the real scorer rather than trusting the solver's own arithmetic
+	verified = evaluateSolution(constellations, model)
+	cost = getSolutionCost(constellations)
+
+	print("\n  score      : %.0f   (verified %.0f via evaluateSolution)" % (score, verified))
+	print("  cost       : %d / %d stars" % (cost, model.points))
+	print("  restarts   : %d in %.2fs" % (restarts, elapsed))
+	if abs(score - verified) > 1e-6:
+		print("  WARNING: solver score disagrees with evaluateSolution - treat with suspicion")
+	if not prob.feasible([prob.cons.index(c) for c in constellations]):
+		print("  WARNING: solution is not feasible")
+
+	print("\n  Take in this order:")
+	for c in constellations:
+		print("     %-38s %d stars  %s" % (c.name, len(c.stars), c.requires))
+
+	print("\n  " + solutionPath(constellations))
+
+	# keep it as a seed so the exhaustive search can start from here
+	# (loadModel already read any existing seeds, so this adds rather than replaces)
+	model.addSolution(Solution(constellations, model))
+	model.saveSeedSolutions()
+	print("\n  saved to %s/solutions.py" % model.name.lower())
 
 if __name__ == "__main__":
-	# usage: python devotion.py [modelName]   e.g. lochlan, pakse, fenris
-	startSearch(Model.loadModel(sys.argv[1] if len(sys.argv) > 1 else DEFAULT_MODEL))
+	# usage: python devotion.py [modelName] [--fast [--budget S] [--seeds N]]
+	#   e.g. python devotion.py armitage --fast
+	argv = sys.argv[1:]
+	fast = "--fast" in argv
+	budget = 1.0
+	seeds = 5
+	for flag, cast in (("--budget", float), ("--seeds", int)):
+		if flag in argv:
+			i = argv.index(flag)
+			if i + 1 >= len(argv):
+				sys.exit("%s needs a value" % flag)
+			try:
+				value = cast(argv[i + 1])
+			except ValueError:
+				sys.exit("%s needs a %s" % (flag, cast.__name__))
+			if flag == "--budget":
+				budget = value
+			else:
+				seeds = value
+			del argv[i:i + 2]
+	names = [a for a in argv if not a.startswith("-")]
+	modelName = names[0] if names else DEFAULT_MODEL
+
+	if fast:
+		fastSearch(Model.loadModel(modelName), budget, seeds)
+	else:
+		startSearch(Model.loadModel(modelName))
 
 
 # I think the next step is to look at trying to branch and bound.

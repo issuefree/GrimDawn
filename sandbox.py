@@ -153,7 +153,7 @@ def evalCon(c):
 # sol = [xE, spider, quill, light, hawk, xC, viper, hound, messenger, jackal, ultos, torch, behemothGiantsBlood]
 
 sol = [raven, hammer, panther, wraith, tempest]
-sol = [hawk, rat, light, eel, jackal, hound, ultosHandofUltos]
+sol = [hawk, rat, lightofEmpyrion, eel, jackal, hound, ultosHandofUltos]
 # print(Solution([xP, xC, eel, hound, viper, imp, light, lizard, raven, rat, hawk, jackal, behemothGiantsBlood, ultosHandofUltos, torch], model))
 # # evalSol(sol)
 # print(Solution([xE, hawk, eye, fox, xP, imp, xC, viper, messenger, jackal, torch, ultos, behemothGiantsBlood], model))
@@ -297,4 +297,4 @@ etb  = 	Item( "Empowered Thundertouch Bracers",
 # diffSols(sola, solb)
 
 # evalItemMods(["sword", "axe", "mace", "dagger"], augments )
-evalCon(bear)
+evalCon(direBear)

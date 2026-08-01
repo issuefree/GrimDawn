@@ -51,7 +51,7 @@ e = Star(falcon, d, {})
 e.addAbility(Ability(
 	"Falcon Swoop", 
 	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":2, "targets":3, "shape":"cone"}, 
-	{"weapon damage %":24, "triggered physical":116, "triggered bleed":[675,3]} ))
+	{"weapon damage %":24, "triggered physical":116, "triggered bleed":[225,3]} ))
 
 hammer = Constellation("Hammer", "1a", "4a")
 hammer.id = "hammer"
@@ -119,7 +119,7 @@ e = Star(fiend, d, {})
 e.addAbility(Ability(
 	"Flame Torrent", 
 	{"type":"attack", "trigger":"attack", "chance":.25, "recharge":.5, "targets":3, "shape":"pbaoe"},
-	{"weapon damage %":20, "triggered fire":178, "triggered chaos":126, "triggered burn":[570,3]} ))
+	{"weapon damage %":20, "triggered fire":178, "triggered chaos":126, "triggered burn":[190,3]} ))
 
 ghoul = Constellation("Ghoul", "1c", "3c")
 ghoul.id = "ghoul"
@@ -189,7 +189,7 @@ e = Star(scorpion, c, {})
 e.addAbility(Ability(
 	"Scorpion Sting", 
 	{"type":"attack", "trigger":"attack", "chance":.25, "recharge":1.5, "targets":2, "duration":5, "shape":"pbaoe"},
-	{"triggered poison":[1125,5], "duration":{"reduce defense":150}, "weapon damage %":40} ))
+	{"triggered poison":[225,5], "duration":{"reduce defense":150}, "weapon damage %":40} ))
 
 bat = Constellation("Bat", "1e", "2c 3e")
 bat.id = "bat"
@@ -217,7 +217,7 @@ e = Star(eye, d, {})
 e.addAbility(Ability(
 	"Guardian's Gaze", 
 	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":.5, "shape":"pbaoe", "targets":1.5*5},
-	{"weapon damage %":15, "triggered acid":83, "lifesteal %":15, "triggered poison":[380,2]} ))
+	{"weapon damage %":15, "triggered acid":83, "lifesteal %":15, "triggered poison":[190,2]} ))
 
 fox = Constellation("Fox", "1e", "5e")
 fox.id = "fox"
@@ -346,7 +346,7 @@ e = Star(bull, d, {})
 e.addAbility(Ability(
 	"Bull Rush", 
 	{"type":"attack", "trigger":"attack", "chance":.25, "recharge":.4, "targets":2, "shape":"pbaoe"},
-	{"weapon damage %":32, "triggered physical":(115+230)/2, "triggered internal":[450,2]} ))
+	{"weapon damage %":32, "triggered physical":(115+230)/2, "triggered internal":[225,2]} ))
 
 eel = Constellation("Eel", "1p", "5p")
 eel.id = "eel"
@@ -415,7 +415,7 @@ e = Star(tsunami, d, {})
 e.addAbility(Ability(
 	"Tsunami", 
 	{"type":"attack", "trigger":"attack", "chance":.35, "recharge":1, "targets":2.5, "shape":"line"},
-	{"weapon damage %":45, "triggered cold":(180+215)/2, "triggered lightning":(82+130)/2, "triggered frostburn":[450,2]} ))
+	{"weapon damage %":45, "triggered cold":(180+215)/2, "triggered lightning":(82+130)/2, "triggered frostburn":[225,2]} ))
 
 wraith = Constellation("Wraith", "1p", "3a 3p")
 wraith.id = "wraith"
@@ -450,7 +450,7 @@ e = Star(phoenix, d, {})
 e.addAbility(Ability(
 	"Phoenix Fire",
 	{"type":"attack", "trigger":"critical", "chance":1, "recharge":12, "duration":7, "targets":2.5, "shape":"pbaoe"},
-	{ "damage absorb":188, "fire retaliation":360, "retaliation %":140, "triggered fire":92, "triggered aether":92, "triggered burn":[390, 2]} ))
+	{ "damage absorb":188, "fire retaliation":360, "retaliation %":140, "triggered fire":92, "triggered aether":92, "triggered burn":[195, 2]} ))
 
 winter = Constellation("Amatok the Spirit of Winter", "4e 6p", "1e 1p")
 winter.id = "winter"
@@ -466,7 +466,7 @@ g = Star(winter, f, {})
 g.addAbility(Ability(
 	"Blizzard", 
 	{"type":"attack", "trigger":"critical", "chance":1, "recharge":3.2, "targets":3, "shape":"ground"},
-	{"weapon damage %":16, "triggered cold":(315+392)/2, "triggered frostburn":[490,2], "stun %":50, "slow move":70} ))
+	{"weapon damage %":16, "triggered cold":(315+392)/2, "triggered frostburn":[245,2], "stun %":50, "slow move":70} ))
 
 assassin = Constellation("Assassin", "6a 4o", "1a 1o")
 assassin.id = "assassin"
@@ -497,7 +497,7 @@ g = Star(boar, e, {})
 g.addAbility(Ability(
 	"Trample", 
 	{"type":"attack", "trigger":"block", "chance":.33, "recharge":1, "targets":2.5, "shape":"line"},
-	{"stun %":100, "weapon damage %":55, "retaliation to attack":18, "triggered internal":[570, 2]} ))
+	{"stun %":100, "weapon damage %":55, "retaliation to attack":18, "triggered internal":[285, 2]} ))
 
 harp = Constellation("Bard's Harp", "6a 3o 6p", "2o 2p")
 harp.id = "harp"
@@ -685,7 +685,7 @@ g = Star(magi, f, {})
 g.addAbility(Ability(
 	"Fissure", 
 	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":1.8, "duration":5, "targets":2, "shape":"ground"},
-	{"triggered fire":(160+198)/2, "triggered burn":[390,2], "stun %":25} ))
+	{"triggered fire":(160+198)/2, "triggered burn":[195,2], "stun %":25} ))
 
 manticore = Constellation("Manticore", "4c 6e", "1a 1e")
 manticore.id = "manticore"
@@ -699,7 +699,7 @@ f = Star(manticore, e, {})
 f.addAbility(Ability(
 	"Acid Spray", 
 	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":1, "duration":5, "targets":2},
-	{"triggered acid":217, "triggered poison":[390,2], "reduce resist":28} ))
+	{"triggered acid":217, "triggered poison":[195,2], "reduce resist":28} ))
 
 messenger = Constellation("Messenger of War", "3a 7p", "2c 3p")
 messenger.id = "messenger"
@@ -879,7 +879,7 @@ g = Star(tempest, f, {})
 g.addAbility(Ability(
 	"Reckless Tempest", 
 	{"type":"attack", "trigger":"critical", "chance":1, "recharge":10, "duration":6, "targets":3},
-	{"triggered lightning":(118+290)/2, "triggered electrocute":[490,2], "stun %":20} ))
+	{"triggered lightning":(118+290)/2, "triggered electrocute":[245,2], "stun %":20} ))
 
 typhos = Constellation("Typhos, Jailor of Souls", "6a 3c 3o", "2a 2o")
 typhos.id = "typhos"
@@ -1054,7 +1054,7 @@ g = Star(leviathan, d, {})
 g.addAbility(Ability(
 	"Whirlpool", 
 	{"type":"attack", "trigger":"attack", "chance":.3, "recharge":2, "targets":2, "duration":6, "shape":"ground"}, 
-	{"triggered cold":420, "triggered frostburn":[540,2], "slow move":40} ))
+	{"triggered cold":420, "triggered frostburn":[270,2], "slow move":40} ))
 
 empyrion = Constellation("Light of Empyrion", "8o 18p")
 empyrion.id = "empyrion"
@@ -1071,7 +1071,7 @@ g = Star(empyrion, f, {})
 g.addAbility(Ability(
 	"Light of Empyrion", 
 	{"type":"attack", "trigger":"hit", "chance":.2, "recharge":2.5, "targets":3, "duration":3, "shape":"pbaoe"},
-	{"weapon damage %":54, "triggered fire":(280+385)/2, "triggered physical":315, "triggered burn":[540, 2], "stun %":100, "duration":{"reduce damage %":24}, "damage to undead":50, "damage to cthonics":50} ))
+	{"weapon damage %":54, "triggered fire":(280+385)/2, "triggered physical":315, "triggered burn":[270, 2], "stun %":100, "duration":{"reduce damage %":24}, "damage to undead":50, "damage to cthonics":50} ))
 
 wolf = Constellation("Mogdrogen the Wolf", "15a 12e")
 wolf.id = "wolf"

@@ -268,3 +268,37 @@ def compareToHandMaintained():
     if not lines:
         lines.append("constellationData.py matches the game files.")
     return lines
+
+
+GEOMETRY_FIELDS = ("projectileExplosionRadius", "skillTargetRadius", "skillRadius",
+                   "waveDistance", "waveStartWidth", "waveEndWidth", "sparkMaxNumber",
+                   "projectileLaunchNumber", "skillProjectileMaximumNumber",
+                   "skillActiveDuration", "skillCooldownTime")
+
+
+def geometryFor(skill, db=None, depth=0):
+    """Raw geometry for a proc, following the sub-record some classes delegate to."""
+    out = {}
+    for field in GEOMETRY_FIELDS:
+        value = lastValue(skill.get(field, 0)) or 0
+        if value:
+            out[field] = float(value)
+    out["radius"] = max(out.get("projectileExplosionRadius", 0),
+                        out.get("skillTargetRadius", 0),
+                        out.get("skillRadius", 0))
+    out["projectiles"] = (out.get("projectileLaunchNumber", 0)
+                          or out.get("skillProjectileMaximumNumber", 0))
+    # Skill_AttackBuffRadius and friends hold their numbers one record along
+    if depth < 2 and not out["radius"] and not out["projectiles"]:
+        for link in ("buffSkillName", "petSkillName", "skillSecondaryName"):
+            target = skill.get(link)
+            if target and db is not None:
+                nested = db.read(target)
+                if nested:
+                    merged = geometryFor(nested, db, depth + 1)
+                    for key, value in merged.items():
+                        out.setdefault(key, value)
+                        if key in ("radius", "projectiles") and value:
+                            out[key] = out[key] or value
+                    break
+    return out

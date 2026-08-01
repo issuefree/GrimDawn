@@ -5,9 +5,18 @@ class Solution:
 	maxAffinities = None
 	valueVector = None
 
+	# Shared prefix-trie of fully-explored / pruned constellation sets, keyed by
+	# canonical (index-sorted) order so [A,B] and [B,A] collapse to one entry.
+	# This MUST be class level: as an instance attribute every solution got a
+	# fresh empty trie, so kill() wrote to a dict that was thrown away and
+	# isDeadSolution() always returned False.
+	deadSolutions = {}
+
+	@classmethod
+	def resetDeadSolutions(cls):
+		cls.deadSolutions = {}
+
 	def __init__(self, constellations, model):
-		self.deadSolutions = {}
-		self.boundedPaths = []
 		self.links = None
 		self.canonicalOrder = sorted(constellations, key=lambda c: c.index/100.0)
 		self.isDead = self.isDeadSolution()
@@ -20,7 +29,7 @@ class Solution:
 		self.constellations = constellations
 
 		self.cappingAffinity = Affinity()
-		if Solution.maxAffinities != None:
+		if Solution.maxAffinities:
 			for ac in Affinity.sh:
 				if self.provides.get(ac) > Solution.maxAffinities.get(ac):
 					self.provides.set(ac, Solution.maxAffinities.get(ac))
@@ -62,25 +71,30 @@ class Solution:
 			return self.links
 
 
+	# dead if this set, or any prefix of it in canonical order, has been marked.
+	# A marked prefix means that whole subtree was already explored or pruned.
 	def isDeadSolution(self):
-		deadNode = self.deadSolutions
+		deadNode = Solution.deadSolutions
 		for c in self.canonicalOrder:
-			if not c.id in deadNode.keys():
+			if not c.id in deadNode:
 				return False
-			if deadNode[c.id] == True:
+			if deadNode[c.id] is True:
 				return True
 			deadNode = deadNode[c.id]
 		return False
 
 	def kill(self, verbose=False):
 		if verbose:
-			print "Killing solution: " + solutionPath(self.canonicalOrder)
-		deadNode = self.deadSolutions
-		for c in self.canonicalOrder:
-			if c == self.canonicalOrder[-1]:
+			print("Killing solution: " + solutionPath(self.canonicalOrder))
+		deadNode = Solution.deadSolutions
+		last = len(self.canonicalOrder) - 1
+		for i, c in enumerate(self.canonicalOrder):
+			if i == last:
 				deadNode[c.id] = True
 				return
 
-			if not c.id in deadNode.keys():
+			if not c.id in deadNode:
 				deadNode[c.id] = {}
+			elif deadNode[c.id] is True:
+				return # a shorter prefix is already dead, so this path is covered
 			deadNode = deadNode[c.id]

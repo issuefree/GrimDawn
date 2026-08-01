@@ -2,8 +2,6 @@ import itertools
 import string
 from dataModel import *
 from utils import *
+import random
 
-a = {"foo":1, "bar":2}
-b = {"bar":2, "baz":1}
-
-print mergeBonuses(a, b)
+print random.randint(1,3)

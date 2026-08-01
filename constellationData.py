@@ -949,7 +949,7 @@ h = Star(abomination, g, {})
 h.addAbility(Ability(
 	"Tainted Eruption",
 	{"type":"attack", "trigger":"attack", "chance":.15, "recharge":3, "targets":3, "shape":"pbaoe"},
-	{"triggered poison":[1560,5], "stun %":100} ))
+	{"triggered poison":[472,5], "stun %":100} ))
 
 hourglass = Constellation("Aeon's Hourglass", "8c 18p")
 hourglass.id = "hourglass"
@@ -1117,7 +1117,7 @@ g = Star(oleron, d, {})
 g.addAbility(Ability(
 	"Blind Fury", 
 	{"type":"attack", "trigger":"critical", "chance":1, "recharge":1, "duration":5, "targets":2.5, "shape":"pbaoe"},
-	{"weapon damage %":70, "triggered pierce":85, "triggered internal":[490/2,2], "triggered bleed":[490/2,2], "duration":{"slow attack":25, "reduce physical resist":12*3/5}} ))
+	{"weapon damage %":75, "triggered pierce":85, "triggered internal":[335,5], "triggered bleed":[335,5], "duration":{"slow attack":30, "reduce physical resist":12*3/5}} ))
 
 rattosh = Constellation("Rattosh, the Veilwarden", "6c 10e 6o")
 rattosh.id = "rattosh"
@@ -1144,7 +1144,7 @@ f = Star(spear, e, {})
 f.addAbility(Ability(
 	"Spear of the Heavens", 
 	{"type":"attack", "trigger":"hit", "chance":.5, "recharge":1, "targets":1.5, "shape":"circle"},
-	{"weapon damage %":60, "triggered lightning":(192+332)/2, "triggered aether":294, "triggered electrocute":[236/2,2], "stun %":100} ))
+	{"weapon damage %":60, "triggered lightning":(175+280)/2, "triggered aether":324, "triggered electrocute":[355,2], "stun %":100} ))
 
 tree = Constellation("Tree of Life", "7o 20p")
 tree.id = "tree"
@@ -1173,7 +1173,7 @@ f = Star(ultos, e, {})
 f.addAbility(Ability(
 	"Hand of Ultos", 	
 	{"type":"attack", "trigger":"critical", "chance":1, "recharge":1.5, "targets":3.5, "duration":3},
-	{"weapon damage %":24, "triggered lightning":(224+434)/2, "triggered electrocute":[696/2,2], "duration":{"reduce elemental resist":25}} ))
+	{"weapon damage %":20, "triggered lightning":(222+434)/2, "triggered electrocute":[270,2], "duration":{"reduce elemental resist":20}} ))
 
 torch = Constellation("Ulzuin's Torch", "8c 15e")
 torch.id = "torch"

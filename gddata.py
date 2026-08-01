@@ -21,11 +21,27 @@ FLAT = {
     "offensiveFire": "fire", "offensiveCold": "cold", "offensiveLightning": "lightning",
     "offensivePoison": "acid", "offensiveLife": "vitality", "offensiveAether": "aether",
     "offensiveChaos": "chaos", "offensiveElemental": "elemental",
-    "offensiveLifeLeech": "life leech",
+    # offensiveLifeLeechMin is how the game expresses "% of attack damage
+    # converted to health", which this codebase calls lifesteal %.
+    "offensiveLifeLeech": "lifesteal %",
     "offensiveSlowBleeding": "bleed", "offensiveSlowPhysical": "internal",
-    "offensiveSlowBurn": "burn", "offensiveSlowCold": "frostburn",
+    # GD names these after the parent element, not the effect: SlowFire is burn,
+    # SlowCold is frostburn, SlowLightning is electrocute, SlowLife is vitality decay.
+    "offensiveSlowFire": "burn", "offensiveSlowCold": "frostburn",
     "offensiveSlowLightning": "electrocute", "offensiveSlowPoison": "poison",
-    "offensiveSlowLifeLeach": "vitality decay",
+    "offensiveSlowLife": "vitality decay",
+    # percent-based resist reduction is expressed as a Min/Max pair
+    "offensiveElementalResistanceReductionPercent": "reduce elemental resist",
+    "offensivePhysicalResistanceReductionPercent": "reduce physical resist",
+    "offensiveTotalResistanceReductionPercent": "reduce resist",
+    "retaliationPhysical": "physical retaliation", "retaliationPierce": "pierce retaliation",
+    "retaliationFire": "fire retaliation", "retaliationCold": "cold retaliation",
+    "retaliationLightning": "lightning retaliation", "retaliationPoison": "acid retaliation",
+    "retaliationLife": "vitality retaliation", "retaliationChaos": "chaos retaliation",
+    "retaliationAether": "aether retaliation", "retaliationBleeding": "bleed retaliation",
+    "retaliationStun": "stun retaliation",
+    "retaliationSlowLife": "vitality decay retaliation",
+    "retaliationSlowLifeLeach": "life leech retaliation",
 }
 DIRECT = {
     "characterOffensiveAbility": "offense", "characterOffensiveAbilityModifier": "offense %",
@@ -65,19 +81,31 @@ DIRECT = {
     "offensiveLifeModifier": "vitality %", "offensiveAetherModifier": "aether %",
     "offensiveChaosModifier": "chaos %", "offensiveElementalModifier": "elemental %",
     "offensiveSlowBleedingModifier": "bleed %", "offensiveSlowPhysicalModifier": "internal %",
-    "offensiveSlowBurnModifier": "burn %", "offensiveSlowColdModifier": "frostburn %",
+    "offensiveSlowFireModifier": "burn %", "offensiveSlowColdModifier": "frostburn %",
     "offensiveSlowLightningModifier": "electrocute %", "offensiveSlowPoisonModifier": "poison %",
-    "offensiveSlowLifeLeachModifier": "vitality decay %",
+    "offensiveSlowLifeModifier": "vitality decay %",
     "offensiveLifeLeechModifier": "life leech %",
     "offensivePercentCurrentLifeModifier": "lifesteal %",
     "offensiveLifeLeechChanceModifier": "lifesteal %",
     "retaliationTotalDamageModifier": "retaliation %",
-    "retaliationPhysical": "physical retaliation", "retaliationPierce": "pierce retaliation",
-    "retaliationFire": "fire retaliation", "retaliationCold": "cold retaliation",
-    "retaliationLightning": "lightning retaliation", "retaliationPoison": "acid retaliation",
-    "retaliationLife": "vitality retaliation", "retaliationChaos": "chaos retaliation",
-    "retaliationStun": "stun retaliation",
     "offensiveStunModifier": "stun %",
+    "offensiveSlowBleedingDurationModifier": "bleed duration",
+    "offensiveSlowFireDurationModifier": "burn duration",
+    "offensiveSlowColdDurationModifier": "frostburn duration",
+    "offensiveSlowLightningDurationModifier": "electrocute duration",
+    "offensiveSlowPoisonDurationModifier": "poison duration",
+    "offensiveSlowPhysicalDurationModifier": "internal duration",
+    "offensiveSlowLifeDurationModifier": "vitality decay duration",
+    "defensiveTotalSpeedResistance": "slow resist",
+    "defensivePercentReflectionResistance": "reflected damage reduction",
+    "defensiveReflect": "damage reflect %",
+    "characterHealIncreasePercent": "healing %",
+    "characterConstitutionModifier": "constitution %",
+    "characterEnergyAbsorptionPercent": "energy absorb",
+    "characterDefensiveBlockRecoveryReduction": "shield recovery",
+    "characterAttackSpeedModifier": "attack speed",
+    "defensiveBleeding": "bleed resist",
+    "skillCooldownReduction": "skill recharge",
     "offensiveFumbleModifier": "fumble", "offensiveTotalResistanceReductionAbsolute": "reduce resist",
     "offensiveElementalResistanceReductionAbsolute": "reduce elemental resist",
     "offensivePhysicalResistanceReductionAbsolute": "reduce physical resist",
@@ -137,13 +165,38 @@ def lastValue(value):
     return value
 
 
-def starBonuses(skill):
-    """Map one star's passive stat fields into optimiser bonus names."""
+RACES = {"Undead": "damage undead %", "Beast": "damage beast %", "Human": "damage human %",
+         "Chthonic": "damage cthonics %", "Aetherial": "damage aetherials %",
+         "Insectoid": "damage insectoid %", "Magical": "damage magical %",
+         "Eldritch": "damage eldritch %"}
+
+
+def starBonuses(skill, db=None):
+    """Map one star's passive stat fields into optimiser bonus names.
+
+    A star may also carry petBonusName, pointing at a record that uses the very
+    same field names but applies them to your pets. Those are folded in here
+    with a "pet " prefix, which is how the optimiser names them.
+    """
     out = {}
+    petRecord = skill.get("petBonusName")
+    if petRecord and db is not None:
+        bonus = db.read(petRecord)
+        if bonus:
+            for key, value in starBonuses(bonus).items():
+                key = key if key.startswith("pet ") else "pet " + key
+                out[key] = out.get(key, 0) + value
     for field, name in DIRECT.items():
         v = lastValue(skill.get(field, 0))
         if v:
             out[name] = out.get(name, 0) + round(float(v), 3)
+    races = skill.get("racialBonusRace")
+    racial = lastValue(skill.get("racialBonusPercentDamage", 0)) or 0
+    if racial and races:
+        for race in (races if isinstance(races, list) else [races]):
+            name = RACES.get(race)
+            if name:
+                out[name] = out.get(name, 0) + round(float(racial), 3)
     for prefix, name in FLAT.items():
         lo = lastValue(skill.get(prefix + "Min", 0)) or 0
         hi = lastValue(skill.get(prefix + "Max", 0)) or 0
@@ -193,7 +246,7 @@ def compareToHandMaintained():
             skill = db.read(skillPath)
             if skill.get("templateAutoCast"):
                 continue # a triggered proc, not a passive star bonus
-            for key, value in starBonuses(skill).items():
+            for key, value in starBonuses(skill, db).items():
                 gameTotals[key] = gameTotals.get(key, 0) + value
         for star in current.stars:
             for key, value in star.bonuses.items():

@@ -347,6 +347,7 @@ if __name__ == "__main__":
 	# runs the old branch-and-bound, which does not terminate on large models.
 	argv = sys.argv[1:]
 	exhaustive = "--exhaustive" in argv
+	checkData = "--check-data" in argv
 	if "--fast" in argv:
 		argv.remove("--fast") # now the default; accepted so old invocations still work
 	budget = 1.0
@@ -374,7 +375,14 @@ if __name__ == "__main__":
 	names = [a for a in argv if not a.startswith("-")]
 	modelName = names[0] if names else DEFAULT_MODEL
 
-	if newModel:
+	if checkData:
+		import gddata
+		try:
+			for line in gddata.compareToHandMaintained():
+				print(line)
+		except FileNotFoundError as e:
+			sys.exit("Could not read the Grim Dawn database: %s. Set GRIM_DAWN_DIR if the game is installed elsewhere." % e)
+	elif newModel:
 		import modelspec
 		try:
 			path = modelspec.scaffold(newModel, archetype)

@@ -56,6 +56,49 @@ def applyDefaults(stats):
 	return notes
 
 
+def applyDamagePriority(stats, weights, priority):
+	"""Split one priority per damage type into flat and % weights using the sheet.
+
+	How much a point of a damage type is worth is not a preference - it follows
+	from what you already have. Roughly, damage of type X is
+	(flat + weaponBase) * (1 + X%/100), so:
+
+	    +1 flat X  is worth  (1 + X%/100)
+	    +1% X      is worth  (flat / 100)
+
+	With 69 flat lightning and 850% lightning, a point of flat is ~14x the value
+	of a point of %. With no flat physical at all, physical % multiplies nothing
+	and is worth zero. Hand-written weights tend to set the two equal, which
+	quietly misprices exactly the types you invest in least.
+
+	The priority you supply stays a pure preference ("pierce matters more than
+	cold"), and is preserved in total: weight(X) + weight(X %) == 2 * priority.
+	Anything already named explicitly in `weights` wins, so you can always pin a
+	value you disagree with.
+	"""
+	notes = []
+	for damage, value in sorted(priority.items()):
+		flat, perc = stats.get(damage, 0), stats.get(damage + " %", 0)
+		if not flat and not perc:
+			# Nothing on the sheet to reason from. Splitting here would just
+			# invent a ratio, so leave it to an explicit weight.
+			notes.append("%s priority ignored: no %s on the sheet, so flat vs %% "
+						 "cannot be inferred - set both weights explicitly" % (damage, damage))
+			continue
+		vFlat = 1.0 + perc / 100.0   # value of +1 flat point
+		vPerc = flat / 100.0         # value of +1 percentage point
+		norm = (vFlat + vPerc) / 2.0
+		derived = {damage: value * vFlat / norm, damage + " %": value * vPerc / norm}
+		for key, amount in derived.items():
+			if key in weights:
+				continue # explicit weight wins
+			weights[key] = round(amount, 3)
+		notes.append("%s priority %g -> %s %g, %s %% %g  (sheet: %g flat, %g%%)"
+					 % (damage, value, damage, weights.get(damage, 0),
+						damage, weights.get(damage + " %", 0), flat, perc))
+	return notes
+
+
 def bonusVocabulary():
 	"""Every weight name the optimiser can score against."""
 	vocab = set()
@@ -108,11 +151,14 @@ def statVocabulary():
 
 
 def _suggest(key, vocab):
-	close = difflib.get_close_matches(key, vocab, n=1, cutoff=0.85)
+	# 0.80 catches real typos ('peirce', 'aether reist', 'physiacl resist') while
+	# staying quiet on keys that are simply unsupported ('damage reflect %'),
+	# where a confident-looking wrong suggestion would be worse than none.
+	close = difflib.get_close_matches(key, sorted(vocab), n=1, cutoff=0.80)
 	return "  (did you mean %r?)" % close[0] if close else ""
 
 
-def validate(name, points, stats, weights):
+def validate(name, points, stats, weights, priority=None):
 	"""Raise on anything unrecoverable; warn about anything suspicious."""
 	problems = []
 	if not isinstance(points, (int, float)) or points <= 0:
@@ -123,8 +169,12 @@ def validate(name, points, stats, weights):
 	if stats.get("playStyle") not in PLAY_STYLES and "playStyle" in stats:
 		problems.append("stats['playStyle'] is %r; expected one of %s"
 						% (stats["playStyle"], ", ".join(PLAY_STYLES)))
-	if not weights:
+	if not weights and not priority:
 		problems.append("weights is empty, so every constellation scores 0")
+	for key in (priority or {}):
+		if key not in damages:
+			problems.append("damagePriority key %r is not a damage type%s"
+							% (key, _suggest(key, damages)))
 	if problems:
 		raise ValueError("%s model is not usable:\n    %s"
 						 % (name, "\n    ".join(problems)))
@@ -166,31 +216,45 @@ stats = {
 	# "offense": 0, "defense": 0,
 	# "health": 0, "health/s": 0, "armor": 0,
 	# "fight length": 30,
+
+	# Flat and %% damage for the types you care about. damagePriority below
+	# uses these to work out what a point of each is actually worth.
+	# "pierce": 350, "pierce %%": 200,
 }
 
+# One number per damage type saying how much you care about it. The flat vs %%
+# split is derived from the sheet above: with 69 flat lightning and 850%%
+# lightning, a flat point is worth ~14x a percentage point, and with no flat
+# physical at all, "physical %%" multiplies nothing. You should not have to work
+# that out by hand, and hand-written weights usually get it wrong.
+damagePriority = {
+%(priority)s}
+
+# Everything else - defence, speed, utility. Anything named here also overrides
+# whatever damagePriority would have derived.
 weights = {
 %(weights)s}
 '''
 
 # Rough starting points. These are opinions, not truths - tune them.
+# archetype: (damagePriority lines, weights lines)
 ARCHETYPES = {
-	"physical": ['\t"physical": 10, "physical %%": 10,',
-				 '\t"pierce": 5, "pierce %%": 5,',
-				 '\t"offense": 5, "attack speed": 10,',
-				 '\t"weapon damage %%": 7.5,'],
-	"bleed":    ['\t"bleed": 15, "bleed %%": 15, "bleed duration": 5,',
-				 '\t"physical": 5, "physical %%": 5,',
-				 '\t"offense": 5, "attack speed": 10,'],
-	"fire":     ['\t"fire": 15, "fire %%": 15,',
-				 '\t"burn": 7.5, "burn %%": 7.5, "burn duration": 5,',
-				 '\t"cast speed": 10,'],
-	"tank":     ['\t"armor": 5, "armor absorb": 20,',
-				 '\t"health": 0.66, "defense": 7.5,',
-				 '\t"resist": 15, "physical resist": 35,',
-				 '\t"block %%": 100, "blocked damage %%": 40,'],
-	"pet":      ['\t"pet all damage %%": 10,',
-				 '\t"pet resist": 10,',
-				 '\t"health": 0.5, "defense": 5,'],
+	"physical": (['\t"physical": 10,', '\t"pierce": 5,'],
+				 ['\t"offense": 5, "attack speed": 10,',
+				  '\t"weapon damage %%": 7.5,']),
+	"bleed":    (['\t"bleed": 15,', '\t"physical": 5,'],
+				 ['\t"bleed duration": 5,',
+				  '\t"offense": 5, "attack speed": 10,']),
+	"fire":     (['\t"fire": 15,', '\t"burn": 7.5,'],
+				 ['\t"burn duration": 5,', '\t"cast speed": 10,']),
+	"tank":     (['\t"physical": 5,'],
+				 ['\t"armor": 5, "armor absorb": 20,',
+				  '\t"health": 0.66, "defense": 7.5,',
+				  '\t"resist": 15, "physical resist": 35,',
+				  '\t"block %%": 100, "blocked damage %%": 40,']),
+	"pet":      ([],
+				 ['\t"pet all damage %%": 10,', '\t"pet resist": 10,',
+				  '\t"health": 0.5, "defense": 5,']),
 }
 
 
@@ -204,13 +268,14 @@ def scaffold(name, archetype="physical", points=55, style="melee", force=False):
 		raise ValueError("unknown archetype %r; try one of: %s"
 						 % (archetype, ", ".join(sorted(ARCHETYPES))))
 	os.makedirs(folder, exist_ok=True)
-	body = "\n".join(ARCHETYPES[archetype]) % ()
+	priorityLines, weightLines = ARCHETYPES[archetype]
 	text = TEMPLATE % {
 		"name": name,
 		"points": points,
 		"style": style,
 		"styles": "        # melee | shortranged | ranged | tank",
-		"weights": body + "\n",
+		"priority": ("\n".join(priorityLines) % () + "\n") if priorityLines else "",
+		"weights": "\n".join(weightLines) % () + "\n",
 	}
 	with open(path, "w") as handle:
 		handle.write(text)

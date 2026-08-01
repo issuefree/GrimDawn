@@ -258,7 +258,10 @@ class Model:
 
 		stats, weights = namespace["stats"], namespace["weights"]
 		notes = modelspec.applyDefaults(stats)
-		warnings = modelspec.validate(name, namespace["devotionPoints"], stats, weights)
+		if namespace.get("damagePriority"):
+			notes += modelspec.applyDamagePriority(stats, weights, namespace["damagePriority"])
+		warnings = modelspec.validate(name, namespace["devotionPoints"], stats, weights,
+									  namespace.get("damagePriority"))
 		for note in notes:
 			print("  note: " + note)
 		for warning in warnings:

@@ -373,6 +373,13 @@ if __name__ == "__main__":
 	argv = sys.argv[1:]
 	exhaustive = "--exhaustive" in argv
 	regenerate = "--regenerate" in argv
+	compare = []
+	if "--compare" in argv:
+		# everything after --compare is an item name, so the model has to be
+		# named before it: python devotion.py armitage --compare "a" "b"
+		index = argv.index("--compare")
+		compare = [a for a in argv[index + 1:] if not a.startswith("-")]
+		del argv[index:]
 	if "--fast" in argv:
 		argv.remove("--fast") # now the default; accepted so old invocations still work
 	budget = 1.0
@@ -431,7 +438,10 @@ if __name__ == "__main__":
 			model = Model.loadModel(modelName)
 		except (ValueError, FileNotFoundError) as e:
 			sys.exit(str(e))
-		if exhaustive:
+		if compare:
+			import gearcompare
+			gearcompare.compare(model, compare)
+		elif exhaustive:
 			startSearch(model)
 		else:
 			fastSearch(model, budget, seeds)

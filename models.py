@@ -238,9 +238,33 @@ class Model:
 
 	@staticmethod
 	def loadModel(name):
-		file = open(name.lower() + "/" + name.lower() + ".py", "r")
-		exec(file.read(), locals())
-		model = Model(name, locals()["stats"], locals()["weights"], locals()["devotionPoints"] )
+		import modelspec
+
+		path = name.lower() + "/" + name.lower() + ".py"
+		if not os.path.exists(path):
+			raise FileNotFoundError(
+				"No model at %s. Create one with:  python devotion.py --new %s" % (path, name))
+
+		# Run the file against a copy of this module's globals so a blacklist can
+		# name constellations. exec(src, locals()) only worked by accident of how
+		# CPython caches the locals proxy, and left those names unresolvable.
+		namespace = dict(globals())
+		with open(path, "r") as handle:
+			exec(handle.read(), namespace)
+
+		missing = [k for k in ("devotionPoints", "stats", "weights") if k not in namespace]
+		if missing:
+			raise ValueError("%s does not define: %s" % (path, ", ".join(missing)))
+
+		stats, weights = namespace["stats"], namespace["weights"]
+		notes = modelspec.applyDefaults(stats)
+		warnings = modelspec.validate(name, namespace["devotionPoints"], stats, weights)
+		for note in notes:
+			print("  note: " + note)
+		for warning in warnings:
+			print("  WARNING: %s: %s" % (path, warning))
+
+		model = Model(name, stats, weights, namespace["devotionPoints"])
 		# model.items = locals()["items"]
 		# model.skills = locals()["skills"]
 		# model.constellations = locals()["constellations"]

@@ -351,7 +351,9 @@ if __name__ == "__main__":
 		argv.remove("--fast") # now the default; accepted so old invocations still work
 	budget = 1.0
 	seeds = 5
-	for flag, cast in (("--budget", float), ("--seeds", int)):
+	newModel = None
+	archetype = "physical"
+	for flag, cast in (("--new", str), ("--archetype", str), ("--budget", float), ("--seeds", int)):
 		if flag in argv:
 			i = argv.index(flag)
 			if i + 1 >= len(argv):
@@ -362,16 +364,35 @@ if __name__ == "__main__":
 				sys.exit("%s needs a %s" % (flag, cast.__name__))
 			if flag == "--budget":
 				budget = value
-			else:
+			elif flag == "--seeds":
 				seeds = value
+			elif flag == "--new":
+				newModel = value
+			else:
+				archetype = value
 			del argv[i:i + 2]
 	names = [a for a in argv if not a.startswith("-")]
 	modelName = names[0] if names else DEFAULT_MODEL
 
-	if exhaustive:
-		startSearch(Model.loadModel(modelName))
+	if newModel:
+		import modelspec
+		try:
+			path = modelspec.scaffold(newModel, archetype)
+		except ValueError as e:
+			sys.exit(str(e))
+		print("Created %s (archetype: %s)" % (path, archetype))
+		print("  Fill in your character sheet, then run:  python devotion.py %s" % newModel.lower())
+		print("  Archetypes available: %s" % ", ".join(sorted(modelspec.ARCHETYPES)))
 	else:
-		fastSearch(Model.loadModel(modelName), budget, seeds)
+		# a broken model file is a user error, not a crash - report it plainly
+		try:
+			model = Model.loadModel(modelName)
+		except (ValueError, FileNotFoundError) as e:
+			sys.exit(str(e))
+		if exhaustive:
+			startSearch(model)
+		else:
+			fastSearch(model, budget, seeds)
 
 
 # I think the next step is to look at trying to branch and bound.

@@ -353,7 +353,7 @@ class Ability:
 
 		return triggers/numFights
 
-	def calculateDynamicBonuses(self, model):
+	def calculateDynamicBonuses(self, model, verbose=False):
 		self.dynamicBonuses = {}
 		if "attack as health %" in self.bonuses:
 			totalDamage = 0

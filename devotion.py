@@ -306,6 +306,26 @@ globalMetadata["startTime"] = time()
 
 DEFAULT_MODEL = "morena"
 
+def showAugments(model, count=3):
+	"""The best augments this character could put in each slot.
+
+	Augments are picked slot by slot rather than solved for: unlike devotions
+	they cost nothing but faction standing and one does not rule out another, so
+	the best in each slot is simply the best in each slot.
+	"""
+	from itemData import augments
+
+	print("\n  Best augments per slot:")
+	for location in sorted({slot for item in augments for slot in item.location}):
+		ranked = sorted(((item.evaluate(model, location), item)
+						 for item in Item.getByLocation(location, augments)),
+						key=itemgetter(0), reverse=True)
+		best = [(value, item) for value, item in ranked[:count] if value > 0]
+		print("    %-9s %s" % (location,
+							   "   ".join("%s (%d)" % (item.name, value) for value, item in best)
+							   or "- nothing this character scores"))
+
+
 def fastSearch(model, budget, seeds):
 	from fastsolve import solveModel
 
@@ -337,6 +357,8 @@ def fastSearch(model, budget, seeds):
 	model.addSolution(Solution(constellations, model))
 	model.saveSeedSolutions()
 	print("\n  saved to %s/solutions.py" % model.name.lower())
+
+	showAugments(model)
 
 if __name__ == "__main__":
 	# usage: python devotion.py [modelName] [--budget S] [--seeds N] [--exhaustive]

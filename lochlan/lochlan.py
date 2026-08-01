@@ -347,5 +347,5 @@ skills = [
 
 # skills = {}
 
-constellations = [xC, fiend, viper, tsunami, wraith, quill, kraken, tempest, hawk, eel, ultosHandofUltos, spear]
+constellations = [xC, fiend, viper, tsunami, wraith, quill, kraken, tempest, hawk, eel, ultosHandofUltos, spearoftheHeavens]
 # constellations = [ultos]

@@ -94,7 +94,11 @@ class Ability:
 		skillClass = self.gc("skillClass")
 		if "shape" not in self.conditions:
 			self.conditions["shape"] = devotionderive.shapeFor(skillClass)
-		if "targets" not in self.conditions:
+		# Only something that hits enemies benefits from hitting several. A buff's
+		# radius says who it lands on - you and your pets - so deriving targets
+		# from it multiplied the player's own armour and damage bonuses by the
+		# size of the circle. Dying God's 12m radius was worth four of itself.
+		if "targets" not in self.conditions and self.gc("type") in ("attack", "wps", "aar"):
 			density = model.getStat("enemy density") or None
 			geometry = {k: self.gc(k) for k in
 						("radius", "projectiles", "sparkMaxNumber", "waveDistance",
@@ -103,14 +107,38 @@ class Ability:
 				skillClass, geometry.get("radius", 0), geometry.get("projectiles", 0),
 				density, geometry)
 
-		# A ground effect lists damage per tick and applies for its whole
-		# duration. The old data baked this in for some abilities and not
-		# others; now it is applied uniformly from the duration the game states.
-		scale = devotionderive.durationScale(self.gc("activeDuration"))
+		# A proc's damage is stated per application. How many applications one
+		# enemy actually takes depends on the shape and is decided in one place.
+		scale = devotionderive.durationScale(self.gc("duration"), self.gc("shape"))
 		if scale > 1:
 			for key in list(self.bonuses):
 				if key.startswith("triggered ") and not isinstance(self.bonuses[key], (list, dict)):
 					self.bonuses[key] = round(self.bonuses[key] * scale, 2)
+
+		# A summon's bonuses are what one creature does in one hit. What it adds
+		# up to over a lifespan is the pet's own attack speed and the walk to its
+		# target, both of which are judgement and so are worked out in
+		# devotionderive rather than baked into the data.
+		if self.gc("petMode"):
+			hits = devotionderive.summonHits(self.gc("lifespan"), self.gc("petAttackSpeed"),
+											 self.gc("petMode"), self.gc("petMelee"))
+			interval = float(self.gc("lifespan") or 0) / hits
+			for key in list(self.bonuses):
+				value = self.bonuses[key]
+				if key == "duration":
+					upTime = devotionderive.summonDebuffUpTime(hits, self.gc("lifespan"))
+					# a debuff refreshed by each swing does not stack with itself,
+					# so it scales with how much of the time it is up, not with
+					# how many times it landed
+					for debuff in list(value):
+						value[debuff] = round(value[debuff] * upTime, 2)
+				elif isinstance(value, list):
+					# same refresh rule as an attack proc's DoT, but the interval
+					# is the pet's own swing rather than the proc's recharge
+					damage, ticks = value
+					self.bonuses[key] = round(damage * min(ticks, interval or ticks) * hits, 2)
+				elif key.startswith("triggered "):
+					self.bonuses[key] = round(value * hits, 2)
 
 	def calculateEffective(self, model, verbose=False):
 		self.resolveDerived(model)
@@ -245,6 +273,14 @@ class Ability:
 
 		if self.gc("type") == "summon":
 			self.effective = self.getUpTime(model)
+
+		if "duration" in self.bonuses:
+			# Whatever setDebuffValue did not claim. A buff or a summon is
+			# already charged for how much of the fight it is up, and that is
+			# the same window its debuff component is on the enemy, so these
+			# fold in as ordinary bonuses rather than being scaled again.
+			for bonus, value in self.bonuses.pop("duration").items():
+				self.bonuses[bonus] = self.gb(bonus) + value
 
 	def setDebuffValue(self, targets, model, verbose=False):
 		#find duration based elements (for attacks that include a debuff component)

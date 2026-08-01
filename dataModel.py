@@ -368,8 +368,45 @@ class Constellation:
 		for i in range(len(others)):
 			other = others[i]
 			self.conflicts += [other]
-			other.conflicts += [self]			
+			other.conflicts += [self]
 			other.addConflicts(others[i+1:])
+
+	@staticmethod
+	def buildAbilityFragments(namespace):
+		"""Register a partial constellation for each proc reachable early.
+
+		You do not have to finish a constellation to get its proc: several put
+		one part-way along, and stopping there is often the better buy. Each such
+		prefix becomes a constellation in its own right, conflicting with the full
+		one and with its siblings so the solver cannot take both.
+
+		This used to live at the bottom of the hand-written data file, which is
+		why the generated data had none of it and models that named a fragment
+		("ultosHandofUltos") stopped loading when the default changed. namespace
+		is the caller's globals(), where each fragment is bound under its id.
+		"""
+		def required(star):
+			return [star] + (required(star.requires) if star.requires else [])
+
+		fragments = []
+		for c in Constellation.constellations[:]:
+			siblings = []
+			for ability in c.abilities:
+				stars = required(ability)
+				if len(stars) >= len(c.stars):
+					continue      # the proc is the last star; that is the whole thing
+				sub = Constellation(c.name + " (" + ability.name + ")", c.requires)
+				sub.id = c.id + ability.name.replace(" ", "").replace("'", "")
+				sub.stars = stars
+				sub.abilities = [ability]
+				sub.restricts = c.restricts
+				sub.addConflicts(c.conflicts)
+				siblings.append(sub)
+			c.addConflicts(siblings)
+			fragments += siblings
+		for sub in fragments:
+			namespace[sub.id] = sub
+		return fragments
 
 	# tier 0: a crossroards constellation
 	# tier 1: just like the game defines: requires 1 affinity, provides many affinity.

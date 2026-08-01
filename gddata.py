@@ -5,7 +5,7 @@ base -> GDX1 -> GDX2 -> GDX3 and the last definition wins.
 """
 import os
 
-from constants import durationDamages
+from constants import damages, durationDamages
 from gdarz import Arz
 
 # Override with the GRIM_DAWN_DIR environment variable if installed elsewhere.
@@ -47,7 +47,21 @@ FLAT = {
     "retaliationStun": "stun retaliation",
     "retaliationSlowLife": "vitality decay retaliation",
     "retaliationSlowLifeLeach": "life leech retaliation",
+    # These name what is done to the target rather than a damage type. The
+    # optimiser has no stat for "the enemy misses more", so slowing an enemy's
+    # offensive ability is scored as defence and its defensive ability as
+    # offence, which is how the hand-written data always scored them.
+    # SlowRunSpeed slows the legs, SlowTotalSpeed slows everything the target
+    # does; the optimiser has one stat for being slowed and both land on it.
+    "offensiveSlowRunSpeed": "slow move",
+    "offensiveSlowTotalSpeed": "slow move",
+    "offensiveSlowOffensiveAbility": "defense",
+    "offensiveSlowDefensiveAbility": "offense",
 }
+# The subset of FLAT that lands on the enemy rather than on you. A summon's
+# payload keeps these and its damage; everything else in a pet's records
+# describes the pet itself and is none of the player's business.
+ENEMY_FLAT = frozenset(["slow move", "defense", "offense"])
 DIRECT = {
     "characterOffensiveAbility": "offense", "characterOffensiveAbilityModifier": "offense %",
     "characterDefensiveAbility": "defense", "characterDefensiveAbilityModifier": "defense %",
@@ -112,6 +126,36 @@ DIRECT = {
     "defensiveBleeding": "bleed resist",
     "skillCooldownReduction": "skill recharge",
     "offensiveFumbleModifier": "fumble", "offensiveTotalResistanceReductionAbsolute": "reduce resist",
+    # A shield absorbs a flat amount or a percentage; the game keeps the two in
+    # separate fields and so does the optimiser.
+    "damageAbsorption": "damage absorb", "damageAbsorptionPercent": "damage absorb %",
+    # Heals that restore a lump plus a fraction of your maximum.
+    "skillLifeBonus": "health", "skillLifePercent": "health %",
+}
+# Life the skill costs you every second it is running. Same units as a
+# regeneration bonus, opposite sign.
+COSTS = {"skillActiveLifeCost": "health/s", "skillActiveManaCost": "energy/s"}
+# Crowd control the data states as a duration in seconds. The hand-written file
+# scored these out of 100 and picked the number by feel - Magi's 1.5s stun was
+# worth 25 and Spear of the Heavens' 1.0s was worth 100. One second is taken as
+# 100 here so that two procs that stun for the same time are worth the same.
+STUNS = ("offensiveStun", "offensiveKnockdown")
+STUN_SCALE = 100.0
+# A record with debufSkill set describes what is done to the enemy, using the
+# very same field names as a buff on yourself. A negative resistance there is
+# resistance reduction; the optimiser has no stat for "enemy hits less
+# accurately", so reduced enemy offensive ability is scored the way the
+# hand-written data always scored it, as defence.
+DEBUFF = {
+    "defensivePhysical": "reduce physical resist", "defensivePierce": "reduce pierce resist",
+    "defensiveFire": "reduce fire resist", "defensiveCold": "reduce cold resist",
+    "defensiveLightning": "reduce lightning resist", "defensivePoison": "reduce acid resist",
+    "defensiveLife": "reduce vitality resist", "defensiveAether": "reduce aether resist",
+    "defensiveChaos": "reduce chaos resist", "defensiveBleeding": "reduce bleed resist",
+    "defensiveElementalResistance": "reduce elemental resist",
+    "characterOffensiveAbility": "defense",
+    "characterDefensiveAbility": "offense",
+    "defensiveProtection": "reduce armor",
 }
 WEAPON_FLAGS = {"Sword": "sword", "Sword2h": "2h-sword", "Axe": "axe", "Axe2h": "2h-axe",
                 "Mace": "mace", "Mace2h": "2h-mace", "Spear": "spear", "Staff": "staff",
@@ -220,19 +264,60 @@ def weaponRestricts(skill):
     return sorted({tag for field, tag in WEAPON_FLAGS.items() if skill.get(field)})
 
 
+def isDebuff(record):
+    return bool(record.get("debufSkill"))
+
+
+def procRecords(skill, db, depth=0):
+    """A proc skill and the buff record it delegates to.
+
+    Several classes - Skill_AttackBuff, Skill_AttackBuffRadius, Skill_BuffRadius -
+    hold nothing but a pointer to a buffSkillName record, and that record is where
+    the trigger, the display name and the whole payload actually live. Dire Bear's
+    star skill is literally one field (pointBlank); "Maul", its 305 physical and
+    its 4.5m radius are all on the buff. The two records never define the same
+    stat, so reading them as one record is safe.
+    """
+    out = [skill]
+    target = skill.get("buffSkillName") if depth < 2 else None
+    if target and db is not None:
+        nested = db.read(target)
+        if nested:
+            out.extend(procRecords(nested, db, depth + 1))
+    return out
+
+
+def firstOf(records, field, default=None):
+    """First non-empty value of a field across a proc's records."""
+    for record in records:
+        value = lastValue(record.get(field, 0)) or 0
+        if value:
+            return value
+    return default
+
+
 def compareToHandMaintained():
-    """Report where constellationData.py has drifted from the game files.
+    """Report where constellationData_hand.py has drifted from the game files.
 
     Returns a list of human-readable lines. Star bonuses are compared as
     multisets of (name, value) so a difference in star ordering between the two
     sources is not mistaken for a change in the data.
+
+    Constellations register themselves on import, and the caller has already
+    imported the generated set, so only the entries this import adds count as
+    the hand-written side.
     """
     from dataModel import Constellation
-    import constellationData
-    assert constellationData  # imported for its side effect: registers every constellation
+    before = len(Constellation.constellations)
+    import constellationData_hand
+    assert constellationData_hand  # imported for its side effect: it registers
+
+    hand = {c.name: c for c in Constellation.constellations[before:]}
+    if not hand:
+        return ["constellationData_hand.py was already loaded; run --check-data "
+                "in a fresh process."]
 
     db = Database()
-    hand = {c.name: c for c in Constellation.constellations}
     lines, absent, changed = [], [], []
 
     for path in db.constellations():
@@ -258,6 +343,8 @@ def compareToHandMaintained():
             if skill.get("templateAutoCast"):
                 continue # a triggered proc, not a passive star bonus
             for key, value in starBonuses(skill, db).items():
+                if isinstance(value, list):
+                    continue  # duration damage, skipped on both sides
                 gameTotals[key] = gameTotals.get(key, 0) + value
         for star in current.stars:
             for key, value in star.bonuses.items():
@@ -270,15 +357,102 @@ def compareToHandMaintained():
                                % (name, key, gameTotals[key], handTotals[key]))
 
     if absent:
-        lines.append("%d constellation(s) in the game files but not in constellationData.py:"
+        lines.append("%d constellation(s) in the game files but not in constellationData_hand.py:"
                      % len(absent))
         lines.extend("    " + n for n in sorted(absent))
     if changed:
         lines.append("%d value(s) differ from the game files:" % len(changed))
         lines.extend("    " + c for c in sorted(changed))
     if not lines:
-        lines.append("constellationData.py matches the game files.")
+        lines.append("constellationData_hand.py matches the game files.")
     return lines
+
+
+def hasFlatDamage(record):
+    """True if a record carries flat damage of its own, as opposed to modifiers."""
+    return any(lastValue(record.get(prefix + "Min", 0)) or lastValue(record.get(prefix + "Max", 0))
+               for prefix, name in FLAT.items() if name in damages)
+
+
+def summonFor(skill, db):
+    """What a spawn proc actually puts on the field.
+
+    A summon's damage is nowhere in the skill record: the skill only names a
+    creature, and the creature's own attack skills carry the numbers. This walks
+    spawnObjects -> pet -> pet skills and reports raw game values only. How many
+    times a summon gets to use that attack is judgement, and lives in
+    devotionderive.
+
+    Returns None if the skill spawns nothing that fights (some spawn purely
+    cosmetic objects), otherwise a dict of:
+
+        lifespan       seconds the summon lasts
+        limit, burst   how many may stand at once, how many arrive per cast
+        attackSpeed    the pet's characterAttackSpeed multiplier (0 = stationary)
+        mode           "attack" repeated attacks, "aura" a damaging field that
+                       ticks once a second, "once" a trap that detonates and dies
+        melee          whether the pet has to reach its target before it can hit
+        records        the records whose bonuses make up one hit
+    """
+    spawns = skill.get("spawnObjects")
+    petPath = lastValue(spawns) if spawns else None
+    pet = db.read(petPath) if petPath else None
+    if not pet:
+        return None
+
+    paths = [pet.get("skillName%d" % i) for i in range(1, 13)]
+    paths += [pet.get("attackSkillName"), pet.get("specialAttackSkillName")]
+    skills = [db.read(path) for path in paths if path]
+    skills = [s for s in skills if s]
+
+    mode, records = None, []
+    # A pool or a swarm is modelled in the data as a pet holding a toggled
+    # radius buff; that buff record is the thing that does the damage.
+    for petSkill in skills:
+        if "BuffRadiusToggled" in (petSkill.get("Class") or ""):
+            nested = [r for r in procRecords(petSkill, db) if hasFlatDamage(r)]
+            if nested:
+                mode, records = "aura", nested
+                break
+
+    if not records:
+        attack = db.read(pet["attackSkillName"]) if pet.get("attackSkillName") else None
+        if attack:
+            # a passive with flat damage is the damage the creature adds to every
+            # swing, so it belongs to each hit as much as the attack does
+            records = [attack] + [s for s in skills
+                                  if s.get("Class") == "Skill_Passive" and hasFlatDamage(s)]
+            mode = "attack"
+        else:
+            # No named attack. A creature still hits for whatever its innate
+            # passive carries (Bysmiel's hound); anything else is a trap whose
+            # single skill goes off once and takes the pet with it.
+            innate = [s for s in skills
+                      if s.get("Class") == "Skill_Passive" and hasFlatDamage(s)]
+            if innate:
+                mode, records = "attack", innate
+            else:
+                for petSkill in skills:
+                    if "Suicide" in (petSkill.get("Class") or ""):
+                        continue
+                    nested = [r for r in procRecords(petSkill, db) if hasFlatDamage(r)]
+                    if nested:
+                        mode, records = "once", nested
+                        break
+    if not records:
+        return None
+
+    # a pet that has to walk to its target spends much of its life doing that.
+    # Read it from every skill the creature owns, not just the damaging one:
+    # Bysmiel's hound carries its damage on a passive and its melee reach on the
+    # attacks that passive feeds.
+    melee = any((s.get("distanceProfile") or "") == "Melee" for s in skills)
+    return {"lifespan": float(lastValue(skill.get("spawnObjectsTimeToLive", 0)) or 0),
+            "limit": float(lastValue(skill.get("petLimit", 0)) or 1),
+            "burst": float(lastValue(skill.get("petBurstSpawn", 0)) or 1),
+            "attackSpeed": float(pet.get("characterAttackSpeed") or 0),
+            "mode": mode, "melee": melee, "records": records,
+            "attackClass": records[0].get("Class") or ""}
 
 
 GEOMETRY_FIELDS = ("projectileExplosionRadius", "skillTargetRadius", "skillRadius",

@@ -23,15 +23,15 @@ akeronsScorpion_0 = Star(akeronsScorpion, [], {"offense":12})
 akeronsScorpion_1 = Star(akeronsScorpion, akeronsScorpion_0, {"acid %":15, "physique":15, "poison %":30})
 akeronsScorpion_2 = Star(akeronsScorpion, akeronsScorpion_1, {"acid %":24, "offense":18})
 akeronsScorpion_3 = Star(akeronsScorpion, akeronsScorpion_2, {"poison %":50, "poison duration":30})
-akeronsScorpion_4 = Star(akeronsScorpion, akeronsScorpion_3, {})
-akeronsScorpion_4.addAbility(Ability('Scorpion Sting', {"chance":0.25, "projectiles":6, "radius":0.1, "recharge":1.5, "skillClass":'Skill_AttackProjectileRing', "trigger":'attack', "type":'attack'}, {"triggered poison":[225, 5], "weapon damage %":40}))
+akeronsScorpion_4 = Star(akeronsScorpion, akeronsScorpion_2, {})
+akeronsScorpion_4.addAbility(Ability('Scorpion Sting', {"chance":0.25, "projectiles":6, "radius":0.1, "recharge":1.5, "skillClass":'Skill_AttackProjectileRing', "trigger":'attack', "type":'attack'}, {"duration":{"offense":150}, "triggered poison":[225, 5], "weapon damage %":40}))
 
 raven = Constellation('Raven', '1e', '5e')
 raven.id = 'raven'
 raven_0 = Star(raven, [], {"pet all damage %":15, "spirit":15})
 raven_1 = Star(raven, raven_0, {"energy/s":1.5, "offense":10})
 raven_2 = Star(raven, raven_1, {"offense %":3, "pet all damage %":60, "pet offense %":5})
-raven_3 = Star(raven, raven_2, {"offense":15, "pet lightning %":80})
+raven_3 = Star(raven, raven_1, {"offense":15, "pet lightning %":80})
 
 hammer = Constellation('Hammer', '1a', '4a')
 hammer.id = 'hammer'
@@ -46,7 +46,7 @@ anvil_1 = Star(anvil, anvil_0, {"physique":20})
 anvil_2 = Star(anvil, anvil_1, {"armor":45, "armor absorb":3})
 anvil_3 = Star(anvil, anvil_2, {"block %":5, "defense":15, "internal":[12, 5], "offense":10})
 anvil_4 = Star(anvil, anvil_3, {})
-anvil_4.addAbility(Ability("Targo's Hammer", {"chance":0.5, "projectiles":10, "radius":0.25, "recharge":0.1, "skillClass":'Skill_AttackProjectileOrbiting', "trigger":'block', "type":'attack'}, {"triggered internal":[225, 2], "triggered physical":203, "weapon damage %":45}))
+anvil_4.addAbility(Ability("Targo's Hammer", {"chance":0.5, "projectiles":10, "radius":0.25, "recharge":0.1, "skillClass":'Skill_AttackProjectileOrbiting', "trigger":'block', "type":'attack'}, {"stun %":100, "triggered internal":[225, 2], "triggered physical":203, "weapon damage %":45}))
 
 shepherdsCrook = Constellation("Shepherd's Crook", '1a', '5a')
 shepherdsCrook.id = 'shepherdsCrook'
@@ -55,22 +55,23 @@ shepherdsCrook_1 = Star(shepherdsCrook, shepherdsCrook_0, {"cunning":15, "health
 shepherdsCrook_2 = Star(shepherdsCrook, shepherdsCrook_1, {"elemental resist":10, "pet elemental resist":15})
 shepherdsCrook_3 = Star(shepherdsCrook, shepherdsCrook_2, {"health %":3, "pet defense %":5, "pet health %":8})
 shepherdsCrook_4 = Star(shepherdsCrook, shepherdsCrook_3, {})
-shepherdsCrook_4.addAbility(Ability("Shepherd's Call", {"activeDuration":4, "chance":0.25, "recharge":6, "skillClass":'Skill_BuffSelfDuration', "trigger":'attack', "type":'buff'}, {"offense":85}))
+shepherdsCrook_4.addAbility(Ability("Shepherd's Call", {"chance":0.25, "duration":4, "recharge":6, "skillClass":'Skill_BuffSelfDuration', "trigger":'attack', "type":'buff'}, {"offense":85, "pet all damage %":250, "pet crit damage":28, "pet retaliation %":300}))
 
 sailorsGuide = Constellation("Sailor's Guide", '1p', '5p')
 sailorsGuide.id = 'sailorsGuide'
 sailorsGuide_0 = Star(sailorsGuide, [], {"defense":8, "physique":15})
 sailorsGuide_1 = Star(sailorsGuide, sailorsGuide_0, {"freeze resist":18, "slow resist":18})
 sailorsGuide_2 = Star(sailorsGuide, sailorsGuide_1, {"move speed":10, "physique":15})
-sailorsGuide_3 = Star(sailorsGuide, sailorsGuide_2, {"elemental resist":15, "physical resist":3})
+sailorsGuide_3 = Star(sailorsGuide, sailorsGuide_1, {"elemental resist":15, "physical resist":3})
 
 assassinsBlade = Constellation("Assassin's Blade", '1o', '3a 2o')
 assassinsBlade.id = 'assassinsBlade'
 assassinsBlade_0 = Star(assassinsBlade, [], {"physical %":15, "pierce %":15})
 assassinsBlade_1 = Star(assassinsBlade, assassinsBlade_0, {"defense":12})
-assassinsBlade_2 = Star(assassinsBlade, assassinsBlade_1, {"physical %":24, "pierce %":24})
+assassinsBlade_2 = Star(assassinsBlade, assassinsBlade_0, {"physical %":24, "pierce %":24})
 assassinsBlade_3 = Star(assassinsBlade, assassinsBlade_2, {"offense":18})
 assassinsBlade_4 = Star(assassinsBlade, assassinsBlade_3, {})
+assassinsBlade_4.addAbility(Ability("Assassin's Mark", {"chance":1, "duration":18, "skillClass":'Skill_AttackBuff', "trigger":'critical', "type":'attack'}, {"reduce physical resist":32, "reduce pierce resist":36}))
 
 eyeofDreeg = Constellation('Eye of Dreeg', '1e', '3e 3a')
 eyeofDreeg.id = 'eyeofDreeg'
@@ -97,8 +98,8 @@ attakSeru_1 = Star(attakSeru, attakSeru_0, {"defense":25, "elemental %":80})
 attakSeru_2 = Star(attakSeru, attakSeru_1, {"bleed resist":25, "health":300, "pierce resist":25})
 attakSeru_3 = Star(attakSeru, attakSeru_2, {"armor":100, "defense %":6, "offense %":4})
 attakSeru_4 = Star(attakSeru, attakSeru_3, {"aether %":100, "elemental":16, "elemental %":100})
-attakSeru_5 = Star(attakSeru, attakSeru_4, {})
-attakSeru_5.addAbility(Ability('Arcane Currents', {"chance":0.25, "recharge":0.7, "skillClass":'Skill_TargetedSpawnPet', "trigger":'attack', "type":'summon'}, {}))
+attakSeru_5 = Star(attakSeru, attakSeru_3, {})
+attakSeru_5.addAbility(Ability('Arcane Currents', {"burst":1, "chance":0.25, "lifespan":4.5, "limit":5, "petMelee":False, "petMode":'attack', "recharge":0.7, "skillClass":'Skill_TargetedSpawnPet', "trigger":'attack', "type":'summon', "waveDistance":14, "waveEndWidth":2.2, "waveStartWidth":2.2}, {"triggered aether":235, "triggered elemental":430}))
 
 rattosh = Constellation('Rattosh', '10e 6c 6o', '')
 rattosh.id = 'rattosh'
@@ -108,13 +109,14 @@ rattosh_2 = Star(rattosh, rattosh_1, {"defense":45, "offense":45, "vitality deca
 rattosh_3 = Star(rattosh, rattosh_2, {"aether %":100, "vitality %":100, "vitality decay":[18, 3]})
 rattosh_4 = Star(rattosh, rattosh_3, {"bleed resist":15, "physical resist":5, "pierce resist":15, "vitality":10})
 rattosh_5 = Star(rattosh, rattosh_4, {})
+rattosh_5.addAbility(Ability('Mark of Rattosh', {"chance":0.15, "duration":8, "skillClass":'Skill_AttackBuff', "trigger":'attack', "type":'attack'}, {"reduce vitality resist":28, "triggered aether":185, "triggered vitality":185}))
 
 sandclaw = Constellation('Sandclaw', '1a', '3a 2c')
 sandclaw.id = 'sandclaw'
 sandclaw_0 = Star(sandclaw, [], {"cunning":15, "health/s":8, "pet all damage %":20})
 sandclaw_1 = Star(sandclaw, sandclaw_0, {"elemental resist":10, "pet bleed %":30, "pet elemental resist":15})
 sandclaw_2 = Star(sandclaw, sandclaw_1, {"bleed %":20, "bleed duration":20, "pet all damage %":60})
-sandclaw_3 = Star(sandclaw, sandclaw_2, {"bleed %":50, "pet bleed %":50, "physical resist":3})
+sandclaw_3 = Star(sandclaw, sandclaw_1, {"bleed %":50, "pet bleed %":50, "physical resist":3})
 
 mantis = Constellation('Mantis', '1c', '3a 2c')
 mantis.id = 'mantis'
@@ -128,14 +130,14 @@ beetle.id = 'beetle'
 beetle_0 = Star(beetle, [], {"armor":20, "physique":15})
 beetle_1 = Star(beetle, beetle_0, {"blocked damage %":16, "shield recovery":5})
 beetle_2 = Star(beetle, beetle_1, {"armor %":8, "bleed resist":15})
-beetle_3 = Star(beetle, beetle_2, {"acid retaliation":40, "blocked damage %":16, "shield recovery":10, "stun resist":15})
+beetle_3 = Star(beetle, beetle_1, {"acid retaliation":40, "blocked damage %":16, "shield recovery":10, "stun resist":15})
 
 lotus = Constellation('Lotus', '1o', '3e 2o')
 lotus.id = 'lotus'
 lotus_0 = Star(lotus, [], {"energy":100, "health":30})
 lotus_1 = Star(lotus, lotus_0, {"energy/s":1, "energy/s %":15})
-lotus_2 = Star(lotus, lotus_1, {"energy %":4, "health":80, "vitality resist":8})
-lotus_3 = Star(lotus, lotus_2, {"healing %":20, "health/s %":20, "reflected damage reduction":25})
+lotus_2 = Star(lotus, lotus_0, {"energy %":4, "health":80, "vitality resist":8})
+lotus_3 = Star(lotus, lotus_0, {"healing %":20, "health/s %":20, "reflected damage reduction":25})
 
 ulzaad = Constellation('Ulzaad', '8a 6p', '2e 2a')
 ulzaad.id = 'ulzaad'
@@ -143,9 +145,9 @@ ulzaad_0 = Star(ulzaad, [], {"physical %":40})
 ulzaad_1 = Star(ulzaad, ulzaad_0, {"acid resist":15, "defense":25})
 ulzaad_2 = Star(ulzaad, ulzaad_1, {"internal %":50, "physical":10.5, "physical %":50})
 ulzaad_3 = Star(ulzaad, ulzaad_2, {})
-ulzaad_3.addAbility(Ability('Ulzaad Decree', {"activeDuration":10, "chance":0.2, "recharge":22, "skillClass":'Skill_BuffSelfDuration', "trigger":'attack', "type":'buff'}, {"armor":190, "internal %":200, "physical %":200, "physical retaliation":327.5, "pierce %":200, "triggered physical":43.5}))
-ulzaad_4 = Star(ulzaad, ulzaad_3, {"aether resist":10, "defense %":1, "health":250})
-ulzaad_5 = Star(ulzaad, ulzaad_4, {"chaos resist":10, "defense %":1, "health":250})
+ulzaad_3.addAbility(Ability('Ulzaad Decree', {"chance":0.2, "duration":10, "recharge":22, "skillClass":'Skill_BuffSelfDuration', "trigger":'attack', "type":'buff'}, {"armor":190, "internal %":200, "physical":43.5, "physical %":200, "physical retaliation":327.5, "pierce %":200}))
+ulzaad_4 = Star(ulzaad, ulzaad_1, {"aether resist":10, "defense %":1, "health":250})
+ulzaad_5 = Star(ulzaad, ulzaad_1, {"chaos resist":10, "defense %":1, "health":250})
 
 hyrian = Constellation('Hyrian', '8e 6a', '2a 2p')
 hyrian.id = 'hyrian'
@@ -155,7 +157,7 @@ hyrian_2 = Star(hyrian, hyrian_1, {"armor %":9, "healing %":10, "health":300})
 hyrian_3 = Star(hyrian, hyrian_2, {"armor %":9, "burn %":80, "electrocute %":80, "elemental %":50, "elemental resist":15, "frostburn %":80})
 hyrian_4 = Star(hyrian, hyrian_3, {})
 hyrian_4.addAbility(Ability('Hyrian Glare', {"chance":0.3, "recharge":2, "skillClass":'Skill_AttackWave', "trigger":'hit', "type":'attack', "waveDistance":10, "waveEndWidth":3, "waveStartWidth":3}, {"triggered burn":[95, 2], "triggered electrocute":[95, 2], "triggered elemental":280, "triggered frostburn":[95, 2], "weapon damage %":85}))
-hyrian_5 = Star(hyrian, hyrian_4, {"blocked damage %":40, "elemental":16, "retaliation %":50})
+hyrian_5 = Star(hyrian, hyrian_2, {"blocked damage %":40, "elemental":16, "retaliation %":50})
 
 korvaak = Constellation('Korvaak', '18p 10e', '')
 korvaak.id = 'korvaak'
@@ -163,9 +165,9 @@ korvaak_0 = Star(korvaak, [], {"all damage %":30, "health":300, "pet all damage 
 korvaak_1 = Star(korvaak, korvaak_0, {"energy/s":2, "health %":8, "pet health %":12})
 korvaak_2 = Star(korvaak, korvaak_1, {"chaos resist":20, "pet chaos resist":20})
 korvaak_3 = Star(korvaak, korvaak_2, {"all damage %":50, "offense %":5, "pet all damage %":80, "pet offense %":5})
-korvaak_4 = Star(korvaak, korvaak_3, {})
-korvaak_4.addAbility(Ability("Korvaak's Eye", {"chance":1, "projectiles":6, "radius":1, "recharge":1.5, "skillClass":'Skill_AttackProjectileRing', "trigger":'critical', "type":'attack'}, {"weapon damage %":18}))
-korvaak_5 = Star(korvaak, korvaak_4, {"all damage %":50, "crit damage":5, "pet all damage %":80, "pet crit damage":5})
+korvaak_4 = Star(korvaak, korvaak_2, {})
+korvaak_4.addAbility(Ability("Korvaak's Eye", {"chance":1, "projectiles":6, "radius":1, "recharge":1.5, "skillClass":'Skill_AttackProjectileRing', "trigger":'critical', "type":'attack'}, {"duration":{"defense":130, "offense":130}, "weapon damage %":18}))
+korvaak_5 = Star(korvaak, korvaak_2, {"all damage %":50, "crit damage":5, "pet all damage %":80, "pet crit damage":5})
 
 azrakaa = Constellation('Azrakaa', '12a 8p 6o', '')
 azrakaa.id = 'azrakaa'
@@ -174,8 +176,8 @@ azrakaa_1 = Star(azrakaa, azrakaa_0, {"armor":90, "health":300})
 azrakaa_2 = Star(azrakaa, azrakaa_1, {"defense":50, "health":350, "move speed":6})
 azrakaa_3 = Star(azrakaa, azrakaa_2, {"physical %":120, "pierce":14, "pierce %":120})
 azrakaa_4 = Star(azrakaa, azrakaa_3, {})
-azrakaa_4.addAbility(Ability('Shifting Sands', {"activeDuration":1, "chance":0.2, "projectiles":5, "radius":2, "recharge":0.5, "skillClass":'Skill_AttackProjectile', "trigger":'attack', "type":'attack'}, {"crit damage":40, "triggered physical":205, "triggered pierce":335, "weapon damage %":30}))
-azrakaa_5 = Star(azrakaa, azrakaa_4, {"attack speed":6, "cast speed":6, "defense":50})
+azrakaa_4.addAbility(Ability('Shifting Sands', {"chance":0.2, "duration":1, "projectiles":5, "radius":2, "recharge":0.5, "skillClass":'Skill_AttackProjectile', "trigger":'attack', "type":'attack'}, {"crit damage":40, "duration":{"defense":140}, "triggered physical":205, "triggered pierce":335, "weapon damage %":30}))
+azrakaa_5 = Star(azrakaa, azrakaa_2, {"attack speed":6, "cast speed":6, "defense":50})
 
 eel = Constellation('Eel', '1p', '5p')
 eel.id = 'eel'
@@ -189,16 +191,16 @@ yugol_0 = Star(yugol, [], {"cold %":80, "offense":25})
 yugol_1 = Star(yugol, yugol_0, {"acid %":80, "health":300, "offense":25})
 yugol_2 = Star(yugol, yugol_1, {"petrify resist":30, "reflected damage reduction":10, "vitality resist":25})
 yugol_3 = Star(yugol, yugol_2, {"acid %":100, "cold %":100, "spirit %":4})
-yugol_4 = Star(yugol, yugol_3, {"acid":8, "cold":8, "life leech resist":40, "lifesteal %":8})
+yugol_4 = Star(yugol, yugol_2, {"acid":8, "cold":8, "life leech resist":40, "lifesteal %":8})
 yugol_5 = Star(yugol, yugol_4, {})
-yugol_5.addAbility(Ability('Black Blood of Yugol', {"chance":0.3, "recharge":0.8, "skillClass":'Skill_TargetedSpawnPet', "trigger":'hit', "type":'summon'}, {}))
+yugol_5.addAbility(Ability('Black Blood of Yugol', {"burst":1, "chance":0.3, "lifespan":8, "limit":6, "petAttackSpeed":0.8, "petMelee":False, "petMode":'aura', "radius":3, "recharge":0.8, "skillClass":'Skill_TargetedSpawnPet', "trigger":'hit', "type":'summon'}, {"triggered acid":330, "triggered cold":330}))
 
 owl = Constellation('Owl', '1a', '5a')
 owl.id = 'owl'
 owl_0 = Star(owl, [], {"cunning":15, "spirit":15})
 owl_1 = Star(owl, owl_0, {"elemental resist":8})
 owl_2 = Star(owl, owl_1, {"bleed %":50, "bleed duration":50, "burn %":50, "burn duration":50, "electrocute %":50, "electrocute duration":50, "frostburn %":50, "frostburn duration":50, "internal %":50, "internal duration":50, "poison %":50, "poison duration":50, "vitality decay %":50, "vitality decay duration":50})
-owl_3 = Star(owl, owl_2, {"all damage %":30, "defense":15, "reflected damage reduction":15})
+owl_3 = Star(owl, owl_1, {"all damage %":30, "defense":15, "reflected damage reduction":15})
 
 viper = Constellation('Viper', '1c', '3p 2c')
 viper.id = 'viper'
@@ -223,7 +225,7 @@ emptyThrone.id = 'emptyThrone'
 emptyThrone_0 = Star(emptyThrone, [], {"defense":12, "slow resist":10})
 emptyThrone_1 = Star(emptyThrone, emptyThrone_0, {"defense":20, "pet pierce resist":15, "pierce resist":8})
 emptyThrone_2 = Star(emptyThrone, emptyThrone_1, {"aether resist":10, "freeze resist":25, "pet aether resist":15, "pet freeze resist":25})
-emptyThrone_3 = Star(emptyThrone, emptyThrone_2, {"chaos resist":10, "pet chaos resist":15, "pet stun resist":25, "stun resist":25})
+emptyThrone_3 = Star(emptyThrone, emptyThrone_1, {"chaos resist":10, "pet chaos resist":15, "pet stun resist":25, "stun resist":25})
 
 rat = Constellation('Rat', '1c', '3e 2c')
 rat.id = 'rat'
@@ -248,7 +250,7 @@ imp_1 = Star(imp, imp_0, {"defense":10, "spirit":15})
 imp_2 = Star(imp, imp_1, {"aether resist":8, "physique":15})
 imp_3 = Star(imp, imp_2, {"aether %":24, "fire %":24})
 imp_4 = Star(imp, imp_3, {})
-imp_4.addAbility(Ability('Aetherfire', {"activeDuration":3, "chance":0.15, "projectiles":8, "radius":2.5, "skillClass":'Skill_AttackProjectileAreaEffect', "trigger":'attack', "type":'attack'}, {"triggered aether":190, "triggered fire":140}))
+imp_4.addAbility(Ability('Aetherfire', {"chance":0.15, "duration":3, "projectiles":8, "radius":2.5, "skillClass":'Skill_AttackProjectileAreaEffect', "trigger":'attack', "type":'attack'}, {"triggered aether":190, "triggered fire":140}))
 
 fiend = Constellation('Fiend', '1c', '3e 2c')
 fiend.id = 'fiend'
@@ -265,22 +267,22 @@ bull_0 = Star(bull, [], {"defense":8, "physique":15})
 bull_1 = Star(bull, bull_0, {"internal %":30, "internal duration":30, "move speed":3})
 bull_2 = Star(bull, bull_1, {"armor":30, "physique":15})
 bull_3 = Star(bull, bull_2, {"defense":10, "internal":[12, 5], "internal %":50})
-bull_4 = Star(bull, bull_3, {})
+bull_4 = Star(bull, bull_2, {})
 bull_4.addAbility(Ability('Bull Rush', {"chance":0.25, "radius":3.5, "recharge":0.4, "skillClass":'Skill_AttackRadius', "trigger":'attack', "type":'attack'}, {"triggered internal":[225, 2], "triggered physical":172.5, "weapon damage %":32}))
 
 wraith = Constellation('Wraith', '1p', '3a 3p')
 wraith.id = 'wraith'
 wraith_0 = Star(wraith, [], {"aether %":15, "lightning %":15})
 wraith_1 = Star(wraith, wraith_0, {"aether resist":8, "retaliation %":30, "spirit":15})
-wraith_2 = Star(wraith, wraith_1, {"energy absorb":15, "lightning retaliation":55, "offense":24})
-wraith_3 = Star(wraith, wraith_2, {"aether %":24, "lightning %":24, "physical resist":3})
+wraith_2 = Star(wraith, wraith_0, {"energy absorb":15, "lightning retaliation":55, "offense":24})
+wraith_3 = Star(wraith, wraith_0, {"aether %":24, "lightning %":24, "physical resist":3})
 
 harpy = Constellation('Harpy', '1a', '5a')
 harpy.id = 'harpy'
 harpy_0 = Star(harpy, [], {"cold %":15, "pierce %":15})
 harpy_1 = Star(harpy, harpy_0, {"cunning":15, "energy/s":1})
 harpy_2 = Star(harpy, harpy_1, {"bleed resist":10, "offense":24})
-harpy_3 = Star(harpy, harpy_2, {"cold %":24, "crit damage":5, "pierce":8, "pierce %":24})
+harpy_3 = Star(harpy, harpy_1, {"cold %":24, "crit damage":5, "pierce":8, "pierce %":24})
 
 fox = Constellation('Fox', '1e', '5e')
 fox.id = 'fox'
@@ -294,8 +296,9 @@ ghoul.id = 'ghoul'
 ghoul_0 = Star(ghoul, [], {"defense":8, "physique":15})
 ghoul_1 = Star(ghoul, ghoul_0, {"health %":3, "health/s":16})
 ghoul_2 = Star(ghoul, ghoul_1, {"defense":15, "physique":15, "spirit":15})
-ghoul_3 = Star(ghoul, ghoul_2, {"health/s %":30, "lifesteal %":5})
+ghoul_3 = Star(ghoul, ghoul_1, {"health/s %":30, "lifesteal %":5})
 ghoul_4 = Star(ghoul, ghoul_3, {})
+ghoul_4.addAbility(Ability('Ghoulish Hunger', {"chance":1, "duration":5, "recharge":30, "skillClass":'Skill_BuffSelfDuration', "trigger":'low health', "type":'buff'}, {"attack speed":22, "cast speed":22, "healing %":40, "lifesteal %":80, "physical resist":18}))
 
 dryad = Constellation('Dryad', '1o', '3o')
 dryad.id = 'dryad'
@@ -304,7 +307,7 @@ dryad_1 = Star(dryad, dryad_0, {"energy/s":1, "health":80})
 dryad_2 = Star(dryad, dryad_1, {"move speed":3, "slow resist":15})
 dryad_3 = Star(dryad, dryad_2, {"physical resist":3, "spirit %":5})
 dryad_4 = Star(dryad, dryad_3, {})
-dryad_4.addAbility(Ability("Dryad's Blessing", {"activeDuration":10, "chance":0.33, "recharge":2.2, "skillClass":'Skill_BuffSelfDuration', "trigger":'attack', "type":'buff'}, {"armor":70}))
+dryad_4.addAbility(Ability("Dryad's Blessing", {"chance":0.33, "duration":10, "recharge":2.2, "skillClass":'Skill_BuffSelfDuration', "trigger":'attack', "type":'buff'}, {"armor":70, "health":848, "health %":10}))
 
 hawk = Constellation('Hawk', '1e', '3e')
 hawk.id = 'hawk'
@@ -318,7 +321,7 @@ wolverine_0 = Star(wolverine, [], {"defense":15, "pet pierce resist":10})
 wolverine_1 = Star(wolverine, wolverine_0, {"armor":30, "pet vitality resist":15, "retaliation %":30})
 wolverine_2 = Star(wolverine, wolverine_1, {"defense":25, "pet acid resist":15})
 wolverine_3 = Star(wolverine, wolverine_2, {"armor":30, "move speed":3, "pet bleed resist":25, "retaliation %":50})
-wolverine_4 = Star(wolverine, wolverine_3, {"defense %":4, "pet defense %":5})
+wolverine_4 = Star(wolverine, wolverine_2, {"defense %":4, "pet defense %":5})
 
 turtle = Constellation('Turtle', '1o', '3p 2o')
 turtle.id = 'turtle'
@@ -326,7 +329,8 @@ turtle_0 = Star(turtle, [], {"armor":20, "defense":12})
 turtle_1 = Star(turtle, turtle_0, {"armor":20, "defense":15})
 turtle_2 = Star(turtle, turtle_1, {"armor":40, "defense":15})
 turtle_3 = Star(turtle, turtle_2, {"armor %":8, "defense":10, "health %":4})
-turtle_4 = Star(turtle, turtle_3, {})
+turtle_4 = Star(turtle, turtle_2, {})
+turtle_4.addAbility(Ability('Turtle Shell', {"chance":1, "recharge":8, "skillClass":'Skill_BuffSelfShield', "trigger":'low health', "type":'shield'}, {"damage absorb":6100}))
 
 panther = Constellation('Panther', '1o', '3p 2o')
 panther.id = 'panther'
@@ -348,8 +352,8 @@ vulture.id = 'vulture'
 vulture_0 = Star(vulture, [], {"cunning":15, "spirit":15})
 vulture_1 = Star(vulture, vulture_0, {"bleed resist":15, "life leech resist":30, "offense":15})
 vulture_2 = Star(vulture, vulture_1, {"energy":200, "health":80, "offense":15})
-vulture_3 = Star(vulture, vulture_2, {"cunning %":5, "offense":15, "spirit %":5})
-vulture_4 = Star(vulture, vulture_3, {"chaos resist":8, "offense":15, "vitality resist":15})
+vulture_3 = Star(vulture, vulture_1, {"cunning %":5, "offense":15, "spirit %":5})
+vulture_4 = Star(vulture, vulture_1, {"chaos resist":8, "offense":15, "vitality resist":15})
 
 hound = Constellation('Hound', '1p', '4p')
 hound.id = 'hound'
@@ -361,9 +365,9 @@ spider = Constellation('Spider', '1e', '6e')
 spider.id = 'spider'
 spider_0 = Star(spider, [], {"cunning":15, "spirit":15})
 spider_1 = Star(spider, spider_0, {"offense":20, "spirit %":3})
-spider_2 = Star(spider, spider_1, {"cast speed":5, "offense":20})
-spider_3 = Star(spider, spider_2, {"attack speed":5, "defense":20})
-spider_4 = Star(spider, spider_3, {"cunning %":3, "defense":20})
+spider_2 = Star(spider, spider_0, {"cast speed":5, "offense":20})
+spider_3 = Star(spider, spider_0, {"attack speed":5, "defense":20})
+spider_4 = Star(spider, spider_0, {"cunning %":3, "defense":20})
 
 lizard = Constellation('Lizard', '1p', '4p')
 lizard.id = 'lizard'
@@ -376,7 +380,7 @@ rhowansCrown.id = 'rhowansCrown'
 rhowansCrown_0 = Star(rhowansCrown, [], {"elemental":7.5, "elemental %":30})
 rhowansCrown_1 = Star(rhowansCrown, rhowansCrown_0, {"defense":20, "pet elemental %":60, "spirit":20})
 rhowansCrown_2 = Star(rhowansCrown, rhowansCrown_1, {})
-rhowansCrown_2.addAbility(Ability('Elemental Storm', {"activeDuration":5, "chance":0.25, "radius":3.5, "recharge":1.5, "skillClass":'Skill_AttackProjectileAreaEffect', "trigger":'attack', "type":'attack'}, {"duration":{"reduce elemental resist":32}, "triggered burn":[98, 2], "triggered electrocute":[98, 2], "triggered elemental":132, "triggered frostburn":[98, 2]}))
+rhowansCrown_2.addAbility(Ability('Elemental Storm', {"chance":0.25, "duration":5, "radius":3.5, "recharge":1.5, "skillClass":'Skill_AttackProjectileAreaEffect', "trigger":'attack', "type":'attack'}, {"duration":{"reduce elemental resist":32}, "triggered burn":[98, 2], "triggered electrocute":[98, 2], "triggered elemental":132, "triggered frostburn":[98, 2]}))
 rhowansCrown_3 = Star(rhowansCrown, rhowansCrown_2, {"elemental resist":18, "offense":20, "pet elemental resist":18})
 rhowansCrown_4 = Star(rhowansCrown, rhowansCrown_3, {"burn %":60, "chaos resist":8, "electrocute %":60, "elemental %":40, "frostburn %":60})
 
@@ -386,7 +390,7 @@ scalesofUlcama_0 = Star(scalesofUlcama, [], {"energy":300, "health":250})
 scalesofUlcama_1 = Star(scalesofUlcama, scalesofUlcama_0, {"health %":6, "move speed":6})
 scalesofUlcama_2 = Star(scalesofUlcama, scalesofUlcama_1, {"energy/s":2.5, "energy/s %":33})
 scalesofUlcama_3 = Star(scalesofUlcama, scalesofUlcama_2, {"health/s":30, "health/s %":33, "lifesteal %":5})
-scalesofUlcama_4 = Star(scalesofUlcama, scalesofUlcama_3, {"defense":45, "physique":20})
+scalesofUlcama_4 = Star(scalesofUlcama, scalesofUlcama_1, {"defense":45, "physique":20})
 scalesofUlcama_5 = Star(scalesofUlcama, scalesofUlcama_4, {})
 scalesofUlcama_5.addAbility(Ability('Tip the Scales', {"chance":0.33, "recharge":1, "skillClass":'Skill_AttackSpell', "trigger":'hit', "type":'attack'}, {"duration":{"reduce resist":20}, "lifesteal %":132, "triggered vitality":310, "weapon damage %":33}))
 
@@ -398,6 +402,7 @@ wendigo_2 = Star(wendigo, wendigo_1, {"defense":40, "total speed":5, "vitality d
 wendigo_3 = Star(wendigo, wendigo_2, {"health %":6})
 wendigo_4 = Star(wendigo, wendigo_3, {"vitality %":50, "vitality decay":[12, 3], "vitality decay %":50})
 wendigo_5 = Star(wendigo, wendigo_4, {})
+wendigo_5.addAbility(Ability('Mark of the Wendigo', {"chance":0.15, "duration":10, "skillClass":'Skill_AttackBuff', "trigger":'attack', "type":'attack'}, {"lifesteal %":55, "triggered vitality":310}))
 
 huntress = Constellation('Huntress', '4a 4e 3c', '1e 1a')
 huntress.id = 'huntress'
@@ -405,9 +410,10 @@ huntress_0 = Star(huntress, [], {"health":200, "offense":15})
 huntress_1 = Star(huntress, huntress_0, {"cunning":20, "pierce %":50})
 huntress_2 = Star(huntress, huntress_1, {"bleed %":60, "offense":25})
 huntress_3 = Star(huntress, huntress_2, {"armor":60, "pet all damage %":40, "pet health %":12, "pierce resist":8})
-huntress_4 = Star(huntress, huntress_3, {"healing %":12, "health/s":25, "offense %":3, "pet offense %":5})
+huntress_4 = Star(huntress, huntress_2, {"healing %":12, "health/s":25, "offense %":3, "pet offense %":5})
 huntress_5 = Star(huntress, huntress_4, {"bleed":[15, 3], "bleed %":50, "bleed duration":20, "pet bleed %":80})
-huntress_6 = Star(huntress, huntress_5, {})
+huntress_6 = Star(huntress, huntress_4, {})
+huntress_6.addAbility(Ability('Rend', {"chance":0.2, "duration":5, "radius":5, "skillClass":'Skill_AttackBuffRadius', "trigger":'attack', "type":'attack'}, {"defense":150, "reduce bleed resist":32, "triggered bleed":[325, 5]}))
 
 direBear = Constellation('Dire Bear', '5a 5p', '1p 1a')
 direBear.id = 'direBear'
@@ -416,16 +422,17 @@ direBear_1 = Star(direBear, direBear_0, {"cunning":20, "defense":15, "physique":
 direBear_2 = Star(direBear, direBear_1, {"armor":60, "physical %":50})
 direBear_3 = Star(direBear, direBear_2, {"freeze resist":15, "health %":6, "stun resist":15})
 direBear_4 = Star(direBear, direBear_3, {"armor":80, "lifesteal %":4})
-direBear_5 = Star(direBear, direBear_4, {})
+direBear_5 = Star(direBear, direBear_3, {})
+direBear_5.addAbility(Ability('Maul', {"chance":0.2, "duration":5, "radius":4.5, "skillClass":'Skill_AttackBuffRadius', "trigger":'attack', "type":'attack'}, {"lifesteal %":45, "triggered physical":305}))
 
 assassin = Constellation('Assassin', '6a 4o', '1a 1o')
 assassin.id = 'assassin'
 assassin_0 = Star(assassin, [], {"pierce %":40})
 assassin_1 = Star(assassin, assassin_0, {"armor":60, "cunning":20})
 assassin_2 = Star(assassin, assassin_1, {"avoid melee":4, "defense":10, "offense":18})
-assassin_3 = Star(assassin, assassin_2, {"bleed resist":10, "cunning %":5, "pierce %":50})
+assassin_3 = Star(assassin, assassin_1, {"bleed resist":10, "cunning %":5, "pierce %":50})
 assassin_4 = Star(assassin, assassin_3, {"acid resist":10, "defense":25})
-assassin_5 = Star(assassin, assassin_4, {"pierce":12, "pierce %":50})
+assassin_5 = Star(assassin, assassin_3, {"pierce":12, "pierce %":50})
 assassin_6 = Star(assassin, assassin_5, {})
 assassin_6.addAbility(Ability('Blade Burst', {"chance":1, "projectiles":16, "recharge":1.8, "skillClass":'Skill_AttackProjectileRing', "trigger":'critical', "type":'attack'}, {"triggered pierce":290, "weapon damage %":25}))
 
@@ -435,10 +442,10 @@ magi_0 = Star(magi, [], {"fire %":40})
 magi_1 = Star(magi, magi_0, {"defense":15, "elemental resist":8})
 magi_2 = Star(magi, magi_1, {"defense":20, "energy/s":1.5, "trap resist":15})
 magi_3 = Star(magi, magi_2, {"attack speed":5, "burn %":50, "cast speed":5, "physique":15})
-magi_4 = Star(magi, magi_3, {"fire":12.5, "fire %":40, "freeze resist":15})
-magi_5 = Star(magi, magi_4, {"burn":[12, 3], "burn %":50, "burn duration":30})
+magi_4 = Star(magi, magi_2, {"fire":12.5, "fire %":40, "freeze resist":15})
+magi_5 = Star(magi, magi_2, {"burn":[12, 3], "burn %":50, "burn duration":30})
 magi_6 = Star(magi, magi_5, {})
-magi_6.addAbility(Ability('Volcano', {"activeDuration":5, "chance":0.15, "radius":1, "recharge":1.8, "skillClass":'Skill_AttackProjectileAreaEffect', "trigger":'attack', "type":'attack'}, {"triggered burn":[195, 2], "triggered fire":179}))
+magi_6.addAbility(Ability('Volcano', {"chance":0.15, "duration":5, "radius":1, "recharge":1.8, "skillClass":'Skill_AttackProjectileAreaEffect', "trigger":'attack', "type":'attack'}, {"stun %":150, "triggered burn":[195, 2], "triggered fire":179}))
 
 autumnBoar = Constellation('Autumn Boar', '4p 4a 3o', '3a')
 autumnBoar.id = 'autumnBoar'
@@ -446,10 +453,10 @@ autumnBoar_0 = Star(autumnBoar, [], {"cunning":20, "physique":20, "retaliation %
 autumnBoar_1 = Star(autumnBoar, autumnBoar_0, {"physique":15, "pierce resist":15, "slow resist":15})
 autumnBoar_2 = Star(autumnBoar, autumnBoar_1, {"physique %":5, "retaliation %":30})
 autumnBoar_3 = Star(autumnBoar, autumnBoar_2, {"block %":5, "defense":25, "move speed":5})
-autumnBoar_4 = Star(autumnBoar, autumnBoar_3, {"defense":30, "retaliation %":40})
+autumnBoar_4 = Star(autumnBoar, autumnBoar_2, {"defense":30, "retaliation %":40})
 autumnBoar_5 = Star(autumnBoar, autumnBoar_4, {"physical resist":4, "physical retaliation":150, "reflected damage reduction":15, "shield recovery":10})
-autumnBoar_6 = Star(autumnBoar, autumnBoar_5, {})
-autumnBoar_6.addAbility(Ability('Trample', {"chance":0.5, "radius":0.1, "recharge":0.3, "skillClass":'Skill_AttackProjectile', "trigger":'block', "type":'attack'}, {"triggered internal":[285, 2], "weapon damage %":55}))
+autumnBoar_6 = Star(autumnBoar, autumnBoar_4, {})
+autumnBoar_6.addAbility(Ability('Trample', {"chance":0.5, "radius":0.1, "recharge":0.3, "skillClass":'Skill_AttackProjectile', "trigger":'block', "type":'attack'}, {"stun %":80, "triggered internal":[285, 2], "weapon damage %":55}))
 
 widow = Constellation('Widow', '6e 4p', '3p')
 widow.id = 'widow'
@@ -459,7 +466,7 @@ widow_2 = Star(widow, widow_1, {"aether %":30, "physique":15, "spirit":15})
 widow_3 = Star(widow, widow_2, {"aether resist":18, "vitality resist":8})
 widow_4 = Star(widow, widow_3, {"aether %":50, "lightning %":50, "offense %":2})
 widow_5 = Star(widow, widow_4, {})
-widow_5.addAbility(Ability('Arcane Bomb', {"chance":0.25, "radius":1, "recharge":1, "skillClass":'Skill_TargetedSpawnPet', "trigger":'attack', "type":'summon'}, {}))
+widow_5.addAbility(Ability('Arcane Bomb', {"chance":0.25, "radius":6, "recharge":1, "skillClass":'Skill_TargetedSpawnPet', "trigger":'attack', "type":'attack'}, {"defense":95, "reduce aether resist":40, "reduce lightning resist":35, "triggered aether":160, "triggered lightning":120}))
 
 revenant = Constellation('Revenant', '8c', '1p 1c')
 revenant.id = 'revenant'
@@ -469,7 +476,7 @@ revenant_2 = Star(revenant, revenant_1, {"stun resist":20, "vitality resist":24}
 revenant_3 = Star(revenant, revenant_2, {"health":250, "lifesteal %":6, "vitality %":60})
 revenant_4 = Star(revenant, revenant_3, {"aether %":60, "attack speed":4, "cast speed":4})
 revenant_5 = Star(revenant, revenant_4, {})
-revenant_5.addAbility(Ability('Raise Skeleton', {"chance":0.2, "recharge":2, "skillClass":'Skill_TargetedSpawnPet', "trigger":'attack', "type":'summon'}, {}))
+revenant_5.addAbility(Ability('Raise Skeleton', {"burst":2, "chance":0.2, "lifespan":20, "limit":6, "petAttackSpeed":1.44, "petMelee":True, "petMode":'attack', "recharge":2, "skillClass":'Skill_TargetedSpawnPet', "trigger":'attack', "type":'summon'}, {"duration":{"reduce resist":24, "slow move":45}, "triggered aether":230, "triggered vitality":230}))
 
 samaelsWitchblade = Constellation("Samael's Witchblade", '6e 4c', '1e 1c')
 samaelsWitchblade.id = 'samaelsWitchblade'
@@ -478,6 +485,7 @@ samaelsWitchblade_1 = Star(samaelsWitchblade, samaelsWitchblade_0, {"offense":10
 samaelsWitchblade_2 = Star(samaelsWitchblade, samaelsWitchblade_1, {"chaos %":30, "defense":15, "fire %":30})
 samaelsWitchblade_3 = Star(samaelsWitchblade, samaelsWitchblade_2, {"chaos %":50, "defense":25, "fire %":50})
 samaelsWitchblade_4 = Star(samaelsWitchblade, samaelsWitchblade_3, {})
+samaelsWitchblade_4.addAbility(Ability('Eldritch Fire', {"chance":0.15, "duration":4, "recharge":1, "skillClass":'Skill_AttackBuff', "trigger":'attack', "type":'attack'}, {"reduce chaos resist":35, "reduce fire resist":23, "triggered chaos":120, "triggered fire":120}))
 
 bysmielsBond = Constellation("Bysmiel's Bond", '6e 4c', '3e')
 bysmielsBond.id = 'bysmielsBond'
@@ -486,7 +494,7 @@ bysmielsBond_1 = Star(bysmielsBond, bysmielsBond_0, {"cast speed":5, "pet all da
 bysmielsBond_2 = Star(bysmielsBond, bysmielsBond_1, {"pet vitality resist":20, "vitality resist":15})
 bysmielsBond_3 = Star(bysmielsBond, bysmielsBond_2, {"all damage %":30, "pet all damage %":50, "pet trap resist":20, "trap resist":20})
 bysmielsBond_4 = Star(bysmielsBond, bysmielsBond_3, {})
-bysmielsBond_4.addAbility(Ability("Bysmiel's Command", {"chance":0.2, "recharge":30, "skillClass":'Skill_TargetedSpawnPet', "trigger":'attack', "type":'summon'}, {}))
+bysmielsBond_4.addAbility(Ability("Bysmiel's Command", {"burst":1, "chance":0.2, "lifespan":20, "limit":1, "petAttackSpeed":1.18, "petMelee":True, "petMode":'attack', "recharge":30, "skillClass":'Skill_TargetedSpawnPet', "trigger":'attack', "type":'summon'}, {"duration":{"defense":180, "reduce resist":25}, "triggered acid":183, "triggered physical":158.5}))
 
 tempest = Constellation('Tempest', '5p 5a', '1e 1p')
 tempest.id = 'tempest'
@@ -495,41 +503,41 @@ tempest_1 = Star(tempest, tempest_0, {"lightning":14, "physique":20})
 tempest_2 = Star(tempest, tempest_1, {"electrocute %":50, "lightning %":50})
 tempest_3 = Star(tempest, tempest_2, {"defense":25, "offense":25, "slow resist":10})
 tempest_4 = Star(tempest, tempest_3, {"lightning %":250, "stun resist":15, "total speed":4})
-tempest_5 = Star(tempest, tempest_4, {"electrocute %":50, "electrocute duration":50, "offense":20})
+tempest_5 = Star(tempest, tempest_3, {"electrocute %":50, "electrocute duration":50, "offense":20})
 tempest_6 = Star(tempest, tempest_5, {})
-tempest_6.addAbility(Ability('Reckless Tempest', {"activeDuration":6, "chance":1, "radius":8, "recharge":10, "skillClass":'Skill_BuffAttackRadiusLightning', "trigger":'critical', "type":'attack'}, {"triggered electrocute":[245, 2], "triggered lightning":204}))
+tempest_6.addAbility(Ability('Reckless Tempest', {"chance":1, "duration":6, "radius":8, "recharge":10, "skillClass":'Skill_BuffAttackRadiusLightning', "trigger":'critical', "type":'attack'}, {"stun %":70, "triggered electrocute":[245, 2], "triggered lightning":204}))
 
 targotheBuilder = Constellation('Targo the Builder', '6p 4o', '1o')
 targotheBuilder.id = 'targotheBuilder'
 targotheBuilder_0 = Star(targotheBuilder, [], {"defense":20, "retaliation %":30})
 targotheBuilder_1 = Star(targotheBuilder, targotheBuilder_0, {"aether resist":8, "health %":6})
 targotheBuilder_2 = Star(targotheBuilder, targotheBuilder_1, {"armor %":8, "physical retaliation":150})
-targotheBuilder_3 = Star(targotheBuilder, targotheBuilder_2, {"chaos resist":8, "health %":6})
+targotheBuilder_3 = Star(targotheBuilder, targotheBuilder_1, {"chaos resist":8, "health %":6})
 targotheBuilder_4 = Star(targotheBuilder, targotheBuilder_3, {"defense":35, "health":300, "retaliation %":60})
-targotheBuilder_5 = Star(targotheBuilder, targotheBuilder_4, {"armor %":12, "blocked damage %":24})
+targotheBuilder_5 = Star(targotheBuilder, targotheBuilder_3, {"armor %":12, "blocked damage %":24})
 targotheBuilder_6 = Star(targotheBuilder, targotheBuilder_5, {})
-targotheBuilder_6.addAbility(Ability('Shield Wall', {"activeDuration":5, "chance":0.25, "recharge":8, "skillClass":'Skill_BuffSelfDuration', "trigger":'attack', "type":'buff'}, {"armor %":50, "blocked damage %":210, "physical retaliation":730}))
+targotheBuilder_6.addAbility(Ability('Shield Wall', {"chance":0.25, "duration":5, "recharge":8, "skillClass":'Skill_BuffSelfDuration', "trigger":'attack', "type":'buff'}, {"armor %":50, "blocked damage %":210, "physical retaliation":730}))
 
 callerofTheFrost = Constellation('Caller of The Frost', '6p 4e', '1p 1e')
 callerofTheFrost.id = 'callerofTheFrost'
 callerofTheFrost_0 = Star(callerofTheFrost, [], {"cold %":40})
 callerofTheFrost_1 = Star(callerofTheFrost, callerofTheFrost_0, {"defense":15, "health %":6})
 callerofTheFrost_2 = Star(callerofTheFrost, callerofTheFrost_1, {"armor":80, "defense":30})
-callerofTheFrost_3 = Star(callerofTheFrost, callerofTheFrost_2, {"armor":60, "cold %":50, "frostburn %":50})
+callerofTheFrost_3 = Star(callerofTheFrost, callerofTheFrost_1, {"armor":60, "cold %":50, "frostburn %":50})
 callerofTheFrost_4 = Star(callerofTheFrost, callerofTheFrost_3, {"cold %":50, "frostburn":[12, 3], "frostburn %":100})
-callerofTheFrost_5 = Star(callerofTheFrost, callerofTheFrost_4, {"frostburn %":50, "frostburn duration":50, "offense":25})
+callerofTheFrost_5 = Star(callerofTheFrost, callerofTheFrost_1, {"frostburn %":50, "frostburn duration":50, "offense":25})
 callerofTheFrost_6 = Star(callerofTheFrost, callerofTheFrost_5, {})
-callerofTheFrost_6.addAbility(Ability('Blizzard', {"chance":1, "radius":6.5, "recharge":3.2, "skillClass":'Skill_AttackProjectileDrop', "trigger":'critical', "type":'attack'}, {"triggered cold":353.5, "triggered frostburn":[245, 2], "weapon damage %":16}))
+callerofTheFrost_6.addAbility(Ability('Blizzard', {"chance":1, "radius":6.5, "recharge":3.2, "skillClass":'Skill_AttackProjectileDrop', "trigger":'critical', "type":'attack'}, {"duration":{"slow move":70}, "triggered cold":353.5, "triggered frostburn":[245, 2], "weapon damage %":16}))
 
 pestilence = Constellation('Pestilence', '4e 4a 3c', '1e 1a')
 pestilence.id = 'pestilence'
 pestilence_0 = Star(pestilence, [], {"poison %":40, "vitality decay %":40})
 pestilence_1 = Star(pestilence, pestilence_0, {"acid retaliation":60, "defense":20, "offense":20, "spirit":20})
 pestilence_2 = Star(pestilence, pestilence_1, {})
-pestilence_2.addAbility(Ability('Fetid pool', {"activeDuration":6, "chance":0.33, "radius":3, "recharge":2, "skillClass":'Skill_AttackProjectileAreaEffect', "trigger":'hit', "type":'attack'}, {"triggered vitality":370, "triggered vitality decay":[245, 2]}))
+pestilence_2.addAbility(Ability('Fetid pool', {"chance":0.33, "duration":6, "radius":3, "recharge":2, "skillClass":'Skill_AttackProjectileAreaEffect', "trigger":'hit', "type":'attack'}, {"duration":{"slow move":30}, "triggered vitality":370, "triggered vitality decay":[245, 2]}))
 pestilence_3 = Star(pestilence, pestilence_2, {"offense %":4, "poison %":50, "retaliation %":60})
 pestilence_4 = Star(pestilence, pestilence_3, {"acid retaliation":90, "offense":40, "vitality decay":[15, 3], "vitality decay %":60, "vitality decay duration":50})
-pestilence_5 = Star(pestilence, pestilence_4, {"defense %":4, "poison %":50, "retaliation %":60})
+pestilence_5 = Star(pestilence, pestilence_2, {"defense %":4, "poison %":50, "retaliation %":60})
 pestilence_6 = Star(pestilence, pestilence_5, {"acid retaliation":90, "defense":40, "vitality decay":[15, 3], "vitality decay %":60, "vitality decay duration":50})
 
 crab = Constellation('Crab', '6a 4o', '3a')
@@ -537,7 +545,7 @@ crab.id = 'crab'
 crab_0 = Star(crab, [], {"constitution %":15, "physique":25})
 crab_1 = Star(crab, crab_0, {"elemental %":50, "internal %":50, "physical %":50})
 crab_2 = Star(crab, crab_1, {})
-crab_2.addAbility(Ability('Arcane Barrier', {"chance":0.3, "recharge":3, "skillClass":'Skill_BuffSelfShield', "trigger":'hit', "type":'shield'}, {}))
+crab_2.addAbility(Ability('Arcane Barrier', {"chance":0.3, "recharge":3, "skillClass":'Skill_BuffSelfShield', "trigger":'hit', "type":'shield'}, {"damage absorb":2900}))
 crab_3 = Star(crab, crab_2, {"defense":40, "offense":40, "pierce resist":18})
 crab_4 = Star(crab, crab_3, {"burn %":100, "electrocute %":100, "elemental":15, "elemental %":60, "elemental resist":15, "frostburn %":100})
 
@@ -547,7 +555,7 @@ manticore_0 = Star(manticore, [], {"health":250, "offense":15})
 manticore_1 = Star(manticore, manticore_0, {"acid %":50, "pet acid %":60, "pet poison %":60, "poison %":50})
 manticore_2 = Star(manticore, manticore_1, {"health %":6, "pet health %":12})
 manticore_3 = Star(manticore, manticore_2, {"acid resist":10, "offense":20, "pet all damage %":40, "pet offense %":4, "physical resist":4})
-manticore_4 = Star(manticore, manticore_3, {"acid %":40, "pet acid %":60, "pet poison %":60, "poison":[8, 5], "poison %":40, "poison duration":30})
+manticore_4 = Star(manticore, manticore_2, {"acid %":40, "pet acid %":60, "pet poison %":60, "poison":[8, 5], "poison %":40, "poison duration":30})
 manticore_5 = Star(manticore, manticore_4, {})
 manticore_5.addAbility(Ability('Acid Spray', {"chance":0.15, "recharge":1, "skillClass":'Skill_AttackWave', "trigger":'attack', "type":'attack', "waveDistance":4, "waveEndWidth":4, "waveStartWidth":2}, {"duration":{"reduce resist":28}, "triggered acid":217, "triggered poison":[195, 2]}))
 
@@ -565,17 +573,18 @@ messengerofWar_0 = Star(messengerofWar, [], {"fire retaliation":90, "retaliation
 messengerofWar_1 = Star(messengerofWar, messengerofWar_0, {"move speed":5, "offense":20, "physique":20})
 messengerofWar_2 = Star(messengerofWar, messengerofWar_1, {"offense":25, "retaliation %":60})
 messengerofWar_3 = Star(messengerofWar, messengerofWar_2, {"armor %":12, "fire retaliation":120})
-messengerofWar_4 = Star(messengerofWar, messengerofWar_3, {"elemental resist":15, "fire retaliation":120})
+messengerofWar_4 = Star(messengerofWar, messengerofWar_1, {"elemental resist":15, "fire retaliation":120})
 messengerofWar_5 = Star(messengerofWar, messengerofWar_4, {})
+messengerofWar_5.addAbility(Ability('Messenger of War', {"chance":0.2, "duration":8, "recharge":15, "skillClass":'Skill_BuffSelfDuration', "trigger":'hit', "type":'buff'}, {"fire retaliation":860, "move speed":30, "retaliation %":140, "slow resist":70}))
 
 kraken = Constellation('Kraken', '5p 5e', '3p 2c')
 kraken.id = 'kraken'
 kraken.restricts = ['2h-axe', '2h-mace', '2h-sword', 'ranged']
 kraken_0 = Star(kraken, [], {"all damage %":50, "retaliation %":80})
 kraken_1 = Star(kraken, kraken_0, {"attack speed":13, "cast speed":5, "health":250})
-kraken_2 = Star(kraken, kraken_1, {"attack speed":13, "cast speed":5, "health":250})
-kraken_3 = Star(kraken, kraken_2, {"all damage %":70, "move speed":5, "retaliation %":100})
-kraken_4 = Star(kraken, kraken_3, {"crit damage":15, "physical resist":4})
+kraken_2 = Star(kraken, kraken_0, {"attack speed":13, "cast speed":5, "health":250})
+kraken_3 = Star(kraken, kraken_0, {"all damage %":70, "move speed":5, "retaliation %":100})
+kraken_4 = Star(kraken, kraken_0, {"crit damage":15, "physical resist":4})
 
 hydra = Constellation('Hydra', '5e 3a 3c', '3e 2c')
 hydra.id = 'hydra'
@@ -583,9 +592,9 @@ hydra.restricts = ['ranged']
 hydra_0 = Star(hydra, [], {"offense":25})
 hydra_1 = Star(hydra, hydra_0, {"move speed":10, "offense":35})
 hydra_2 = Star(hydra, hydra_1, {"attack speed":5, "cast speed":5, "lifesteal %":5})
-hydra_3 = Star(hydra, hydra_2, {"offense":25, "physical":6})
+hydra_3 = Star(hydra, hydra_1, {"offense":25, "physical":6})
 hydra_4 = Star(hydra, hydra_3, {"offense %":4, "physical":12, "slow resist":20})
-hydra_5 = Star(hydra, hydra_4, {"all damage %":50, "attack speed":5, "cast speed":5})
+hydra_5 = Star(hydra, hydra_1, {"all damage %":50, "attack speed":5, "cast speed":5})
 
 bladesofNadaan = Constellation('Blades of Nadaan', '10a', '3a 2o')
 bladesofNadaan.id = 'bladesofNadaan'
@@ -593,9 +602,9 @@ bladesofNadaan.restricts = ['2h-sword', 'sword']
 bladesofNadaan_0 = Star(bladesofNadaan, [], {"avoid melee":2, "avoid ranged":2})
 bladesofNadaan_1 = Star(bladesofNadaan, bladesofNadaan_0, {"pierce %":40})
 bladesofNadaan_2 = Star(bladesofNadaan, bladesofNadaan_1, {"pierce %":50})
-bladesofNadaan_3 = Star(bladesofNadaan, bladesofNadaan_2, {"attack speed":4, "defense":15})
-bladesofNadaan_4 = Star(bladesofNadaan, bladesofNadaan_3, {"attack speed":4, "defense":15})
-bladesofNadaan_5 = Star(bladesofNadaan, bladesofNadaan_4, {"pierce":16, "pierce %":50})
+bladesofNadaan_3 = Star(bladesofNadaan, bladesofNadaan_1, {"attack speed":4, "defense":15})
+bladesofNadaan_4 = Star(bladesofNadaan, bladesofNadaan_1, {"attack speed":4, "defense":15})
+bladesofNadaan_5 = Star(bladesofNadaan, bladesofNadaan_1, {"pierce":16, "pierce %":50})
 
 rhowansScepter = Constellation("Rhowan's Scepter", '6a 4o', '3a 2o')
 rhowansScepter.id = 'rhowansScepter'
@@ -604,7 +613,7 @@ rhowansScepter_0 = Star(rhowansScepter, [], {"armor":30, "defense":20})
 rhowansScepter_1 = Star(rhowansScepter, rhowansScepter_0, {"armor":80, "health %":6})
 rhowansScepter_2 = Star(rhowansScepter, rhowansScepter_1, {"petrify resist":25, "physical %":50})
 rhowansScepter_3 = Star(rhowansScepter, rhowansScepter_2, {"armor %":8, "physical":10, "physical %":50, "retaliation %":50})
-rhowansScepter_4 = Star(rhowansScepter, rhowansScepter_3, {"defense":50, "internal %":50})
+rhowansScepter_4 = Star(rhowansScepter, rhowansScepter_1, {"defense":50, "internal %":50})
 rhowansScepter_5 = Star(rhowansScepter, rhowansScepter_4, {"internal":[20, 5], "internal %":80, "internal duration":50, "retaliation %":50})
 
 berserker = Constellation('Berserker', '5a 5e', '3e 2c')
@@ -613,9 +622,9 @@ berserker.restricts = ['2h-axe', 'axe']
 berserker_0 = Star(berserker, [], {"health":300, "offense":20})
 berserker_1 = Star(berserker, berserker_0, {"bleed %":50, "freeze resist":15, "physical %":50})
 berserker_2 = Star(berserker, berserker_1, {"crit damage":8, "offense":60})
-berserker_3 = Star(berserker, berserker_2, {"bleed %":50, "physical %":50, "stun resist":15})
+berserker_3 = Star(berserker, berserker_0, {"bleed %":50, "physical %":50, "stun resist":15})
 berserker_4 = Star(berserker, berserker_3, {"bleed":[20, 3], "bleed %":50, "bleed duration":50})
-berserker_5 = Star(berserker, berserker_4, {"healing %":15, "health/s":25, "physical resist":4, "pierce resist":15})
+berserker_5 = Star(berserker, berserker_0, {"healing %":15, "health/s":25, "physical resist":4, "pierce resist":15})
 
 oklainesLantern = Constellation("Oklaine's Lantern", '10e', '3e 2o')
 oklainesLantern.id = 'oklainesLantern'
@@ -633,7 +642,7 @@ shieldmaiden_0 = Star(shieldmaiden, [], {"blocked damage %":30, "defense":20})
 shieldmaiden_1 = Star(shieldmaiden, shieldmaiden_0, {"internal %":50, "retaliation %":40})
 shieldmaiden_2 = Star(shieldmaiden, shieldmaiden_1, {"block %":5, "defense":50})
 shieldmaiden_3 = Star(shieldmaiden, shieldmaiden_2, {"block %":6, "internal":[20, 5], "physical retaliation":200})
-shieldmaiden_4 = Star(shieldmaiden, shieldmaiden_3, {"blocked damage %":50, "stun resist":25})
+shieldmaiden_4 = Star(shieldmaiden, shieldmaiden_1, {"blocked damage %":50, "stun resist":25})
 shieldmaiden_5 = Star(shieldmaiden, shieldmaiden_4, {"blocked damage %":80, "shield recovery":30})
 
 behemoth = Constellation('Behemoth', '4p 4e 3c', '3e 2c')
@@ -641,10 +650,10 @@ behemoth.id = 'behemoth'
 behemoth_0 = Star(behemoth, [], {"health/s":30})
 behemoth_1 = Star(behemoth, behemoth_0, {"health":300, "pet health %":12})
 behemoth_2 = Star(behemoth, behemoth_1, {"healing %":6, "health/s":70})
-behemoth_3 = Star(behemoth, behemoth_2, {"armor":80, "health %":8, "pet armor":100})
-behemoth_4 = Star(behemoth, behemoth_3, {"health/s %":80, "pet health/s %":100})
-behemoth_5 = Star(behemoth, behemoth_4, {})
-behemoth_5.addAbility(Ability('Giantsblood', {"activeDuration":12, "chance":0.15, "recharge":25, "skillClass":'Skill_BuffSelfDuration', "trigger":'hit', "type":'buff'}, {"health/s":590}))
+behemoth_3 = Star(behemoth, behemoth_1, {"armor":80, "health %":8, "pet armor":100})
+behemoth_4 = Star(behemoth, behemoth_1, {"health/s %":80, "pet health/s %":100})
+behemoth_5 = Star(behemoth, behemoth_1, {})
+behemoth_5.addAbility(Ability('Giantsblood', {"chance":0.15, "duration":12, "recharge":25, "skillClass":'Skill_BuffSelfDuration', "trigger":'hit', "type":'buff'}, {"health":1200, "health %":20, "health/s":590}))
 
 chariotoftheDead = Constellation('Chariot of the Dead', '5a 5e', '3e 2c')
 chariotoftheDead.id = 'chariotoftheDead'
@@ -652,19 +661,19 @@ chariotoftheDead_0 = Star(chariotoftheDead, [], {"cunning":20, "physique":20})
 chariotoftheDead_1 = Star(chariotoftheDead, chariotoftheDead_0, {"offense":15, "slow resist":10})
 chariotoftheDead_2 = Star(chariotoftheDead, chariotoftheDead_1, {"armor":60, "cunning":25})
 chariotoftheDead_3 = Star(chariotoftheDead, chariotoftheDead_2, {"stun resist":20, "vitality resist":16})
-chariotoftheDead_4 = Star(chariotoftheDead, chariotoftheDead_3, {"offense":25, "slow resist":15})
+chariotoftheDead_4 = Star(chariotoftheDead, chariotoftheDead_2, {"offense":25, "slow resist":15})
 chariotoftheDead_5 = Star(chariotoftheDead, chariotoftheDead_4, {"offense":15, "offense %":4})
 chariotoftheDead_6 = Star(chariotoftheDead, chariotoftheDead_5, {})
-chariotoftheDead_6.addAbility(Ability('Wayward Soul', {"activeDuration":5, "chance":0.2, "recharge":8, "skillClass":'Skill_BuffSelfDuration', "trigger":'hit', "type":'buff'}, {"armor":460, "defense":130}))
+chariotoftheDead_6.addAbility(Ability('Wayward Soul', {"chance":0.2, "duration":5, "recharge":8, "skillClass":'Skill_BuffSelfDuration', "trigger":'hit', "type":'buff'}, {"armor":460, "defense":130, "health %":12}))
 
 uloKeeperoftheWaters = Constellation('Ulo Keeper of the Waters', '6p 4o', '3p 2o')
 uloKeeperoftheWaters.id = 'uloKeeperoftheWaters'
 uloKeeperoftheWaters_0 = Star(uloKeeperoftheWaters, [], {"elemental resist":15, "pet elemental resist":15})
 uloKeeperoftheWaters_1 = Star(uloKeeperoftheWaters, uloKeeperoftheWaters_0, {"energy":300, "health":300, "life leech resist":30})
 uloKeeperoftheWaters_2 = Star(uloKeeperoftheWaters, uloKeeperoftheWaters_1, {"freeze resist":15, "pet freeze resist":15, "pet petrify resist":15, "pet stun resist":15, "pet trap resist":15, "petrify resist":15, "stun resist":15, "trap resist":15})
-uloKeeperoftheWaters_3 = Star(uloKeeperoftheWaters, uloKeeperoftheWaters_2, {"acid resist":20, "chaos resist":20, "pet acid resist":20, "pet chaos resist":20})
-uloKeeperoftheWaters_4 = Star(uloKeeperoftheWaters, uloKeeperoftheWaters_3, {})
-uloKeeperoftheWaters_4.addAbility(Ability('Purge', {"activeDuration":1, "chance":1, "radius":3.5, "recharge":10, "skillClass":'Skill_DispelMagic', "trigger":'attack', "type":'buff'}, {}))
+uloKeeperoftheWaters_3 = Star(uloKeeperoftheWaters, uloKeeperoftheWaters_1, {"acid resist":20, "chaos resist":20, "pet acid resist":20, "pet chaos resist":20})
+uloKeeperoftheWaters_4 = Star(uloKeeperoftheWaters, uloKeeperoftheWaters_1, {})
+uloKeeperoftheWaters_4.addAbility(Ability('Purge', {"chance":1, "duration":1, "radius":3.5, "recharge":10, "skillClass":'Skill_DispelMagic', "trigger":'attack', "type":'buff'}, {"duration":{"slow move":50}}))
 
 aeonsHourglass = Constellation("Aeon's Hourglass", '8c 18p', '')
 aeonsHourglass.id = 'aeonsHourglass'
@@ -683,8 +692,8 @@ abomination_1 = Star(abomination, abomination_0, {"acid %":80, "vitality %":80, 
 abomination_2 = Star(abomination, abomination_1, {"acid resist":20, "offense":40})
 abomination_3 = Star(abomination, abomination_2, {"chaos %":80, "health":400, "offense":40, "vitality %":80})
 abomination_4 = Star(abomination, abomination_3, {})
-abomination_4.addAbility(Ability('Abominable Might', {"activeDuration":12, "chance":0.2, "recharge":18, "skillClass":'Skill_BuffSelfDuration', "trigger":'attack', "type":'buff'}, {"chaos %":260, "health/s %":100, "triggered chaos":94.5, "vitality %":310, "vitality decay %":310}))
-abomination_5 = Star(abomination, abomination_4, {"health":400, "offense":40, "poison %":80, "vitality decay %":80})
+abomination_4.addAbility(Ability('Abominable Might', {"chance":0.2, "duration":12, "recharge":18, "skillClass":'Skill_BuffSelfDuration', "trigger":'attack', "type":'buff'}, {"chaos":94.5, "chaos %":260, "health/s %":100, "vitality %":310, "vitality decay %":310}))
+abomination_5 = Star(abomination, abomination_2, {"health":400, "offense":40, "poison %":80, "vitality decay %":80})
 abomination_6 = Star(abomination, abomination_5, {"acid":12, "acid %":100, "poison %":100})
 abomination_7 = Star(abomination, abomination_6, {})
 abomination_7.addAbility(Ability('Tainted Eruption', {"chance":0.15, "radius":10, "recharge":3, "skillClass":'Skill_AttackRadius', "trigger":'attack', "type":'attack'}, {"triggered poison":[472, 5]}))
@@ -698,7 +707,7 @@ lightofEmpyrion_3 = Star(lightofEmpyrion, lightofEmpyrion_2, {"fire %":100, "hea
 lightofEmpyrion_4 = Star(lightofEmpyrion, lightofEmpyrion_3, {"aether resist":20, "chaos resist":20})
 lightofEmpyrion_5 = Star(lightofEmpyrion, lightofEmpyrion_4, {"fire":19})
 lightofEmpyrion_6 = Star(lightofEmpyrion, lightofEmpyrion_5, {})
-lightofEmpyrion_6.addAbility(Ability('Light of Empyrion', {"chance":0.3, "radius":5, "recharge":2, "skillClass":'Skill_AttackRadius', "trigger":'hit', "type":'attack'}, {"triggered burn":[270, 2], "triggered fire":332.5, "triggered physical":315, "weapon damage %":54}))
+lightofEmpyrion_6.addAbility(Ability('Light of Empyrion', {"chance":0.3, "radius":5, "recharge":2, "skillClass":'Skill_AttackRadius', "trigger":'hit', "type":'attack'}, {"stun %":180, "triggered burn":[270, 2], "triggered fire":332.5, "triggered physical":315, "weapon damage %":54}))
 
 oleron = Constellation('Oleron', '20a 7o', '')
 oleron.id = 'oleron'
@@ -707,8 +716,8 @@ oleron_1 = Star(oleron, oleron_0, {"bleed %":80, "internal %":80, "physical %":8
 oleron_2 = Star(oleron, oleron_1, {"armor":80, "bleed resist":10, "offense":35})
 oleron_3 = Star(oleron, oleron_2, {"health":350, "physical resist":4})
 oleron_4 = Star(oleron, oleron_3, {"bleed %":100, "physical":14, "physical %":120})
-oleron_5 = Star(oleron, oleron_4, {"internal":[24, 5], "internal %":120, "offense":35})
-oleron_6 = Star(oleron, oleron_5, {})
+oleron_5 = Star(oleron, oleron_3, {"internal":[24, 5], "internal %":120, "offense":35})
+oleron_6 = Star(oleron, oleron_3, {})
 oleron_6.addAbility(Ability('Blind Fury', {"chance":1, "radius":6, "recharge":1, "skillClass":'Skill_AttackRadius', "trigger":'critical', "type":'attack'}, {"triggered bleed":[335, 5], "triggered internal":[335, 5], "triggered physical":220, "weapon damage %":75}))
 
 menhirsObelisk = Constellation("Menhir's Obelisk", '8o 15p', '')
@@ -716,10 +725,11 @@ menhirsObelisk.id = 'menhirsObelisk'
 menhirsObelisk_0 = Star(menhirsObelisk, [], {"armor %":10})
 menhirsObelisk_1 = Star(menhirsObelisk, menhirsObelisk_0, {"armor":210, "defense":30})
 menhirsObelisk_2 = Star(menhirsObelisk, menhirsObelisk_1, {"defense":40, "defense %":6})
-menhirsObelisk_3 = Star(menhirsObelisk, menhirsObelisk_2, {"physical retaliation":120, "retaliation %":140})
+menhirsObelisk_3 = Star(menhirsObelisk, menhirsObelisk_0, {"physical retaliation":120, "retaliation %":140})
 menhirsObelisk_4 = Star(menhirsObelisk, menhirsObelisk_3, {"block %":5, "blocked damage %":40})
 menhirsObelisk_5 = Star(menhirsObelisk, menhirsObelisk_4, {"armor absorb":18, "freeze resist":30, "stun resist":30})
 menhirsObelisk_6 = Star(menhirsObelisk, menhirsObelisk_5, {})
+menhirsObelisk_6.addAbility(Ability("Menhir's Obelisk", {"chance":0.33, "duration":8, "radius":15, "recharge":12, "skillClass":'Skill_BuffRadius', "trigger":'block', "type":'buff'}, {"damage absorb":400, "damage absorb %":10, "retaliation %":115}))
 
 spearoftheHeavens = Constellation('Spear of the Heavens', '20p 7c', '')
 spearoftheHeavens.id = 'spearoftheHeavens'
@@ -729,7 +739,7 @@ spearoftheHeavens_2 = Star(spearoftheHeavens, spearoftheHeavens_1, {"aether resi
 spearoftheHeavens_3 = Star(spearoftheHeavens, spearoftheHeavens_2, {"aether":10, "crit damage":5, "energy/s %":15})
 spearoftheHeavens_4 = Star(spearoftheHeavens, spearoftheHeavens_3, {"aether %":100, "lightning %":100})
 spearoftheHeavens_5 = Star(spearoftheHeavens, spearoftheHeavens_4, {})
-spearoftheHeavens_5.addAbility(Ability('Spear of the Heavens', {"chance":0.5, "radius":2.4, "recharge":1, "skillClass":'Skill_AttackProjectileDrop', "trigger":'hit', "type":'attack'}, {"triggered aether":324, "triggered electrocute":[355, 2], "triggered lightning":227.5, "weapon damage %":60}))
+spearoftheHeavens_5.addAbility(Ability('Spear of the Heavens', {"chance":0.5, "radius":2.4, "recharge":1, "skillClass":'Skill_AttackProjectileDrop', "trigger":'hit', "type":'attack'}, {"stun %":100, "triggered aether":324, "triggered electrocute":[355, 2], "triggered lightning":227.5, "weapon damage %":60}))
 
 ulzuinsTorch = Constellation("Ulzuin's Torch", '8c 15e', '')
 ulzuinsTorch.id = 'ulzuinsTorch'
@@ -738,9 +748,9 @@ ulzuinsTorch_1 = Star(ulzuinsTorch, ulzuinsTorch_0, {"chaos resist":15, "offense
 ulzuinsTorch_2 = Star(ulzuinsTorch, ulzuinsTorch_1, {"crit damage":5, "move speed":5})
 ulzuinsTorch_3 = Star(ulzuinsTorch, ulzuinsTorch_2, {"fire":13.5, "fire %":100})
 ulzuinsTorch_4 = Star(ulzuinsTorch, ulzuinsTorch_3, {"burn":[18, 3], "burn %":100, "stun resist":20})
-ulzuinsTorch_5 = Star(ulzuinsTorch, ulzuinsTorch_4, {"armor":120, "burn %":100, "burn duration":50})
+ulzuinsTorch_5 = Star(ulzuinsTorch, ulzuinsTorch_2, {"armor":120, "burn %":100, "burn duration":50})
 ulzuinsTorch_6 = Star(ulzuinsTorch, ulzuinsTorch_5, {})
-ulzuinsTorch_6.addAbility(Ability('Meteor Shower', {"activeDuration":3, "chance":0.3, "projectiles":1, "radius":5, "recharge":3.5, "skillClass":'Skill_BuffAttackRadiusDrop', "trigger":'attack', "type":'attack'}, {"triggered burn":[270, 2], "triggered fire":211, "triggered physical":197.5}))
+ulzuinsTorch_6.addAbility(Ability('Meteor Shower', {"chance":0.3, "duration":3, "projectiles":1, "radius":5, "recharge":3.5, "skillClass":'Skill_BuffAttackRadiusDrop', "trigger":'attack', "type":'attack'}, {"triggered burn":[270, 2], "triggered fire":211, "triggered physical":197.5}))
 
 dyingGod = Constellation('Dying God', '8c 15p', '')
 dyingGod.id = 'dyingGod'
@@ -750,16 +760,18 @@ dyingGod_2 = Star(dyingGod, dyingGod_1, {"offense %":3, "pet all damage %":60, "
 dyingGod_3 = Star(dyingGod, dyingGod_2, {"chaos resist":15, "defense":25, "offense":45})
 dyingGod_4 = Star(dyingGod, dyingGod_3, {"chaos %":100, "defense":30, "vitality %":100})
 dyingGod_5 = Star(dyingGod, dyingGod_4, {"chaos":11.5, "crit damage":4, "pet all damage %":80, "pet crit damage":6})
-dyingGod_6 = Star(dyingGod, dyingGod_5, {})
+dyingGod_6 = Star(dyingGod, dyingGod_4, {})
+dyingGod_6.addAbility(Ability('Hungering Void', {"chance":0.33, "duration":20, "radius":12, "recharge":30, "skillClass":'Skill_BuffRadius', "trigger":'attack', "type":'buff'}, {"chaos %":370, "chaos retaliation":720, "crit damage":18, "duration":{"pet slow move":30}, "health/s":-308, "pet all damage %":250, "pet crit damage":14, "total speed":10, "vitality %":370, "vitality decay %":370}))
 
 treeofLife = Constellation('Tree of Life', '20p 7o', '')
 treeofLife.id = 'treeofLife'
 treeofLife_0 = Star(treeofLife, [], {"health %":8, "pet health %":12})
 treeofLife_1 = Star(treeofLife, treeofLife_0, {"health/s":60, "pet health/s %":50})
 treeofLife_2 = Star(treeofLife, treeofLife_1, {"health %":8, "health/s %":30, "pet health %":15})
-treeofLife_3 = Star(treeofLife, treeofLife_2, {"defense":30, "health/s":60, "pet health/s %":50})
+treeofLife_3 = Star(treeofLife, treeofLife_1, {"defense":30, "health/s":60, "pet health/s %":50})
 treeofLife_4 = Star(treeofLife, treeofLife_3, {"health %":8, "health/s %":30, "pet health/s":80})
-treeofLife_5 = Star(treeofLife, treeofLife_4, {})
+treeofLife_5 = Star(treeofLife, treeofLife_3, {})
+treeofLife_5.addAbility(Ability('Healing Rain', {"chance":0.25, "duration":8, "radius":15, "recharge":12, "skillClass":'Skill_BuffRadius', "trigger":'hit', "type":'buff'}, {"energy/s":12, "energy/s %":55, "health":700, "health %":10, "health/s":425, "health/s %":75}))
 
 mogdrogentheWolf = Constellation('Mogdrogen the Wolf', '15a 12e', '')
 mogdrogentheWolf.id = 'mogdrogentheWolf'
@@ -769,7 +781,7 @@ mogdrogentheWolf_2 = Star(mogdrogentheWolf, mogdrogentheWolf_1, {"defense":50, "
 mogdrogentheWolf_3 = Star(mogdrogentheWolf, mogdrogentheWolf_2, {"bleed":[18, 3], "bleed %":80, "bleed duration":50, "healing %":20})
 mogdrogentheWolf_4 = Star(mogdrogentheWolf, mogdrogentheWolf_3, {"bleed resist":15, "elemental resist":15, "offense %":4, "pet all damage %":80})
 mogdrogentheWolf_5 = Star(mogdrogentheWolf, mogdrogentheWolf_4, {})
-mogdrogentheWolf_5.addAbility(Ability('Howl of Mogdrogen', {"activeDuration":10, "chance":0.2, "recharge":15, "skillClass":'Skill_BuffSelfDuration', "trigger":'attack', "type":'buff'}, {"attack speed":18, "bleed %":275, "cast speed":15, "health/s %":100, "triggered bleed":[58, 3]}))
+mogdrogentheWolf_5.addAbility(Ability('Howl of Mogdrogen', {"chance":0.2, "duration":10, "recharge":15, "skillClass":'Skill_BuffSelfDuration', "trigger":'attack', "type":'buff'}, {"attack speed":18, "bleed":[58, 3], "bleed %":275, "cast speed":15, "duration":{"offense":156}, "health/s %":100, "pet bleed":[32, 3], "pet offense %":15, "pet total speed":30}))
 
 blindSage = Constellation('Blind Sage', '10a 18e', '')
 blindSage.id = 'blindSage'
@@ -777,10 +789,10 @@ blindSage_0 = Star(blindSage, [], {"offense":25, "physique":30, "spirit":30})
 blindSage_1 = Star(blindSage, blindSage_0, {"defense":40, "elemental %":80, "elemental resist":15})
 blindSage_2 = Star(blindSage, blindSage_1, {"crit damage":12, "physical resist":4, "skill disruption protection":30})
 blindSage_3 = Star(blindSage, blindSage_2, {"cold %":100, "frostburn %":250, "frostburn duration":25, "offense":45})
-blindSage_4 = Star(blindSage, blindSage_3, {"electrocute %":250, "electrocute duration":25, "lightning %":100, "offense":45})
-blindSage_5 = Star(blindSage, blindSage_4, {"burn %":250, "burn duration":25, "fire %":100, "offense":45})
+blindSage_4 = Star(blindSage, blindSage_2, {"electrocute %":250, "electrocute duration":25, "lightning %":100, "offense":45})
+blindSage_5 = Star(blindSage, blindSage_2, {"burn %":250, "burn duration":25, "fire %":100, "offense":45})
 blindSage_6 = Star(blindSage, blindSage_5, {})
-blindSage_6.addAbility(Ability('Elemental Seeker', {"chance":1, "radius":1, "recharge":0.8, "skillClass":'Skill_TargetedSpawnPet', "trigger":'attack', "type":'summon'}, {}))
+blindSage_6.addAbility(Ability('Elemental Seeker', {"burst":1, "chance":1, "lifespan":3, "limit":1, "petAttackSpeed":0.4, "petMelee":True, "petMode":'aura', "radius":3.8, "recharge":0.8, "skillClass":'Skill_TargetedSpawnPet', "trigger":'attack', "type":'summon'}, {"triggered elemental":600}))
 
 leviathan = Constellation('Leviathan', '13e 13a', '')
 leviathan.id = 'leviathan'
@@ -789,20 +801,20 @@ leviathan_1 = Star(leviathan, leviathan_0, {"health %":8, "physique":35})
 leviathan_2 = Star(leviathan, leviathan_1, {"defense":60, "energy %":10, "energy/s %":20})
 leviathan_3 = Star(leviathan, leviathan_2, {"physical resist":5, "pierce resist":20, "vitality resist":20})
 leviathan_4 = Star(leviathan, leviathan_3, {"cold":12, "cold %":100})
-leviathan_5 = Star(leviathan, leviathan_4, {"frostburn":[20, 3], "frostburn %":100})
-leviathan_6 = Star(leviathan, leviathan_5, {})
-leviathan_6.addAbility(Ability('Whirlpool', {"activeDuration":6, "chance":0.3, "radius":3.5, "recharge":2, "skillClass":'Skill_AttackProjectileAreaEffect', "trigger":'attack', "type":'attack'}, {"triggered cold":420, "triggered frostburn":[270, 2]}))
+leviathan_5 = Star(leviathan, leviathan_3, {"frostburn":[20, 3], "frostburn %":100})
+leviathan_6 = Star(leviathan, leviathan_3, {})
+leviathan_6.addAbility(Ability('Whirlpool', {"chance":0.3, "duration":6, "radius":3.5, "recharge":2, "skillClass":'Skill_AttackProjectileAreaEffect', "trigger":'attack', "type":'attack'}, {"duration":{"slow move":40}, "triggered cold":420, "triggered frostburn":[270, 2]}))
 
 theUnknownSoldier = Constellation('The Unknown Soldier', '15a 8o', '')
 theUnknownSoldier.id = 'theUnknownSoldier'
 theUnknownSoldier_0 = Star(theUnknownSoldier, [], {"offense":15, "pierce %":80})
 theUnknownSoldier_1 = Star(theUnknownSoldier, theUnknownSoldier_0, {"bleed":[18, 3], "bleed %":80, "offense":40})
 theUnknownSoldier_2 = Star(theUnknownSoldier, theUnknownSoldier_1, {"attack speed":5, "health":400})
-theUnknownSoldier_3 = Star(theUnknownSoldier, theUnknownSoldier_2, {"bleed %":120, "pierce %":120})
+theUnknownSoldier_3 = Star(theUnknownSoldier, theUnknownSoldier_1, {"bleed %":120, "pierce %":120})
 theUnknownSoldier_4 = Star(theUnknownSoldier, theUnknownSoldier_3, {"health %":8, "offense":40, "skill disruption protection":30})
 theUnknownSoldier_5 = Star(theUnknownSoldier, theUnknownSoldier_4, {"crit damage":6, "offense %":4, "pierce":20})
 theUnknownSoldier_6 = Star(theUnknownSoldier, theUnknownSoldier_5, {})
-theUnknownSoldier_6.addAbility(Ability('Living Shadow', {"chance":1, "recharge":6, "skillClass":'Skill_SpawnPet', "trigger":'critical', "type":'summon'}, {}))
+theUnknownSoldier_6.addAbility(Ability('Living Shadow', {"burst":1, "chance":1, "lifespan":24, "limit":3, "petAttackSpeed":1, "petMelee":True, "petMode":'attack', "recharge":6, "skillClass":'Skill_SpawnPet', "trigger":'critical', "type":'summon'}, {"triggered bleed":[200, 2], "triggered pierce":232.5}))
 
 harvestmansScythe = Constellation("Harvestman's Scythe", '3a 5p 3o', '3p 3a')
 harvestmansScythe.id = 'harvestmansScythe'
@@ -881,8 +893,9 @@ murmur_0 = Star(murmur, [], {"acid %":40, "cold %":40})
 murmur_1 = Star(murmur, murmur_0, {"avoid melee":3, "avoid ranged":3})
 murmur_2 = Star(murmur, murmur_1, {"defense":20, "health":200})
 murmur_3 = Star(murmur, murmur_2, {})
+murmur_3.addAbility(Ability('Rumor', {"chance":0.15, "duration":4, "recharge":1, "skillClass":'Skill_AttackBuff', "trigger":'attack', "type":'attack'}, {"defense":96, "reduce acid resist":30, "reduce cold resist":23, "triggered acid":97, "triggered cold":97}))
 murmur_4 = Star(murmur, murmur_3, {"defense":20, "vitality resist":15})
-murmur_5 = Star(murmur, murmur_4, {"acid %":50, "cold %":50, "frostburn %":80})
+murmur_5 = Star(murmur, murmur_3, {"acid %":50, "cold %":50, "frostburn %":80})
 
 staffRattosh = Constellation('StaffRattosh', '6p 3o 3c', '3p 2c')
 staffRattosh.id = 'staffRattosh'
@@ -890,7 +903,7 @@ staffRattosh_0 = Star(staffRattosh, [], {"defense":20, "pet defense %":3})
 staffRattosh_1 = Star(staffRattosh, staffRattosh_0, {"aether resist":15, "pet aether resist":20})
 staffRattosh_2 = Star(staffRattosh, staffRattosh_1, {"health":250, "pet aether %":70, "pet all damage %":50})
 staffRattosh_3 = Star(staffRattosh, staffRattosh_2, {"health %":5, "pet vitality resist":20, "vitality resist":10})
-staffRattosh_4 = Star(staffRattosh, staffRattosh_3, {"all damage %":50, "pet aether %":70, "pet all damage %":50})
+staffRattosh_4 = Star(staffRattosh, staffRattosh_1, {"all damage %":50, "pet aether %":70, "pet all damage %":50})
 staffRattosh_5 = Star(staffRattosh, staffRattosh_4, {"offense %":4, "pet offense %":3, "pet total speed":8})
 
 alladrahPhoenix = Constellation('AlladrahPhoenix', '6e 6p 3o', '2e 2a')
@@ -900,7 +913,7 @@ alladrahPhoenix_1 = Star(alladrahPhoenix, alladrahPhoenix_0, {"chaos resist":12,
 alladrahPhoenix_2 = Star(alladrahPhoenix, alladrahPhoenix_1, {"aether %":30, "elemental %":30, "fire retaliation":200, "freeze resist":15})
 alladrahPhoenix_3 = Star(alladrahPhoenix, alladrahPhoenix_2, {"burn %":50, "burn duration":30, "crit damage":8, "fire %":50, "retaliation %":80})
 alladrahPhoenix_4 = Star(alladrahPhoenix, alladrahPhoenix_3, {})
-alladrahPhoenix_4.addAbility(Ability('Phoenix Fire', {"activeDuration":7, "chance":1, "radius":5, "recharge":12, "skillClass":'Skill_BuffAttackRadiusDuration', "trigger":'critical', "type":'attack'}, {"fire retaliation":360, "retaliation %":140, "triggered aether":92, "triggered burn":[195, 2], "triggered fire":92}))
+alladrahPhoenix_4.addAbility(Ability('Phoenix Fire', {"chance":1, "duration":7, "radius":5, "recharge":12, "skillClass":'Skill_BuffAttackRadiusDuration', "trigger":'critical', "type":'attack'}, {"damage absorb":188, "fire retaliation":360, "retaliation %":140, "triggered aether":92, "triggered burn":[195, 2], "triggered fire":92}))
 
 typhos = Constellation('Typhos', '6a 3o 3c', '3a 2o')
 typhos.id = 'typhos'
@@ -909,7 +922,7 @@ typhos_1 = Star(typhos, typhos_0, {"defense":20, "pet defense %":3})
 typhos_2 = Star(typhos, typhos_1, {"acid resist":15, "bleed resist":15, "pet acid resist":15, "pet bleed resist":15})
 typhos_3 = Star(typhos, typhos_2, {"health %":6, "offense":20, "pet all damage %":40, "pet offense %":3})
 typhos_4 = Star(typhos, typhos_3, {"crit damage":6, "pet all damage %":40, "pet crit damage":10})
-typhos_5 = Star(typhos, typhos_4, {"pet physical resist":6, "pet stun resist":50, "total speed":6})
+typhos_5 = Star(typhos, typhos_2, {"pet physical resist":6, "pet stun resist":50, "total speed":6})
 
 harp = Constellation('Harp', '6p 6a 3o', '2p 2o')
 harp.id = 'harp'
@@ -919,16 +932,17 @@ harp_2 = Star(harp, harp_1, {"bleed resist":10, "health":300, "pierce resist":15
 harp_3 = Star(harp, harp_2, {"defense":30, "energy/s":3, "total speed":6})
 harp_4 = Star(harp, harp_3, {"burn %":80, "electrocute %":80, "elemental %":50, "elemental resist":15, "frostburn %":80, "pierce %":50})
 harp_5 = Star(harp, harp_4, {})
+harp_5.addAbility(Ability('Inspiration', {"chance":0.3, "duration":6, "radius":15, "recharge":10, "skillClass":'Skill_BuffRadius', "trigger":'hit', "type":'buff'}, {"defense":160, "energy/s":7, "offense":130, "slow resist":45, "trap resist":45}))
 
 ultos = Constellation('Ultos', '6c 10e 10p', '')
 ultos.id = 'ultos'
 ultos_0 = Star(ultos, [], {"cold %":80, "offense":25})
 ultos_1 = Star(ultos, ultos_0, {"lightning %":80, "offense":25})
 ultos_2 = Star(ultos, ultos_1, {"chaos resist":15, "health":350})
-ultos_3 = Star(ultos, ultos_2, {"crit damage":5, "electrocute %":120, "frostburn %":120, "offense":20})
+ultos_3 = Star(ultos, ultos_1, {"crit damage":5, "electrocute %":120, "frostburn %":120, "offense":20})
 ultos_4 = Star(ultos, ultos_3, {"cold %":100, "lightning":20, "lightning %":100})
 ultos_5 = Star(ultos, ultos_4, {})
-ultos_5.addAbility(Ability('Hand of Ultos', {"chance":1, "recharge":1.5, "skillClass":'Skill_AttackChain', "sparkMaxNumber":10, "trigger":'critical', "type":'attack'}, {"duration":{"reduce elemental resist":20}, "triggered electrocute":[270, 2], "triggered lightning":328, "weapon damage %":20}))
+ultos_5.addAbility(Ability('Hand of Ultos', {"chance":1, "recharge":1.5, "skillClass":'Skill_AttackChain', "sparkMaxNumber":10, "trigger":'critical', "type":'attack'}, {"duration":{"reduce elemental resist":20}, "stun %":40, "triggered electrocute":[270, 2], "triggered lightning":328, "weapon damage %":20}))
 
 ishtak = Constellation('Ishtak', '10o 15p', '')
 ishtak.id = 'ishtak'
@@ -938,7 +952,7 @@ ishtak_2 = Star(ishtak, ishtak_1, {"pet all damage %":80, "slow resist":30, "tot
 ishtak_3 = Star(ishtak, ishtak_2, {"bleed resist":20, "health":300, "pet all damage %":80, "pet bleed resist":30})
 ishtak_4 = Star(ishtak, ishtak_3, {"defense %":4, "pet physical resist":5, "spirit %":3})
 ishtak_5 = Star(ishtak, ishtak_4, {})
-ishtak_5.addAbility(Ability('Nature Guardian', {"activeDuration":8, "chance":0.25, "recharge":15, "skillClass":'Skill_BuffSelfDuration', "trigger":'hit', "type":'buff'}, {}))
+ishtak_5.addAbility(Ability('Nature Guardian', {"chance":0.25, "duration":8, "recharge":15, "skillClass":'Skill_BuffSelfDuration', "trigger":'hit', "type":'buff'}, {"damage absorb %":25, "duration":{"pet reduce resist":18}, "pet defense":130, "pet offense":130, "pet physical":40}))
 
 vire = Constellation('Vire', '18p 12a', '')
 vire.id = 'vire'
@@ -946,7 +960,10 @@ vire_0 = Star(vire, [], {"armor":50, "health":300})
 vire_1 = Star(vire, vire_0, {"internal %":80, "physical %":80, "physical retaliation":120})
 vire_2 = Star(vire, vire_1, {"armor":80, "blocked damage %":30, "health %":8})
 vire_3 = Star(vire, vire_2, {"cunning %":3, "internal %":120, "physical %":120, "retaliation %":140})
-vire_4 = Star(vire, vire_3, {"aether resist":15, "bleed resist":15, "chaos resist":15, "physical resist":5})
+vire_4 = Star(vire, vire_2, {"aether resist":15, "bleed resist":15, "chaos resist":15, "physical resist":5})
 vire_5 = Star(vire, vire_4, {})
-vire_5.addAbility(Ability('Fist of Vire', {"activeDuration":1, "chance":0.2, "projectiles":5, "radius":2.5, "recharge":1, "skillClass":'Skill_AttackProjectileAreaEffect', "trigger":'hit', "type":'attack'}, {"triggered internal":[320, 5], "triggered physical":245, "weapon damage %":65}))
+vire_5.addAbility(Ability('Fist of Vire', {"chance":0.2, "duration":1, "projectiles":5, "radius":2.5, "recharge":1, "skillClass":'Skill_AttackProjectileAreaEffect', "trigger":'hit', "type":'attack'}, {"triggered internal":[320, 5], "triggered physical":245, "weapon damage %":65}))
 
+# A proc part-way along a constellation can be bought on its own, so each
+# such prefix is registered as a constellation in its own right.
+Constellation.buildAbilityFragments(globals())

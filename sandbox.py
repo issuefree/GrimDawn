@@ -76,6 +76,46 @@ def diffSols(sola, solb):
 			print(bonus[0].ljust(25), str(bonus[1]).ljust(8), str(bonus[2]))
 
 
+def compareGear(*names):
+	"""Which of these pieces is best for this character, and why.
+
+	Takes names, not Item literals - anything the game has can be named,
+	whether or not it is listed in equipmentWanted.py:
+
+		compareGear("thundertouch", "everliving grove")
+
+	Matching ignores case and punctuation and falls back to a substring, so
+	part of a name is enough. Prints a row per bonus, a total, and the margin.
+	"""
+	import gearcompare
+	gearcompare.compare(model, names)
+
+
+def bestInSlot(slot, pool=None, count=3):
+	"""The best few things this character could put in one slot.
+
+	pool defaults to augments; pass components or equipment.values() for those.
+
+		bestInSlot("ring")
+		bestInSlot("head", components)
+	"""
+	items = Item.getByLocation(slot, list(pool if pool is not None else augments))
+	ranked = sorted(((item.evaluate(model, slot), item) for item in items),
+					key=lambda row: row[0], reverse=True)
+	print("\n  Best in %s:" % slot)
+	for value, item in ranked[:count]:
+		if value > 0:
+			print("    %-42s %d" % (item.name, value))
+	if not ranked or ranked[0][0] <= 0:
+		print("    - nothing this character scores")
+
+
+def bestAugments(count=3):
+	"""The top augments for every slot at once, as the solver prints them."""
+	import devotion
+	devotion.showAugments(model, count)
+
+
 def evalItemMods(location, itemType):
 	items = Item.getByLocation(location, itemType)
 	for item in items:
@@ -297,4 +337,9 @@ etb  = 	Item( "Empowered Thundertouch Bracers",
 # diffSols(sola, solb)
 
 # evalItemMods(["sword", "axe", "mace", "dagger"], augments )
-evalCon(direBear)
+# evalCon(direBear)
+
+# compareGear("thundertouch", "everliving grove")
+# bestInSlot("ring")
+# bestInSlot("head", components)
+bestAugments()

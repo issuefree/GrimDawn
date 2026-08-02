@@ -587,6 +587,43 @@ class Model:
 		self.saveSeedSolutions()
 
 
+	def swingPercent(self, weaponPercent, flat=None, boost=None):
+		"""What one cast of a skill is worth, as a percentage of a bare swing.
+
+		Three things a skill brings: the sheet's flat damage scaled by the
+		weapon damage it swings for, flat damage it adds itself, and percentages
+		it adds for itself - none of the last two being on the sheet, since they
+		apply to that skill and nothing else. A skill's percentage joins the
+		sheet's in one sum rather than multiplying it, so 12 on top of 450 lifts
+		that type by a fiftieth.
+
+		Divided by what one percent of a bare swing is worth, so a skill that is
+		nothing but a 100% swing returns exactly 100.
+
+		Used for both sides of one comparison, which is why it is here rather
+		than written out where the main attack is read: asking whether a granted
+		skill beats your own means measuring the two of them the same way, and
+		it was measuring the main attack with its own damage counted and the
+		candidate without. Behead states 120% and is worth 131 by this.
+		"""
+		flat, boost = flat or {}, boost or {}
+		bare = sum(self.getStat(d) * self.get(d) for d in damages
+				   if d not in ("elemental", "all damage")) / 100.0
+		if not bare:
+			return weaponPercent
+		swing = 0.0
+		for damage in damages:
+			if damage in ("elemental", "all damage") or not self.get(damage):
+				continue
+			value = self.getStat(damage) * self.get(damage) * weaponPercent / 100.0
+			if damage in flat:
+				value += self.calculateBonus(damage, flat[damage])
+			if boost.get(damage):
+				base = 100.0 + self.getStat(damage + " %")
+				value *= (base + boost[damage]) / base
+			swing += value
+		return swing / bare
+
 	def spareEnergy(self):
 		"""Energy a second a skill an item grants may spend.
 
@@ -936,28 +973,7 @@ class Model:
 				named.append("%s at %d" % (name, level))
 
 			if named:
-				swing = 0.0
-				for damage in damages:
-					if damage in ("elemental", "all damage") or not self.get(damage):
-						continue
-					# the sheet's flat, scaled by the weapon damage the skill
-					# swings for, plus whatever the skill adds itself
-					value = self.getStat(damage) * self.get(damage) * percent / 100.0
-					if damage in flat:
-						value += self.calculateBonus(damage, flat[damage])
-					# a skill's own percentage joins the sheet's rather than
-					# multiplying it, so it lifts this type by the share it adds
-					# to the total - 12 on top of 450 is worth a fiftieth, not 12%
-					if boost.get(damage):
-						base = 100.0 + self.getStat(damage + " %")
-						value *= (base + boost[damage]) / base
-					swing += value
-				# divided by what one percent of a bare swing is worth, so it
-				# comes back in the game's own units: a bare 100% skill returns
-				# 100, and it can be held against the percentage a component
-				# skill states. Deliberately not the weight, which a model may
-				# have overridden for reasons of its own.
-				self.stats["main attack %"] = swing / bareSwing if bareSwing else percent
+				self.stats["main attack %"] = self.swingPercent(percent, flat, boost)
 				print("  main attack %%: %.1f  (%s: %g%% weapon damage, and its own damage "
 					  "and modifiers, none of which is on the sheet)"
 					  % (self.stats["main attack %"], ", ".join(named), percent))

@@ -33,6 +33,9 @@ class Ability:
 		self.interval = 0
 		# how long one cast keeps working; set by resolveDerived
 		self.payloadSeconds = 0
+		# damage this cast adds itself, and percentages it adds for itself,
+		# neither of which is on the character sheet; set by resolveDerived
+		self.swingFlat, self.swingBoost = {}, {}
 		# enemies one cast lands on, after shape and playStyle - only meaningful
 		# for the attack types, and kept so a report can name the two factors
 		# behind `effective` separately
@@ -111,6 +114,19 @@ class Ability:
 		self.payloadSeconds = max([float(self.gc("duration") or 0)]
 								  + [float(value[1]) for value in self.bonuses.values()
 									 if isinstance(value, list) and len(value) == 2])
+
+		# What this cast puts on the target beyond the weapon damage it scales,
+		# captured here for the same reason: the duration loop below turns a
+		# [dps, seconds] pair into a scalar and resolveTiming runs again on
+		# every re-evaluation. A generated ability names its damage "triggered
+		# x"; a mastery skill out of skillData names it plainly.
+		self.swingFlat, self.swingBoost = {}, {}
+		for bonus, value in self.bonuses.items():
+			name = bonus[len("triggered "):] if bonus.startswith("triggered ") else bonus
+			if name in damages:
+				self.swingFlat[name] = value
+			elif name.endswith(" %") and name[:-2] in damages:
+				self.swingBoost[name[:-2]] = self.swingBoost.get(name[:-2], 0) + value
 
 		if not self.gc("skillClass"):
 			return
@@ -396,7 +412,13 @@ class Ability:
 			rate = float(model.getStat("attacks/s") or 0)
 			if rate:
 				interval = max(interval, 1.0 / rate)
-			if self.gb("weapon damage %") < self.mainAttackPercent(model):
+			# Both sides measured the same way. This used to hold the skill's
+			# bare weapon damage percentage against a main attack figure that
+			# had the main attack's own damage counted into it, so a skill
+			# carrying little weapon damage and a lot of its own lost a
+			# comparison it should have won.
+			if model.swingPercent(self.gb("weapon damage %"), self.swingFlat,
+								  self.swingBoost) < self.mainAttackPercent(model):
 				interval = max(interval, self.payloadSeconds)
 			interval = max(interval, self.energyInterval(model))
 		self.interval = interval

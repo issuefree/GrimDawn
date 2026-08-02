@@ -54,6 +54,17 @@ CLASS_SLOTS = {
 }
 GEAR_CLASSES = tuple(CLASS_SLOTS)
 
+# A weapon pool skill does not cost you a turn, it replaces your swing: the game
+# rolls skillChanceWeight on each attack and substitutes this for the default
+# one. That is a different thing from a skill you press, and the optimiser
+# already has a type for it - a wps is charged -100 weapon damage % for the
+# attack it displaces rather than an attack opportunity cost, because you were
+# going to swing anyway.
+#
+# Told apart by class alone. Every one of the 39 on items is a Skill_WPAttack_*,
+# none of them has a cooldown, and skillChanceWeight appears on nothing else.
+WPS_CLASS = "WPAttack"
+
 # An item's granted skill has no templateAutoCast: what fires it is its class.
 # Most are abilities you press, which the optimiser calls a manual trigger.
 SKILL_TRIGGERS = (
@@ -104,7 +115,13 @@ def grantedAbility(record, db):
     trigger, chance = (None, None)
     if controller:
         trigger, chance = triggerAndChance([{"templateAutoCast": controller}])
-    conditions = {"type": "buff" if "Buff" in skillClass or "Passive" in skillClass else "attack",
+    if WPS_CLASS in skillClass:
+        kind, trigger = "wps", "attack"
+        weight = lastValue(firstOf(records, "skillChanceWeight", 0)) or 0
+        chance = round(float(weight) / 100.0, 2) or 1
+    else:
+        kind = "buff" if "Buff" in skillClass or "Passive" in skillClass else "attack"
+    conditions = {"type": kind,
                   "trigger": trigger or triggerFor(skillClass), "chance": chance or 1,
                   "skillClass": skillClass}
     for field, name in (("skillCooldownTime", "recharge"), ("skillActiveDuration", "duration")):

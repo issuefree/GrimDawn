@@ -469,7 +469,13 @@ class Ability:
 						self.dynamicBonuses[dam] = (model.getStat(dam) * self.gb("weapon damage %")/100.0 + self.gb(dam)) * self.gb(dam+" %")/100.0
 
 		if self.gc("type") == "wps":
-			self.dynamicBonuses["weapon damage %"] = -100
+			# A weapon pool skill substitutes for the swing it replaces, so it
+			# gives up that swing's 100% weapon damage. One swing, on one enemy,
+			# however many the replacement hits - so this is divided by targets
+			# for the same reason the manual opportunity cost is: every bonus is
+			# multiplied by effective, and effective carries the target count.
+			# Left flat, a wps that hits four enemies paid four attacks for one.
+			self.dynamicBonuses["weapon damage %"] = -100 / max(1, self.targets)
 
 		# armor reduction is like + physical damage that isn't affected by %damage
 		if self.gb("reduce armor") > 0:

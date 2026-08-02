@@ -156,6 +156,20 @@ def evalItemMods(slot, pool=None, count=8, detail=4):
 	"""
 	from gearcompare import bonusWorth
 	items = Item.getByLocation(slot, list(pool if pool is not None else components))
+
+	# Against one enemy as well, because a ranking on packs alone is misleading
+	# in the one direction that matters: an area skill multiplies by everything
+	# it touches, so it climbs over a single-target item that beats it in the
+	# fight you actually die in. The x column is how much of a piece is clear
+	# speed, and a 1.0 is a piece nothing can take away from you.
+	was = model.stats.get("enemies")
+	model.stats["enemies"] = 1
+	boss = {item.name: item.evaluate(model, slot) for item in items}
+	if was is None:
+		model.stats.pop("enemies", None)
+	else:
+		model.stats["enemies"] = was
+
 	ranked = [(item.evaluate(model, slot), item) for item in items]
 	ranked = sorted(((v, i) for v, i in ranked if v > 0), reverse=True, key=lambda r: r[0])
 	if not ranked:
@@ -163,8 +177,11 @@ def evalItemMods(slot, pool=None, count=8, detail=4):
 		return
 
 	print("\n  %s, best first:" % slot)
+	print("    %-40s %8s %8s %6s" % ("", "pack", "boss", "x"))
 	for value, item in ranked[:count]:
-		print("    %-40s %8d" % (item.name[:40], value))
+		one = boss.get(item.name, value)
+		print("    %-40s %8d %8d %6.2f"
+			  % (item.name[:40], value, one, (value / one) if one else 0))
 		named = set(item.bonuses)
 		if item.ability and item.abilityCounted:
 			named |= set(item.ability.bonuses)

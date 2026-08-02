@@ -564,7 +564,10 @@ class Skill:
 	def __init__(self, name, profession, levels, parentSkillName=None):
 		self.name = name		
 		self.levels = levels
-		self.maxLevel = levels[0]
+		# levels is indexed by points spent, and levels[0] is the empty string -
+		# no points, no skill - so the highest level is the last index, not the
+		# first entry. This read "" until something finally called getAbility.
+		self.maxLevel = len(levels) - 1
 		self.profession = profession
 		self.parentSkillName = parentSkillName
 		self.childSkills = []

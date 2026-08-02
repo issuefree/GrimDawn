@@ -149,8 +149,9 @@ def statVocabulary():
 				  # alike - and it was not readable before.
 				  "reduce cooldown",
 				  # weapon damage of the attack you actually swing with, which is
-				  # what a granted skill interrupts and has to beat
-				  "main attack %"})
+				  # what a granted skill interrupts and has to beat. Name the
+				  # skill as ("Cadence", 12) and the percentage is looked up.
+				  "main attack %", "main attack"})
 	for d in damages:
 		vocab.update({d, d + " %", d + " duration"})
 	for r in resists:

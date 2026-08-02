@@ -599,28 +599,21 @@ class Model:
 
 		self.stats["allAttacks/s"].sort(reverse=True)
 
-		# What a cast gives up is a swing, so it is priced in the same currency a
-		# swing is: whatever a point of weapon damage % is worth to you. The two
-		# are one number and cannot be set apart.
-		if self.get("attack opportunity cost") == 0:
-			self.bonuses["attack opportunity cost"] = -self.get("weapon damage %")
-			print("  attack opportunity cost", self.bonuses["attack opportunity cost"])
-
-		if not self.get("weapon damage %"):
-			# and with no weight on weapon damage there is no currency to charge
-			# in, so every button an item grants becomes free to press. That is
-			# rarely what is meant - it was the state morena was in while every
-			# component skill was reading high.
-			print("  WARNING: no 'weapon damage %' weight, so pressing a granted skill "
-				  "costs nothing and every component skill scores as pure upside. "
-				  "'main attack %' has nothing to bite on either.")
-		elif not self.getStat("main attack %"):
-			# Unstated, a cast interrupts a bare default attack - generous to any
-			# component skill that swings for more, and most builds attack with a
-			# mastery skill worth a good deal more than one.
-			print("  note: no 'main attack %' - a component skill is priced against a bare "
-				  "100% swing, so one that beats that reads as an upgrade. Set it to what "
-				  "allAttacks/s[0] swings for.")
+		# What your main attack swings for is a fact about your skill bar, not a
+		# preference, and the generated skill data already knows it - name the
+		# skill and the level and it is looked up. skillData is imported here
+		# rather than at the top because it is six thousand lines and only a
+		# model that names an attack needs it.
+		if not self.getStat("main attack %") and self.getStat("main attack"):
+			name, level = self.getStat("main attack")
+			import skillData                       # noqa: F401 - registers the skills
+			skill = Skill.skills.get(name)
+			if skill is None:
+				print("  WARNING: no skill called %r - 'main attack' is ignored" % name)
+			else:
+				self.stats["main attack %"] = skill.getAbility(level).gb("weapon damage %")
+				print("  main attack %%: %g  (%s at %d)"
+					  % (self.stats["main attack %"], name, level))
 
 		if not "fight length" in self.stats:
 			self.stats["fight length"] = 30
@@ -844,6 +837,35 @@ class Model:
 			print("  damage types the model did not name, priced off their multiplier:")
 			for (weight, multiplier), names in sorted(bands.items(), reverse=True):
 				print("    %7.3f  (x%.2f)  %s" % (weight, multiplier, ", ".join(sorted(names))))
+
+		# What one swing is worth, and therefore what a point of weapon damage %
+		# is worth: a skill's "% Weapon Damage" scales the whole flat damage of
+		# the attack, so one point of it is one percent of your flat damage
+		# pool, priced at the weights those types already carry. Same reasoning
+		# as applyDamagePriority - it follows from the sheet and is not a
+		# preference, so it does not need to be one. morena had it at 25 by hand
+		# where the sheet says 71.
+		self.setIfNull("weapon damage %", sum(
+			self.getStat(d) * self.get(d) for d in damages
+			if d not in ("elemental", "all damage")) / 100.0)
+
+		# Pressing a granted skill costs you the attack you would have made.
+		# Priced in the same currency, because it is the same thing: a swing.
+		# At a main attack of 100% the two agree by construction - giving up one
+		# swing costs exactly one swing's worth of flat damage.
+		if self.get("attack opportunity cost") == 0:
+			self.bonuses["attack opportunity cost"] = -self.get("weapon damage %")
+		print("  weapon damage %%: %.2f  -> attack opportunity cost %.2f"
+			  % (self.get("weapon damage %"), self.get("attack opportunity cost")))
+
+		if not self.get("weapon damage %"):
+			print("  WARNING: nothing on the sheet for weapon damage to scale, so pressing "
+				  "a granted skill costs nothing and every component skill scores as pure "
+				  "upside. Give the model some flat damage.")
+		elif not self.getStat("main attack %"):
+			print("  note: no 'main attack %' - a component skill is priced against a bare "
+				  "100% swing, so one that beats that reads as an upgrade. Name your attack "
+				  "as \"main attack\":(\"Cadence\", 12) and it is read from the skill data.")
 
 		total = 0
 		for speed in ["attack speed", "cast speed", "move speed"]:

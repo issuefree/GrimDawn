@@ -841,7 +841,20 @@ class Model:
 		# component skill states, because it is not in the game's units any more.
 		bareSwing = sum(self.getStat(d) * self.get(d) for d in damages
 						if d not in ("elemental", "all damage")) / 100.0
-		self.setIfNull("weapon damage %", bareSwing)
+
+		# The weight is that divided by the attack rate, because weapon damage %
+		# is never a standing bonus. It is not on a single item or star in the
+		# game - it is a property of a skill, and it lands when that skill
+		# lands: 61 item skills and 32 devotion procs carry one, and nothing
+		# else does. So it is scored the way triggered damage is scored, once
+		# per cast against a weight for one delivery, where bareSwing is what a
+		# percent is worth applied to every swing.
+		#
+		# Getting this wrong made a proc's weapon damage worth attacks/s times
+		# too much, and it hid because morena's hand-set 25 was almost exactly
+		# the 71 the sheet derives divided by her 3 attacks a second. A weight
+		# tuned by feel had absorbed the error.
+		self.setIfNull("weapon damage %", bareSwing / (self.getStat("attacks/s") or 1))
 
 		# Pressing a granted skill costs you the attack you would have made.
 		# Priced in the same currency, because it is the same thing: a swing.

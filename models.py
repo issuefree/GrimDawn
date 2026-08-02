@@ -858,32 +858,53 @@ class Model:
 			if stated and isinstance(stated[0], str):
 				stated = [stated]
 			import skillData                       # noqa: F401 - registers the skills
-			total, extra, named = 0, 0, []
+			# Nothing a skill carries reaches the character sheet. The sheet is
+			# what applies to every attack you make; a skill and its modifiers
+			# apply to that skill. Open Wounds bleeds for Onslaught and nothing
+			# else, and Endless Rage's 12% bleed lifts Onslaught's bleed on top
+			# of the sheet's own - it is not part of the 450% that applies to
+			# everything. So the swing is worked out from all three: the weapon
+			# damage it scales, the flat damage it adds, and the percentages it
+			# adds for itself.
+			percent, flat, boost, named = 0, {}, {}, []
 			for name, level in stated:
 				skill = Skill.skills.get(name)
 				if skill is None:
 					print("  WARNING: no skill called %r - it adds nothing to 'main attack'" % name)
 					continue
 				ability = skill.getAbility(level)
-				total += ability.gb("weapon damage %")
-				# A skill's own flat damage is not on your character sheet. The
-				# sheet carries what gear and auras add to every attack; damage
-				# a skill or one of its modifiers adds lands only when that skill
-				# lands - Open Wounds bleeds for Onslaught and for nothing else.
-				# It is still part of the swing, so it is still part of what
-				# skipping the swing costs.
+				percent += ability.gb("weapon damage %")
 				for bonus, value in ability.bonuses.items():
-					if bonus in damages and self.get(bonus):
-						extra += self.calculateBonus(bonus, value)
+					if bonus in damages:
+						flat[bonus] = value if bonus not in flat else flat[bonus]
+					elif bonus.endswith(" %") and bonus[:-2] in damages:
+						boost[bonus[:-2]] = boost.get(bonus[:-2], 0) + value
 				named.append("%s at %d" % (name, level))
+
 			if named:
-				# said in weapon damage % so the whole cost stays one number in
-				# one currency; the weight is what a percent of a swing is worth
+				swing = 0.0
+				for damage in damages:
+					if damage in ("elemental", "all damage") or not self.get(damage):
+						continue
+					# the sheet's flat, scaled by the weapon damage the skill
+					# swings for, plus whatever the skill adds itself
+					value = self.getStat(damage) * self.get(damage) * percent / 100.0
+					if damage in flat:
+						value += self.calculateBonus(damage, flat[damage])
+					# a skill's own percentage joins the sheet's rather than
+					# multiplying it, so it lifts this type by the share it adds
+					# to the total - 12 on top of 450 is worth a fiftieth, not 12%
+					if boost.get(damage):
+						base = 100.0 + self.getStat(damage + " %")
+						value *= (base + boost[damage]) / base
+					swing += value
+				# said in weapon damage %, whose weight is what one percent of a
+				# bare swing is worth - so a bare 100% skill comes back as 100
 				perPercent = self.get("weapon damage %")
-				self.stats["main attack %"] = total + (extra / perPercent if perPercent else 0)
-				print("  main attack %%: %.1f  (%s: %g%% weapon damage plus %.0f of its own "
-					  "damage, which the sheet does not carry)"
-					  % (self.stats["main attack %"], ", ".join(named), total, extra))
+				self.stats["main attack %"] = swing / perPercent if perPercent else percent
+				print("  main attack %%: %.1f  (%s: %g%% weapon damage, and its own damage "
+					  "and modifiers, none of which is on the sheet)"
+					  % (self.stats["main attack %"], ", ".join(named), percent))
 
 		if not self.get("weapon damage %"):
 			print("  WARNING: nothing on the sheet for weapon damage to scale, so pressing "

@@ -6,6 +6,9 @@ import devotionderive
 
 class Ability:
 	minTriggerTime = .25  # there are gaps between skills etc
+	# What a default attack swings for. A granted skill carrying at least this
+	# much weapon damage replaces the swing rather than interrupting it.
+	weaponSwing = 100
 
 	def __init__(self, name, conditions, bonuses):
 		self.name = name		
@@ -28,6 +31,8 @@ class Ability:
 		# the whole gap from one firing to the next
 		self.rechargeTime = 0
 		self.interval = 0
+		# how long one cast keeps working; set by resolveDerived
+		self.payloadSeconds = 0
 		# enemies one cast lands on, after shape and playStyle - only meaningful
 		# for the attack types, and kept so a report can name the two factors
 		# behind `effective` separately
@@ -95,10 +100,20 @@ class Ability:
 		Runs once per ability. Enemy density is a property of the character, so
 		this assumes one model per process, which is how the tools drive it.
 		"""
-		if self.derived or not self.gc("skillClass"):
-			self.derived = True
+		if self.derived:
 			return
 		self.derived = True
+
+		# How long one cast keeps working: its own stated duration and any
+		# damage over time it lays down. Read here rather than in resolveTiming
+		# because the duration loop below collapses a [dps, seconds] pair into a
+		# scalar, and resolveTiming runs again on every re-evaluation.
+		self.payloadSeconds = max([float(self.gc("duration") or 0)]
+								  + [float(value[1]) for value in self.bonuses.values()
+									 if isinstance(value, list) and len(value) == 2])
+
+		if not self.gc("skillClass"):
+			return
 
 		skillClass = self.gc("skillClass")
 		if "shape" not in self.conditions:
@@ -338,14 +353,20 @@ class Ability:
 		Then the gap: a proc waits for its trigger, and a skill you press waits
 		on you noticing it is ready, which is what minTriggerTime stands in for.
 
-		Then the floor, for a skill you press: you cannot press it more often
-		than you can swing. Without that a skill with no cooldown at all came out
-		at four casts a second on any character, so the old code gave one a flat
-		one second recharge instead - a number with nothing behind it. The real
-		limit is the character's own attack rate, and it says the right thing at
-		both ends: Brutal Slam's two second cooldown is untouched by it, and
-		Decapitate, which has no cooldown because it is meant to be used as your
-		attack, comes out at exactly your attack rate.
+		Then two floors, for a skill you press. You cannot press it more often
+		than you can swing, whatever its cooldown says.
+
+		And unless it is worth swinging with, you would not press it every
+		swing. A default attack is 100% weapon damage, so a skill carrying at
+		least that much is an attack in its own right - Decapitate at 145%,
+		Beronath's Fury at 124% - and you use it as your attack. One carrying
+		less is a cast you fit in: Poison Bomb is 12% weapon damage and a poison
+		cloud, and casting it again before the cloud expires refreshes something
+		already running while costing another whole swing. So its repeat rate is
+		how long its payload lasts, not how fast your arm moves. Charging it as
+		though it were spammed cost 300% of weapon damage a second against the
+		44% a two second cooldown costs, which is what made the two look
+		unrelated.
 		"""
 		reduction = min(90.0, float(model.getStat("reduce cooldown") or 0)) / 100.0
 		self.rechargeTime = self.gc("recharge") * (1.0 - reduction)
@@ -354,7 +375,28 @@ class Ability:
 			rate = float(model.getStat("attacks/s") or 0)
 			if rate:
 				interval = max(interval, 1.0 / rate)
+			if self.gb("weapon damage %") < Ability.weaponSwing:
+				interval = max(interval, self.payloadSeconds)
+			interval = max(interval, self.energyInterval(model))
 		self.interval = interval
+
+	def energyInterval(self, model):
+		"""Seconds between casts that the character can actually pay for.
+
+		The last thing that stops you pressing a button, and the one that was
+		missing: Amber's nova costs 55 energy, and spamming it three times a
+		second is 165 a second against eight a second of regeneration. Nothing
+		checked, so it came out the best component in the slot by double.
+
+		What a fight affords is the regeneration plus the pool, since you may
+		end a fight empty. A skill that costs nothing is unconstrained.
+		"""
+		cost = -self.gb("energy")
+		if cost <= 0:
+			return 0.0
+		fight = float(model.getStat("fight length") or 0) or 1.0
+		budget = float(model.getStat("energy/s") or 0) + float(model.getStat("energy") or 0) / fight
+		return cost / budget if budget > 0 else 0.0
 
 	def activeSeconds(self, ticks):
 		"""Seconds of a DoT that actually land, per application.

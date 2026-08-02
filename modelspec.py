@@ -231,6 +231,16 @@ def validate(name, points, stats, weights, priority=None):
 	if stats.get("playStyle") not in PLAY_STYLES and "playStyle" in stats:
 		problems.append("stats['playStyle'] is %r; expected one of %s"
 						% (stats["playStyle"], ", ".join(PLAY_STYLES)))
+	if "difficulty" in stats:
+		# A name nobody recognises used to fall through to the default, which
+		# reads a different column of the game's scaling table - wrong enemy
+		# defence and wrong resistances, silently. Loud is better.
+		from models import DIFFICULTIES, DIFFICULTY_ALIAS
+		known = set(DIFFICULTIES) | set(DIFFICULTY_ALIAS)
+		if str(stats["difficulty"]).lower() not in known:
+			problems.append("stats['difficulty'] is %r; expected one of %s%s"
+							% (stats["difficulty"], ", ".join(sorted(known)),
+							   _suggest(str(stats["difficulty"]).lower(), known)))
 	if not weights and not priority:
 		problems.append("weights is empty, so every constellation scores 0")
 	for key in (priority or {}):

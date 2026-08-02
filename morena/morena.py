@@ -9,8 +9,8 @@ if __name__ == "__main__":
 devotionPoints = 20
 
 stats = {
-		"level":32,
-		"difficulty":"elite",
+		"level":33,
+		"difficulty":"veteran",
 
 		"attacks/s":3,
 		"allAttacks/s":[
@@ -46,6 +46,7 @@ stats = {
 		"pierce %":300, "pierce":500,
 		"bleed %":450, "bleed":350,
 		"cold %":100, "cold":50,
+		"frostburn %":158, "frostburn":67,
 
 		"fight length":30,
 

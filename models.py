@@ -61,6 +61,13 @@ PTH_CRIT_WINDOW = 100.0
 # those three is what confirms the layout.
 DIFFICULTIES = ("normal", "elite", "ultimate")
 DEFAULT_DIFFICULTY = "ultimate"
+# Veteran is not a fourth band, it is a switch on the first one - the game says
+# so itself: "Veteran Mode enhances Normal Difficulty ... Can be toggled on/off
+# in the main menu at any time", and Elite is "for characters that have
+# completed Normal / Veteran". The pak has three columns and Veteran reads the
+# Normal one. What it raises is monster level and density, and level is a stat
+# of its own here.
+DIFFICULTY_ALIAS = {"veteran": "normal"}
 
 # characterDefensiveAbility and characterDefensiveAbilityModifier from the pak,
 # which apply on top of whatever the enemy's own record says.
@@ -113,7 +120,11 @@ DEFAULT_ENEMY_RESIST = 0.0
 
 
 def difficultyOf(model):
+	"""Which column of the pak to read. Unrecognised names are caught by
+	modelspec.validate rather than quietly becoming the default here - reading
+	the wrong column moves both enemy defence and every resistance."""
 	stated = str(model.getStat("difficulty") or DEFAULT_DIFFICULTY).lower()
+	stated = DIFFICULTY_ALIAS.get(stated, stated)
 	return stated if stated in DIFFICULTIES else DEFAULT_DIFFICULTY
 
 
@@ -683,13 +694,19 @@ class Model:
 		self.stats["bleed %"] = self.getStat("bleed %") + self.getStat("cunning")*CUNNING_DURATION
 		self.stats["internal %"] = self.getStat("internal %") + self.getStat("cunning")*CUNNING_DURATION
 
-		for dam in ["fire %", "cold %", "lightning %", "acid %", "vitality %", "aether %", "chaos %"]:
-			if self.getStat(dam) > 0:
-				self.stats[dam] = self.getStat(dam) + self.getStat("spirit")*.47
+		# Spirit's share, on the same footing as cunning's above: unconditional.
+		# It used to be skipped for any type the sheet left at zero, which meant a
+		# damage type picked up from a devotion rather than from gear was scored
+		# with no attribute scaling at all - morena has 200 spirit, which doubles
+		# frostburn, and Tsunami's frostburn was counted as if she had none. The
+		# cunning lines above never had that guard, so this is also the two
+		# halves agreeing. 0.47 was a hand-rounded SPIRIT_DAMAGE; the constant
+		# comes from the game's own magicalDamageEquation.
+		for dam in magicalDamage:
+			self.stats[dam + " %"] = self.getStat(dam + " %") + self.getStat("spirit")*SPIRIT_DAMAGE
 
-		for dam in ["burn %", "frostburn %", "electrocute %", "poison %", "vitality decay %"]:
-			if self.getStat(dam) > 0:
-				self.stats[dam] = self.getStat(dam) + self.getStat("spirit")*.5
+		for dam in magicalDurationDamage:
+			self.stats[dam + " %"] = self.getStat(dam + " %") + self.getStat("spirit")*SPIRIT_DURATION
 
 		#check stats vs % stats
 		percStats = ["physique", "cunning", "spirit", "offense", "defense", "health", "energy", "armor"]
@@ -761,24 +778,54 @@ class Model:
 		self.setCalculated("elemental", sum([self.get(elemental) for elemental in elementals])/3.0)
 		self.setCalculated("triggered elemental", sum([self.get("triggered " + elemental) for elemental in elementals])/3.0)
 
-		# catch all for flat damage of any type
-		# triggered flat damage should be either specified manually or be equivalent to normal flat damage.
-		# catch all for triggered damage of any type (no triggered damage is useless right?)		
-		# retaliation types
+		# Catch-all for a damage type the model never named. A point of flat X
+		# is worth (1 + X%/100), because that is what it multiplies out to -
+		# which is exactly how applyDamagePriority prices a type you did name,
+		# so a named and an unnamed type are now on the same footing instead of
+		# the unnamed one getting a flat number that ignored the sheet.
+		#
+		# It matters most for a damage type you only get from a devotion. It is
+		# never on your gear, so it is never on the sheet, so there was nothing
+		# to derive a priority from and it fell through to "damage" - and
+		# frostburn on a build with 200 spirit is a x2 multiplier being scored
+		# as x1.
+		#
+		# Retaliation is deliberately left flat: the game's own tooltip for it
+		# says "% All Damage does not affect Retaliation damage", and a pet
+		# scales off its own bonuses rather than yours.
+		derived = []
 		for damage in damages:
 			# duration damage is counted for half if not specified manually
 			factor = 1
 			if damage in durationDamages:
 				factor = .5
+			multiplier = 1 + (self.getStat(damage + " %")
+							  + self.getStat("all damage %")) / 100.0
 
-			self.setIfNull(damage, self.get("damage")*factor)
+			# "elemental" and "all damage" are aggregates rather than types you
+			# can be dealt, and are reported by their components instead
+			if (damage not in self.bonuses and self.get("damage")
+					and damage not in ("elemental", "all damage")):
+				derived.append((damage, self.get("damage")*factor*multiplier, multiplier))
+			self.setIfNull(damage, self.get("damage")*factor*multiplier)
 			self.setIfNull("pet "+damage, self.get("pet damage")*factor)
 
-			self.setIfNull("triggered "+damage, max([self.get(damage), self.get("triggered damage")*factor]))
+			self.setIfNull("triggered "+damage,
+						   max([self.get(damage), self.get("triggered damage")*factor*multiplier]))
 
 			self.setIfNull(damage+" retaliation", self.get("retaliation")*factor)
 			self.setIfNull("pet "+damage+" retaliation", self.get("pet retaliation")*factor)
-			
+
+		if derived:
+			# grouped, because they come out in a handful of bands - one per
+			# attribute and duration combination - and a line each is noise
+			bands = {}
+			for damage, weight, multiplier in derived:
+				bands.setdefault((round(weight, 3), round(multiplier, 2)), []).append(damage)
+			print("  damage types the model did not name, priced off their multiplier:")
+			for (weight, multiplier), names in sorted(bands.items(), reverse=True):
+				print("    %7.3f  (x%.2f)  %s" % (weight, multiplier, ", ".join(sorted(names))))
+
 		total = 0
 		for speed in ["attack speed", "cast speed", "move speed"]:
 			total += self.get(speed)

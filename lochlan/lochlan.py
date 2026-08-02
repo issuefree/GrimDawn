@@ -15,7 +15,9 @@ devotionPoints = 53
 
 stats = {
 		"level":85,
-		"difficulty":1,
+		# was 1, which meant nothing and silently read the default. Spelled out
+		# so it scores the same as it always has - correct it if he is on Elite.
+		"difficulty":"ultimate",
 		# estimate how frequent combat events are for calculating dynamic stats and abilities
 		"attacks/s":2,
 		"allAttacks/s":[

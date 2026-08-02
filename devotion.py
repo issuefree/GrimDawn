@@ -1,3 +1,4 @@
+import os
 import sys
 
 from constellationData import *
@@ -315,16 +316,26 @@ def showSolution(model, constellations, bonusCount=18):
 	compared against a character sheet. And which procs are in it, with how
 	much of a fight each is up for - a proc that fires once a minute reads the
 	same as one that never stops until you look.
+
+	Returns the constellations in the order it printed them, which is not the
+	order it was given: see orderSolution.
 	"""
+	# The set is the solver's answer; the order is a separate question, and the
+	# one that matters while levelling. "total" is what the whole thing is worth
+	# once this line is bought, so a 20 point plan can be read as a 10 point one.
+	constellations = orderSolution(constellations, model)
+
 	print("\n  Take in this order:")
-	print("     %-38s %5s %6s %6s %5s  %s"
-		  % ("", "stars", "score", "/star", "spent", "requires"))
+	print("     %-38s %5s %6s %6s %5s %7s  %-11s %s"
+		  % ("", "stars", "score", "/star", "spent", "total", "requires", "provides"))
 	spent = 0
-	for c in constellations:
+	for i, c in enumerate(constellations):
 		spent += len(c.stars)
 		score = c.evaluate(model)
-		print("     %-38s %5d %6d %6d %5d  %s"
-			  % (c.name, len(c.stars), score, score / len(c.stars), spent, c.requires))
+		print("     %-38s %5d %6d %6d %5d %7d  %-11s %s"
+			  % (c.name, len(c.stars), score, score / len(c.stars), spent,
+				 evaluateSolution(constellations[:i + 1], model),
+				 c.requires.short(), c.provides.short()))
 
 	bonuses = getBonuses(constellations, model)
 	ranked = sorted(((evaluateBonuses(model, {name: value}), name, value)
@@ -349,6 +360,9 @@ def showSolution(model, constellations, bonusCount=18):
 		for c, ability in procs:
 			print("     %-30s %-22s %s"
 				  % (c.name[:30], ability.name[:22], ability.describe()))
+
+	# the caller prints the path, and it should read in the order just shown
+	return constellations
 
 
 def showAugments(model, count=3):
@@ -391,7 +405,7 @@ def fastSearch(model, budget, seeds):
 	if not prob.feasible([prob.cons.index(c) for c in constellations]):
 		print("  WARNING: solution is not feasible")
 
-	showSolution(model, constellations)
+	constellations = showSolution(model, constellations)
 
 	print("\n  " + solutionPath(constellations))
 
@@ -403,17 +417,23 @@ def fastSearch(model, budget, seeds):
 
 	showAugments(model)
 
-if __name__ == "__main__":
-	# usage: python devotion.py [modelName] [--budget S] [--seeds N] [--exhaustive]
-	#   e.g. python devotion.py armitage
-	#
-	# constellationData.py is generated from the installed game; rebuild it after
-	# a patch with --regenerate.
-	#
-	# The heuristic solver is the default: it returns in seconds and matches the
-	# exhaustive search on every model where that search terminates. --exhaustive
-	# runs the old branch-and-bound, which does not terminate on large models.
-	argv = sys.argv[1:]
+def main(argv=None, modelName=None):
+	"""The command line, as a function so a model file can be its own entry point.
+
+	usage: python devotion.py [modelName] [--budget S] [--seeds N] [--exhaustive]
+	  e.g. python devotion.py armitage
+
+	constellationData.py is generated from the installed game; rebuild it after
+	a patch with --regenerate.
+
+	The heuristic solver is the default: it returns in seconds and matches the
+	exhaustive search on every model where that search terminates. --exhaustive
+	runs the old branch-and-bound, which does not terminate on large models.
+
+	modelName overrides whatever the arguments name, so a model file can pass
+	its own and still take every flag from the command line.
+	"""
+	argv = list(sys.argv[1:] if argv is None else argv)
 	exhaustive = "--exhaustive" in argv
 	regenerate = "--regenerate" in argv
 	compare = []
@@ -448,7 +468,8 @@ if __name__ == "__main__":
 				archetype = value
 			del argv[i:i + 2]
 	names = [a for a in argv if not a.startswith("-")]
-	modelName = names[0] if names else DEFAULT_MODEL
+	if modelName is None:
+		modelName = names[0] if names else DEFAULT_MODEL
 
 	if regenerate:
 		import devotiongen, itemgen, skillgen
@@ -473,7 +494,7 @@ if __name__ == "__main__":
 		except ValueError as e:
 			sys.exit(str(e))
 		print("Created %s (archetype: %s)" % (path, archetype))
-		print("  Fill in your character sheet, then run:  python devotion.py %s" % newModel.lower())
+		print("  Fill in your character sheet, then run:  python %s" % path)
 		print("  Archetypes available: %s" % ", ".join(sorted(modelspec.ARCHETYPES)))
 	else:
 		# a broken model file is a user error, not a crash - report it plainly
@@ -488,6 +509,24 @@ if __name__ == "__main__":
 			startSearch(model)
 		else:
 			fastSearch(model, budget, seeds)
+
+
+def runModelFile(path):
+	"""Search for the devotions of the model file being run directly.
+
+	A model file is data, and loadModel reads it by exec'ing it, so it cannot
+	simply call the search at the bottom - it would fire again on every load.
+	Instead each file guards on __name__ and hands its own path here, which
+	names the model after the file and runs from the repo root, because
+	loadModel and saveSeedSolutions both address models by relative path.
+	"""
+	folder = os.path.dirname(os.path.abspath(path))
+	os.chdir(os.path.dirname(folder))
+	return main(modelName=os.path.splitext(os.path.basename(path))[0])
+
+
+if __name__ == "__main__":
+	main()
 
 
 # I think the next step is to look at trying to branch and bound.

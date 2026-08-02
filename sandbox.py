@@ -234,4 +234,4 @@ def evalCon(*constellations):
 # evalSol([xA, xC, owl, vulture, jackal, revenant])
 # compareGear("bloodreaper's cleaver", "bloodreaper's claw", "duelist's sabre", "pit master's axe", "gorefeast")
 # compareGear("Briarthorn Band", "band of black ice", "blackwatch seal", "reddan memento ring")
-evalCon(assassinsBladeAssassinsMark, assassin)
+evalCon(tsunami, assassin)

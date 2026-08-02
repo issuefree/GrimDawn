@@ -44,6 +44,139 @@ def evaluateSolution(solution, model, verbose=False):
 	timeMethod("evaluateSolution", start)
 	return value
 
+def orderSolution(solution, model, limit=18):
+	"""Order a finished solution so its score climbs as early as it can.
+
+	The solver picks a set; it does not say what to buy first. That is a
+	separate question and the one that matters while you are levelling - a
+	twenty point plan is also a ten point plan, and which ten depends entirely
+	on the order.
+
+	Two things constrain it. Affinity gates what can be taken next, and the
+	score you actually play with between purchases is the score of what you
+	have already bought. Maximising the score curve on the way up is the same
+	as maximising the area under it, and the area falls out one purchase at a
+	time: while saving the stars for c you hold the score of everything before
+	it, so
+
+	    area(T + c) = area(T) + score(T) * stars(c)
+
+	That depends only on the set already taken, which makes it an exact subset
+	dynamic program rather than a heuristic. A solution is a dozen or so
+	constellations and a subset costs about 8 microseconds to score, so the
+	whole thing is a tenth of a second.
+
+	Scores are not additive and cannot be summed as we go: evaluateSolution
+	ranks the attack-triggered constellations and hands each a different attack
+	rate, so what a proc is worth depends on what else is in the set. score(T)
+	is therefore evaluated per subset.
+
+	Above `limit` constellations the 2^n gets uncomfortable and this falls back
+	to taking the best score per star that affinity currently allows, which is
+	the same objective decided one step at a time instead of all at once.
+	"""
+	solution = list(solution)
+	n = len(solution)
+	if n < 2:
+		return solution
+
+	stars = [len(c.stars) for c in solution]
+	index = {id(c): i for i, c in enumerate(solution)}
+	# conflicts as a bitmask over this solution, so the check is one AND
+	conflict = [0] * n
+	for i, c in enumerate(solution):
+		for other in c.conflicts:
+			if id(other) in index:
+				conflict[i] |= 1 << index[id(other)]
+
+	if n > limit:
+		return _greedyOrder(solution, model, stars, conflict)
+
+	scores = {}
+	def score(mask):
+		if mask not in scores:
+			scores[mask] = evaluateSolution(
+				[solution[i] for i in range(n) if mask >> i & 1], model)
+		return scores[mask]
+
+	# affinity of each subset, built off the subset with its lowest bit removed
+	affinity = [None] * (1 << n)
+	affinity[0] = [0, 0, 0, 0, 0]
+	requires = [c.requires.affinities for c in solution]
+
+	worst = float("-inf")
+	best = [worst] * (1 << n)
+	took = [-1] * (1 << n)
+	best[0] = 0.0
+
+	for mask in range(1 << n):
+		if mask:
+			low = mask & -mask
+			i = low.bit_length() - 1
+			have = list(affinity[mask ^ low])
+			p = solution[i].provides.affinities
+			for k in range(5):
+				have[k] += p[k]
+			affinity[mask] = have
+		if best[mask] == worst:
+			continue
+		have = affinity[mask]
+		here = score(mask)
+		base = best[mask]
+		for i in range(n):
+			bit = 1 << i
+			if mask & bit or mask & conflict[i]:
+				continue
+			need = requires[i]
+			if (have[0] < need[0] or have[1] < need[1] or have[2] < need[2]
+					or have[3] < need[3] or have[4] < need[4]):
+				continue
+			value = base + here * stars[i]
+			if value > best[mask | bit]:
+				best[mask | bit] = value
+				took[mask | bit] = i
+
+	full = (1 << n) - 1
+	if best[full] == worst:
+		# nothing orderable - the set cannot be bought in any sequence, so say
+		# nothing about order rather than printing a plan that does not work
+		return solution
+	order, mask = [], full
+	while mask:
+		i = took[mask]
+		order.append(solution[i])
+		mask &= ~(1 << i)
+	order.reverse()
+	return order
+
+
+def _greedyOrder(solution, model, stars, conflict):
+	"""One step at a time: whatever affinity allows that buys the most per star."""
+	remaining = set(range(len(solution)))
+	taken, order, mask = [], [], 0
+	while remaining:
+		have = getAffinities(taken).affinities
+		bestGain, bestIndex = None, None
+		for i in sorted(remaining):
+			if mask & conflict[i]:
+				continue
+			need = solution[i].requires.affinities
+			if any(have[k] < need[k] for k in range(5)):
+				continue
+			gain = evaluateSolution(taken + [solution[i]], model) / stars[i]
+			if bestGain is None or gain > bestGain:
+				bestGain, bestIndex = gain, i
+		if bestIndex is None:
+			# unreachable from here; append the rest as they came
+			order += [solution[i] for i in sorted(remaining)]
+			break
+		remaining.discard(bestIndex)
+		mask |= 1 << bestIndex
+		taken.append(solution[bestIndex])
+		order.append(solution[bestIndex])
+	return order
+
+
 def getSolutionCost(solution):
 	start = time()
 	cost = 0

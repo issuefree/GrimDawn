@@ -264,6 +264,14 @@ TEMPLATE = '''\
 # Only attacks/s and playStyle are required. Everything else is optional -
 # add sheet numbers as you care about them. Unknown keys are reported on load.
 
+# python %(folder)s/%(folder)s.py [--budget 30] [--seeds 10] [--exhaustive]
+# Exits here rather than falling through; see devotion.runModelFile for why.
+if __name__ == "__main__":
+	import os, sys
+	sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+	import devotion
+	sys.exit(devotion.runModelFile(__file__))
+
 devotionPoints = %(points)d
 
 stats = {
@@ -346,6 +354,7 @@ def scaffold(name, archetype="physical", points=55, style="melee", force=False):
 	priorityLines, weightLines = ARCHETYPES[archetype]
 	text = TEMPLATE % {
 		"name": name,
+		"folder": folder,
 		"points": points,
 		"style": style,
 		"styles": "        # melee | shortranged | ranged | tank",

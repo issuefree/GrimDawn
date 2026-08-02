@@ -137,10 +137,20 @@ class Affinity:
 		return a
 
 	def __str__(self):
-		out = ""		
+		out = ""
 		for i in range(len(self.affinities)):
 			out += str(self.affinities[i]) + Affinity.sh[i] + " "
 		return out
+
+	def short(self):
+		"""Just the affinities that are not zero, for a table.
+
+		__str__ spells out all five, which is what you want when comparing two
+		of them line by line. In a column most of them are zero and "0a 0c 0e
+		0o 0p" is four fifths noise.
+		"""
+		return " ".join("%d%s" % (value, Affinity.sh[i])
+						for i, value in enumerate(self.affinities) if value) or "-"
 
 	# a vector is one type of affinity or an affinity set that provides only one type.
 	def isVector(self, vector=None):

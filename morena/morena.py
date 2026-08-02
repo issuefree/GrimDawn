@@ -1,3 +1,11 @@
+# python morena/morena.py [--budget 30] [--seeds 10] [--exhaustive]
+# Exits here rather than falling through; see devotion.runModelFile for why.
+if __name__ == "__main__":
+	import os, sys
+	sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+	import devotion
+	sys.exit(devotion.runModelFile(__file__))
+
 devotionPoints = 20
 
 stats = {
@@ -49,8 +57,8 @@ stats = {
 	}
 
 damagePriority = {
-		"pierce": 12.5,
-		"physical": 10,
+		"pierce": 10,
+		"physical": 7.5,
 		"bleed": 5,
 		"cold": 5,
 	}
@@ -62,12 +70,12 @@ weights = {
 		"offense": 5, # "offense %": ,
 
 		"damage":1,
+		"health":.1,
+		"energy":.1,
 
 		"bleed duration":5,
 
-		# "weapon damage %":7.5,
-
-		"crit damage": 10,
+		"weapon damage %":25,
 
 		# "lifesteal %":33,
 		"move speed": 50,

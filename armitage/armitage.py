@@ -1,3 +1,11 @@
+# python armitage/armitage.py [--budget 30] [--seeds 10] [--exhaustive]
+# Exits here rather than falling through; see devotion.runModelFile for why.
+if __name__ == "__main__":
+	import os, sys
+	sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+	import devotion
+	sys.exit(devotion.runModelFile(__file__))
+
 devotionPoints = 57
 
 stats = {

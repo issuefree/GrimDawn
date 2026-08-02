@@ -215,9 +215,9 @@ def compare(model, names, slot=None):
             for bonus in item.ability.bonuses:
                 if model.get(bonus):
                     rows[bonus] = True
-    for bonus in sorted(rows, key=lambda b: -max(_worth(item, b, model)
+    for bonus in sorted(rows, key=lambda b: -max(bonusWorth(item, b, model)
                                                  for _, item, _ in scored)):
-        cells = ["%*d" % (width, _worth(item, bonus, model)) for _, item, _ in scored]
+        cells = ["%*d" % (width, bonusWorth(item, bonus, model)) for _, item, _ in scored]
         print("  %-24s %s" % (bonus[:24], "  ".join(cells)))
     if not rows:
         print("  none of these carry anything this character scores")
@@ -230,15 +230,24 @@ def compare(model, names, slot=None):
               % (scored[0][1].name, lead, 100.0 * lead / scored[0][0]))
 
 
-def _worth(item, bonus, model):
-    """What one bonus on one item is worth to this character."""
-    value = item.bonuses.get(bonus, 0)
-    if isinstance(value, list):
-        value = value[0]
-    total = model.get(bonus) * value
-    if item.ability and bonus in item.ability.bonuses:
+def bonusWorth(item, bonus, model):
+    """What one bonus on one item is worth to this character.
+
+    Goes through calculateBonus rather than multiplying the weight here, so a
+    row reads the same as the total it is part of - this used to keep its own
+    copy of the arithmetic and missed that a duration damage is divided by
+    attacks per second.
+
+    A skill the item grants only counts if it was worth pressing. Item.evaluate
+    floors a skill that costs more attacks than it returns, and a row that
+    ignored that would not add up to the total underneath it.
+    """
+    total = model.calculateBonus(bonus, item.bonuses[bonus]) if bonus in item.bonuses else 0
+    if item.ability and item.abilityCounted and bonus in item.ability.bonuses:
         carried = item.ability.getTotalBonus(bonus)
         if isinstance(carried, list):
-            carried = carried[0]
-        total += model.get(bonus) * carried * item.ability.effective
+            carried = [carried[0] * item.ability.effective, carried[1]]
+        else:
+            carried = carried * item.ability.effective
+        total += model.calculateBonus(bonus, carried)
     return total

@@ -486,6 +486,10 @@ class Item:
 		self.ability = ability
 
 		self.value = 0
+		# set by evaluate: what the granted skill came to, and whether that was
+		# worth pressing. A report reads these so its rows add up to its total.
+		self.abilityValue = 0
+		self.abilityCounted = bool(ability)
 
 	def __str__(self):
 		return self.name
@@ -522,9 +526,17 @@ class Item:
 		# every swing overwrites itself instead of stacking. Taking the
 		# per-second figure whole made the same bonus worth attacks/s times more
 		# on an item than on a devotion - three times, on morena.
-		value = 0
+		# The two are summed apart because a granted skill is opt-in. Pressing it
+		# instead of swinging costs an attack, which ability.py charges as
+		# "attack opportunity cost", and for a weak skill that costs more than
+		# the skill returns - Mutagenic Ichor's poison bolt is worth 424 against
+		# 2000 of forfeited attacks. Charging that against the item said a
+		# component was worse than an empty socket, which is not a thing that can
+		# happen: you keep the component for its passive bonuses and never press
+		# the button. So the skill floors at nothing rather than going negative.
+		value, abilityValue = 0, 0
 		for bonus in model.bonuses:
-			for source in (self.bonuses, abilityBonuses):
+			for source, isAbility in ((self.bonuses, False), (abilityBonuses, True)):
 				if bonus not in source:
 					continue
 				worth = model.calculateBonus(bonus, source[bonus])
@@ -532,9 +544,18 @@ class Item:
 					amount = source[bonus]
 					amount = amount[0] if isinstance(amount, list) else amount
 					print("  ", bonus.ljust(20), str(int(amount)).ljust(5), int(worth))
-				value += worth
-		self.value = value
-		return value
+				if isAbility:
+					abilityValue += worth
+				else:
+					value += worth
+		if verbose and abilityValue < 0:
+			print("   %s not worth using (%d); counted as nothing"
+				  % (self.ability.name, abilityValue))
+		# recorded so a report can show the same rows the total was built from
+		self.abilityValue = abilityValue
+		self.abilityCounted = abilityValue > 0
+		self.value = value + max(0, abilityValue)
+		return self.value
 
 class Skill:
 	skills = {}

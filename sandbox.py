@@ -159,8 +159,11 @@ def evalItems(itemList, slot=None):
 					  else (i.location[0] if i.location else "")) for i in items]
 	scored = sorted(((item.evaluate(model, w), item, w) for item, w in zip(items, where)),
 					reverse=True, key=lambda row: row[0])
-	columns = [(item, {b: model.get(b) * (v[0] if isinstance(v, list) else v)
-					   for b, v in item.bonuses.items() if model.get(b)})
+	# same row arithmetic gearcompare prints, so the two agree and neither keeps
+	# its own copy of what a bonus is worth
+	from gearcompare import bonusWorth
+	columns = [(item, {b: bonusWorth(item, b, model)
+					   for b in item.bonuses if model.get(b)})
 			   for _, item, _ in scored]
 	bonuses = {b for _, worth in columns for b in worth}
 	rows = [(b, [worth.get(b, 0) for _, worth in columns])

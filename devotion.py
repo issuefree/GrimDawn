@@ -306,6 +306,56 @@ globalMetadata["startTime"] = time()
 
 DEFAULT_MODEL = "morena"
 
+def showSolution(model, constellations, bonusCount=18):
+	"""Break a finished solution down: what it costs, what it buys, why.
+
+	Three questions the bare list of names never answered. What is each
+	constellation actually worth here, and is it paying for its stars. What
+	stats the whole thing adds up to, biggest first, since that is what gets
+	compared against a character sheet. And which procs are in it, with how
+	much of a fight each is up for - a proc that fires once a minute reads the
+	same as one that never stops until you look.
+	"""
+	print("\n  Take in this order:")
+	print("     %-38s %5s %6s %6s %5s  %s"
+		  % ("", "stars", "score", "/star", "spent", "requires"))
+	spent = 0
+	for c in constellations:
+		spent += len(c.stars)
+		score = c.evaluate(model)
+		print("     %-38s %5d %6d %6d %5d  %s"
+			  % (c.name, len(c.stars), score, score / len(c.stars), spent, c.requires))
+
+	bonuses = getBonuses(constellations, model)
+	ranked = sorted(((evaluateBonuses(model, {name: value}), name, value)
+					 for name, value in bonuses.items()),
+					reverse=True, key=lambda row: row[0])
+	shown = [row for row in ranked if row[0] > 0][:bonusCount]
+	if shown:
+		print("\n  What it buys:")
+		for worth, name, value in shown:
+			if isinstance(value, list):
+				value = "%g over %gs" % (value[0], value[1])
+			else:
+				value = "%g" % value
+			print("     %-30s %12s %8d" % (name, value, worth))
+		rest = sum(row[0] for row in ranked[len(shown):] if row[0] > 0)
+		if rest:
+			print("     %-30s %12s %8d" % ("... everything else", "", rest))
+
+	procs = [(c, star.ability) for c in constellations for star in c.stars if star.ability]
+	if procs:
+		print("\n  Procs:")
+		for c, ability in procs:
+			# A summon's effective is how many are standing rather than a
+			# fraction of the fight, and passes 1 the moment two overlap.
+			if ability.gc("type") == "summon":
+				note = "%.1f standing at once" % ability.effective
+			else:
+				note = "up %.0f%% of the fight" % min(100, 100 * ability.effective)
+			print("     %-30s %-22s %s" % (c.name[:30], ability.name[:22], note))
+
+
 def showAugments(model, count=3):
 	"""The best augments this character could put in each slot.
 
@@ -346,9 +396,7 @@ def fastSearch(model, budget, seeds):
 	if not prob.feasible([prob.cons.index(c) for c in constellations]):
 		print("  WARNING: solution is not feasible")
 
-	print("\n  Take in this order:")
-	for c in constellations:
-		print("     %-38s %d stars  %s" % (c.name, len(c.stars), c.requires))
+	showSolution(model, constellations)
 
 	print("\n  " + solutionPath(constellations))
 

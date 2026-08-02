@@ -56,7 +56,6 @@ damagePriority = {
 	}
 
 weights = {
-		"attack opportunity cost":-100,
 		"attack speed":10,
 		"cast speed":7.5,
 

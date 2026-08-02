@@ -9,7 +9,7 @@ from solution import *
 
 import os
 
-model = Model.loadModel("Pakse")
+model = Model.loadModel("Morena")
 
 # getBestConstellations/getHighestScoring/getMostEfficient used to run here and
 # print the whole ranked list on every start. Nothing below reads any of it -
@@ -364,5 +364,5 @@ sol = [hawk, rat, lightofEmpyrion, eel, jackal, hound, ultosHandofUltos]
 # bestInSlot("ring")
 # bestInSlot("head", components)
 # bestAugments()
-evalCon(falcon)
-evalCon(owl)
+evalCon(falcon, owl)
+evalSol([xA, xC, owl, vulture, jackal, revenant])

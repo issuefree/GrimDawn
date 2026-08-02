@@ -502,21 +502,37 @@ class Item:
 			self.ability.calculateEffective(model, verbose)
 			self.ability.calculateDynamicBonuses(model, verbose)
 			for bonus in chain(self.ability.bonuses.keys(), self.ability.dynamicBonuses.keys()):
-				abilityBonuses[bonus] = self.ability.getTotalBonus(bonus)*self.ability.effective
+				total = self.ability.getTotalBonus(bonus)
+				# Duration damage is [damage per second, seconds] and only the
+				# first half scales. Multiplying the pair was list repetition,
+				# not arithmetic: a toggled buff has an effective of exactly 1,
+				# so [45, 3] * 1 came back unchanged and blew up on the next
+				# multiply, and an effective of 2 would have quietly produced
+				# [45, 3, 45, 3]. Ability.getBonuses has always split these.
+				if isinstance(total, list):
+					abilityBonuses[bonus] = [total[0]*self.ability.effective, total[1]]
+				else:
+					abilityBonuses[bonus] = total*self.ability.effective
 
+		# Both halves go through calculateBonus, which is the same rule
+		# constellations are scored by (getBonuses -> evaluateBonuses). This used
+		# to multiply the weight by the raw number and take [0] off a duration
+		# damage, which skips the one thing calculateBonus does for a list:
+		# divide by attacks per second, because a damage-over-time you reapply
+		# every swing overwrites itself instead of stacking. Taking the
+		# per-second figure whole made the same bonus worth attacks/s times more
+		# on an item than on a devotion - three times, on morena.
 		value = 0
 		for bonus in model.bonuses:
-			if bonus in self.bonuses:
-				keyBonus = self.bonuses[bonus]
-				if isinstance(keyBonus, list):
-					keyBonus = keyBonus[0] # just use the total duration damage
+			for source in (self.bonuses, abilityBonuses):
+				if bonus not in source:
+					continue
+				worth = model.calculateBonus(bonus, source[bonus])
 				if verbose:
-					print("  ", bonus.ljust(20), str(int(keyBonus)).ljust(5), int(model.get(bonus)*keyBonus))
-				value += model.get(bonus)*keyBonus
-			if bonus in abilityBonuses:
-				value += model.get(bonus)*abilityBonuses[bonus]
-				if verbose:
-					print("  ", bonus.ljust(20), str(int(abilityBonuses[bonus])).ljust(5), int(model.get(bonus)*abilityBonuses[bonus]))
+					amount = source[bonus]
+					amount = amount[0] if isinstance(amount, list) else amount
+					print("  ", bonus.ljust(20), str(int(amount)).ljust(5), int(worth))
+				value += worth
 		self.value = value
 		return value
 

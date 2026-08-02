@@ -10,7 +10,7 @@ devotionPoints = 20
 
 stats = {
 		"level":33,
-		"difficulty":"veteran",
+		"difficulty":"normal",
 
 		"attacks/s":3,
 		"allAttacks/s":[

@@ -475,9 +475,11 @@ class Item:
 				return item
 		raise KeyError("No item named %r" % name)
 
-	def __init__(self, name, bonuses, location, ability=None):
+	def __init__(self, name, bonuses, location, ability=None, level=0):
 		self.name = name
 		self.bonuses = bonuses
+		# character level the game asks for before you can wear it
+		self.level = level
 
 		if "armor" in bonuses and not isinstance(location, list) and location in Item.armorLocationFactor:
 			self.bonuses["armor"] = bonuses["armor"]*Item.armorLocationFactor[location]

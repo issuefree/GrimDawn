@@ -141,12 +141,21 @@ def grantedAbility(record, db):
     return db.name(skill) or "Item Skill", conditions, bonuses
 
 
-def itemLiteral(name, bonuses, locations, ability=None):
+def levelFor(record):
+    """Character level the game asks for before the piece can be worn."""
+    return int(lastValue(record.get("levelRequirement", 0)) or 0)
+
+
+def itemLiteral(name, bonuses, locations, ability=None, level=0):
     parts = ["%r" % name, dictLiteral(bonuses), repr(locations)]
     if ability:
         label, conditions, abilityBonuses = ability
         parts.append("Ability(%r, %s, %s)"
                      % (label, dictLiteral(conditions), dictLiteral(abilityBonuses)))
+    elif level:
+        parts.append("None")           # keep level in its own position
+    if level:
+        parts.append("%d" % level)
     return "Item(%s)" % ", ".join(parts)
 
 
@@ -245,7 +254,8 @@ def generate(path="itemData.py", root=None):
             if not locations:
                 continue
             entries.append("\t%s," % itemLiteral(name, itemBonuses(record, db), locations,
-                                                 grantedAbility(record, db)))
+                                                 grantedAbility(record, db),
+                                                 levelFor(record)))
         lines.append("%s = [" % label)
         lines.extend(entries)
         lines.append("]")
@@ -267,7 +277,7 @@ def generate(path="itemData.py", root=None):
         location = CLASS_SLOTS.get(record.get("Class"), "")
         lines.append('equipment[%r] = %s'
                      % (name, itemLiteral(name, itemBonuses(record, db), location or [],
-                                          grantedAbility(record, db))))
+                                          grantedAbility(record, db), levelFor(record))))
         found += 1
     sets = setBonuses(db)
     for name in equipmentWanted.WANTED_SETS:

@@ -611,7 +611,7 @@ class Model:
 		self.saveSeedSolutions()
 
 
-	def swingPercent(self, weaponPercent, flat=None, boost=None):
+	def swingPercent(self, weaponPercent, flat=None, boost=None, durationBoost=None):
 		"""What one cast of a skill is worth, as a percentage of a bare swing.
 
 		Three things a skill brings: the sheet's flat damage scaled by the
@@ -631,6 +631,7 @@ class Model:
 		candidate without. Behead states 120% and is worth 131 by this.
 		"""
 		flat, boost = flat or {}, boost or {}
+		durationBoost = durationBoost or {}
 		bare = sum(self.getStat(d) * self.get(d) for d in damages
 				   if d not in ("elemental", "all damage")) / 100.0
 		if not bare:
@@ -641,7 +642,8 @@ class Model:
 				continue
 			value = self.getStat(damage) * self.get(damage) * weaponPercent / 100.0
 			if damage in flat:
-				value += self.calculateBonus(damage, flat[damage])
+				value += self.calculateBonus(damage, flat[damage],
+											 durationBoost.get(damage, 0))
 			if boost.get(damage):
 				base = 100.0 + self.getStat(damage + " %")
 				value *= (base + boost[damage]) / base
@@ -995,7 +997,7 @@ class Model:
 			# everything. So the swing is worked out from all three: the weapon
 			# damage it scales, the flat damage it adds, and the percentages it
 			# adds for itself.
-			percent, flat, boost, named = 0, {}, {}, []
+			percent, flat, boost, longer, named = 0, {}, {}, {}, []
 			for name, level in stated:
 				skill = Skill.skills.get(name)
 				if skill is None:
@@ -1008,10 +1010,12 @@ class Model:
 						flat[bonus] = value if bonus not in flat else flat[bonus]
 					elif bonus.endswith(" %") and bonus[:-2] in damages:
 						boost[bonus[:-2]] = boost.get(bonus[:-2], 0) + value
+					elif bonus.endswith(" duration") and bonus[:-9] in damages:
+						longer[bonus[:-9]] = longer.get(bonus[:-9], 0) + value
 				named.append("%s at %d" % (name, level))
 
 			if named:
-				self.stats["main attack %"] = self.swingPercent(percent, flat, boost)
+				self.stats["main attack %"] = self.swingPercent(percent, flat, boost, longer)
 				print("  main attack %%: %.1f  (%s: %g%% weapon damage, and its own damage "
 					  "and modifiers, none of which is on the sheet)"
 					  % (self.stats["main attack %"], ", ".join(named), percent))
@@ -1046,7 +1050,7 @@ class Model:
 					Constellation.constellations.remove(c)
 					print("    -", c.name, "removed <-",str(c.restricts))
 
-	def calculateBonus(self, bonus, value):
+	def calculateBonus(self, bonus, value, extraDuration=0):
 		#handle flat duration damages being overwritten.
 		# the value of flat damage is based on how much damage you'll deliver with it.
 		# so 10 fire damage, 1 attack per second, 30 second fight you'll do 300 damage
@@ -1071,7 +1075,9 @@ class Model:
 		# comment beside it said was wrong.
 		if type(value) == type([]):
 			dotDps, seconds = value
-			seconds *= self.durationScale(bonus)
+			# extraDuration is a skill's own, which the sheet never carries -
+			# Endless Rage lengthens Onslaught's bleed and nothing else's
+			seconds *= self.durationScale(bonus) + extraDuration / 100.0
 			if bonus.startswith("pet "):
 				# A summon swings about once a second and spends a while walking
 				# to its next target; devotionderive measured both off the

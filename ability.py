@@ -33,9 +33,9 @@ class Ability:
 		self.interval = 0
 		# how long one cast keeps working; set by resolveDerived
 		self.payloadSeconds = 0
-		# damage this cast adds itself, and percentages it adds for itself,
-		# neither of which is on the character sheet; set by resolveDerived
-		self.swingFlat, self.swingBoost = {}, {}
+		# damage this cast adds itself, and the percentages and durations it adds
+		# for itself, none of which is on the character sheet; set by resolveDerived
+		self.swingFlat, self.swingBoost, self.swingDuration = {}, {}, {}
 		# enemies one cast lands on, after shape and playStyle - only meaningful
 		# for the attack types, and kept so a report can name the two factors
 		# behind `effective` separately
@@ -120,13 +120,15 @@ class Ability:
 		# [dps, seconds] pair into a scalar and resolveTiming runs again on
 		# every re-evaluation. A generated ability names its damage "triggered
 		# x"; a mastery skill out of skillData names it plainly.
-		self.swingFlat, self.swingBoost = {}, {}
+		self.swingFlat, self.swingBoost, self.swingDuration = {}, {}, {}
 		for bonus, value in self.bonuses.items():
 			name = bonus[len("triggered "):] if bonus.startswith("triggered ") else bonus
 			if name in damages:
 				self.swingFlat[name] = value
 			elif name.endswith(" %") and name[:-2] in damages:
 				self.swingBoost[name[:-2]] = self.swingBoost.get(name[:-2], 0) + value
+			elif name.endswith(" duration") and name[:-9] in damages:
+				self.swingDuration[name[:-9]] = self.swingDuration.get(name[:-9], 0) + value
 
 		if not self.gc("skillClass"):
 			return
@@ -134,10 +136,6 @@ class Ability:
 		skillClass = self.gc("skillClass")
 		if "shape" not in self.conditions:
 			self.conditions["shape"] = devotionderive.shapeFor(skillClass)
-		# Only something that hits enemies benefits from hitting several. A buff's
-		# radius says who it lands on - you and your pets - so deriving targets
-		# from it multiplied the player's own armour and damage bonuses by the
-		# size of the circle. Dying God's 12m radius was worth four of itself.
 		# Some projectiles are worth less at the range you fight at than at the
 		# range they were built for. Applied to the damage rather than to
 		# targets: it is each hit that lands softer, not fewer of them.
@@ -420,8 +418,8 @@ class Ability:
 			# had the main attack's own damage counted into it, so a skill
 			# carrying little weapon damage and a lot of its own lost a
 			# comparison it should have won.
-			if model.swingPercent(self.gb("weapon damage %"), self.swingFlat,
-								  self.swingBoost) < self.mainAttackPercent(model):
+			if model.swingPercent(self.gb("weapon damage %"), self.swingFlat, self.swingBoost,
+								  self.swingDuration) < self.mainAttackPercent(model):
 				interval = max(interval, self.payloadSeconds)
 			interval = max(interval, self.energyInterval(model))
 		self.interval = interval

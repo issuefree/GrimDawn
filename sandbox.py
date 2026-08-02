@@ -138,16 +138,21 @@ def bestAugments(count=3):
 	devotion.showAugments(model, count)
 
 
-def evalItemMods(slot, pool=None, count=8, detail=4):
+def evalItemMods(slot, pool=None, count=8, detail=4, level=None):
 	"""Everything that fits one slot, ranked, and where each one's value is.
 
 		evalItemMods("medal")
 		evalItemMods("axe", augments)
+		evalItemMods("axe", level=0)      # everything, whatever the level
 
 	pool defaults to components. count is how many items to list, detail how
 	many bonus lines each. A cost - the attack a granted skill gives up - is
 	always shown whether or not it makes the cut, since it is the reason an
 	item scores less than its stats suggest.
+
+	level defaults to the model's own, because a list topped by things you
+	cannot wear is a list you have to read past. Pass a number to ask about a
+	level you are planning for, or 0 for everything.
 
 	This used to hand verbose=True to evaluate, which printed an ability's
 	trigger arithmetic in the middle of the table and then a bare float on the
@@ -156,6 +161,14 @@ def evalItemMods(slot, pool=None, count=8, detail=4):
 	"""
 	from gearcompare import bonusWorth
 	items = Item.getByLocation(slot, list(pool if pool is not None else components))
+
+	if level is None:
+		level = model.getStat("level")
+	hidden = 0
+	if level:
+		usable = [i for i in items if i.level <= level]
+		hidden = len(items) - len(usable)
+		items = usable
 
 	# Against one enemy as well, because a ranking on packs alone is misleading
 	# in the one direction that matters: an area skill multiplies by everything
@@ -176,12 +189,14 @@ def evalItemMods(slot, pool=None, count=8, detail=4):
 		print("\n  Nothing this character scores in %s." % slot)
 		return
 
-	print("\n  %s, best first:" % slot)
-	print("    %-40s %8s %8s %6s" % ("", "pack", "boss", "x"))
+	print("\n  %s, best first%s:"
+		  % (slot, "" if not level else " (level %g%s)"
+			 % (level, ", %d above it hidden" % hidden if hidden else "")))
+	print("    %-36s %4s %8s %8s %6s" % ("", "lvl", "pack", "boss", "x"))
 	for value, item in ranked[:count]:
 		one = boss.get(item.name, value)
-		print("    %-40s %8d %8d %6.2f"
-			  % (item.name[:40], value, one, (value / one) if one else 0))
+		print("    %-36s %4d %8d %8d %6.2f"
+			  % (item.name[:36], item.level, value, one, (value / one) if one else 0))
 		named = set(item.bonuses)
 		if item.ability and item.abilityCounted:
 			named |= set(item.ability.bonuses)

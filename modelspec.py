@@ -66,7 +66,7 @@ def applyDefaults(stats):
 	return notes
 
 
-def applyDamagePriority(stats, weights, priority):
+def applyDamagePriority(stats, weights, priority, attributeBonus=None):
 	"""Split one priority per damage type into flat and % weights using the sheet.
 
 	How much a point of a damage type is worth is not a preference - it follows
@@ -85,10 +85,19 @@ def applyDamagePriority(stats, weights, priority):
 	cold"), and is preserved in total: weight(X) + weight(X %) == 2 * priority.
 	Anything already named explicitly in `weights` wins, so you can always pin a
 	value you disagree with.
+
+	attributeBonus is the percentage cunning and spirit add, which the sheet
+	does not show and checkModel folds in later - later than this, which is the
+	point of passing it. Reading morena's pierce as the 275 on her sheet rather
+	than the 551 she actually has valued a point of flat pierce at 3.75 times
+	its damage instead of 6.51, and correspondingly overvalued a point of
+	percentage. Both halves of the split were wrong and in opposite directions.
 	"""
+	attributeBonus = attributeBonus or {}
 	notes = []
 	for damage, value in sorted(priority.items()):
-		flat, perc = stats.get(damage, 0), stats.get(damage + " %", 0)
+		flat = stats.get(damage, 0)
+		perc = stats.get(damage + " %", 0) + attributeBonus.get(damage, 0)
 		if not flat and not perc:
 			# Nothing on the sheet to reason from. Splitting here would just
 			# invent a ratio, so leave it to an explicit weight.
@@ -103,9 +112,11 @@ def applyDamagePriority(stats, weights, priority):
 			if key in weights:
 				continue # explicit weight wins
 			weights[key] = round(amount, 3)
-		notes.append("%s priority %g -> %s %g, %s %% %g  (sheet: %g flat, %g%%)"
+		bonus = attributeBonus.get(damage, 0)
+		notes.append("%s priority %g -> %s %g, %s %% %g  (%g flat, %g%%%s)"
 					 % (damage, value, damage, weights.get(damage, 0),
-						damage, weights.get(damage + " %", 0), flat, perc))
+						damage, weights.get(damage + " %", 0), flat, perc,
+						" incl %g from attributes" % round(bonus) if bonus else ""))
 	return notes
 
 

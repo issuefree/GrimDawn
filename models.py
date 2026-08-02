@@ -463,6 +463,29 @@ class Model:
 		self.initialized = False
 
 	@staticmethod
+	def attributeBonus(stats):
+		"""Damage percentage each type gets from the attributes.
+
+		The character sheet leaves these out - the game says so itself, its
+		tooltip for a damage percentage reading "not including the bonus from
+		Spirit" - so checkModel folds them into the stats. But it does that
+		after the weights have been derived, and the derivation needs them: what
+		a point of flat damage is worth is one plus the percentage multiplying
+		it, and reading 275 where the true figure is 551 halves the answer.
+		"""
+		cunning, spirit = float(stats.get("cunning") or 0), float(stats.get("spirit") or 0)
+		out = {}
+		for damage in physicalDamage:
+			out[damage] = cunning * CUNNING_DAMAGE
+		for damage in physicalDurationDamage:
+			out[damage] = cunning * CUNNING_DURATION
+		for damage in magicalDamage:
+			out[damage] = spirit * SPIRIT_DAMAGE
+		for damage in magicalDurationDamage:
+			out[damage] = spirit * SPIRIT_DURATION
+		return out
+
+	@staticmethod
 	def loadModel(name):
 		import modelspec
 
@@ -485,7 +508,8 @@ class Model:
 		stats, weights = namespace["stats"], namespace["weights"]
 		notes = modelspec.applyDefaults(stats)
 		if namespace.get("damagePriority"):
-			notes += modelspec.applyDamagePriority(stats, weights, namespace["damagePriority"])
+			notes += modelspec.applyDamagePriority(stats, weights, namespace["damagePriority"],
+												   Model.attributeBonus(stats))
 		warnings = modelspec.validate(name, namespace["devotionPoints"], stats, weights,
 									  namespace.get("damagePriority"))
 		for note in notes:

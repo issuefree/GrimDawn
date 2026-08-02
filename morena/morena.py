@@ -9,7 +9,7 @@ if __name__ == "__main__":
 devotionPoints = 20
 
 stats = {
-		"level":33,
+		"level":35,
 		"difficulty":"normal",
 
 		"attacks/s":3,
@@ -29,29 +29,29 @@ stats = {
 		"hits/s":2,
 		"low healths/s":1.0/30, # total guesswork.
 
-		"physique":375,
-		"cunning":600,
-		"spirit":200,
+		"physique":449,
+		"cunning":677,
+		"spirit":273,
 
 		# Sheet value. crit chance is derived from this and comes out at the
 		# 17.7% the training dummy reports, so it is not pinned here - pinning
 		# it would go stale the moment this number changes.
-		"offense":1250,
-		"defense":810,
+		"offense":1159,
+		"defense":835,
 
 		"health":5000,
-		"health/s":110,
+		"health/s":43,
 
-		"armor":318,
+		"armor":366,
 
-		"energy":1300,
-		"energy/s":8,
+		"energy":1600,
+		"energy/s":9,
 
-		"physical %":125, "physical":0,
-		"pierce %":300, "pierce":500,
-		"bleed %":450, "bleed":350,
-		"cold %":100, "cold":50,
-		"frostburn %":158, "frostburn":67,
+		"physical %":175, "physical":425,
+		"pierce %":275, "pierce":330,
+		"bleed %":350, "bleed":150,
+		"cold %":150, "cold":50,
+		"frostburn %":175, "frostburn":0,
 
 		"fight length":30,
 

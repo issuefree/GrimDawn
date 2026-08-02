@@ -605,15 +605,27 @@ class Model:
 		# rather than at the top because it is six thousand lines and only a
 		# model that names an attack needs it.
 		if not self.getStat("main attack %") and self.getStat("main attack"):
-			name, level = self.getStat("main attack")
+			# One (skill, level) pair, or a list of them where the modifiers
+			# that hang off the attack also carry weapon damage. Most do not -
+			# Onslaught's Open Wounds and Endless Rage add bleed and a bleed
+			# duration, not a bigger swing - but Blood Burst adds 85%, so the
+			# list is worth accepting rather than assuming the base is all of it.
+			stated = self.getStat("main attack")
+			if stated and isinstance(stated[0], str):
+				stated = [stated]
 			import skillData                       # noqa: F401 - registers the skills
-			skill = Skill.skills.get(name)
-			if skill is None:
-				print("  WARNING: no skill called %r - 'main attack' is ignored" % name)
-			else:
-				self.stats["main attack %"] = skill.getAbility(level).gb("weapon damage %")
-				print("  main attack %%: %g  (%s at %d)"
-					  % (self.stats["main attack %"], name, level))
+			total, named = 0, []
+			for name, level in stated:
+				skill = Skill.skills.get(name)
+				if skill is None:
+					print("  WARNING: no skill called %r - it adds nothing to 'main attack'" % name)
+					continue
+				part = skill.getAbility(level).gb("weapon damage %")
+				total += part
+				named.append("%s at %d%s" % (name, level, "" if part else " (+0)"))
+			if named:
+				self.stats["main attack %"] = total
+				print("  main attack %%: %g  (%s)" % (total, ", ".join(named)))
 
 		if not "fight length" in self.stats:
 			self.stats["fight length"] = 30

@@ -830,9 +830,18 @@ class Model:
 		# as applyDamagePriority - it follows from the sheet and is not a
 		# preference, so it does not need to be one. morena had it at 25 by hand
 		# where the sheet says 71.
-		self.setIfNull("weapon damage %", sum(
-			self.getStat(d) * self.get(d) for d in damages
-			if d not in ("elemental", "all damage")) / 100.0)
+		#
+		# Kept as its own number as well as offered as the weight, because the
+		# two are different kinds of thing. What one percent of a bare swing is
+		# worth is a fact and is the unit "% Weapon Damage" is quoted in; the
+		# weight is what you choose to pay for it. A model that overrides the
+		# weight is stating a preference, not redefining the percent, and
+		# converting a skill's damage through the override put morena's main
+		# attack at 293% - a number that cannot be compared against the 145% a
+		# component skill states, because it is not in the game's units any more.
+		bareSwing = sum(self.getStat(d) * self.get(d) for d in damages
+						if d not in ("elemental", "all damage")) / 100.0
+		self.setIfNull("weapon damage %", bareSwing)
 
 		# Pressing a granted skill costs you the attack you would have made.
 		# Priced in the same currency, because it is the same thing: a swing.
@@ -898,10 +907,12 @@ class Model:
 						base = 100.0 + self.getStat(damage + " %")
 						value *= (base + boost[damage]) / base
 					swing += value
-				# said in weapon damage %, whose weight is what one percent of a
-				# bare swing is worth - so a bare 100% skill comes back as 100
-				perPercent = self.get("weapon damage %")
-				self.stats["main attack %"] = swing / perPercent if perPercent else percent
+				# divided by what one percent of a bare swing is worth, so it
+				# comes back in the game's own units: a bare 100% skill returns
+				# 100, and it can be held against the percentage a component
+				# skill states. Deliberately not the weight, which a model may
+				# have overridden for reasons of its own.
+				self.stats["main attack %"] = swing / bareSwing if bareSwing else percent
 				print("  main attack %%: %.1f  (%s: %g%% weapon damage, and its own damage "
 					  "and modifiers, none of which is on the sheet)"
 					  % (self.stats["main attack %"], ", ".join(named), percent))

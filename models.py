@@ -1,5 +1,6 @@
 import os
 
+import devotionderive
 from dataModel import *
 from constellationData import *
 from utils import *
@@ -860,16 +861,28 @@ class Model:
 		# this would be handled in the value of the stat.
 		# skills with a weapon component will tend to mess this calculation up.
 		# so if your build is based on skills with a weapon component with a significant cooldown that would be handled in the value of the stat
+		# One rule for both, differing only in how long the gap between hits is.
+		# A refreshed damage-over-time delivers dps * min(duration, interval) per
+		# application, and the weight is per point delivered per hit, so that
+		# product is what a point is worth. For you the interval is one attack;
+		# for a pet it is the pet's own swing.
+		#
+		# The pet half used to sit behind an `if type(value) == list` that the
+		# branch above had already returned on, so it never ran once - pet
+		# duration damage was being divided by *your* attack speed, which the
+		# comment beside it said was wrong.
 		if type(value) == type([]):
-			aps = float(self.getStat("attacks/s"))
-			dotDps = value[0] # the duration doesn't really matter since you're unlikely to have an attack speed less than the total duration of the dot (e.g. you won't have an aps of < .5 which is the shortest dot)
-			return dotDps / aps * self.get(bonus)
-
-		# TODO pet dot damage is hard to figure since we don't know pet attack speed (it doesn't seem very fast)
-		# for now assuming pets attack real slow and deal full duration damage
-		if bonus in ["pet " + dd for dd in durationDamages]:
-			if type(value) == type([]):
-				return self.get(bonus) * value[0]*value[1]
+			dotDps, seconds = value
+			if bonus.startswith("pet "):
+				# A summon swings about once a second and spends a while walking
+				# to its next target; devotionderive measured both off the
+				# creature records. Five seconds is longer than any duration
+				# damage in the game lasts, so a pet's does run to completion -
+				# which is what the note here always claimed, now for a reason.
+				interval = 1.0 / devotionderive.BASE_ATTACK_RATE + devotionderive.CHASE_SECONDS
+			else:
+				interval = 1.0 / float(self.getStat("attacks/s"))
+			return self.get(bonus) * dotDps * min(seconds, interval)
 		return self.get(bonus)*value
 
 	def get(self, key):

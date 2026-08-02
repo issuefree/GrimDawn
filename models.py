@@ -31,9 +31,19 @@ SPIRIT_DURATION = 1 / 200.0 * 100
 # magicalDurationDamageEquation by 200, and both offensiveAbilityEquation and
 # defensiveAbilityEquation take half of the attribute. Nothing here is fitted.
 
-# Hitting and critting, from the same record. probabilityToHitEquation verbatim,
-# and pthThreshold1 - the point where a hit becomes a critical one.
-PTH_CRIT_THRESHOLD = 70.0
+# Hitting and critting, from the same record. Two different thresholds, and
+# conflating them was wrong: pthThreshold1 is where you stop missing, not where
+# you start critting.
+#
+# pthDamageModifier1 is 1.0. Reaching pthThreshold1 buys a hit at full damage
+# and nothing more, which is an ordinary hit. The critical tiers are 2 to 6,
+# pthThreshold2..6 = 90/105/120/130/135 paying 1.1/1.2/1.3/1.4/1.5, so a
+# critical starts at 90.
+#
+# What settled it: a training dummy read 17.7% crit where treating 70 as the
+# crit threshold predicted 40.8%.
+PTH_HIT_THRESHOLD = 70.0     # normalPTHEquation is probabilityToHit/70
+PTH_CRIT_THRESHOLD = 90.0    # pthThreshold2, the first tier paying over 1.0
 
 # Difficulty scaling, which is not per-enemy at all: gameengine.dbr names
 # records/game/balancingadjustment_mp+difficulty_enemies01.dbr as the
@@ -154,6 +164,8 @@ def percentReductionValue(enemyResistPercent):
 	R/100 of a flat point, and nothing whatsoever against an enemy at zero.
 	At the 15% an average enemy carries, a point of it is worth about a
 	seventh of a flat point.
+
+	Unaffected by the crit threshold correction; this reads resistance, not PTH.
 	"""
 	return resistReductionValue(enemyResistPercent) * float(enemyResistPercent) / 100.0
 
@@ -174,21 +186,19 @@ def probabilityToHit(offense, enemyDefense):
 def critChance(offense, enemyDefense):
 	"""Share of your hits that critical, as a fraction.
 
-	One threshold does two jobs in the game's data. normalPTHEquation is
-	probabilityToHit/70, which is your chance to hit while PTH is under 70 and
-	saturates at certainty there; everything PTH carries above 70 goes into
-	critting instead. So the roll lands uniformly in [0, PTH] and a critical is
-	the part of that range past the threshold:
+	The roll lands uniformly in [0, PTH] and the tier is which thresholds it
+	clears, so a critical is the part of that range past pthThreshold2:
 
-	    hit  = min(1, PTH/70)          crit = max(0, 1 - 70/PTH)
+	    hit  = min(1, PTH/70)          crit = max(0, 1 - 90/PTH)
 
-	This is the one inferred step - the equation and the thresholds are the
-	game's, how the roll reads them is not stated in the data.
-
-	It is very sensitive to the gap between the two abilities, so the level a
-	model states is worth getting right. At 1239 offensive ability morena crits
-	42% of the time against a level 32 enemy, 22% at level 96, and never at all
-	from about level 154 up, where she starts missing instead.
+	How the roll reads the thresholds is the one step the data does not state,
+	and it is only partly confirmed. Against a level 34 training dummy on
+	Elite - defensive ability 484 by the game's own equation - this predicts
+	23.8% at the 1239 offensive ability morena's model claims, where the game
+	reported 17.7%. 17.7% is what the formula gives at 955 offensive ability,
+	so either the sheet figure is stale or the shape of the roll is not
+	uniform. One reading cannot tell those apart; a second at a very different
+	offensive ability would.
 	"""
 	pth = probabilityToHit(offense, enemyDefense)
 	if pth <= PTH_CRIT_THRESHOLD:
@@ -198,7 +208,7 @@ def critChance(offense, enemyDefense):
 
 def hitChance(offense, enemyDefense):
 	"""Share of your attacks that land at all. Certain once PTH reaches 70."""
-	return min(1.0, max(0.0, probabilityToHit(offense, enemyDefense)) / PTH_CRIT_THRESHOLD)
+	return min(1.0, max(0.0, probabilityToHit(offense, enemyDefense)) / PTH_HIT_THRESHOLD)
 
 
 class Model:

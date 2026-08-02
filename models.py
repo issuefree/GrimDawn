@@ -604,6 +604,15 @@ class Model:
 			self.bonuses["attack opportunity cost"] = -self.get("weapon damage %")
 			print("  attack opportunity cost", self.bonuses["attack opportunity cost"])
 
+		# What pressing a granted skill actually interrupts. Unstated it is a
+		# bare default attack, which is generous to any component skill that
+		# swings for more than one - and most builds attack with a mastery skill
+		# worth a good deal more than that.
+		if not self.getStat("main attack %") and self.get("weapon damage %"):
+			print("  note: no 'main attack %' - a component skill is priced against a bare "
+				  "100% swing, so one that beats that reads as an upgrade. Set it to what "
+				  "allAttacks/s[0] swings for.")
+
 		if not "fight length" in self.stats:
 			self.stats["fight length"] = 30
 

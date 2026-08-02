@@ -147,7 +147,10 @@ def statVocabulary():
 				  # % Reduced Skill Cooldown off the sheet. Ability.resolveTiming
 				  # takes it off every cooldown - item skills and devotion procs
 				  # alike - and it was not readable before.
-				  "reduce cooldown"})
+				  "reduce cooldown",
+				  # weapon damage of the attack you actually swing with, which is
+				  # what a granted skill interrupts and has to beat
+				  "main attack %"})
 	for d in damages:
 		vocab.update({d, d + " %", d + " duration"})
 	for r in resists:
@@ -294,6 +297,11 @@ stats = {
 
 	# Break out each trigger source for a better estimate of stacked procs.
 	# "allAttacks/s": [2.0, 1.0, 0.5],
+
+	# What the first of those swings for. Pressing a skill an item grants costs
+	# you one of these, and a skill only earns its place by beating it - leave
+	# it out and every component skill is measured against a bare 100%% swing.
+	# "main attack %%": 100,
 
 	# Your level, and what you fight. Crit chance is derived from your offensive
 	# ability against the enemy's defensive one using the game's own hit

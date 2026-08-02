@@ -6,8 +6,8 @@ import devotionderive
 
 class Ability:
 	minTriggerTime = .25  # there are gaps between skills etc
-	# What a default attack swings for. A granted skill carrying at least this
-	# much weapon damage replaces the swing rather than interrupting it.
+	# What a bare default attack swings for, and the fallback when a character
+	# has not said what its own main attack is worth.
 	weaponSwing = 100
 
 	def __init__(self, name, conditions, bonuses):
@@ -295,7 +295,7 @@ class Ability:
 				# A skill with no cooldown used to be handed a one second one
 				# here; resolveTiming floors the interval at the attack rate
 				# instead, which is the thing that actually limits pressing it.
-				self.bonuses["attack opportunity cost"] = 100/targets
+				self.bonuses["attack opportunity cost"] = self.mainAttackPercent(model)/targets
 
 			self.targets = targets
 			self.effective = self.getNumTriggers(model, verbose)*targets/model.getStat("fight length")
@@ -356,17 +356,17 @@ class Ability:
 		Then two floors, for a skill you press. You cannot press it more often
 		than you can swing, whatever its cooldown says.
 
-		And unless it is worth swinging with, you would not press it every
-		swing. A default attack is 100% weapon damage, so a skill carrying at
-		least that much is an attack in its own right - Decapitate at 145%,
-		Beronath's Fury at 124% - and you use it as your attack. One carrying
-		less is a cast you fit in: Poison Bomb is 12% weapon damage and a poison
-		cloud, and casting it again before the cloud expires refreshes something
-		already running while costing another whole swing. So its repeat rate is
-		how long its payload lasts, not how fast your arm moves. Charging it as
-		though it were spammed cost 300% of weapon damage a second against the
-		44% a two second cooldown costs, which is what made the two look
-		unrelated.
+		And unless it beats the attack it interrupts, you would not press it
+		every swing. A skill carrying at least as much weapon damage as your own
+		main attack is worth swinging with instead; one carrying less is a cast
+		you fit in, and casting it again before its own payload expires
+		refreshes something already running while costing another whole swing.
+		So a skill below your main attack repeats no faster than its payload
+		lasts - Poison Bomb is 12% weapon damage and a four second cloud.
+
+		What counts as "your main attack" is mainAttackPercent, and it matters:
+		against a bare 100% swing Decapitate's 145% looks like an upgrade worth
+		spamming, and against a real mastery attack it is not.
 		"""
 		reduction = min(90.0, float(model.getStat("reduce cooldown") or 0)) / 100.0
 		self.rechargeTime = self.gc("recharge") * (1.0 - reduction)
@@ -375,10 +375,26 @@ class Ability:
 			rate = float(model.getStat("attacks/s") or 0)
 			if rate:
 				interval = max(interval, 1.0 / rate)
-			if self.gb("weapon damage %") < Ability.weaponSwing:
+			if self.gb("weapon damage %") < self.mainAttackPercent(model):
 				interval = max(interval, self.payloadSeconds)
 			interval = max(interval, self.energyInterval(model))
 		self.interval = interval
+
+	def mainAttackPercent(self, model):
+		"""Weapon damage of the attack a cast interrupts.
+
+		Pressing a button costs you the attack you would otherwise have made,
+		and that attack is whatever your build actually swings with - a mastery
+		skill with points in it, not a bare default attack. This was hardcoded
+		at 100, which is the bare swing, and it decided two things at once: what
+		a cast gives up, and whether a granted skill is good enough to be your
+		attack instead. Both were being asked against the wrong opponent.
+
+		Set stats["main attack %"] to what the first entry of allAttacks/s
+		swings for. Left unset it falls back to a plain 100, which flatters any
+		component skill that carries more.
+		"""
+		return float(model.getStat("main attack %") or 0) or Ability.weaponSwing
 
 	def energyInterval(self, model):
 		"""Seconds between casts that the character can actually pay for.

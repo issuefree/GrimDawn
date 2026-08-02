@@ -20,7 +20,12 @@ stats = {
 		"cunning":600,
 		"spirit":200,
 
-		"offense":1239,
+		"offense":1250,
+		# Measured off a training dummy rather than derived. The derivation
+		# from offense against the dummy's 484 defensive ability says 24.0%,
+		# and the game says this - see critChance in models.py for the three
+		# things that could account for the gap.
+		"crit chance":.177,
 		"defense":810,
 
 		"health":5000,

@@ -192,13 +192,27 @@ def critChance(offense, enemyDefense):
 	    hit  = min(1, PTH/70)          crit = max(0, 1 - 90/PTH)
 
 	How the roll reads the thresholds is the one step the data does not state,
-	and it is only partly confirmed. Against a level 34 training dummy on
-	Elite - defensive ability 484 by the game's own equation - this predicts
-	23.8% at the 1239 offensive ability morena's model claims, where the game
-	reported 17.7%. 17.7% is what the formula gives at 955 offensive ability,
-	so either the sheet figure is stale or the shape of the roll is not
-	uniform. One reading cannot tell those apart; a second at a very different
-	offensive ability would.
+	and it is known to be wrong by about a third. Measured: a sheet offensive
+	ability of 1250 against a level 34 training dummy on Elite - 484 defensive
+	ability by the game's own equation - reads 17.7% in game, where this
+	predicts 24.0%.
+
+	Three things could account for that and one reading cannot separate them:
+
+	  * the roll is not uniform. (PTH-100)/100 gives 18.5% here, but 100 is not
+	    a number that appears anywhere in the record, and fitting an invented
+	    constant to a single point is what this file has spent its time
+	    removing.
+	  * the dummy's defensive ability is not 484. For the uniform shape to hold
+	    it would have to be 720, which is a level 55 enemy, and the record says
+	    charLevel*1+2 with no defensive ability of its own.
+	  * the dummy's readout is diluted. It reports criticals as a share of
+	    damage events, and damage over time cannot critical - on a bleed build
+	    26% of events being bleed ticks reproduces 17.7% exactly from a true
+	    24%.
+
+	Until that is settled, a character with a measurement should state
+	"crit chance" outright; morena does. The threshold above is not in doubt.
 	"""
 	pth = probabilityToHit(offense, enemyDefense)
 	if pth <= PTH_CRIT_THRESHOLD:

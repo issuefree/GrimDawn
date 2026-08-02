@@ -122,7 +122,16 @@ class Ability:
 		if self.gc("petMode"):
 			hits = devotionderive.summonHits(self.gc("lifespan"), self.gc("petAttackSpeed"),
 											 self.gc("petMode"), self.gc("petMelee"))
-			interval = float(self.gc("lifespan") or 0) / hits
+			lifespan = float(self.gc("lifespan") or 0)
+			interval = lifespan / hits
+			# Everything else is charged per second: an attack proc's damage is
+			# per trigger and its effective is triggers per second. A summon's
+			# effective is how many are standing, so its damage has to be per
+			# second too - what one creature deals over its whole life, divided
+			# by how long that life is. Charging the lifetime total against the
+			# standing count made Revenant's skeletons worth twenty times what
+			# they are.
+			perSecond = hits / lifespan if lifespan else hits
 			for key in list(self.bonuses):
 				value = self.bonuses[key]
 				if key == "duration":
@@ -136,9 +145,9 @@ class Ability:
 					# same refresh rule as an attack proc's DoT, but the interval
 					# is the pet's own swing rather than the proc's recharge
 					damage, ticks = value
-					self.bonuses[key] = round(damage * min(ticks, interval or ticks) * hits, 2)
+					self.bonuses[key] = round(damage * min(ticks, interval or ticks) * perSecond, 2)
 				elif key.startswith("triggered "):
-					self.bonuses[key] = round(value * hits, 2)
+					self.bonuses[key] = round(value * perSecond, 2)
 
 	def calculateEffective(self, model, verbose=False):
 		self.resolveDerived(model)

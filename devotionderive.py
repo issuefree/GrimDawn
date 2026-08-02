@@ -181,6 +181,37 @@ def summonDebuffUpTime(hits, lifespan):
 GROUND_TICKS = 1.0
 
 
+# Metres between you and what you are hitting, per playStyle. The play styles in
+# ability.py already state these in words - ranged is "optimal range 10+ yards",
+# shortranged "5-10 yards", melee "melee but not surrounded", tank "all enemies
+# up close and personal" - so this is those sentences as numbers, in one place.
+ENGAGEMENT_RANGE = {"tank": 1.0, "melee": 1.5, "shortranged": 7.0, "ranged": 12.0}
+DEFAULT_RANGE = 2.5
+
+
+def damageScale(bands, playStyle):
+	"""What share of its damage a proc lands, given how far out you fight.
+
+	A projectile can be worth less up close than at distance - Blade Burst
+	throws a ring of blades from your feet and only reaches full damage three
+	metres out, so a tank standing in the middle of a pack collects the 70%
+	band. It is the only devotion proc in the game with a falloff, but the rule
+	is the game's rather than a special case, so it is applied by rule.
+
+	Returns 1.0 when a proc has no falloff, which is every other proc.
+	"""
+	if not bands:
+		return 1.0
+	distance = ENGAGEMENT_RANGE.get(playStyle, DEFAULT_RANGE)
+	for low, high, percent in bands:
+		if low <= distance < high:
+			return percent / 100.0
+	# past the last band the projectile has expired; the furthest one is the
+	# best available answer for a character who fights further out than the
+	# skill was built for
+	return bands[-1][2] / 100.0 if bands else 1.0
+
+
 def durationScale(duration, shape=None):
 	"""How many times a proc's stated damage lands on one enemy.
 

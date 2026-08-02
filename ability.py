@@ -1,6 +1,8 @@
 import copy
+import math
 from itertools import chain
 from constants import *
+import devotionderive
 
 class Ability:
 	minTriggerTime = .25  # there are gaps between skills etc
@@ -22,6 +24,10 @@ class Ability:
 
 		self.triggerTime = 0
 		self.effective = 0
+		# enemies one cast lands on, after shape and playStyle - only meaningful
+		# for the attack types, and kept so a report can name the two factors
+		# behind `effective` separately
+		self.targets = 1
 		self.derived = False # set by resolveDerived on first evaluation
 
 		self.star = None
@@ -89,7 +95,6 @@ class Ability:
 			self.derived = True
 			return
 		self.derived = True
-		import devotionderive
 
 		skillClass = self.gc("skillClass")
 		if "shape" not in self.conditions:
@@ -106,6 +111,20 @@ class Ability:
 			self.conditions["targets"] = devotionderive.targetsFor(
 				skillClass, geometry.get("radius", 0), geometry.get("projectiles", 0),
 				density, geometry)
+
+		# Some projectiles are worth less at the range you fight at than at the
+		# range they were built for. Applied to the damage rather than to
+		# targets: it is each hit that lands softer, not fewer of them.
+		falloff = devotionderive.damageScale(self.gc("damageBands"),
+											 model.getStat("playStyle"))
+		if falloff != 1:
+			for key in list(self.bonuses):
+				if ((key.startswith("triggered ") or key == "weapon damage %")
+						and not isinstance(self.bonuses[key], dict)):
+					value = self.bonuses[key]
+					self.bonuses[key] = ([round(value[0] * falloff, 2), value[1]]
+										 if isinstance(value, list)
+										 else round(value * falloff, 2))
 
 		# A proc's damage is stated per application. How many applications one
 		# enemy actually takes depends on the shape and is decided in one place.
@@ -241,11 +260,20 @@ class Ability:
 				elif self.gc("shape") == "melee":
 					pass
 
+			# MAX_TARGETS is the bound on how many enemies one proc realistically
+			# hits, and the playStyle adjustment above has to live under it rather
+			# than on top of it. Applying the cap in targetsFor and then
+			# multiplying by 1.5 for a tank's pbaoe put Tainted Eruption, Blind
+			# Fury and Reckless Tempest on six enemies apiece against a stated
+			# ceiling of four.
+			targets = min(targets, devotionderive.MAX_TARGETS)
+
 			if self.gc("trigger") == "manual":
 				self.bonuses["attack opportunity cost"] = 100/targets
 				if self.gc("recharge") == 0:
 					self.conditions["recharge"] = 1
 
+			self.targets = targets
 			self.effective = self.getNumTriggers(model, verbose)*targets/model.getStat("fight length")
 
 			if verbose:
@@ -261,15 +289,11 @@ class Ability:
 					del self.bonuses[damage+" %"]
 
 
-			interval = self.triggerTime+self.gc("recharge")
 			for dam in durationDamages:
 				if "triggered "+dam in self.bonuses:
 					if type(self.gb("triggered "+dam)) == type([]):
 						damage, ticks = self.bonuses["triggered "+dam]
-						if ticks < interval:
-							self.bonuses["triggered "+dam] = damage*ticks
-						else:
-							self.bonuses["triggered "+dam] = damage*interval
+						self.bonuses["triggered "+dam] = damage*self.activeSeconds(ticks)
 				
 		if self.gc("type") == "shield":
 			self.effective = self.getNumTriggers(model)
@@ -291,6 +315,63 @@ class Ability:
 			for bonus, value in self.bonuses.pop("duration").items():
 				self.bonuses[bonus] = self.gb(bonus) + value
 
+	def activeSeconds(self, ticks):
+		"""Seconds of a DoT that actually land, per application.
+
+		A DoT reapplied by its own proc refreshes rather than stacking, so one
+		application is worth however long it runs before the next one truncates
+		it - dps * that, charged once per cast.
+
+		The obvious form is min(duration, interval), and that is what this used
+		to be. It over-counts, because the interval is not a fixed number: the
+		proc waits a geometric number of attacks, so some gaps run long and lose
+		the tail of the DoT while short ones cannot make it back. min() is
+		concave, so feeding it the mean interval always reads high - simulated
+		against the model's own Poisson assumption it ran 15-30% over on Bull
+		Rush, Rend and any proc whose duration is near its interval.
+
+		Taking the expectation properly, with the interval as the cooldown plus
+		an exponential wait of mean triggerTime:
+
+			E[min(D, I)] = recharge + triggerTime * (1 - exp(-(D-recharge)/triggerTime))
+
+		which matches simulation to three decimals on every case tried, and
+		still collapses to the right answers at the edges - a duration shorter
+		than the cooldown lands whole, and a very long one tends to the full
+		interval.
+		"""
+		recharge = self.gc("recharge")
+		if ticks <= recharge:
+			return ticks
+		if self.triggerTime <= 0:
+			# fires on every opportunity, so the interval is just the cooldown
+			return min(ticks, recharge) or ticks
+		return recharge + self.triggerTime * (1.0 - math.exp(-(ticks - recharge) / self.triggerTime))
+
+	def describe(self):
+		"""What this ability's `effective` means, in the units it is actually in.
+
+		`effective` is not one quantity. For an attack it is applications a
+		second summed over everything the cast lands on; for a summon it is how
+		many are standing; for a shield or a heal it is how many times it fires
+		in a fight; only for a buff is it a share of the fight. Printing all of
+		them as "hits a second" or as a percentage read plausibly and was wrong
+		four times out of five - Arcane Barrier reported "up 640% of the fight".
+
+		An attack is given as its two factors rather than their product, because
+		which one is large is the useful part: a slow proc across a pack and a
+		fast one on a single target multiply out the same.
+		"""
+		kind = self.gc("type")
+		if kind == "summon":
+			return "%.1f standing at once" % self.effective
+		if kind in ("attack", "wps", "aar"):
+			casts = self.effective / self.targets if self.targets else 0.0
+			return "%.2f casts/s x %.1f targets" % (casts, self.targets)
+		if kind in ("shield", "heal"):
+			return "%.1f times a fight" % self.effective
+		return "up %.0f%% of the fight" % min(100, 100 * self.effective)
+
 	def setDebuffValue(self, targets, model, verbose=False):
 		#find duration based elements (for attacks that include a debuff component)
 		upTime = self.getUpTime(model)
@@ -299,12 +380,11 @@ class Ability:
 			print("  upTime", upTime)
 			print("  effective", self.effective)
 		durationBonuses = self.bonuses["duration"]
-		interval = self.triggerTime + self.gc("recharge")
 		for bonus in durationBonuses:
 			value = durationBonuses[bonus]
 			if type(value) == type([]):
 				damage, ticks = value
-				value = damage*ticks if ticks < interval else damage*interval
+				value = damage*self.activeSeconds(ticks)
 			self.bonuses[bonus] = value*self.effective
 			#reduce duration based damage as the foe may die due to other effects durring the duration
 			if bonus in ["triggered "+damage for damage in damages]:

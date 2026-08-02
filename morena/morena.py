@@ -1,6 +1,8 @@
 devotionPoints = 20
 
 stats = {
+		"level":32,
+
 		"attacks/s":3,
 		"allAttacks/s":[
 			1.5, # main attack (taking it down a notch due to using other abilities etc)
@@ -35,7 +37,7 @@ stats = {
 
 		"fight length":30,
 
-		"playStyle":"tank",
+		"playStyle":"melee",
 		# Kept deliberately: this excludes shield and ranged constellations.
 		# Omitting it defaults to every weapon type, which is not the same thing.
 		"weapons":["sword", "axe", "dagger", "mace", "scepter", "spear", "twohand"],
@@ -43,15 +45,15 @@ stats = {
 	}
 
 damagePriority = {
-		"pierce": 15,
+		"pierce": 12.5,
 		"physical": 10,
-		"bleed": 7.5,
+		"bleed": 5,
 		"cold": 5,
 	}
 
 weights = {
-		"attack speed":10,
-		"cast speed":7.5,
+		"attack speed":50,
+		"cast speed":25,
 
 		"offense": 5, # "offense %": ,
 
@@ -59,10 +61,10 @@ weights = {
 
 		"bleed duration":5,
 
-		"weapon damage %":7.5,
+		# "weapon damage %":7.5,
 
-		"crit damage": 1,
+		"crit damage": 10,
 
 		# "lifesteal %":33,
-		"move speed": 10,
+		"move speed": 50,
 	}

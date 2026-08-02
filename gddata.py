@@ -497,6 +497,34 @@ GEOMETRY_FIELDS = ("projectileExplosionRadius", "skillTargetRadius", "skillRadiu
                    "projectileLaunchNumber", "skillProjectileMaximumNumber",
                    "skillActiveDuration", "skillCooldownTime")
 
+# How hard a projectile hits depends on how far it has travelled: three bands of
+# min/max metres and a percentage of full damage. Blade Burst is the only
+# devotion proc that uses them, and it is the reason they are read at all - a
+# ring of blades thrown from your feet does 70% to anything inside two metres,
+# which is most of what a melee character is fighting.
+RANGE_BANDS = 3
+
+
+def damageBandsFor(records):
+    """(from, to, percent) per distance band, or [] where damage does not fall off.
+
+    Bands that deal full damage still come back, because which band applies is
+    a question about the character and belongs to whoever answers that; this
+    only reports what the game says.
+    """
+    for record in records:
+        bands = []
+        for n in range(1, RANGE_BANDS + 1):
+            scale = lastValue(record.get("projectileDamageRange%dScale" % n, 0)) or 0
+            if not scale:
+                continue
+            bands.append((float(lastValue(record.get("projectileDamageRange%dMin" % n, 0)) or 0),
+                          float(lastValue(record.get("projectileDamageRange%dMax" % n, 0)) or 0),
+                          float(scale)))
+        if bands and any(percent != 100 for _, _, percent in bands):
+            return bands
+    return []
+
 
 def geometryFor(records):
     """Raw geometry for a proc, read across every record it is made of.

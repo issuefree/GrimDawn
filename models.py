@@ -25,6 +25,70 @@ SPIRIT_REGEN_PERCENT = 0.25
 SPIRIT_DAMAGE = 1 / 215.0 * 100
 SPIRIT_DURATION = 1 / 200.0 * 100
 
+# All six constants above are the game's, and records/game/combatformulas.dbr
+# says so in as many words: physicalDamageEquation divides dexterity by 245,
+# physicalDurationDamageEquation by 215, magicalDamageEquation by 215,
+# magicalDurationDamageEquation by 200, and both offensiveAbilityEquation and
+# defensiveAbilityEquation take half of the attribute. Nothing here is fitted.
+
+# Hitting and critting, from the same record. probabilityToHitEquation verbatim,
+# and pthThreshold1 - the point where a hit becomes a critical one.
+PTH_CRIT_THRESHOLD = 70.0
+
+# Defensive ability of what you fight, per level, when the model does not say.
+# defensiveAbilityEquation gives an enemy characterLevel*12 + 53 before its
+# classification is counted, and almost every enemy record leaves the base at
+# zero, so level is very nearly the whole story. Walking the 2944 enemy records
+# at level 100 gives a median of 1253 for a common enemy, 1277 for a hero and
+# 1397 for a boss; 13 a level lands at 1300, between the hero and the boss, and
+# stays within a few percent of the game's own line across the whole range.
+# These are pre-difficulty-scaling, which the records do not carry - a character
+# grinding Ultimate should state "enemy defense" outright.
+ENEMY_DEFENSE_PER_LEVEL = 13
+
+
+def probabilityToHit(offense, enemyDefense):
+	"""Grim Dawn's PTH, off your offensive ability against an enemy's defensive.
+
+	Copied from probabilityToHitEquation in records/game/combatformulas.dbr
+	rather than fitted. Two terms, a ratio and a difference, blended 30/70.
+	"""
+	oa, da = float(offense), float(enemyDefense)
+	if oa <= 0:
+		return 0.0
+	return ((((oa / ((da / 3.5) + oa)) * 300) * 0.3)
+			+ (((((oa * 3.25) + 10000) - (da * 3.25)) / 100) * 0.7)) - 50
+
+
+def critChance(offense, enemyDefense):
+	"""Share of your hits that critical, as a fraction.
+
+	One threshold does two jobs in the game's data. normalPTHEquation is
+	probabilityToHit/70, which is your chance to hit while PTH is under 70 and
+	saturates at certainty there; everything PTH carries above 70 goes into
+	critting instead. So the roll lands uniformly in [0, PTH] and a critical is
+	the part of that range past the threshold:
+
+	    hit  = min(1, PTH/70)          crit = max(0, 1 - 70/PTH)
+
+	This is the one inferred step - the equation and the thresholds are the
+	game's, how the roll reads them is not stated in the data.
+
+	It is very sensitive to the gap between the two abilities, so the level a
+	model states is worth getting right. At 1239 offensive ability morena crits
+	42% of the time against a level 32 enemy, 22% at level 96, and never at all
+	from about level 154 up, where she starts missing instead.
+	"""
+	pth = probabilityToHit(offense, enemyDefense)
+	if pth <= PTH_CRIT_THRESHOLD:
+		return 0.0
+	return 1.0 - PTH_CRIT_THRESHOLD / pth
+
+
+def hitChance(offense, enemyDefense):
+	"""Share of your attacks that land at all. Certain once PTH reaches 70."""
+	return min(1.0, max(0.0, probabilityToHit(offense, enemyDefense)) / PTH_CRIT_THRESHOLD)
+
 
 class Model:
 	# ALL_DAMAGE_PERC="all damage %"				#increases all non-retaliation damage
@@ -293,6 +357,10 @@ class Model:
 		# model.skills = locals()["skills"]
 		# model.constellations = locals()["constellations"]
 		model.initialize()
+		# after initialize, so this only counts procs on constellations this
+		# character was actually offered
+		for warning in modelspec.unratedTriggers(stats):
+			print("  WARNING: %s: %s" % (path, warning))
 		return model
 
 	# checkModel is NOT idempotent: it folds attribute-derived bonuses straight into
@@ -398,7 +466,23 @@ class Model:
 		if not "fight length" in self.stats:
 			self.stats["fight length"] = 30
 
-		self.stats["criticals/s"] = getTriggerChance(self.getStat("crit chance"), self.getStat("attacks/s"))		
+		# What you fight is mostly a question of what level you fight at.
+		if not self.getStat("enemy defense") and self.getStat("level"):
+			self.stats["enemy defense"] = ENEMY_DEFENSE_PER_LEVEL * self.getStat("level")
+			print("  enemy defense: %g  (level %g x %g)"
+				  % (self.stats["enemy defense"], self.getStat("level"), ENEMY_DEFENSE_PER_LEVEL))
+
+		# Crit chance follows from offensive ability against what you fight, so
+		# derive it rather than making it a number to guess at. An explicit
+		# "crit chance" still wins, the way an explicit weight beats a derived one.
+		if "crit chance" not in self.stats and self.getStat("offense") and self.getStat("enemy defense"):
+			oa, da = self.getStat("offense"), self.getStat("enemy defense")
+			self.stats["crit chance"] = critChance(oa, da)
+			print("  crit chance: %.3f  (offense %g vs enemy defense %g, PTH %.1f, hits %.0f%%)"
+				  % (self.stats["crit chance"], oa, da, probabilityToHit(oa, da),
+					 100 * hitChance(oa, da)))
+
+		self.stats["criticals/s"] = getTriggerChance(self.getStat("crit chance"), self.getStat("attacks/s"))
 
 		# /s stats can be calculated based on fight length and the value of the stat
 

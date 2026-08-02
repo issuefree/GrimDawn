@@ -20,7 +20,7 @@ import re
 
 from constants import damages, durationDamages
 from gddata import (Database, starBonuses, geometryFor, lastValue, firstOf,
-					procRecords, summonFor, weaponRestricts, AFFINITY)
+					procRecords, summonFor, weaponRestricts, damageBandsFor, AFFINITY)
 
 # skill class -> the ability "type" the optimiser reasons about
 TYPE_BY_CLASS = (
@@ -225,13 +225,19 @@ def literal(value):
 	return repr(value)
 
 
+def listLiteral(values):
+	# nested, because a distance falloff is a list of (from, to, percent) bands
+	return "[%s]" % ", ".join(listLiteral(v) if isinstance(v, list) else literal(v)
+							  for v in values)
+
+
 def dictLiteral(mapping):
 	parts = []
 	for key, value in sorted(mapping.items()):
 		if isinstance(value, dict):
 			parts.append('"%s":%s' % (key, dictLiteral(value)))
 		elif isinstance(value, list):
-			parts.append('"%s":[%s]' % (key, ", ".join(literal(v) for v in value)))
+			parts.append('"%s":%s' % (key, listLiteral(value)))
 		else:
 			parts.append('"%s":%s' % (key, literal(value)))
 	return "{" + ", ".join(parts) + "}"
@@ -323,6 +329,9 @@ def generate(path="constellationData.py", root=None):
 						"waveStartWidth", "waveEndWidth"):
 				if geometry.get(key):
 					conditions[key] = round(float(geometry[key]), 2)
+			bands = damageBandsFor(records)
+			if bands:
+				conditions["damageBands"] = [list(band) for band in bands]
 			recharge = firstOf(records, "skillCooldownTime", 0)
 			if recharge:
 				conditions["recharge"] = round(float(recharge), 2)

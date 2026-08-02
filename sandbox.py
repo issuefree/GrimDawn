@@ -198,7 +198,7 @@ def evalCon(*constellations):
 
 	Bonuses either one gives are listed together so the difference is one row
 	to read. Procs are folded in the way scoring folds them, and named
-	underneath with the share of the fight they are up for.
+	underneath with how often each one lands, in its own units.
 	"""
 	columns = []
 	for c in constellations:
@@ -222,8 +222,8 @@ def evalCon(*constellations):
 	for c, _ in columns:
 		for star in c.stars:
 			if star.ability:
-				print("  %-24s %s up %.0f%% of the fight"
-					  % (c.name[:24], star.ability.name, 100 * star.ability.effective))
+				print("  %-24s %-22s %s"
+					  % (c.name[:24], star.ability.name[:22], star.ability.describe()))
 
 
 # compareGear("thundertouch", "everliving grove")
@@ -233,4 +233,5 @@ def evalCon(*constellations):
 # evalCon(falcon, huntressRend)
 # evalSol([xA, xC, owl, vulture, jackal, revenant])
 # compareGear("bloodreaper's cleaver", "bloodreaper's claw", "duelist's sabre", "pit master's axe", "gorefeast")
-compareGear("Briarthorn Band", "band of black ice", "blackwatch seal", "reddan memento ring")
+# compareGear("Briarthorn Band", "band of black ice", "blackwatch seal", "reddan memento ring")
+evalCon(assassinsBladeAssassinsMark, assassin)

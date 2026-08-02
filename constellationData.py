@@ -435,7 +435,7 @@ assassin_3 = Star(assassin, assassin_1, {"bleed resist":10, "cunning %":5, "pier
 assassin_4 = Star(assassin, assassin_3, {"acid resist":10, "defense":25})
 assassin_5 = Star(assassin, assassin_3, {"pierce":12, "pierce %":50})
 assassin_6 = Star(assassin, assassin_5, {})
-assassin_6.addAbility(Ability('Blade Burst', {"chance":1, "projectiles":16, "recharge":1.8, "skillClass":'Skill_AttackProjectileRing', "trigger":'critical', "type":'attack'}, {"triggered pierce":290, "weapon damage %":25}))
+assassin_6.addAbility(Ability('Blade Burst', {"chance":1, "damageBands":[[0, 2, 70], [2, 3, 95], [3, 25, 100]], "projectiles":16, "recharge":1.8, "skillClass":'Skill_AttackProjectileRing', "trigger":'critical', "type":'attack'}, {"triggered pierce":290, "weapon damage %":25}))
 
 magi = Constellation('Magi', '10e', '3e')
 magi.id = 'magi'

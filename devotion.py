@@ -347,18 +347,8 @@ def showSolution(model, constellations, bonusCount=18):
 	if procs:
 		print("\n  Procs:")
 		for c, ability in procs:
-			# A summon's effective is how many are standing rather than a
-			# fraction of the fight, and passes 1 the moment two overlap.
-			# effective means a different thing per type and only one of them is
-			# a fraction of the fight. An attack's is applications a second
-			# across everything it hits; a summon's is how many are standing.
-			if ability.gc("type") == "summon":
-				note = "%.1f standing at once" % ability.effective
-			elif ability.gc("type") in ("attack", "wps", "aar"):
-				note = "%.2f hits a second" % ability.effective
-			else:
-				note = "up %.0f%% of the fight" % min(100, 100 * ability.effective)
-			print("     %-30s %-22s %s" % (c.name[:30], ability.name[:22], note))
+			print("     %-30s %-22s %s"
+				  % (c.name[:30], ability.name[:22], ability.describe()))
 
 
 def showAugments(model, count=3):

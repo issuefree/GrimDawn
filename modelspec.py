@@ -30,6 +30,12 @@ CONTROL_STATS = {
 	"attacks/s", "allAttacks/s", "hits/s", "blocks/s", "kills/s", "criticals/s",
 	"low healths/s", "crit chance", "fight length", "playStyle", "weapons",
 	"blacklist", "difficulty", "level",
+	# what you fight, rather than what you are. "enemy density" (enemies per
+	# square metre) sizes every area proc in devotionderive; "enemy defense" is
+	# the defensive ability crit chance is worked out against. Both were read
+	# by the code already and neither was listed here, so a model that set one
+	# was told it was an unknown stat and never read.
+	"enemy density", "enemy defense",
 }
 
 
@@ -150,6 +156,58 @@ def statVocabulary():
 	return vocab
 
 
+# A proc's trigger names the rate it fires at, and Ability.calculateTriggerTime
+# reads that rate straight off the sheet. A rate of zero is not a small number,
+# it is an early return that scores the whole proc at nothing - so a sheet that
+# omits one silently deletes every proc hanging off it. trigger -> the ways the
+# sheet can supply its rate, and how to say it in the warning. Each way is a
+# group of keys that all have to be present, and any one group is enough.
+TRIGGER_RATES = {
+	"attack": ((("attacks/s",),), "set 'attacks/s'"),
+	"hit": ((("hits/s",),), "set 'hits/s'"),
+	# checkModel derives criticals/s from crit chance, and crit chance itself
+	# from offensive ability against a stated enemy defense - which needs both,
+	# so naming the enemy without an offense to swing at it is not enough
+	"critical": ((("crit chance",), ("offense", "enemy defense"), ("offense", "level")),
+				 "set 'level' (or 'enemy defense' outright) alongside 'offense' "
+				 "to derive it, or pin 'crit chance'"),
+	"block": ((("blocks/s",),), "set 'blocks/s'"),
+	"kill": ((("kills/s",),), "set 'kills/s'"),
+	"low health": ((("low healths/s",),), "set 'low healths/s'"),
+}
+
+
+def unratedTriggers(stats):
+	"""Triggers this sheet gives no rate for, as warnings naming what each costs.
+
+	Call this after filterConstellations, so it only counts procs the character
+	could actually have taken - a two-hander should not be told what its missing
+	block rate costs it in shield constellations it was never offered.
+
+	Not fatal. A build with no crit and no block genuinely fires none of those,
+	and saying so is the point: morena weights crit damage at 10 while carrying
+	no crit chance, which reads as a crit build but scores all nine
+	crit-triggered procs at zero.
+	"""
+	# by identity: buildAbilityFragments registers a part-way prefix as its own
+	# constellation sharing the same Ability object, so walking constellations
+	# alone reports one proc twice
+	counts, seen = {}, set()
+	for c in Constellation.constellations:
+		for star in c.stars:
+			trigger = star.ability.gc("trigger") if star.ability else None
+			if trigger in TRIGGER_RATES and id(star.ability) not in seen:
+				seen.add(id(star.ability))
+				counts[trigger] = counts.get(trigger, 0) + 1
+	out = []
+	for trigger, procs in sorted(counts.items()):
+		groups, hint = TRIGGER_RATES[trigger]
+		if not any(all(stats.get(key) for key in group) for group in groups):
+			out.append("nothing gives %s-triggered procs a rate, so all %d of them "
+					   "score 0 - %s" % (trigger, procs, hint))
+	return out
+
+
 def _suggest(key, vocab):
 	# 0.80 catches real typos ('peirce', 'aether reist', 'physiacl resist') while
 	# staying quiet on keys that are simply unsupported ('damage reflect %'),
@@ -210,6 +268,17 @@ stats = {
 
 	# Break out each trigger source for a better estimate of stacked procs.
 	# "allAttacks/s": [2.0, 1.0, 0.5],
+
+	# Your level, and what you fight. Crit chance is derived from your offensive
+	# ability against the enemy's defensive one using the game's own hit
+	# formula, and enemy defence is derived from level - so stating "level" is
+	# usually enough, and without it every crit-triggered proc scores zero.
+	# Override "enemy defense" directly if you grind a difficulty whose scaling
+	# the game's records do not carry. "enemy density" is enemies per square
+	# metre and sizes every area proc.
+	# "level": 100,
+	# "enemy defense": 1400,
+	# "enemy density": 0.03,
 
 	# "weapons": ["sword", "shield"],   # omit to allow every constellation
 	# "physique": 0, "cunning": 0, "spirit": 0,

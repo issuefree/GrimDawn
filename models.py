@@ -5,6 +5,15 @@ from constellationData import *
 from utils import *
 from solution import *
 
+# What one point of cunning is worth, from the game's own numbers rather than
+# rounded by hand - and used on both sides, so what a point is worth to score
+# and what it has already given the sheet cannot drift apart.
+CUNNING_DAMAGE = 1 / 245.0 * 100      # physical and pierce %
+CUNNING_DURATION = 1 / 215.0 * 100    # bleed and internal trauma %
+CUNNING_OFFENSE = 0.5                 # offensive ability
+CUNNING_HEALTH = 1.0                  # health
+
+
 class Model:
 	# ALL_DAMAGE_PERC="all damage %"				#increases all non-retaliation damage
 
@@ -413,13 +422,18 @@ class Model:
 
 		self.setCalculated("physique", val)
 
-		# cunning grants physical %, pierce %, bleed %, internal % and offense.
+		# One point of cunning is +1 health, +0.5 offensive ability, 1/245 of a
+		# percent physical and pierce damage, and 1/215 of a percent bleed and
+		# internal trauma. Pierce read .40 against physical's .41 where the game
+		# gives both the same, offensive ability read .4 where the game gives
+		# .5, and the health was missing.
 		val = 0
-		val += self.get("physical %") * .41
-		val += self.get("pierce %") * .40
-		val += self.get("bleed %") * .46
-		val += self.get("internal %") * .46
-		val += self.get("offense") * .4
+		val += self.get("physical %") * CUNNING_DAMAGE
+		val += self.get("pierce %") * CUNNING_DAMAGE
+		val += self.get("bleed %") * CUNNING_DURATION
+		val += self.get("internal %") * CUNNING_DURATION
+		val += self.get("offense") * CUNNING_OFFENSE
+		val += self.get("health") * CUNNING_HEALTH
 
 		self.setCalculated("cunning", val)
 
@@ -434,10 +448,10 @@ class Model:
 		self.setCalculated("spirit", val)
 
 		# update damage % stats
-		self.stats["physical %"] = self.getStat("physical %")  + self.getStat("cunning")*.41
-		self.stats["pierce %"] = self.getStat("pierce %")  + self.getStat("cunning")*.41
-		self.stats["bleed %"] = self.getStat("bleed %") + self.getStat("cunning")*.46
-		self.stats["internal %"] = self.getStat("internal %") + self.getStat("cunning")*.46
+		self.stats["physical %"] = self.getStat("physical %") + self.getStat("cunning")*CUNNING_DAMAGE
+		self.stats["pierce %"] = self.getStat("pierce %") + self.getStat("cunning")*CUNNING_DAMAGE
+		self.stats["bleed %"] = self.getStat("bleed %") + self.getStat("cunning")*CUNNING_DURATION
+		self.stats["internal %"] = self.getStat("internal %") + self.getStat("cunning")*CUNNING_DURATION
 
 		for dam in ["fire %", "cold %", "lightning %", "acid %", "vitality %", "aether %", "chaos %"]:
 			if self.getStat(dam) > 0:

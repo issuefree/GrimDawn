@@ -12,6 +12,18 @@ CUNNING_DAMAGE = 1 / 245.0 * 100      # physical and pierce %
 CUNNING_DURATION = 1 / 215.0 * 100    # bleed and internal trauma %
 CUNNING_OFFENSE = 0.5                 # offensive ability
 CUNNING_HEALTH = 1.0                  # health
+# Physique: health, health regen beyond the base 50, defensive ability.
+PHYSIQUE_HEALTH = 2.5
+PHYSIQUE_REGEN = 1 / 25.0
+PHYSIQUE_DEFENSE = 0.5
+# Spirit: health, energy, energy regen flat and percentage, and the magical
+# damage types - 1/215 for direct, 1/200 for the durations.
+SPIRIT_HEALTH = 1.0
+SPIRIT_ENERGY = 2.0
+SPIRIT_REGEN = 0.01
+SPIRIT_REGEN_PERCENT = 0.25
+SPIRIT_DAMAGE = 1 / 215.0 * 100
+SPIRIT_DURATION = 1 / 200.0 * 100
 
 
 class Model:
@@ -416,9 +428,9 @@ class Model:
 
 		# physique grants health/s, health and defense so this should be accounted for
 		val = 0
-		val += self.get("health/s") * .04
-		val += self.get("health") * 2.5
-		val += self.get("defense") * .4
+		val += self.get("health/s") * PHYSIQUE_REGEN
+		val += self.get("health") * PHYSIQUE_HEALTH
+		val += self.get("defense") * PHYSIQUE_DEFENSE   # the game gives .5, not .4
 
 		self.setCalculated("physique", val)
 
@@ -439,11 +451,14 @@ class Model:
 
 		# spirit grants fire %, burn %, cold %, frostburn %, lightning %, electrocute %, acid %, poison %, vitality %, vitality decay%, aether %, chaos %, energy and energy regen
 		val = 0
-		val += sum([self.get(b) for b in ["fire %", "cold %", "lightning %", "acid %", "vitality %", "aether %", "chaos %"]]) * .47
-		val += sum([self.get(b) for b in ["burn %", "frostburn %", "electrocute %", "poison %", "vitality decay %"]]) * .5
-		val += self.get("energy") * 2
-		val += self.get("energy/s") * .01
-		val += self.get("energy/s %") * .26
+		# magicalDamage and magicalDurationDamage are the game's own groupings;
+		# spelling them out here had quietly left life leech off the first list.
+		val += sum([self.get(d + " %") for d in magicalDamage]) * SPIRIT_DAMAGE
+		val += sum([self.get(d + " %") for d in magicalDurationDamage]) * SPIRIT_DURATION
+		val += self.get("energy") * SPIRIT_ENERGY
+		val += self.get("energy/s") * SPIRIT_REGEN
+		val += self.get("energy/s %") * SPIRIT_REGEN_PERCENT
+		val += self.get("health") * SPIRIT_HEALTH
 
 		self.setCalculated("spirit", val)
 

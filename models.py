@@ -35,16 +35,127 @@ SPIRIT_DURATION = 1 / 200.0 * 100
 # and pthThreshold1 - the point where a hit becomes a critical one.
 PTH_CRIT_THRESHOLD = 70.0
 
-# Defensive ability of what you fight, per level, when the model does not say.
-# defensiveAbilityEquation gives an enemy characterLevel*12 + 53 before its
-# classification is counted, and almost every enemy record leaves the base at
-# zero, so level is very nearly the whole story. Walking the 2944 enemy records
-# at level 100 gives a median of 1253 for a common enemy, 1277 for a hero and
-# 1397 for a boss; 13 a level lands at 1300, between the hero and the boss, and
-# stays within a few percent of the game's own line across the whole range.
-# These are pre-difficulty-scaling, which the records do not carry - a character
-# grinding Ultimate should state "enemy defense" outright.
-ENEMY_DEFENSE_PER_LEVEL = 13
+# Difficulty scaling, which is not per-enemy at all: gameengine.dbr names
+# records/game/balancingadjustment_mp+difficulty_enemies01.dbr as the
+# monsterAttributePak, and every field in it is twelve numbers - three
+# difficulties by four player counts. Index 0/4/8 is Normal/Elite/Ultimate for
+# a solo character, and characterLifeModifier reading +50/+320/+580% across
+# those three is what confirms the layout.
+DIFFICULTIES = ("normal", "elite", "ultimate")
+DEFAULT_DIFFICULTY = "ultimate"
+
+# characterDefensiveAbility and characterDefensiveAbilityModifier from the pak,
+# which apply on top of whatever the enemy's own record says.
+DIFFICULTY_DEFENSE = {"normal": (35.0, -15.0), "elite": (60.0, -8.0),
+					  "ultimate": (75.0, -8.0)}
+DEFENSE_PER_LEVEL = 12.0     # defensiveAbilityEquation: characterLevel * 12
+DEFENSE_BASE = 53.0          # and its trailing + 53
+
+# Resistance the enemy is assumed to have, per damage type, as a percentage.
+# Nothing in the database states a resistance equation - the shield line in
+# combatformulas.dbr, damage * ((100 - absorption) / 100), is the convention the
+# engine uses everywhere, and resistance is the same plain multiplier with no
+# floor at zero. So what a point of resist reduction buys depends only on what
+# the enemy already resists, and both halves of that are measured.
+#
+# What the enemy's own record carries: the mean over the 2570
+# Common/Champion/Hero/Boss records with a charLevel.
+ENEMY_RESIST_BASE = {
+	"vitality": 19.2, "cold": 16.7, "pierce": 16.5, "fire": 15.3,
+	"lightning": 14.6, "acid": 14.2, "physical": 14.1, "aether": 13.1,
+	"chaos": 11.9, "bleed": 0.0, "life leech": 0.0,
+}
+# What the difficulty adds on top, from the same monsterAttributePak. Nothing
+# is resisted any better on Normal than the record says; Elite and Ultimate are
+# where it comes from, and it is not uniform - lightning and acid gain three
+# times what physical does.
+DIFFICULTY_RESIST = {
+	"physical":   {"normal": 0.0, "elite": 0.0, "ultimate": 2.0},
+	"pierce":     {"normal": 0.0, "elite": 2.0, "ultimate": 5.0},
+	"fire":       {"normal": 0.0, "elite": 4.0, "ultimate": 8.0},
+	"cold":       {"normal": 0.0, "elite": 2.0, "ultimate": 5.0},
+	"lightning":  {"normal": 0.0, "elite": 6.0, "ultimate": 10.0},
+	"acid":       {"normal": 0.0, "elite": 6.0, "ultimate": 10.0},
+	"vitality":   {"normal": 0.0, "elite": 6.0, "ultimate": 12.0},
+	"aether":     {"normal": 0.0, "elite": 2.0, "ultimate": 5.0},
+	"chaos":      {"normal": 0.0, "elite": 2.0, "ultimate": 5.0},
+	"bleed":      {"normal": 0.0, "elite": 5.0, "ultimate": 9.0},
+	"life leech": {"normal": 35.0, "elite": 45.0, "ultimate": 65.0},
+}
+# Duration damage has no resistance of its own - the pak carries no
+# defensiveSlowFire, defensiveSlowPoison or the like, because the game resists
+# each by its parent element. Bleeding is the exception and has its own field,
+# which is why it appears above rather than here.
+RESISTED_AS = {
+	"burn": "fire", "frostburn": "cold", "electrocute": "lightning",
+	"poison": "acid", "vitality decay": "vitality", "internal": "physical",
+	"elemental": "fire",
+}
+DEFAULT_ENEMY_RESIST = 0.0
+
+
+def difficultyOf(model):
+	stated = str(model.getStat("difficulty") or DEFAULT_DIFFICULTY).lower()
+	return stated if stated in DIFFICULTIES else DEFAULT_DIFFICULTY
+
+
+def enemyResist(model, damage):
+	"""What the enemy resists this damage type by, in percent.
+
+	An explicit "enemy <type> resist" wins, then a blanket "enemy resist", then
+	the record base plus whatever the difficulty adds.
+	"""
+	stated = model.getStat("enemy %s resist" % damage)
+	if stated:
+		return float(stated)
+	stated = model.getStat("enemy resist")
+	if stated:
+		return float(stated)
+	parent = RESISTED_AS.get(damage, damage)
+	return (ENEMY_RESIST_BASE.get(parent, DEFAULT_ENEMY_RESIST)
+			+ DIFFICULTY_RESIST.get(parent, {}).get(difficultyOf(model), 0.0))
+
+
+def enemyDefense(level, difficulty):
+	"""Defensive ability of a level-appropriate enemy, from the game's equation.
+
+	defensiveAbilityEquation is (base + level*12 + strength*0.5) * (1 + mod/100)
+	+ 53. Almost every enemy record leaves its own base and strength at zero, so
+	what is left is the level term and the difficulty's contribution to both the
+	flat part and the modifier.
+	"""
+	flat, modifier = DIFFICULTY_DEFENSE.get(difficulty, DIFFICULTY_DEFENSE[DEFAULT_DIFFICULTY])
+	return (flat + float(level) * DEFENSE_PER_LEVEL) * (1 + modifier / 100.0) + DEFENSE_BASE
+
+
+def resistReductionValue(enemyResistPercent):
+	"""Extra damage one flat point of resist reduction buys, as a fraction.
+
+	Damage is base * (1 - R/100) and R goes negative freely, so dropping R by
+	one point multiplies damage by (101 - R)/(100 - R) - a gain of 1/(100 - R).
+	Against an unresisting enemy that is exactly 1% per point, and it climbs
+	from there: 1.18% at the 15% an average enemy carries, 2% at 50%.
+
+	The .0075 this replaces was measured off a training dummy and came out
+	below the value at zero resistance, which the formula cannot produce for
+	any enemy that resists anything at all. The likely cause is that resist
+	reduction of the same kind does not stack - only the largest source counts
+	- so a second source added to one already running measures as worth much
+	less than the first.
+	"""
+	return 1.0 / (100.0 - float(enemyResistPercent))
+
+
+def percentReductionValue(enemyResistPercent):
+	"""Same, for one point of the '% reduced target's resistance' kind.
+
+	A different mechanic wearing a similar name. Viper's 20 does not subtract
+	20 points, it takes a fifth off whatever the enemy has - so it is worth
+	R/100 of a flat point, and nothing whatsoever against an enemy at zero.
+	At the 15% an average enemy carries, a point of it is worth about a
+	seventh of a flat point.
+	"""
+	return resistReductionValue(enemyResistPercent) * float(enemyResistPercent) / 100.0
 
 
 def probabilityToHit(offense, enemyDefense):
@@ -466,11 +577,13 @@ class Model:
 		if not "fight length" in self.stats:
 			self.stats["fight length"] = 30
 
-		# What you fight is mostly a question of what level you fight at.
+		# What you fight is a question of what level you fight at and on which
+		# difficulty; both come from the game's own equation and scaling table.
 		if not self.getStat("enemy defense") and self.getStat("level"):
-			self.stats["enemy defense"] = ENEMY_DEFENSE_PER_LEVEL * self.getStat("level")
-			print("  enemy defense: %g  (level %g x %g)"
-				  % (self.stats["enemy defense"], self.getStat("level"), ENEMY_DEFENSE_PER_LEVEL))
+			difficulty = difficultyOf(self)
+			self.stats["enemy defense"] = enemyDefense(self.getStat("level"), difficulty)
+			print("  enemy defense: %.0f  (level %g on %s)"
+				  % (self.stats["enemy defense"], self.getStat("level"), difficulty))
 
 		# Crit chance follows from offensive ability against what you fight, so
 		# derive it rather than making it a number to guess at. An explicit
@@ -565,24 +678,37 @@ class Model:
 		for stat in percStats:
 			self.setCalculated(stat+" %", self.getStat(stat) * self.get(stat) / 100)
 
-		#check resist reduction
-		# I'm assuming 20% resistance for the purposes of calculating value.
-		# at that resistance each point of resist reduction resulst in 1.33% more overall damage.
-		# if we have +400% vitality damage (500% total) a 1 percent reduction in resist is worth
-		# 500*.0133 vitality % or 6.65 %
-		# Testing against dummy is giving me 7.5% increased damage for -10% resist. Using that (.0075)
-		# single target debuffs need to have reduced value. Also applying resist reduction only applies to the next hit
-		# setting value at 1/3		
+		# Resist reduction, from the game's multiplier rather than a fitted
+		# constant. A point of it buys 1/(100 - enemyResist) more damage, which
+		# is then worth that fraction of your whole damage multiplier - so it
+		# converts into the same units as a point of "<damage> %".
+		#
+		# The /3 stays: resist reduction lands on one enemy where a damage
+		# percentage applies to everything you hit, and most of it is a debuff
+		# with a duration rather than something always on. That part is
+		# judgement, not the game's arithmetic.
+		SINGLE_TARGET_DISCOUNT = 3.0
 		for damage in primaryDamages:
 			if self.get(damage+" %") > 0:
+				resist = enemyResist(self, damage)
 				# pet sheet damage only counts "all damage %" so specific types are lost here
 				totalDamagePerc = (self.getStat(damage+" %")+100) + (self.getStat("pet damage %")+100)
-				self.setCalculated("reduce "+damage+" resist", totalDamagePerc*.0075*self.get(damage+" %")/3.0)
+				worth = (totalDamagePerc * resistReductionValue(resist)
+						 * self.get(damage+" %") / SINGLE_TARGET_DISCOUNT)
+				self.setCalculated("reduce "+damage+" resist", worth)
+				# "X% reduced target's resistance" takes a share of what the
+				# enemy has instead of subtracting points, so it is worth
+				# nothing against an enemy that resists nothing
+				self.setCalculated("reduce "+damage+" resist %",
+								   worth * resist / 100.0)
 
 		self.setCalculated("reduce resist", sum([self.get("reduce "+b) for b in resists]))
+		self.setCalculated("reduce resist %", sum([self.get("reduce "+b+" %") for b in resists]))
 
 		elementals = ["fire", "cold", "lightning"]
 		self.setCalculated("reduce elemental resist", sum([self.get("reduce "+b+" resist") for b in elementals]))
+		self.setCalculated("reduce elemental resist %",
+						   sum([self.get("reduce "+b+" resist %") for b in elementals]))
 
 		# handle shorthand sets: resist	
 		#resist types

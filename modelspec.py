@@ -126,7 +126,9 @@ def bonusVocabulary():
 	for d in damages:
 		vocab.update({d, d + " %", "pet " + d, "pet " + d + " %", "triggered " + d,
 					  d + " retaliation", "pet " + d + " retaliation",
-					  "reduce " + d + " resist", d + " duration"})
+					  "reduce " + d + " resist", "reduce " + d + " resist %",
+					  d + " duration"})
+	vocab.update({"reduce resist %", "reduce elemental resist %"})
 	for r in resists:
 		vocab.update({r, "pet " + r, "max " + r, "pet max " + r, "reduce " + r})
 	return vocab
@@ -148,6 +150,8 @@ def statVocabulary():
 		vocab.update({r, "max " + r})
 	for d in primaryDamages:
 		vocab.add("reduce " + d + " resist")
+		vocab.add("enemy " + d + " resist")   # what the enemy resists, not what you reduce
+	vocab.add("enemy resist")
 	# checkModel reads a "<stat> %" form for anything with a percentage modifier
 	# (via bonusToPercent / processMetaStats), so those are legitimate sheet values
 	for stat in ("physique", "cunning", "spirit", "health", "health/s", "energy",
@@ -277,7 +281,9 @@ stats = {
 	# the game's records do not carry. "enemy density" is enemies per square
 	# metre and sizes every area proc.
 	# "level": 100,
-	# "enemy defense": 1400,
+	# "difficulty": "ultimate",     # normal | elite | ultimate
+	# "enemy defense": 1400,        # overrides what level+difficulty derive
+	# "enemy resist": 25,           # ditto, for every damage type at once
 	# "enemy density": 0.03,
 
 	# "weapons": ["sword", "shield"],   # omit to allow every constellation

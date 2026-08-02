@@ -43,10 +43,16 @@ FLAT = {
     "offensiveTotalResistanceReductionAbsolute": "reduce resist",
     "offensiveElementalResistanceReductionAbsolute": "reduce elemental resist",
     "offensivePhysicalResistanceReductionAbsolute": "reduce physical resist",
-    # percent-based resist reduction is expressed as a Min/Max pair
-    "offensiveElementalResistanceReductionPercent": "reduce elemental resist",
-    "offensivePhysicalResistanceReductionPercent": "reduce physical resist",
-    "offensiveTotalResistanceReductionPercent": "reduce resist",
+    # A different mechanic that reads like the same one. Absolute subtracts
+    # points from the enemy's resistance and drives it negative; Percent takes a
+    # share of whatever the enemy has and is worth nothing against an enemy at
+    # zero. Both used to be called "reduce X resist", so Viper's 20 - a fifth
+    # off the enemy's elemental resistance, about 3 points against an average
+    # one - was scored as though it were 20 points flat, roughly seven times its
+    # worth. They are named apart so models can price them apart.
+    "offensiveElementalResistanceReductionPercent": "reduce elemental resist %",
+    "offensivePhysicalResistanceReductionPercent": "reduce physical resist %",
+    "offensiveTotalResistanceReductionPercent": "reduce resist %",
     "retaliationPhysical": "physical retaliation", "retaliationPierce": "pierce retaliation",
     "retaliationFire": "fire retaliation", "retaliationCold": "cold retaliation",
     "retaliationLightning": "lightning retaliation", "retaliationPoison": "acid retaliation",

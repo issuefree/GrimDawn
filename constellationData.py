@@ -208,7 +208,7 @@ viper.id = 'viper'
 viper_0 = Star(viper, [], {"cunning":15, "spirit":15})
 viper_1 = Star(viper, viper_0, {"energy absorb":10, "energy leech":18})
 viper_2 = Star(viper, viper_1, {"vitality resist":10})
-viper_3 = Star(viper, viper_2, {"offense %":3, "reduce elemental resist":20})
+viper_3 = Star(viper, viper_2, {"offense %":3, "reduce elemental resist %":20})
 
 gallows = Constellation('Gallows', '1p', '5p')
 gallows.id = 'gallows'
@@ -943,7 +943,7 @@ ultos_2 = Star(ultos, ultos_1, {"chaos resist":15, "health":350})
 ultos_3 = Star(ultos, ultos_1, {"crit damage":5, "electrocute %":120, "frostburn %":120, "offense":20})
 ultos_4 = Star(ultos, ultos_3, {"cold %":100, "lightning":20, "lightning %":100})
 ultos_5 = Star(ultos, ultos_4, {})
-ultos_5.addAbility(Ability('Hand of Ultos', {"chance":1, "recharge":1.5, "skillClass":'Skill_AttackChain', "sparkMaxNumber":10, "trigger":'critical', "type":'attack'}, {"duration":{"reduce elemental resist":20}, "stun %":40, "triggered electrocute":[270, 2], "triggered lightning":328, "weapon damage %":20}))
+ultos_5.addAbility(Ability('Hand of Ultos', {"chance":1, "recharge":1.5, "skillClass":'Skill_AttackChain', "sparkMaxNumber":10, "trigger":'critical', "type":'attack'}, {"duration":{"reduce elemental resist %":20}, "stun %":40, "triggered electrocute":[270, 2], "triggered lightning":328, "weapon damage %":20}))
 
 ishtak = Constellation('Ishtak', '10o 15p', '')
 ishtak.id = 'ishtak'

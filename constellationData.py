@@ -414,7 +414,7 @@ huntress_3 = Star(huntress, huntress_2, {"armor":60, "pet all damage %":40, "pet
 huntress_4 = Star(huntress, huntress_2, {"healing %":12, "health/s":25, "offense %":3, "pet offense %":5})
 huntress_5 = Star(huntress, huntress_4, {"bleed":[15, 3], "bleed %":50, "bleed duration":20, "pet bleed %":80})
 huntress_6 = Star(huntress, huntress_4, {})
-huntress_6.addAbility(Ability('Rend', {"chance":0.2, "duration":5, "radius":5, "skillClass":'Skill_AttackBuffRadius', "trigger":'attack', "type":'attack'}, {"defense":150, "reduce bleed resist":32, "triggered bleed":[325, 5]}))
+huntress_6.addAbility(Ability('Rend', {"chance":0.2, "duration":5, "radius":5, "skillClass":'Skill_AttackBuffRadius', "trigger":'attack', "type":'attack'}, {"defense":150, "reduce bleed resist":32, "triggered bleed":[325, 1]}))
 
 direBear = Constellation('Dire Bear', '5a 5p', '1p 1a')
 direBear.id = 'direBear'

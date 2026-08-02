@@ -1378,7 +1378,7 @@ Skill('Searing Might', 'Demolitionist', [
 # === Occultist ===
 Skill('Bloody Pox', 'Occultist', [
 		"",
-		Ability('1', {"chance":1, "skillClass":'Skill_AttackBuff', "trigger":'manual', "type":'attack'}, {"energy":-30, "triggered bleed":[6, 5], "triggered vitality":4}),
+		Ability('1', {"chance":1, "skillClass":'Skill_AttackBuff', "trigger":'manual', "type":'attack'}, {"energy":-30, "triggered bleed":[6, 1], "triggered vitality":4}),
 	])
 Skill('Wasting', 'Occultist', [
 		"",
@@ -2257,7 +2257,7 @@ Skill('Elemental Awakening', 'Nightblade', [
 	])
 Skill('Blade Trap', 'Nightblade', [
 		"",
-		Ability('1', {"chance":1, "skillClass":'Skill_AttackProjectileDebuf', "trigger":'manual', "type":'attack'}, {"energy":-30, "triggered bleed":[18, 2.8], "triggered pierce":16}),
+		Ability('1', {"chance":1, "skillClass":'Skill_AttackProjectileDebuf', "trigger":'manual', "type":'attack'}, {"energy":-30, "triggered bleed":[18, 2], "triggered pierce":16}),
 	])
 Skill('Devouring Blades', 'Nightblade', [
 		"",
@@ -3513,7 +3513,7 @@ Skill('Oak Skin', 'Shaman', [
 	])
 Skill('Devouring Swarm', 'Shaman', [
 		"",
-		Ability('1', {"chance":1, "skillClass":'Skill_AttackProjectileDebuf', "trigger":'manual', "type":'attack'}, {"energy":-12, "lifesteal %":20, "reduce bleed resist":3, "reduce vitality resist":8, "triggered bleed":[3, 3], "triggered vitality":3}),
+		Ability('1', {"chance":1, "skillClass":'Skill_AttackProjectileDebuf', "trigger":'manual', "type":'attack'}, {"energy":-12, "lifesteal %":20, "reduce bleed resist":3, "reduce vitality resist":8, "triggered bleed":[3, 1], "triggered vitality":3}),
 	])
 Skill('Grasping Vines', 'Shaman', [
 		"",
@@ -4024,7 +4024,7 @@ Skill('Chillsurge', 'Inquisitor', [
 	])
 Skill('Storm Box of Elgoloth', 'Inquisitor', [
 		"",
-		Ability('1', {"chance":1, "skillClass":'Skill_AttackBuff', "trigger":'manual', "type":'attack'}, {"energy":-18, "offense":10, "triggered electrocute":[3, 8], "triggered lightning":14}),
+		Ability('1', {"chance":1, "skillClass":'Skill_AttackBuff', "trigger":'manual', "type":'attack'}, {"energy":-18, "offense":10, "triggered electrocute":[3, 2], "triggered lightning":14}),
 	])
 Skill('Lightning Tether', 'Inquisitor', [
 		"",
@@ -4442,7 +4442,7 @@ Skill('Blood Boil', 'Necromancer', [
 	])
 Skill('Ill Omen', 'Necromancer', [
 		"",
-		Ability('1', {"chance":1, "skillClass":'Skill_AttackBuff', "trigger":'manual', "type":'attack'}, {"energy":-35, "triggered cold":6, "triggered vitality decay":[6, 3]}),
+		Ability('1', {"chance":1, "skillClass":'Skill_AttackBuff', "trigger":'manual', "type":'attack'}, {"energy":-35, "triggered cold":6, "triggered vitality decay":[6, 1]}),
 	])
 Skill('Master of Death', 'Necromancer', [
 		"",

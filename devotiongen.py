@@ -157,13 +157,11 @@ def procBonuses(records, db, summon=False, triggered=True):
 							if name in damages and triggered and not prefix else name)
 			seconds = lastValue(record.get(field + "DurationMin", 0)) or 0
 			if seconds and name in durationDamages:
-				if debuff:
-					# A debuff aura sits on the enemy for its own active duration
-					# and puts the damage back on every second, so the bleed
-					# really runs for as long as the aura does. Huntress's Rend
-					# states a one second bleed inside a five second debuff.
-					seconds = max(float(seconds),
-								  float(lastValue(record.get("skillActiveDuration", 0)) or 0))
+				# The duration on the field is the one that counts. A debuff aura
+				# also states how long it sits on the enemy, and stretching the
+				# damage over that instead charged Huntress's Rend five times its
+				# bleed: 325 a second for one second, reapplied while you keep
+				# hitting, is not 325 a second for five.
 				out[key] = [value, round(float(seconds), 2)]
 			elif seconds:
 				timed[key] = timed.get(key, 0) + value

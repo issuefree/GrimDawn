@@ -364,5 +364,5 @@ sol = [hawk, rat, lightofEmpyrion, eel, jackal, hound, ultosHandofUltos]
 # bestInSlot("ring")
 # bestInSlot("head", components)
 # bestAugments()
-evalCon(falcon, owl)
-evalSol([xA, xC, owl, vulture, jackal, revenant])
+evalCon(falcon, huntressRend)
+# evalSol([xA, xC, owl, vulture, jackal, revenant])

@@ -20,6 +20,11 @@ stats = {
 			.75,  # blades
 			.75,  # shadow
 		],
+		# The first of those, with the modifiers that only apply to it. Read for
+		# what a swing is worth, which is what pressing a skill an item grants
+		# costs you - update it as these get levelled, because a component skill
+		# that beats Onslaught at 1 will not beat it at 10.
+		"main attack":[("Onslaught", 1), ("Open Wounds", 3), ("Endless Rage", 1)],
 
 		"hits/s":2,
 		"low healths/s":1.0/30, # total guesswork.
@@ -76,7 +81,9 @@ weights = {
 
 		"bleed duration":5,
 
-		"weapon damage %":25,
+		# "weapon damage %" left out on purpose: it is one percent of the flat
+		# damage on the sheet above, so it is derived rather than guessed. It
+		# came out at 71 where this said 25.
 
 		# "lifesteal %":33,
 		"move speed": 50,

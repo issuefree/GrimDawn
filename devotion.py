@@ -468,7 +468,10 @@ def fastSearch(model, budget, seeds):
 	model.saveSeedSolutions()
 	print("\n  saved to %s/solutions.py" % model.name.lower())
 
-	showAugments(model)
+	# augments are not part of the answer to "which devotions" and were twenty
+	# lines of unrelated table on the end of every search. Ask for them:
+	#     bestAugments()   in the sandbox
+
 
 def main(argv=None, modelName=None):
 	"""The command line, as a function so a model file can be its own entry point.

@@ -138,15 +138,46 @@ def bestAugments(count=3):
 	devotion.showAugments(model, count)
 
 
-def evalItemMods(location, itemType):
-	items = Item.getByLocation(location, itemType)
-	for item in items:
-		item.evaluate(model, location)
-		# print(item.name.ljust(20), item.value)
-	items.sort(key=lambda i: i.value, reverse=True)
-	for item in items:
-		if item.value > 0:
-			print(item.evaluate(model, location, True))
+def evalItemMods(slot, pool=None, count=8, detail=4):
+	"""Everything that fits one slot, ranked, and where each one's value is.
+
+		evalItemMods("medal")
+		evalItemMods("axe", augments)
+
+	pool defaults to components. count is how many items to list, detail how
+	many bonus lines each. A cost - the attack a granted skill gives up - is
+	always shown whether or not it makes the cut, since it is the reason an
+	item scores less than its stats suggest.
+
+	This used to hand verbose=True to evaluate, which printed an ability's
+	trigger arithmetic in the middle of the table and then a bare float on the
+	end of it. The breakdown comes from the same function gearcompare prints,
+	so a row here and a row there agree.
+	"""
+	from gearcompare import bonusWorth
+	items = Item.getByLocation(slot, list(pool if pool is not None else components))
+	ranked = [(item.evaluate(model, slot), item) for item in items]
+	ranked = sorted(((v, i) for v, i in ranked if v > 0), reverse=True, key=lambda r: r[0])
+	if not ranked:
+		print("\n  Nothing this character scores in %s." % slot)
+		return
+
+	print("\n  %s, best first:" % slot)
+	for value, item in ranked[:count]:
+		print("    %-40s %8d" % (item.name[:40], value))
+		named = set(item.bonuses)
+		if item.ability and item.abilityCounted:
+			named |= set(item.ability.bonuses)
+		rows = sorted(((bonusWorth(item, b, model), b) for b in named
+					   if abs(bonusWorth(item, b, model)) >= 1), reverse=True)
+		shown = rows[:detail] + [row for row in rows[detail:] if row[0] < 0]
+		for worth, bonus in shown:
+			print("       %-37s %8d" % (bonus[:37], worth))
+		rest = sum(worth for worth, _ in rows[detail:] if worth > 0)
+		if rest:
+			print("       %-37s %8d" % ("... everything else", rest))
+		if item.ability and not item.abilityCounted:
+			print("       %-37s %8s" % ("(%s not worth using)" % item.ability.name[:24], "-"))
 
 def evalItems(itemList, slot=None):
 	"""Side by side for Items you already have in hand, best first.

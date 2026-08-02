@@ -599,33 +599,6 @@ class Model:
 
 		self.stats["allAttacks/s"].sort(reverse=True)
 
-		# What your main attack swings for is a fact about your skill bar, not a
-		# preference, and the generated skill data already knows it - name the
-		# skill and the level and it is looked up. skillData is imported here
-		# rather than at the top because it is six thousand lines and only a
-		# model that names an attack needs it.
-		if not self.getStat("main attack %") and self.getStat("main attack"):
-			# One (skill, level) pair, or a list of them where the modifiers
-			# that hang off the attack also carry weapon damage. Most do not -
-			# Onslaught's Open Wounds and Endless Rage add bleed and a bleed
-			# duration, not a bigger swing - but Blood Burst adds 85%, so the
-			# list is worth accepting rather than assuming the base is all of it.
-			stated = self.getStat("main attack")
-			if stated and isinstance(stated[0], str):
-				stated = [stated]
-			import skillData                       # noqa: F401 - registers the skills
-			total, named = 0, []
-			for name, level in stated:
-				skill = Skill.skills.get(name)
-				if skill is None:
-					print("  WARNING: no skill called %r - it adds nothing to 'main attack'" % name)
-					continue
-				part = skill.getAbility(level).gb("weapon damage %")
-				total += part
-				named.append("%s at %d%s" % (name, level, "" if part else " (+0)"))
-			if named:
-				self.stats["main attack %"] = total
-				print("  main attack %%: %g  (%s)" % (total, ", ".join(named)))
 
 		if not "fight length" in self.stats:
 			self.stats["fight length"] = 30
@@ -869,6 +842,48 @@ class Model:
 			self.bonuses["attack opportunity cost"] = -self.get("weapon damage %")
 		print("  weapon damage %%: %.2f  -> attack opportunity cost %.2f"
 			  % (self.get("weapon damage %"), self.get("attack opportunity cost")))
+
+		# What your main attack swings for is a fact about your skill bar, not a
+		# preference, and the generated skill data already knows it - name the
+		# skill and the level and it is looked up. skillData is imported here
+		# rather than at the top because it is six thousand lines and only a
+		# model that names an attack needs it.
+		if not self.getStat("main attack %") and self.getStat("main attack"):
+			# One (skill, level) pair, or a list of them where the modifiers
+			# that hang off the attack also carry weapon damage. Most do not -
+			# Onslaught's Open Wounds and Endless Rage add bleed and a bleed
+			# duration, not a bigger swing - but Blood Burst adds 85%, so the
+			# list is worth accepting rather than assuming the base is all of it.
+			stated = self.getStat("main attack")
+			if stated and isinstance(stated[0], str):
+				stated = [stated]
+			import skillData                       # noqa: F401 - registers the skills
+			total, extra, named = 0, 0, []
+			for name, level in stated:
+				skill = Skill.skills.get(name)
+				if skill is None:
+					print("  WARNING: no skill called %r - it adds nothing to 'main attack'" % name)
+					continue
+				ability = skill.getAbility(level)
+				total += ability.gb("weapon damage %")
+				# A skill's own flat damage is not on your character sheet. The
+				# sheet carries what gear and auras add to every attack; damage
+				# a skill or one of its modifiers adds lands only when that skill
+				# lands - Open Wounds bleeds for Onslaught and for nothing else.
+				# It is still part of the swing, so it is still part of what
+				# skipping the swing costs.
+				for bonus, value in ability.bonuses.items():
+					if bonus in damages and self.get(bonus):
+						extra += self.calculateBonus(bonus, value)
+				named.append("%s at %d" % (name, level))
+			if named:
+				# said in weapon damage % so the whole cost stays one number in
+				# one currency; the weight is what a percent of a swing is worth
+				perPercent = self.get("weapon damage %")
+				self.stats["main attack %"] = total + (extra / perPercent if perPercent else 0)
+				print("  main attack %%: %.1f  (%s: %g%% weapon damage plus %.0f of its own "
+					  "damage, which the sheet does not carry)"
+					  % (self.stats["main attack %"], ", ".join(named), total, extra))
 
 		if not self.get("weapon damage %"):
 			print("  WARNING: nothing on the sheet for weapon damage to scale, so pressing "

@@ -10,28 +10,28 @@ stats = {
 			.75,  # shadow
 		],
 
-		"hits/s":4,
+		"hits/s":2,
 		"low healths/s":1.0/30, # total guesswork.
 
 		"physique":375,
-		"cunning":500,
+		"cunning":600,
 		"spirit":200,
 
-		"offense":1150,
-		"defense":750,
+		"offense":1239,
+		"defense":810,
 
-		"health":4000,
-		"health/s":50,
+		"health":5000,
+		"health/s":110,
 
 		"armor":318,
 
-		"energy":1200,
+		"energy":1300,
 		"energy/s":8,
 
-		# "physical %":0, "physical":0,
-		"pierce %":200, "pierce":350,
-		"bleed %":300, "bleed":275,
-		"cold %":50, "cold":20,
+		"physical %":125, "physical":0,
+		"pierce %":300, "pierce":500,
+		"bleed %":450, "bleed":350,
+		"cold %":100, "cold":50,
 
 		"fight length":30,
 
@@ -42,17 +42,11 @@ stats = {
 		# blacklist omitted - defaults to empty
 	}
 
-# One number per damage type saying how much you care about it. The flat vs %
-# split is derived from the sheet above, which prices them very differently to
-# the old 1:1 weights:
-#   pierce  350 flat / 200%  ->  a % point is worth a little more than a flat one
-#   bleed   275 flat / 300%  ->  a flat point is worth ~1.45x a % point
-#   cold     20 flat /  50%  ->  a flat point is worth 7.5x a % point,
-#                                there being almost no cold damage to scale up
 damagePriority = {
 		"pierce": 15,
-		"bleed": 10,
-		"cold": 7.5,
+		"physical": 10,
+		"bleed": 7.5,
+		"cold": 5,
 	}
 
 weights = {
@@ -62,11 +56,6 @@ weights = {
 		"offense": 5, # "offense %": ,
 
 		"damage":1,
-
-		# No physical on the sheet, so the flat/% split cannot be derived and
-		# these stay explicit. If this character does carry physical damage, add
-		# it to stats above and move this into damagePriority.
-		"physical": 10, "physical %": 10,
 
 		"bleed duration":5,
 

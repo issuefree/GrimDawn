@@ -135,22 +135,45 @@ def source(names):
     import itemgen
     from gddata import Database
 
-    gear = gearIndex()
     db = Database()
+    # Components and augments are not in the gear index - that is built from the
+    # weapon and armour classes - so dumpGear("blessed steel") reported no such
+    # item while compareGear found it, because resolve() looks in itemData
+    # first and only falls back to the index. Both are searched now.
+    parts = {}
+    for recordClass in ("ItemRelic", "ItemEnchantment"):
+        for name, record in itemgen.collect(db, recordClass).items():
+            parts.setdefault(_key(name), (name, record))
+    gear = gearIndex()
+
     for name in names:
         wanted = _key(name)
-        hit = gear.get(wanted)
-        if hit is None:
-            candidates = [v for k, v in gear.items() if wanted in k]
-            hit = min(candidates, key=lambda v: len(v[0])) if candidates else None
-        if not hit:
-            print("  no item found called %r" % name)
-            continue
-        full, path = hit
-        record = db.read(path)
-        print(itemgen.itemLiteral(full, itemgen.itemBonuses(record, db),
-                                  itemgen.CLASS_SLOTS.get(record.get("Class"), "") or [],
-                                  itemgen.grantedAbility(record, db)))
+        hit = _match(parts, wanted)
+        if hit:
+            full, record = hit
+        else:
+            hit = _match(gear, wanted)
+            if not hit:
+                print("  no item found called %r" % name)
+                continue
+            full, path = hit
+            record = db.read(path)
+        # a piece of gear is one slot named by its class; a component fits
+        # several and says which by the flags on its own record
+        where = (itemgen.CLASS_SLOTS.get(record.get("Class"), "")
+                 or itemgen.locationsFor(record) or [])
+        print(itemgen.itemLiteral(full, itemgen.itemBonuses(record, db), where,
+                                  itemgen.grantedAbility(record, db),
+                                  itemgen.levelFor(record)))
+
+
+def _match(index, wanted):
+    """Exact key, else the shortest name containing it."""
+    hit = index.get(wanted)
+    if hit is not None:
+        return hit
+    candidates = [v for k, v in index.items() if wanted in k]
+    return min(candidates, key=lambda v: len(v[0])) if candidates else None
 
 
 def _ability(spec):

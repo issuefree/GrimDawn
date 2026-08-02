@@ -601,12 +601,17 @@ class Model:
 		bookkeeping of what the rest of the bar spends, which is a lot of
 		tracking for a number nobody can hold accurate.
 
-		Regeneration needs none of it. It is per second already, it does not
-		care how long the fight is, and being the sustainable rate it is the
-		honest bound on a skill you intend to lean on. It is conservative on a
-		short fight, where the pool really would let you burst - a per-second
-		score cannot express a burst, and pretending otherwise is what made
-		fight length load-bearing.
+		Regeneration needs none of it. It is per second already and it does not
+		care how long the fight is.
+
+		Read it as a tolerance for spending energy rather than as a literal
+		budget, and it is better than it looks: it leaves out the pool, which
+		understates what a skill can afford, and it leaves out every other skill
+		drawing on that pool, which overstates it. The two omissions pull
+		opposite ways. That is why this is not worth "fixing" by adding the pool
+		back - doing so restores one error while leaving the other, and buys
+		back the dependence on fight length that made the figure meaningless
+		between a ten second pack and a three minute boss.
 
 		Override with "energy for skills/s" where regeneration is not the story
 		- an energy leech build sustains on something this cannot see.

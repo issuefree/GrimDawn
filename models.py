@@ -599,16 +599,25 @@ class Model:
 
 		self.stats["allAttacks/s"].sort(reverse=True)
 
-		# this should eventually be calculated
+		# What a cast gives up is a swing, so it is priced in the same currency a
+		# swing is: whatever a point of weapon damage % is worth to you. The two
+		# are one number and cannot be set apart.
 		if self.get("attack opportunity cost") == 0:
 			self.bonuses["attack opportunity cost"] = -self.get("weapon damage %")
 			print("  attack opportunity cost", self.bonuses["attack opportunity cost"])
 
-		# What pressing a granted skill actually interrupts. Unstated it is a
-		# bare default attack, which is generous to any component skill that
-		# swings for more than one - and most builds attack with a mastery skill
-		# worth a good deal more than that.
-		if not self.getStat("main attack %") and self.get("weapon damage %"):
+		if not self.get("weapon damage %"):
+			# and with no weight on weapon damage there is no currency to charge
+			# in, so every button an item grants becomes free to press. That is
+			# rarely what is meant - it was the state morena was in while every
+			# component skill was reading high.
+			print("  WARNING: no 'weapon damage %' weight, so pressing a granted skill "
+				  "costs nothing and every component skill scores as pure upside. "
+				  "'main attack %' has nothing to bite on either.")
+		elif not self.getStat("main attack %"):
+			# Unstated, a cast interrupts a bare default attack - generous to any
+			# component skill that swings for more, and most builds attack with a
+			# mastery skill worth a good deal more than one.
 			print("  note: no 'main attack %' - a component skill is priced against a bare "
 				  "100% swing, so one that beats that reads as an upgrade. Set it to what "
 				  "allAttacks/s[0] swings for.")

@@ -24,6 +24,10 @@ class Ability:
 
 		self.triggerTime = 0
 		self.effective = 0
+		# set by resolveTiming: the cooldown after the character's reduction, and
+		# the whole gap from one firing to the next
+		self.rechargeTime = 0
+		self.interval = 0
 		# enemies one cast lands on, after shape and playStyle - only meaningful
 		# for the attack types, and kept so a report can name the two factors
 		# behind `effective` separately
@@ -177,6 +181,8 @@ class Ability:
 				del self.bonuses["duration"]
 			return
 
+		self.resolveTiming(model)
+
 		targets = max(1, self.gc("targets"))
 		if self.gc("type") == "buff":
 			self.effective = self.getUpTime(model)*targets
@@ -269,9 +275,12 @@ class Ability:
 			targets = min(targets, devotionderive.MAX_TARGETS)
 
 			if self.gc("trigger") == "manual":
+				# one swing given up per cast, however many the cast hits - the
+				# divide cancels the targets that effective multiplies back in.
+				# A skill with no cooldown used to be handed a one second one
+				# here; resolveTiming floors the interval at the attack rate
+				# instead, which is the thing that actually limits pressing it.
 				self.bonuses["attack opportunity cost"] = 100/targets
-				if self.gc("recharge") == 0:
-					self.conditions["recharge"] = 1
 
 			self.targets = targets
 			self.effective = self.getNumTriggers(model, verbose)*targets/model.getStat("fight length")
@@ -315,6 +324,38 @@ class Ability:
 			for bonus, value in self.bonuses.pop("duration").items():
 				self.bonuses[bonus] = self.gb(bonus) + value
 
+	def resolveTiming(self, model):
+		"""Seconds from one firing to the next, and how much of that is cooldown.
+
+		Three things decide it and none of them used to be in one place.
+
+		The cooldown is the game's, less whatever the character's gear takes off
+		it. Grim Dawn's "% Reduced Skill Cooldown" is on some fifteen hundred
+		item records and nothing here read it, so a build wearing 30% of it was
+		scored as though every cooldown were full length - on this skill and on
+		every devotion proc with a recharge.
+
+		Then the gap: a proc waits for its trigger, and a skill you press waits
+		on you noticing it is ready, which is what minTriggerTime stands in for.
+
+		Then the floor, for a skill you press: you cannot press it more often
+		than you can swing. Without that a skill with no cooldown at all came out
+		at four casts a second on any character, so the old code gave one a flat
+		one second recharge instead - a number with nothing behind it. The real
+		limit is the character's own attack rate, and it says the right thing at
+		both ends: Brutal Slam's two second cooldown is untouched by it, and
+		Decapitate, which has no cooldown because it is meant to be used as your
+		attack, comes out at exactly your attack rate.
+		"""
+		reduction = min(90.0, float(model.getStat("reduce cooldown") or 0)) / 100.0
+		self.rechargeTime = self.gc("recharge") * (1.0 - reduction)
+		interval = self.rechargeTime + self.triggerTime
+		if self.gc("trigger") == "manual":
+			rate = float(model.getStat("attacks/s") or 0)
+			if rate:
+				interval = max(interval, 1.0 / rate)
+		self.interval = interval
+
 	def activeSeconds(self, ticks):
 		"""Seconds of a DoT that actually land, per application.
 
@@ -340,13 +381,15 @@ class Ability:
 		than the cooldown lands whole, and a very long one tends to the full
 		interval.
 		"""
-		recharge = self.gc("recharge")
-		if ticks <= recharge:
+		# the settled part of the interval - cooldown, plus anything the action
+		# rate floor added - against the part that is a wait for the trigger
+		fixed = max(0.0, self.interval - self.triggerTime)
+		if ticks <= fixed:
 			return ticks
 		if self.triggerTime <= 0:
 			# fires on every opportunity, so the interval is just the cooldown
-			return min(ticks, recharge) or ticks
-		return recharge + self.triggerTime * (1.0 - math.exp(-(ticks - recharge) / self.triggerTime))
+			return min(ticks, fixed) or ticks
+		return fixed + self.triggerTime * (1.0 - math.exp(-(ticks - fixed) / self.triggerTime))
 
 	def describe(self):
 		"""What this ability's `effective` means, in the units it is actually in.
@@ -418,7 +461,7 @@ class Ability:
 		fightRemaining = fightLen - self.triggerTime		
 		while fightRemaining >= 0:
 			up += min(max(self.gc("duration"), self.gc("lifespan")), fightRemaining)
-			fightRemaining -= max(self.gc("duration"), self.gc("recharge") + self.triggerTime) 
+			fightRemaining -= max(self.gc("duration"), self.interval)
 		return up/fightLen
 
 	#average over a number of fights
@@ -428,13 +471,14 @@ class Ability:
 		fightRemaining = model.getStat("fight length")*numFights - self.triggerTime		
 		while fightRemaining >= 0:
 			triggers += 1
-			fightRemaining -= self.gc("recharge") + self.triggerTime
+			fightRemaining -= self.interval
 
 		triggers = max(triggers, 1) # this will usually catch low health events which don't happen often. We'll calculate stats as if they happen once a fight.
 
 		if verbose:
 			print(self.name, "getNumTriggers")
-			print("   recharge", self.gc("recharge"))
+			print("   recharge", self.rechargeTime)
+			print("   interval", self.interval)
 			print("   triggerTime", self.triggerTime)
 			print("   fight length", model.stats["fight length"])
 			print("   total triggers", triggers)

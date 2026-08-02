@@ -18,8 +18,8 @@ gddata.Database.name.
 
     python devotion.py --regenerate
 """
-from gddata import (Database, firstOf, itemExtras, lastValue, procRecords,
-                    starBonuses)
+from gddata import (Database, firstOf, geometryFor, itemExtras, lastValue,
+                    procRecords, starBonuses)
 from devotiongen import dictLiteral, procBonuses, triggerAndChance
 
 # record flag -> the location name the optimiser filters on. The game says
@@ -124,6 +124,16 @@ def grantedAbility(record, db):
     conditions = {"type": kind,
                   "trigger": trigger or triggerFor(skillClass), "chance": chance or 1,
                   "skillClass": skillClass}
+    # The same geometry devotiongen emits, and for the same reason: how many
+    # enemies a skill reaches is worked out at scoring time from the area it
+    # covers. This was simply missing, so every skill an item granted was scored
+    # single-target - Brutal Slam states a 4.5 metre radius and was being given
+    # one enemy where the rule gives it nearly three.
+    geometry = geometryFor(records)
+    for key in ("radius", "projectiles", "sparkMaxNumber", "waveDistance",
+                "waveStartWidth", "waveEndWidth"):
+        if geometry.get(key):
+            conditions[key] = round(float(geometry[key]), 2)
     for field, name in (("skillCooldownTime", "recharge"), ("skillActiveDuration", "duration")):
         value = firstOf(records, field, 0)
         if value:

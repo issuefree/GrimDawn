@@ -143,7 +143,11 @@ def statVocabulary():
 				  "block %", "blocked damage %", "damage absorb %", "lifesteal %",
 				  "weapon damage %", "crit damage", "retaliation %", "pet damage %",
 				  "avoid melee", "avoid ranged", "elemental %", "elemental resist",
-				  "all damage %", "physical resist"})
+				  "all damage %", "physical resist",
+				  # % Reduced Skill Cooldown off the sheet. Ability.resolveTiming
+				  # takes it off every cooldown - item skills and devotion procs
+				  # alike - and it was not readable before.
+				  "reduce cooldown"})
 	for d in damages:
 		vocab.update({d, d + " %", d + " duration"})
 	for r in resists:

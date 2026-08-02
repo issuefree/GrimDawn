@@ -36,6 +36,10 @@ CONTROL_STATS = {
 	# by the code already and neither was listed here, so a model that set one
 	# was told it was an unknown stat and never read.
 	"enemy density", "enemy defense",
+	# how many are actually in front of you, which caps what any one cast can
+	# reach. Density cannot say it: a chain jumps to a fixed number of separate
+	# targets however sparse the room, and against a boss it jumps to one.
+	"enemies",
 }
 
 

@@ -122,15 +122,6 @@ class Ability:
 		# radius says who it lands on - you and your pets - so deriving targets
 		# from it multiplied the player's own armour and damage bonuses by the
 		# size of the circle. Dying God's 12m radius was worth four of itself.
-		if "targets" not in self.conditions and self.gc("type") in ("attack", "wps", "aar"):
-			density = model.getStat("enemy density") or None
-			geometry = {k: self.gc(k) for k in
-						("radius", "projectiles", "sparkMaxNumber", "waveDistance",
-						 "waveStartWidth", "waveEndWidth") if self.gc(k)}
-			self.conditions["targets"] = devotionderive.targetsFor(
-				skillClass, geometry.get("radius", 0), geometry.get("projectiles", 0),
-				density, geometry)
-
 		# Some projectiles are worth less at the range you fight at than at the
 		# range they were built for. Applied to the damage rather than to
 		# targets: it is each hit that lands softer, not fewer of them.
@@ -198,7 +189,7 @@ class Ability:
 
 		self.resolveTiming(model)
 
-		targets = max(1, self.gc("targets"))
+		targets = max(1, self.derivedTargets(model))
 		if self.gc("type") == "buff":
 			self.effective = self.getUpTime(model)*targets
 			# print("buff uptime:", self.getUpTime(model))
@@ -338,6 +329,36 @@ class Ability:
 			# fold in as ordinary bonuses rather than being scaled again.
 			for bonus, value in self.bonuses.pop("duration").items():
 				self.bonuses[bonus] = self.gb(bonus) + value
+
+	def derivedTargets(self, model):
+		"""How many enemies one cast lands on, before the playStyle adjustment.
+
+		Worked out per evaluation rather than cached into conditions the way it
+		used to be. It is a property of the character as much as of the skill -
+		it reads enemy density - and caching it meant a model could only ever be
+		asked about one kind of fight, because resolveDerived runs once and
+		changing the density afterwards had no effect. Being able to score the
+		same build against a boss and against a pack is the whole point of
+		asking.
+
+		An ability that states targets outright keeps what it states.
+		"""
+		if "targets" in self.conditions:
+			return self.conditions["targets"]
+		if self.gc("type") not in ("attack", "wps", "aar"):
+			return 0
+		geometry = {k: self.gc(k) for k in
+					("radius", "projectiles", "sparkMaxNumber", "waveDistance",
+					 "waveStartWidth", "waveEndWidth") if self.gc(k)}
+		targets = devotionderive.targetsFor(
+			self.gc("skillClass"), geometry.get("radius", 0), geometry.get("projectiles", 0),
+			model.getStat("enemy density") or None, geometry)
+		# Density says how thickly they stand, not how many there are, and for a
+		# chain or a volley it says nothing at all - those hit a fixed number of
+		# separate targets however sparse the room. Against one enemy they hit
+		# one, so a count caps the lot.
+		limit = model.getStat("enemies")
+		return min(targets, limit) if limit else targets
 
 	def resolveTiming(self, model):
 		"""Seconds from one firing to the next, and how much of that is cooldown.

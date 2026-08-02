@@ -307,6 +307,57 @@ globalMetadata["startTime"] = time()
 
 DEFAULT_MODEL = "morena"
 
+def scoreAgainst(model, constellations, enemies):
+	"""Score a finished solution against a stated number of enemies.
+
+	Restores the model afterwards, and resets every constellation on the way in
+	and out, because a constellation caches what it scored and the whole point
+	here is that it scores differently.
+	"""
+	was = model.stats.get("enemies")
+	if enemies is None:
+		model.stats.pop("enemies", None)
+	else:
+		model.stats["enemies"] = enemies
+	for c in Constellation.constellations:
+		c.reset()
+	total = evaluateSolution(constellations, model)
+	each = [(c.name, c.evaluate(model)) for c in constellations]
+	if was is None:
+		model.stats.pop("enemies", None)
+	else:
+		model.stats["enemies"] = was
+	for c in Constellation.constellations:
+		c.reset()
+	return total, each
+
+
+def showBothFights(model, constellations):
+	"""The same build against one enemy, and against what the model fights.
+
+	These are two different fights and one number cannot hold both. The hardest
+	fight in the game is a single enemy; the commonest is a room of them. A
+	build tuned on an average of the two is tuned for a fight that never
+	happens, and the average also hides which way a solution leans - a devotion
+	that only pays off across a pack reads exactly like one that always pays.
+
+	So both are shown rather than blended. The right column is what the solver
+	optimised, from the model's own enemy density; the left is the same build
+	with only one thing to hit. The ratio between them is how much of a pick is
+	clear speed, and a pick at 1.0 is one a boss cannot take away from you.
+	"""
+	one, eachOne = scoreAgainst(model, constellations, 1)
+	many, eachMany = scoreAgainst(model, constellations, None)
+	if abs(one - many) < 1e-6:
+		return          # nothing in this solution cares how many there are
+
+	print("\n  Against one enemy, and against a pack:")
+	print("     %-38s %8s %8s %8s" % ("", "boss", "pack", "x"))
+	for (name, a), (_, b) in zip(eachOne, eachMany):
+		print("     %-38s %8d %8d %7.1f" % (name, a, b, (b / a) if a else 0))
+	print("     %-38s %8d %8d %7.1f" % ("TOTAL", one, many, (many / one) if one else 0))
+
+
 def showSolution(model, constellations, bonusCount=18):
 	"""Break a finished solution down: what it costs, what it buys, why.
 
@@ -336,6 +387,8 @@ def showSolution(model, constellations, bonusCount=18):
 			  % (c.name, len(c.stars), score, score / len(c.stars), spent,
 				 evaluateSolution(constellations[:i + 1], model),
 				 c.requires.short(), c.provides.short()))
+
+	showBothFights(model, constellations)
 
 	bonuses = getBonuses(constellations, model)
 	ranked = sorted(((evaluateBonuses(model, {name: value}), name, value)

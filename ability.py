@@ -324,7 +324,10 @@ class Ability:
 				if "triggered "+dam in self.bonuses:
 					if type(self.gb("triggered "+dam)) == type([]):
 						damage, ticks = self.bonuses["triggered "+dam]
-						self.bonuses["triggered "+dam] = damage*self.activeSeconds(ticks)
+						# a longer bleed is more bleed, but only as far as the
+						# next cast: activeSeconds takes it against the interval
+						self.bonuses["triggered "+dam] = damage*self.activeSeconds(
+							ticks * model.durationScale(dam))
 				
 		if self.gc("type") == "shield":
 			self.effective = self.getNumTriggers(model)
@@ -535,7 +538,7 @@ class Ability:
 			value = durationBonuses[bonus]
 			if type(value) == type([]):
 				damage, ticks = value
-				value = damage*self.activeSeconds(ticks)
+				value = damage*self.activeSeconds(ticks * model.durationScale(bonus))
 			self.bonuses[bonus] = value*self.effective
 			#reduce duration based damage as the foe may die due to other effects durring the duration
 			if bonus in ["triggered "+damage for damage in damages]:

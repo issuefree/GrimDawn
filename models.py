@@ -648,6 +648,20 @@ class Model:
 			swing += value
 		return swing / bare
 
+	def durationScale(self, damage):
+		"""How much longer a damage-over-time of this type runs on this character.
+
+		"+30% Bleed Duration" is +30% bleed damage when the bleed gets to finish,
+		and nothing at all when you reapply it before it does - which is why this
+		multiplies the duration rather than the damage, and lets whoever is
+		asking take the min against their own interval. Nothing read it before:
+		"bleed duration" was a name the vocabulary accepted and no code used.
+		"""
+		for prefix in ("triggered ", "pet "):
+			if damage.startswith(prefix):
+				damage = damage[len(prefix):]
+		return 1.0 + float(self.getStat(damage + " duration") or 0) / 100.0
+
 	def spareEnergy(self):
 		"""Energy a second a skill an item grants may spend.
 
@@ -1057,6 +1071,7 @@ class Model:
 		# comment beside it said was wrong.
 		if type(value) == type([]):
 			dotDps, seconds = value
+			seconds *= self.durationScale(bonus)
 			if bonus.startswith("pet "):
 				# A summon swings about once a second and spends a while walking
 				# to its next target; devotionderive measured both off the

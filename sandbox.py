@@ -148,29 +148,82 @@ def evalItemMods(location, itemType):
 		if item.value > 0:
 			print(item.evaluate(model, location, True))
 
-def evalItems(itemList):
-	items = []
-	for item in itemList:
-		if type(item) == type(""):
-			item = equipment[item]
-		items += [item]
-		item.evaluate(model)
-	items.sort(key=lambda i: i.value, reverse=True)
-	for item in items:
-		if item.value > 0:
-			print(item.evaluate(model, "", True))
+def evalItems(itemList, slot=None):
+	"""Side by side for Items you already have in hand, best first.
+
+	compareGear takes names and finds them; this takes the objects, for
+	something built here that the game has no record of.
+	"""
+	items = [equipment[i] if isinstance(i, str) else i for i in itemList]
+	where = [slot or (i.location if isinstance(i.location, str)
+					  else (i.location[0] if i.location else "")) for i in items]
+	scored = sorted(((item.evaluate(model, w), item, w) for item, w in zip(items, where)),
+					reverse=True, key=lambda row: row[0])
+	columns = [(item, {b: model.get(b) * (v[0] if isinstance(v, list) else v)
+					   for b, v in item.bonuses.items() if model.get(b)})
+			   for _, item, _ in scored]
+	bonuses = {b for _, worth in columns for b in worth}
+	rows = [(b, [worth.get(b, 0) for _, worth in columns])
+			for b in sorted(bonuses, key=lambda b: -max(w.get(b, 0) for _, w in columns))]
+	sideBySide([item.name for item, _ in columns], rows,
+			   [("slot", [w for _, _, w in scored]),
+				("TOTAL", [value for value, _, _ in scored])], width=18)
 
 
 
-def evalCon(c):
-	print(c.evaluate(model))
+def sideBySide(headers, rows, footers=(), label=24, width=14):
+	"""One column per thing, one row per bonus, biggest contribution first."""
+	width = max(width, max((len(h) for h in headers), default=width))
+	print("\n  %-*s %s" % (label, "", "  ".join("%*s" % (width, h) for h in headers)))
+	print("  %-*s %s" % (label, "", "  ".join("%*s" % (width, "-" * len(h)) for h in headers)))
+	for name, values in rows:
+		print("  %-*s %s" % (label, name[:label],
+							 "  ".join("%*s" % (width, _cell(v)) for v in values)))
+	for name, values in footers:
+		print("  %-*s %s" % (label, name[:label],
+							 "  ".join("%*s" % (width, _cell(v)) for v in values)))
 
-	for star in c.stars:
-		if star.ability:
-			print(star.ability.name, star.ability.effective)
-		for bonus in star.bonuses:
-			if model.get(bonus) != 0:
-				print(str(bonus).ljust(25), str(star.bonuses[bonus]).ljust(8), "\t", int(model.calculateBonus(bonus, star.bonuses[bonus])))
+
+def _cell(value):
+	if value == 0:
+		return "-"
+	return "%d" % value if isinstance(value, float) else str(value)
+
+
+def evalCon(*constellations):
+	"""What each constellation is worth to this character, and where from.
+
+		evalCon(falcon)
+		evalCon(falcon, owl)
+
+	Bonuses either one gives are listed together so the difference is one row
+	to read. Procs are folded in the way scoring folds them, and named
+	underneath with the share of the fight they are up for.
+	"""
+	columns = []
+	for c in constellations:
+		c.evaluate(model)      # scoring an ability writes its share into the stars
+		worth = {}
+		for star in c.stars:
+			for bonus, value in star.bonuses.items():
+				if bonus in model.bonuses:
+					worth[bonus] = worth.get(bonus, 0) + model.calculateBonus(bonus, value)
+		columns.append((c, {b: v for b, v in worth.items() if v}))
+
+	names = [c.name for c, _ in columns]
+	bonuses = {b for _, worth in columns for b in worth}
+	rows = [(b, [worth.get(b, 0) for _, worth in columns])
+			for b in sorted(bonuses, key=lambda b: -max(w.get(b, 0) for _, w in columns))]
+	footers = [("TOTAL", [c.evaluate(model) for c, _ in columns]),
+			   ("stars", [len(c.stars) for c, _ in columns]),
+			   ("per star", [c.evaluate(model) / len(c.stars) for c, _ in columns])]
+	sideBySide(names, rows, footers)
+
+	for c, _ in columns:
+		for star in c.stars:
+			if star.ability:
+				print("  %-24s %s up %.0f%% of the fight"
+					  % (c.name[:24], star.ability.name, 100 * star.ability.effective))
 
 # print(solutionPath(findBonus("stun %")))
 

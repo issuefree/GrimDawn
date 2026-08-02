@@ -31,19 +31,27 @@ SPIRIT_DURATION = 1 / 200.0 * 100
 # magicalDurationDamageEquation by 200, and both offensiveAbilityEquation and
 # defensiveAbilityEquation take half of the attribute. Nothing here is fitted.
 
-# Hitting and critting, from the same record. Two different thresholds, and
-# conflating them was wrong: pthThreshold1 is where you stop missing, not where
-# you start critting.
+# Hitting is the record's. normalPTHEquation is probabilityToHit/70, so PTH
+# under 70 is your chance to land the blow at all and 70 is certainty.
+PTH_HIT_THRESHOLD = 70.0
+
+# Critting is measured, because the record does not say it. Two readings off a
+# level 34 training dummy on Elite, same character, gear swapped between them:
 #
-# pthDamageModifier1 is 1.0. Reaching pthThreshold1 buys a hit at full damage
-# and nothing more, which is an ordinary hit. The critical tiers are 2 to 6,
-# pthThreshold2..6 = 90/105/120/130/135 paying 1.1/1.2/1.3/1.4/1.5, so a
-# critical starts at 90.
+#     offensive ability 846   PTH 105.6   5.3% critical
+#     offensive ability 1250  PTH 118.5  17.7% critical
 #
-# What settled it: a training dummy read 17.7% crit where treating 70 as the
-# crit threshold predicted 40.8%.
-PTH_HIT_THRESHOLD = 70.0     # normalPTHEquation is probabilityToHit/70
-PTH_CRIT_THRESHOLD = 90.0    # pthThreshold2, the first tier paying over 1.0
+# Fitting crit = (PTH - T)/W to those two, with nothing assumed, returns
+# T = 100.1 and W = 103.8. So PTH reads as a percentage where 100 is an
+# ordinary hit and every point above it is a point of critical chance.
+#
+# The pthThreshold ladder in the record - 70/90/105/120/130/135 paying
+# 1.0/1.1/1.2/1.3/1.4/1.5 - is not this. It sizes the damage bonus once a
+# critical happens, and two earlier guesses that it also gated the chance
+# (at 70, then at 90) predicted 40.8% and 24.0% where the game said 17.7%.
+# 100 appears nowhere in the record; it is here because it was measured twice.
+PTH_CRIT_BASE = 100.0
+PTH_CRIT_WINDOW = 100.0
 
 # Difficulty scaling, which is not per-enemy at all: gameengine.dbr names
 # records/game/balancingadjustment_mp+difficulty_enemies01.dbr as the
@@ -186,38 +194,24 @@ def probabilityToHit(offense, enemyDefense):
 def critChance(offense, enemyDefense):
 	"""Share of your hits that critical, as a fraction.
 
-	The roll lands uniformly in [0, PTH] and the tier is which thresholds it
-	clears, so a critical is the part of that range past pthThreshold2:
+	    hit  = min(1, PTH/70)          crit = (PTH - 100)/100
 
-	    hit  = min(1, PTH/70)          crit = max(0, 1 - 90/PTH)
+	so PTH 70 to 100 always lands and never criticals, and 200 would critical
+	every time. See PTH_CRIT_BASE for the two readings this comes off.
 
-	How the roll reads the thresholds is the one step the data does not state,
-	and it is known to be wrong by about a third. Measured: a sheet offensive
-	ability of 1250 against a level 34 training dummy on Elite - 484 defensive
-	ability by the game's own equation - reads 17.7% in game, where this
-	predicts 24.0%.
+	The residual is small and points the same way both times: against the 484
+	defensive ability the equation gives a level 34 dummy, this reads 0.3 and
+	0.8 of a point high. Solving instead for the defensive ability that would
+	make each reading exact gives 490 and 503 - agreeing with each other and
+	with the equation to within 3%, which is where the residual lives. Nothing
+	is fitted per character.
 
-	Three things could account for that and one reading cannot separate them:
-
-	  * the roll is not uniform. (PTH-100)/100 gives 18.5% here, but 100 is not
-	    a number that appears anywhere in the record, and fitting an invented
-	    constant to a single point is what this file has spent its time
-	    removing.
-	  * the dummy's defensive ability is not 484. For the uniform shape to hold
-	    it would have to be 720, which is a level 55 enemy, and the record says
-	    charLevel*1+2 with no defensive ability of its own.
-	  * the dummy's readout is diluted. It reports criticals as a share of
-	    damage events, and damage over time cannot critical - on a bleed build
-	    26% of events being bleed ticks reproduces 17.7% exactly from a true
-	    24%.
-
-	Until that is settled, a character with a measurement should state
-	"crit chance" outright; morena does. The threshold above is not in doubt.
+	It is very sensitive to the gap between the two abilities. morena criticals
+	17.7% of the time at 1250 offensive ability, 5.3% at 846, and not at all
+	below about 700.
 	"""
 	pth = probabilityToHit(offense, enemyDefense)
-	if pth <= PTH_CRIT_THRESHOLD:
-		return 0.0
-	return 1.0 - PTH_CRIT_THRESHOLD / pth
+	return min(1.0, max(0.0, (pth - PTH_CRIT_BASE) / PTH_CRIT_WINDOW))
 
 
 def hitChance(offense, enemyDefense):

@@ -20,12 +20,10 @@ stats = {
 		"cunning":600,
 		"spirit":200,
 
+		# Sheet value. crit chance is derived from this and comes out at the
+		# 17.7% the training dummy reports, so it is not pinned here - pinning
+		# it would go stale the moment this number changes.
 		"offense":1250,
-		# Measured off a training dummy rather than derived. The derivation
-		# from offense against the dummy's 484 defensive ability says 24.0%,
-		# and the game says this - see critChance in models.py for the three
-		# things that could account for the gap.
-		"crit chance":.177,
 		"defense":810,
 
 		"health":5000,

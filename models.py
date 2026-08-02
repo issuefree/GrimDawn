@@ -587,6 +587,33 @@ class Model:
 		self.saveSeedSolutions()
 
 
+	def spareEnergy(self):
+		"""Energy a second a skill an item grants may spend.
+
+		Regeneration, because it is the only rate that is true whatever the
+		fight looks like. This was regeneration plus the pool divided by fight
+		length, which is worse in two ways that matter more than the accuracy it
+		bought. It made fight length carry weight it cannot: a boss goes for
+		minutes and a trash pack for ten seconds, and the same pool spread over
+		those two gives budgets an order of magnitude apart. And amortising a
+		pool is a statement about spending it exactly once, which every skill
+		being scored would have to do separately - so the fix for that was
+		bookkeeping of what the rest of the bar spends, which is a lot of
+		tracking for a number nobody can hold accurate.
+
+		Regeneration needs none of it. It is per second already, it does not
+		care how long the fight is, and being the sustainable rate it is the
+		honest bound on a skill you intend to lean on. It is conservative on a
+		short fight, where the pool really would let you burst - a per-second
+		score cannot express a burst, and pretending otherwise is what made
+		fight length load-bearing.
+
+		Override with "energy for skills/s" where regeneration is not the story
+		- an energy leech build sustains on something this cannot see.
+		"""
+		stated = self.getStat("energy for skills/s")
+		return float(stated) if stated else float(self.getStat("energy/s") or 0)
+
 	def bonusToPercent(self, bonus):
 		return (1+self.getStat(bonus)/100.0)
 

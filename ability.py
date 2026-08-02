@@ -404,15 +404,22 @@ class Ability:
 		second is 165 a second against eight a second of regeneration. Nothing
 		checked, so it came out the best component in the slot by double.
 
-		What a fight affords is the regeneration plus the pool, since you may
-		end a fight empty. A skill that costs nothing is unconstrained.
+		What a fight affords is the regeneration plus the pool, since you may end
+		a fight empty - less whatever the rest of the build has already spoken
+		for. That subtraction is the point: items are scored one at a time, so
+		without it every candidate is handed the whole pool and told it may have
+		all of it, and a dozen skills each priced as sole owner of the energy
+		all read as affordable when only one of them is. The model works out
+		what your main attack costs and takes it off; anything else your
+		rotation burns is "energy committed/s", because nothing here can know it.
+
+		A skill that costs nothing is unconstrained.
 		"""
 		cost = -self.gb("energy")
 		if cost <= 0:
 			return 0.0
-		fight = float(model.getStat("fight length") or 0) or 1.0
-		budget = float(model.getStat("energy/s") or 0) + float(model.getStat("energy") or 0) / fight
-		return cost / budget if budget > 0 else 0.0
+		budget = model.spareEnergy()
+		return cost / budget if budget > 0 else float("inf")
 
 	def activeSeconds(self, ticks):
 		"""Seconds of a DoT that actually land, per application.

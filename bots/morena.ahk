@@ -2,15 +2,14 @@
 #SingleInstance
 #Include timlib.ahk
 
-rally	 	:= spell("a", 8000)
-burst	 	:= spell("s", 10000, 500)
-slam        := spell("q", 1000, 150)
-strike      := spell("w", 1750, 250)
-leap        := spell("d", 1500, 250)
-; blades      := spell("e ", 1500, 250)
-ring        := spell("f ", 1500, 150)
-cry         := spell("r", 4500, 250)
-greenpot    := spell("x", 6000, 150)
+rally	 	:= spell("a", 8000)			; buff and minor heal
+burst	 	:= spell("s", 10000, 500)   ; buff and minor heal
+sacred      := spell("q", 1500, 150)    ; strong single target and bebuff
+shadow      := spell("w", 1750, 250)    ; dash single target (fast)
+leap        := spell("d", 1500, 250)    ; dash multi target
+ring        := spell("f ", 1500, 150)   ; pbaoe
+cry         := spell("r", 4500, 250)    ; pbaoe debuff
+greenpot    := spell("x", 6000, 150)    ; restore energy
 
 ~*LButton::{
 	if WinActive("Grim Dawn") {
@@ -18,10 +17,9 @@ greenpot    := spell("x", 6000, 150)
 		clockL := 0
 		queueSpell(&queueL, rally, 250)
 		queueSpell(&queueL, burst, 250)
-		queueSpell(&queueL, strike, 500)
+		queueSpell(&queueL, shadow, 500)
 		queueSpell(&queueL, cry, 500)
-		queueSpell(&queueL, slam, 500)
-		; queueSpell(&queueL, blades, 500)
+		queueSpell(&queueL, sacred, 500)
 		queueSpell(&queueL, ring, 500)
 		queueSpell(&queueL, greenpot, 1500)
 
@@ -42,7 +40,7 @@ greenpot    := spell("x", 6000, 150)
 
 		while GetKeyState("RButton", "p") {	
 			processQueue(&queueR, &clockR)
-			SendInput "d"
+			SendInput leap.key
 		}
 	}
 }

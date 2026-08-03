@@ -334,4 +334,4 @@ def evalCon(*constellations):
 # evalCon(tsunami, assassin)
 evalItemMods("medal", components)
 # dumpGear("vicious spikes")
-# evalItems("vicious spikes")
+evalItems("vicious spikes")

@@ -88,7 +88,7 @@ weights = {
 		"acid resist":5,
 		"chaos resist":0,
 		"vitality resist":0,
-		"aether reist":25,
+		"aether resist":25,
 
 
 		"block %": 100,

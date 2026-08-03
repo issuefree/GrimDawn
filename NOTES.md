@@ -92,6 +92,29 @@ of `lochlan/lochlan.py` for what they said.
 says which skill modifies which. The `onslaught1/2/3` naming plus `isCircular`
 would give them.
 
+## Reading skills out of the save files
+
+`savefile.py` decodes a player.gdc header - name, mastery pair and level - and
+that much works for all eleven characters. The body does not.
+
+The obfuscation is understood and implemented: the first word is a seed XORed
+with 0x55555555, a 256-entry table is built from it by rotating right one bit
+and multiplying by 39916801, and every read XORs against a running key which is
+then advanced by table[b] for each ciphertext byte consumed. The header proves
+it - `tagSkillClassName0207` does not fall out of a wrong key.
+
+What is not understood is what follows the header. Blocks should start with a
+small id and a length; nothing plausible appears at any offset, under any
+combination of key-updating on the id and length, and a byte-by-byte scan of
+the whole file finds no printable string at all - in a file that certainly
+contains item record paths. So the key state diverges at the header boundary in
+a way the header itself gives no sign of. Candidates not yet tried: extra
+header fields in format version 2, or a second seed for the body.
+
+Worth finishing. It would take transcription out of the loop entirely - skills,
+devotions and gear, not just the level - and the level check it already does
+caught gwyr's model sitting a level behind.
+
 ## Models that do not load
 
 `kieri` and `lachesis` state no `devotionPoints`, which is not a thing that can

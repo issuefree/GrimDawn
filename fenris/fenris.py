@@ -30,30 +30,30 @@ stats = {
 		"hits/s":4,
 		"low healths/s":1.0/30, # total guesswork.
 
-		"physique":500,
-		"cunning":500,
+		"physique":600,
+		"cunning":600,
 		"spirit":300,
 
-		"offense":1000,
-		"defense":1000,
+		"offense":1250,
+		"defense":1100,
 
 		"health":6000,
-		"health/s":35,
+		"health/s":50,
 
-		"armor":392,
+		"armor":500,
 
-		"energy":2000,
-		"energy/s":18,
+		"energy":1500,
+		"energy/s":14,
 
-		"physical %":75, "physical":0,
-		"pierce %":150, "pierce":100,
-		"bleed %":500, "bleed":500,
-		"chaos %":300, "chaos":300,
+		"physical %":350, "physical":750,
+		"pierce %":200, "pierce":0,
+		"bleed %":650, "bleed":1500,
+		"chaos %":350, "chaos":400,
 
 		"fight length":30,
 
-		"playStyle":"tank",
-		"weapons":["sword", "axe", "dagger", "mace", "scepter", "spear", "twohand"],
+		"playStyle":"melee",
+		# "weapons":["sword", "axe", "dagger", "mace", "scepter", "spear", "twohand"],
 		"blacklist":[
 			# manticore, manticoreAcidSpray# I'm not sure it makes sense in this build. Not many attacks to bind it to and the stats on the constellation aren't that good.
 		]
@@ -63,20 +63,25 @@ stats = {
 # flat-versus-percent split comes off the sheet - which is the part that cannot
 # be done by hand and the part the four pairs below were getting wrong.
 #
-# These four are the halves of the pairs they replace, so the preference is
-# unchanged and only the split moves:
+# These four are the halves of the pairs they replaced, so the preference is
+# unchanged and only the split moves. Against the current sheet:
 #
-#     physical    5 / 5     ->   4.88 / 0.00
-#     pierce     10 / 10    ->  11.70 / 2.58
-#     bleed      15 / 15    ->   3.57 / 2.15
-#     chaos      15 / 15    ->  20.85 / 11.59
+#     physical    5    ->   5.05 / 5.45
+#     pierce     10    ->   7.91 / 0.00
+#     bleed      15    ->   2.49 / 3.63
+#     chaos      15    ->  12.84 / 8.71
 #
-# physical % goes to nothing because the sheet says 0 flat physical, and 75%
-# of nothing is nothing. bleed drops fourfold because it is a damage over time
-# and he swings three times a second against a three second bleed, so he
-# overwrites eight ninths of it before it lands - his triggered bleed is
-# untouched by that and goes up, to 10.72, because a devotion's bleed is not
-# reapplied by his swinging.
+# pierce % is nothing because the sheet says 0 flat pierce, and 200% of
+# nothing is nothing. The priority is not wasted - the 7.91 still prices flat
+# pierce off a devotion - but if he does carry pierce damage, the sheet is
+# missing it.
+#
+# bleed is the low one at 2.49 despite 1500 flat and a priority of 15, because
+# it is a damage over time: he swings three times a second against a three
+# second bleed, so eight ninths of each application is overwritten before it
+# lands. His triggered bleed is untouched by that and comes out far higher,
+# because a devotion's bleed is not reapplied by his swinging - which is why
+# his solution buys 3295 of it.
 damagePriority = {
 		"physical":5,
 		"pierce":10,
@@ -92,12 +97,9 @@ weights = {
 		# rather than chosen; state it here if he really does value a swing at
 		# three times what it is worth.
 		#
-		# "weapon damage %" was 7.5 and derives at 30.71: one percent of the
+		# "weapon damage %" was 7.5 and derives at 42.19: one percent of the
 		# flat damage on the sheet, over attacks/s.
 		"attack speed":10,
-		"cast speed":7.5,
-
-		"offense": 20, # "offense %": ,
 
 		# not a split of anything, so not a priority
 		"bleed duration":5,

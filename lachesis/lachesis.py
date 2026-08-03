@@ -1,4 +1,17 @@
+# python lachesis/lachesis.py [--budget 30] [--seeds 10] [--exhaustive]
+# Exits here rather than falling through; see devotion.runModelFile for why.
+if __name__ == "__main__":
+	import os, sys
+	sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+	import devotion
+	sys.exit(devotion.runModelFile(__file__))
+
 stats =	{
+		# Character level. Enemy defence follows from it and from the difficulty,
+		# and crit chance follows from that against your offensive ability - so
+		# without it every crit-triggered proc scores zero. It also decides which
+		# gear evalItemMods will show you.
+		"level":63,
 		"attacks/s":3.5,
 		"allAttacks/s":[
 			3.5, # sigil

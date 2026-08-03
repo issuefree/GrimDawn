@@ -9,7 +9,7 @@ if __name__ == "__main__":
 devotionPoints = 20
 
 stats = {
-		"level":37,
+		"level":38,
 		"difficulty":"normal",
 
 		"physique":449,

@@ -1,6 +1,19 @@
+# python pakse/pakse.py [--budget 30] [--seeds 10] [--exhaustive]
+# Exits here rather than falling through; see devotion.runModelFile for why.
+if __name__ == "__main__":
+	import os, sys
+	sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+	import devotion
+	sys.exit(devotion.runModelFile(__file__))
+
 devotionPoints = 28
 
 stats = {
+		# Character level. Enemy defence follows from it and from the difficulty,
+		# and crit chance follows from that against your offensive ability - so
+		# without it every crit-triggered proc scores zero. It also decides which
+		# gear evalItemMods will show you.
+		"level":65,
 		"attacks/s":2,
 		"allAttacks/s":[
 			1, # main attack, half value due to spamming abilities

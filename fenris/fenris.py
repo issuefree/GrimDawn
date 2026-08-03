@@ -9,6 +9,11 @@ if __name__ == "__main__":
 devotionPoints = 20
 
 stats = {
+		# Character level. Enemy defence follows from it and from the difficulty,
+		# and crit chance follows from that against your offensive ability - so
+		# without it every crit-triggered proc scores zero. It also decides which
+		# gear evalItemMods will show you.
+		"level":43,
 		"attacks/s":3,
 		"allAttacks/s":[
 			1.5, # main attack (taking it down a notch due to using other abilities etc)

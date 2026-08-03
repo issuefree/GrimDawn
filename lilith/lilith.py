@@ -1,6 +1,19 @@
+# python lilith/lilith.py [--budget 30] [--seeds 10] [--exhaustive]
+# Exits here rather than falling through; see devotion.runModelFile for why.
+if __name__ == "__main__":
+	import os, sys
+	sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+	import devotion
+	sys.exit(devotion.runModelFile(__file__))
+
 devotionPoints = 45
 
 stats = {
+		# Character level. Enemy defence follows from it and from the difficulty,
+		# and crit chance follows from that against your offensive ability - so
+		# without it every crit-triggered proc scores zero. It also decides which
+		# gear evalItemMods will show you.
+		"level":70,
 		# estimate how frequent combat events are for calculating dynamic stats and abilities
 		"attacks/s":2,
 		"allAttacks/s":[
@@ -103,7 +116,7 @@ weights = {
 		"chaos resist":2.5,
 		"bleed resist":0,
 		"aether resist":0.5,
-		"physiacl resist":25,
+		"physical resist":25,
 
 		"defense":.5,
 

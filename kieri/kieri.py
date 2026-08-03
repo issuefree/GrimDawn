@@ -1,3 +1,11 @@
+# python kieri/kieri.py [--budget 30] [--seeds 10] [--exhaustive]
+# Exits here rather than falling through; see devotion.runModelFile for why.
+if __name__ == "__main__":
+	import os, sys
+	sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+	import devotion
+	sys.exit(devotion.runModelFile(__file__))
+
 weights = {
 		"armor":.25,
 		"attack speed":40, 
@@ -34,6 +42,11 @@ weights = {
 		"weapon damage %":25, 
 	}
 stats =	{
+		# Character level. Enemy defence follows from it and from the difficulty,
+		# and crit chance follows from that against your offensive ability - so
+		# without it every crit-triggered proc scores zero. It also decides which
+		# gear evalItemMods will show you.
+		"level":33,
 		# estimate how frequent combat events are for calculating dynamic stats and abilities
 		"attacks/s":3,		
 		"hits/s":.25,

@@ -166,7 +166,10 @@ def statVocabulary():
 				  # weapon damage of the attack you actually swing with, which is
 				  # what a granted skill interrupts and has to beat. Name the
 				  # skill as ("Cadence", 12) and the percentage is looked up.
-				  "main attack %", "main attack",
+				  # and how many enemies that swing reaches, since giving it up
+				  # costs all of them. Derived from the named skill's geometry;
+				  # set this only for an attack the skill data does not describe.
+				  "main attack %", "main attack", "main attack targets",
 				  # energy a second a granted skill may spend, when regeneration
 				  # is not the story - a leech build sustains on something the
 				  # sheet's regen figure does not show

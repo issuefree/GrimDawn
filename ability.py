@@ -203,96 +203,15 @@ class Ability:
 
 		self.resolveTiming(model)
 
-		targets = max(1, self.derivedTargets(model))
 		if self.gc("type") == "buff":
-			self.effective = self.getUpTime(model)*targets
+			self.effective = self.getUpTime(model)*max(1, self.derivedTargets(model))
 			# print("buff uptime:", self.getUpTime(model))
 		if self.gc("type") == "attack" or self.gc("type") == "wps" or self.gc("type") == "aar":
 
 			if self.gc("shape") == "???":
 				print("    Shape unknown for", self.name)
 
-			if model.getStat("playStyle") == "ranged":
-				# Characters who try to keep enemies as far away as possible. Often kiting.
-				# Optimal range 10+ yards
-				# Ground target abilities will often miss due to mobility.
-				# Circle is strong due to it hitting the point of the enemy spear where most enemies will clump.
-				# Cone/line abilities may not hit many enemies due to long range.
-				# pbaoe abilities may be of limited value
-				if self.gc("shape") == "cone" or self.gc("shape") == "line":
-					targets = targets * .75
-				elif self.gc("shape") == "ground":
-					targets = targets * .5
-				elif self.gc("shape") == "circle":
-					pass
-				elif self.gc("shape") == "pbaoe":
-					targets = targets * .125
-				elif self.gc("shape") == "melee":
-					targets = targets * .05
-
-			elif model.getStat("playStyle") == "shortranged":
-				# Characters who have short ranged abilities and try to keep monsters from hittim him but kiting is minimal and mostly for the purposes of clumping.
-				# 	Low mobility and close range tend to make crowd control common. Lots of slows and stuns.
-				# Optimal range 5-10 yards
-				# Ground target abilities are strong due to clumping and funneling.
-				# Circle is strong due to clumping and funneling.
-				# Cone/line abilities should have the desired effect.
-				# pbaoe abilities aren't ideal if they're very short ranged.
-				if self.gc("shape") == "cone" or self.gc("shape") == "line":
-					pass
-				elif self.gc("shape") == "ground":
-					targets = targets * 1.25
-				elif self.gc("shape") == "circle":
-					targets = targets * 1.25
-				elif self.gc("shape") == "pbaoe":
-					targets = targets * .75
-				elif self.gc("shape") == "melee":
-					targets = targets * .1
-
-			elif model.getStat("playStyle") == "melee":
-				# Characters who engage in melee but aim to kill fast and minimize getting surrounded or take a beating.
-				# Optimal range is melee but not surrounded.
-				# Ground target abilities are strong due to melee range and not getting surrounded. 
-				#	Mobility is required so value may be somewhat limited.
-				# Circle is strong due to clumping.
-				# Cone/Line abilities are ideal due to keeping enemies close but on one side.
-				# pbaoe abilities are strong but not ideal due to trying not to get surrounded.
-				if self.gc("shape") == "cone" or self.gc("shape") == "line":
-					targets = targets * 1.33
-				elif self.gc("shape") == "ground":
-					pass
-				elif self.gc("shape") == "circle":
-					targets = targets * 1.25
-				elif self.gc("shape") == "pbaoe":
-					pass
-				elif self.gc("shape") == "melee":
-					pass
-
-			elif model.getStat("playStyle") == "tank":
-				# Characters who run into the fray and try to take hits. Often retaliation based.
-				# Optimal range is all enemies up close and personal.
-				# Ground target abilities are strong due to low mobility and enemy gathering. Not ideal as surrounding can spread them out.
-				# Circle is strong due to clumping and gathering.
-				# Cone/Line abilities are decent but similar to ground target, enemies can be spread in a lot of directions.
-				# pbaoe are ideal.
-				if self.gc("shape") == "cone" or self.gc("shape") == "line":
-					pass
-				elif self.gc("shape") == "ground":
-					pass
-				elif self.gc("shape") == "circle":
-					pass
-				elif self.gc("shape") == "pbaoe":
-					targets = targets * 1.5
-				elif self.gc("shape") == "melee":
-					pass
-
-			# MAX_TARGETS is the bound on how many enemies one proc realistically
-			# hits, and the playStyle adjustment above has to live under it rather
-			# than on top of it. Applying the cap in targetsFor and then
-			# multiplying by 1.5 for a tank's pbaoe put Tainted Eruption, Blind
-			# Fury and Reckless Tempest on six enemies apiece against a stated
-			# ceiling of four.
-			targets = min(targets, devotionderive.MAX_TARGETS)
+			targets = self.effectiveTargets(model)
 
 			if self.gc("trigger") == "manual":
 				# one swing given up per cast, however many the cast hits - the
@@ -300,7 +219,15 @@ class Ability:
 				# A skill with no cooldown used to be handed a one second one
 				# here; resolveTiming floors the interval at the attack rate
 				# instead, which is the thing that actually limits pressing it.
-				self.bonuses["attack opportunity cost"] = self.mainAttackPercent(model)/targets
+				#
+				# And the swing is charged across everything it would have hit.
+				# Both sides of the trade are area effects or neither is: a cast
+				# that lands on four was being credited on four while the attack
+				# it displaced was charged on one, so any build whose own attack
+				# cleaves read every granted skill as free area damage.
+				self.bonuses["attack opportunity cost"] = (
+					self.mainAttackPercent(model)
+					* model.mainAttackTargets() / targets)
 
 			self.targets = targets
 			self.effective = self.getNumTriggers(model, verbose)*targets/model.getStat("fight length")
@@ -326,7 +253,7 @@ class Ability:
 						# next cast: activeSeconds takes it against the interval
 						self.bonuses["triggered "+dam] = damage*self.activeSeconds(
 							ticks * model.durationScale(dam))
-				
+
 		if self.gc("type") == "shield":
 			self.effective = self.getNumTriggers(model)
 		if self.gc("type") == "heal":
@@ -347,6 +274,114 @@ class Ability:
 			for bonus, value in self.bonuses.pop("duration").items():
 				self.bonuses[bonus] = self.gb(bonus) + value
 
+	def effectiveTargets(self, model):
+		"""Enemies one cast lands on, after shape, playStyle and the two caps.
+
+		Split out from calculateEffective because it is asked twice now: once
+		for the cast being scored, and once for the attack that cast displaces.
+		Measuring those two different ways is what made an area skill look like
+		free damage.
+		"""
+		targets = max(1, self.derivedTargets(model))
+		# Read rather than gc("shape"): resolveDerived fills that in, and the
+		# main attack is asked for its targets without ever being scored. Only
+		# where there is a class to read it from, the same condition
+		# resolveDerived applies - a hand-written ability with neither keeps the
+		# nothing it had rather than being handed a circle.
+		shape = self.gc("shape") or (self.gc("skillClass")
+									 and devotionderive.shapeFor(self.gc("skillClass")))
+
+		if model.getStat("playStyle") == "ranged":
+			# Characters who try to keep enemies as far away as possible. Often kiting.
+			# Optimal range 10+ yards
+			# Ground target abilities will often miss due to mobility.
+			# Circle is strong due to it hitting the point of the enemy spear where most enemies will clump.
+			# Cone/line abilities may not hit many enemies due to long range.
+			# pbaoe abilities may be of limited value
+			if shape == "cone" or shape == "line":
+				targets = targets * .75
+			elif shape == "ground":
+				targets = targets * .5
+			elif shape == "circle":
+				pass
+			elif shape == "pbaoe":
+				targets = targets * .125
+			elif shape == "melee":
+				targets = targets * .05
+
+		elif model.getStat("playStyle") == "shortranged":
+			# Characters who have short ranged abilities and try to keep monsters from hittim him but kiting is minimal and mostly for the purposes of clumping.
+			# 	Low mobility and close range tend to make crowd control common. Lots of slows and stuns.
+			# Optimal range 5-10 yards
+			# Ground target abilities are strong due to clumping and funneling.
+			# Circle is strong due to clumping and funneling.
+			# Cone/line abilities should have the desired effect.
+			# pbaoe abilities aren't ideal if they're very short ranged.
+			if shape == "cone" or shape == "line":
+				pass
+			elif shape == "ground":
+				targets = targets * 1.25
+			elif shape == "circle":
+				targets = targets * 1.25
+			elif shape == "pbaoe":
+				targets = targets * .75
+			elif shape == "melee":
+				targets = targets * .1
+
+		elif model.getStat("playStyle") == "melee":
+			# Characters who engage in melee but aim to kill fast and minimize getting surrounded or take a beating.
+			# Optimal range is melee but not surrounded.
+			# Ground target abilities are strong due to melee range and not getting surrounded. 
+			#	Mobility is required so value may be somewhat limited.
+			# Circle is strong due to clumping.
+			# Cone/Line abilities are ideal due to keeping enemies close but on one side.
+			# pbaoe abilities are strong but not ideal due to trying not to get surrounded.
+			if shape == "cone" or shape == "line":
+				targets = targets * 1.33
+			elif shape == "ground":
+				pass
+			elif shape == "circle":
+				targets = targets * 1.25
+			elif shape == "pbaoe":
+				pass
+			elif shape == "melee":
+				pass
+
+		elif model.getStat("playStyle") == "tank":
+			# Characters who run into the fray and try to take hits. Often retaliation based.
+			# Optimal range is all enemies up close and personal.
+			# Ground target abilities are strong due to low mobility and enemy gathering. Not ideal as surrounding can spread them out.
+			# Circle is strong due to clumping and gathering.
+			# Cone/Line abilities are decent but similar to ground target, enemies can be spread in a lot of directions.
+			# pbaoe are ideal.
+			if shape == "cone" or shape == "line":
+				pass
+			elif shape == "ground":
+				pass
+			elif shape == "circle":
+				pass
+			elif shape == "pbaoe":
+				targets = targets * 1.5
+			elif shape == "melee":
+				pass
+
+		# Two ceilings, and the playStyle adjustment above has to live under
+		# both rather than on top of them.
+		#
+		# MAX_TARGETS is the bound on how many enemies one proc realistically
+		# hits. Applying it in targetsFor and then multiplying by 1.5 for a
+		# tank's pbaoe put Tainted Eruption, Blind Fury and Reckless Tempest on
+		# six enemies apiece against a stated ceiling of four.
+		#
+		# And a count of enemies is not a ceiling on the geometry, it is a
+		# ceiling on the room: against one enemy nothing hits more than one.
+		# That cap used to be applied inside derivedTargets, so a melee
+		# character's 1.25 for a circle put every area skill on 1.25 enemies in
+		# the boss column - and it never reached an ability that states its own
+		# targets at all, which walked past the count entirely.
+		limit = model.getStat("enemies") or devotionderive.MAX_TARGETS
+		return min(targets, devotionderive.MAX_TARGETS, limit)
+
 	def derivedTargets(self, model):
 		"""How many enemies one cast lands on, before the playStyle adjustment.
 
@@ -357,6 +392,10 @@ class Ability:
 		changing the density afterwards had no effect. Being able to score the
 		same build against a boss and against a pack is the whole point of
 		asking.
+
+		Geometry and density only: how many the shape covers in a room that
+		thick. What the room actually holds is effectiveTargets' cap, so that
+		an ability which states its own targets is bound by it too.
 
 		An ability that states targets outright keeps what it states.
 		"""
@@ -372,10 +411,8 @@ class Ability:
 			model.getStat("enemy density") or None, geometry)
 		# Density says how thickly they stand, not how many there are, and for a
 		# chain or a volley it says nothing at all - those hit a fixed number of
-		# separate targets however sparse the room. Against one enemy they hit
-		# one, so a count caps the lot.
-		limit = model.getStat("enemies")
-		return min(targets, limit) if limit else targets
+		# separate targets however sparse the room.
+		return targets
 
 	def resolveTiming(self, model):
 		"""Seconds from one firing to the next, and how much of that is cooldown.
@@ -404,7 +441,10 @@ class Ability:
 
 		What counts as "your main attack" is mainAttackPercent, and it matters:
 		against a bare 100% swing Decapitate's 145% looks like an upgrade worth
-		spamming, and against a real mastery attack it is not.
+		spamming, and against a real mastery attack it is not. Each side is
+		taken across the enemies it reaches, for the same reason the opportunity
+		cost is: a 60% nova landing on four beats a 150% swing landing on one,
+		and you would press it every time it came up.
 		"""
 		reduction = min(90.0, float(model.getStat("reduce cooldown") or 0)) / 100.0
 		self.rechargeTime = self.gc("recharge") * (1.0 - reduction)
@@ -418,8 +458,10 @@ class Ability:
 			# had the main attack's own damage counted into it, so a skill
 			# carrying little weapon damage and a lot of its own lost a
 			# comparison it should have won.
-			if model.swingPercent(self.gb("weapon damage %"), self.swingFlat, self.swingBoost,
-								  self.swingDuration) < self.mainAttackPercent(model):
+			mine = model.swingPercent(self.gb("weapon damage %"), self.swingFlat,
+									  self.swingBoost, self.swingDuration)
+			if (mine * self.effectiveTargets(model)
+					< self.mainAttackPercent(model) * model.mainAttackTargets()):
 				interval = max(interval, self.payloadSeconds)
 			interval = max(interval, self.energyInterval(model))
 		self.interval = interval
@@ -631,9 +673,12 @@ class Ability:
 			#
 			# And the swing it takes the place of is your main attack, not a bare
 			# default one. A pool skill rolls on whatever you are swinging with,
-			# so a 130% proc is only an upgrade against something worth less.
+			# so a 130% proc is only an upgrade against something worth less -
+			# and against however many that swing would have reached, which is
+			# the same trade the manual opportunity cost prices.
 			self.dynamicBonuses["weapon damage %"] = (
-				-self.mainAttackPercent(model) / max(1, self.targets))
+				-self.mainAttackPercent(model) * model.mainAttackTargets()
+				/ max(1, self.targets))
 
 		# armor reduction is like + physical damage that isn't affected by %damage
 		if self.gb("reduce armor") > 0:

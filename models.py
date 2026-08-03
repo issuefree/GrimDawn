@@ -461,6 +461,10 @@ class Model:
 		self.bonuses = bonuses
 		self.points = points
 		self.initialized = False
+		# The skills named by stats["main attack"], once checkModel has looked
+		# them up. Read by mainAttackTargets; empty where a model states a bare
+		# "main attack %" instead, or names nothing at all.
+		self.mainAttackAbilities = []
 
 	@staticmethod
 	def attributeBonus(stats):
@@ -649,6 +653,34 @@ class Model:
 				value *= (base + boost[damage]) / base
 			swing += value
 		return swing / bare
+
+	def mainAttackTargets(self):
+		"""Enemies one swing of your own attack lands on.
+
+		The other half of what a granted skill costs. swingPercent says what the
+		displaced attack is worth against one enemy; this says how many enemies
+		it was going to reach. Both were needed and only the first was asked:
+		the cast was credited across everything it touched while the swing it
+		replaced was charged on a single target, so a build whose own attack
+		cleaves got every area skill at a discount it had not earned.
+
+		Where the attack is named as several skills - the attack and the
+		modifiers hanging off it - the widest of them wins. A modifier is what
+		turns a single-target attack into an area one, Fire Strike's Explosive
+		Strike being the case that matters, and taking the base alone would miss
+		exactly the builds this is here for. It overstates a swing whose area
+		component is only part of its damage, which is the direction to err in:
+		the bug being fixed made granted skills free.
+
+		Override with stats["main attack targets"] for an attack the skill data
+		does not describe.
+		"""
+		stated = self.getStat("main attack targets")
+		if stated:
+			return max(1.0, float(stated))
+		if not self.mainAttackAbilities:
+			return 1.0
+		return max([1.0] + [a.effectiveTargets(self) for a in self.mainAttackAbilities])
 
 	def durationScale(self, damage):
 		"""How much longer a damage-over-time of this type runs on this character.
@@ -998,12 +1030,18 @@ class Model:
 			# damage it scales, the flat damage it adds, and the percentages it
 			# adds for itself.
 			percent, flat, boost, longer, named = 0, {}, {}, {}, []
+			self.mainAttackAbilities = []
 			for name, level in stated:
 				skill = Skill.skills.get(name)
 				if skill is None:
 					print("  WARNING: no skill called %r - it adds nothing to 'main attack'" % name)
 					continue
 				ability = skill.getAbility(level)
+				# Kept so mainAttackTargets can ask them how wide they are. Not
+				# scored here: how many enemies a swing covers depends on how
+				# many there are, and that changes between the boss column and
+				# the pack one.
+				self.mainAttackAbilities.append(ability)
 				percent += ability.gb("weapon damage %")
 				for bonus, value in ability.bonuses.items():
 					if bonus in damages:

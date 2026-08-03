@@ -49,6 +49,18 @@ SHAPE_BY_CLASS = {
 	"Skill_AttackBuffRadius": "circle",
 	"Skill_AttackBuff": "melee",
 	"Skill_AttackWeapon": "melee",
+	# A basic attack, or something that replaces one: it hits whatever your
+	# weapon hits, one target, at whatever range you were already fighting at.
+	# Its own shape, because neither of the existing single-target answers
+	# fits. The default of "circle" handed a melee character 1.25 enemies for
+	# Onslaught, and "melee" would have charged a gunslinger's Fire Strike the
+	# .05 that is meant for an ability which drags a kiter into arm's reach.
+	# Nothing adjusts a shape that no playStyle has an opinion about, which is
+	# the right answer here: how you position does not change how many enemies
+	# one swing lands on.
+	"Skill_WeaponPool_BasicAttack": "single",     # Fire Strike, Onslaught
+	"Skill_WeaponPool_ChargedFinale": "single",   # Cadence
+	"Skill_WPAttack_BasicAttack": "single",       # 13 weapon pool procs
 }
 
 # Enemies per square metre assumed when a character has not said otherwise.
@@ -60,7 +72,21 @@ MAX_TARGETS = 4.0
 
 
 def shapeFor(skillClass):
-	return SHAPE_BY_CLASS.get(skillClass, "circle")
+	"""The shape a class implies, or "single" where the table has no entry.
+
+	The default used to be "circle", which is an opinion: it tells the
+	playStyle adjustment to treat the skill as an area effect and multiply its
+	targets. 53 classes fall through this - Skill_Modifier alone is 85 skills -
+	and a melee character was collecting 1.25 enemies for every one of them,
+	including for modifiers like Open Wounds that have no geometry at all and
+	only exist to hang off another skill.
+
+	"single" is the absence of an opinion rather than a different one: no
+	playStyle has a branch for it, so nothing is scaled. What area a class
+	genuinely covers still comes from its own radius, which areaFor reads
+	whatever the shape says.
+	"""
+	return SHAPE_BY_CLASS.get(skillClass, "single")
 
 
 def areaFor(skillClass, geometry):

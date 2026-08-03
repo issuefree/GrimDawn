@@ -67,18 +67,21 @@ stats = {
 
 # One number per damage type saying how much you care about it. The flat and %
 # weights are split out of it against the sheet, which is the part nobody can
-# do by hand: with 5000 flat lightning and 930% of it, a point of lightning %
+# do by hand: with 5000 flat lightning and 1138% of it, a point of lightning %
 # multiplies fifty flat points and a point of flat multiplies nothing but
 # itself, so the percentage is worth four times as much. The hand-written pair
 # had them at 25 and 30 - all but equal.
 #
-# The totals are unchanged. applyDamagePriority guarantees flat + % is twice
-# the priority, so these three numbers are the halves of what was written
-# before and only the split moves:
+#     lightning     25 / 30    ->  22.42 / 90.54
+#     electrocute   20 / 10    ->  13.08 /  4.94
+#     physical       9 / 7.5   ->   4.89 /  0.82
 #
-#     lightning     25 / 30    ->  10.92 / 44.08
-#     electrocute   20 / 10    ->  21.78 /  8.22
-#     physical       9 / 7.5   ->  14.14 /  2.36
+# These three numbers were picked as the halves of the pairs they replaced,
+# back when the split was normalised per type and so preserved each pair's
+# total. It is normalised across the block now, which is what makes the three
+# comparable with each other, and the totals move: lightning draws more of the
+# block because most of its value is in the percentage. Re-tune them against
+# each other rather than against what the old pairs summed to.
 #
 # Only these three are here because only these three are on the sheet. A type
 # with neither a flat nor a percentage figure has nothing to infer a split
@@ -117,12 +120,23 @@ weights = {
 		# the rest were scoring zero, so a devotion that offered them read as
 		# offering nothing.
 		#
-		# 4 rather than the 8.36 those seven averaged, because a stated weight
-		# is final and this one is not: it is multiplied by what a point of the
-		# type actually delivers, which for a type with nothing on the sheet is
-		# still the 2.6x his cunning or the 3.1x his spirit adds. Those seven
-		# come out at 8.75 on average, which is where they were.
-		"damage":4,
+		# This is a priority like the three above it, not a finished weight: it
+		# gets multiplied by what a point of the type actually delivers, which
+		# for a type with nothing on the sheet is still the 2.6x his cunning or
+		# the 3.1x his spirit adds.
+		#
+		# It is not on the same scale as those three, though, which is worth
+		# knowing before touching it. damagePriority divides by the block's
+		# shared norm and this does not, so one point here is 15.2 points of
+		# priority. 0.4 puts these types at an effective 6.1 - under physical's
+		# 8.25 and well under lightning's 27.5, which is what "never going to
+		# chase poison, but a bit of poison is a bit of damage" means.
+		#
+		# It was 4, which read as 60.8: twice the priority of the damage type
+		# the whole build is about. That was not wrong when it was written - the
+		# norm was per type then and 4 came out at an effective 6.2 - it went
+		# wrong when the norm became shared.
+		"damage":0.4,
 
 		# "physical to lightning" and "physical to elemental" were 5 and 1 here.
 		# Both are derived from the sheet now that it carries flat damage,

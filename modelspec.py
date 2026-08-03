@@ -82,9 +82,25 @@ def applyDamagePriority(stats, weights, priority, attributeBonus=None):
 	quietly misprices exactly the types you invest in least.
 
 	The priority you supply stays a pure preference ("pierce matters more than
-	cold"), and is preserved in total: weight(X) + weight(X %) == 2 * priority.
-	Anything already named explicitly in `weights` wins, so you can always pin a
-	value you disagree with.
+	cold"). Anything already named explicitly in `weights` wins, so you can
+	always pin a value you disagree with.
+
+	The scaling factor is one number for the whole block, not one per type, and
+	that is the difference between a weight meaning something and not. Per type
+	it was (vFlat + vPerc) / 2 for that type, which held weight(X) + weight(X %)
+	to exactly twice the priority - tidy, and wrong across types, because a type
+	you hold a lot of flat damage in has a large vPerc and so a large divisor.
+	lochlan puts lightning at 27.5 against physical's 8.25 and a point of flat
+	lightning delivers 12.38 damage against physical's 9.00, and it came out
+	lightning 10.92, physical 14.14: lower on the type he cares about more and
+	that hits harder, because his 5000 flat lightning drove that divisor to
+	31.19 against physical's 5.25.
+
+	Shared, the divisor cancels out of every comparison and what is left is
+	priority * value-per-point, which is what a weight is for. Totals are no
+	longer held per type - a type carrying most of its value in the percentage
+	draws more of the block than one that does not, which is the honest answer
+	and the reason the tidy property had to go.
 
 	attributeBonus is the percentage cunning and spirit add, which the sheet
 	does not show and checkModel folds in later - later than this, which is the
@@ -95,6 +111,7 @@ def applyDamagePriority(stats, weights, priority, attributeBonus=None):
 	"""
 	attributeBonus = attributeBonus or {}
 	notes = []
+	usable = {}
 	for damage, value in sorted(priority.items()):
 		flat = stats.get(damage, 0)
 		perc = stats.get(damage + " %", 0) + attributeBonus.get(damage, 0)
@@ -106,7 +123,16 @@ def applyDamagePriority(stats, weights, priority, attributeBonus=None):
 			continue
 		vFlat = 1.0 + perc / 100.0   # value of +1 flat point
 		vPerc = flat / 100.0         # value of +1 percentage point
-		norm = (vFlat + vPerc) / 2.0
+		usable[damage] = (value, flat, perc, vFlat, vPerc)
+
+	if not usable:
+		return notes
+	# The mean of what the per-type divisors used to be, so a block of types
+	# that agree on their split lands where it always did and only a block that
+	# disagrees moves.
+	norm = sum((vFlat + vPerc) / 2.0 for _, _, _, vFlat, vPerc in usable.values()) / len(usable)
+
+	for damage, (value, flat, perc, vFlat, vPerc) in usable.items():
 		derived = {damage: value * vFlat / norm, damage + " %": value * vPerc / norm}
 		for key, amount in derived.items():
 			if key in weights:

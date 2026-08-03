@@ -35,18 +35,24 @@ stats = {
 
 		"fight length":20, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
 
-		# STILL LEVEL 85. Everything from here to playStyle was estimated for a
-		# level-85 build, and the character is 59 - so is devotionPoints above,
-		# which is 53 and not reachable yet, and the crit chance pinned at .2,
-		# which overrides what level and offence would now derive. Read these
-		# off the sheet in game and this model describes him; until then it
-		# describes a plan wearing his name.
+		# Worth checking against the sheet. This file began as a copy of
+		# armitage's and the level and devotion points came along with it - 85
+		# and 53 against his 86 and 57 - so the header that used to sit here
+		# calling these "estimated sheet stats for target level" was inherited
+		# too and proves nothing either way about the numbers below it. They are
+		# a lightning build's and armitage's are a fire tank's, so they have
+		# been reworked; whether they were reworked from the game or from
+		# memory is the open question.
 		#
-		# The flat damage lines are missing outright, which is its own problem:
-		# with no flat physical or lightning there is nothing for weapon damage
-		# to scale, nothing to split a damage priority against, and no pool for
-		# a conversion to trade - which is why "weapon damage %" and
-		# "attack opportunity cost" below are hand-set numbers with nothing
+		# Two things the level change does make wrong on their own:
+		# devotionPoints above is still 53, and the crit chance pinned at .2
+		# overrides what level and offence would now derive.
+		#
+		# And the flat damage lines are missing outright, which is its own
+		# problem: with no flat physical or lightning there is nothing for
+		# weapon damage to scale, nothing to split a damage priority against,
+		# and no pool for a conversion to trade - which is why "weapon damage %"
+		# and "attack opportunity cost" below are hand-set numbers with nothing
 		# underneath them.
 		"physique":842,
 		"cunning":388,

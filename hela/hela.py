@@ -31,10 +31,12 @@ stats = {
 	# without it this is just [attacks/s] and stacked procs read optimistic.
 	# "allAttacks/s": [2.0, 1.0, 0.5],
 
-	# What the first of those swings for. Pressing a skill an item grants costs
-	# you one of these, and a skill only earns its place by beating it - leave
-	# it out and every component skill is measured against a bare 100% swing.
-	# "main attack %": 100,
+	# What she actually casts, which is the thing every damage weight is priced
+	# against. Albrecht's Aether Ray carries no weapon component at all, so
+	# none of the flat damage on the sheet below reaches it - the 1700 aether
+	# is what an auto-attack she never makes would do, and her aether % is
+	# multiplying the 294 the beam brings of its own.
+	"main attack": [("Albrecht's Aether Ray", 26), ("Disintegration", 6)],
 
 	"level": 58,
 	"difficulty": "normal",       # from the level band, not from the save
@@ -69,6 +71,18 @@ stats = {
 # "damage" is the priority for every type not named, and it defaults to half
 # the lowest one that is - 1.25 here. Write it in if that is wrong; leaving it
 # out no longer means acid and chaos are worth nothing.
+#
+# These four now read very differently from a weapon build's, and that is the
+# point. Every flat weight is zero - a point of aether on her gear does
+# nothing for a beam that carries no weapon component - and the percentages
+# are priced against what one cast actually lands, which is the beam's own 294
+# aether and 262 fire, not the 1700 and 250 on the sheet. Her fire % went from
+# 0.66 to 0.92 and her aether % from 17.99 to 4.11 on that alone.
+#
+# Which means these four numbers now buy a good deal less against "offense"
+# and "attack speed" below than they did when they were priced off the sheet.
+# They are relative to each other and were never calibrated against the
+# utility weights; that is the next thing to look at.
 damagePriority = {
 	"aether": 10,
 	"lightning": 5,

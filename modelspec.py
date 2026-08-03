@@ -107,6 +107,47 @@ def dotFactor(damage, stats):
 	return min(seconds, 1.0 / rate) / seconds
 
 
+def mainAttackDamage(stats):
+	"""What one cast of your own attack is built from: (weapon share, its own flat).
+
+	The weapon share is the attack's "% Weapon Damage" over a hundred, and it is
+	how much of the sheet's flat damage the attack actually delivers. A Cadence
+	at 150% delivers one and a half times it; Albrecht's Aether Ray delivers
+	none of it, because it carries no weapon component at all - its 294 aether
+	is its own, and the 1700 on the sheet is what an auto-attack she never makes
+	would do.
+
+	That distinction is the whole of what a "pure caster" needs and none of it
+	was read. swingPercent already prices a swing this way, as
+	sheetFlat * weaponPct/100 + the skill's own flat, so this is the same rule
+	applied to the weights rather than a new claim about the game.
+
+	Returns (1.0, {}) when no main attack is named, which is the old behaviour:
+	assume everything you deal goes through your weapon.
+	"""
+	stated = stats.get("main attack")
+	if not stated:
+		return 1.0, {}
+	if isinstance(stated[0], str):
+		stated = [stated]
+	import skillData                       # noqa: F401 - registers the skills
+	from models import Skill
+	share, own = 0.0, {}
+	for name, level in stated:
+		skill = Skill.skills.get(name)
+		if skill is None:
+			continue                        # checkModel warns about this by name
+		ability = skill.getAbility(level)
+		share += ability.gb("weapon damage %") / 100.0
+		for bonus, amount in ability.bonuses.items():
+			if bonus in damages:
+				# a [dps, seconds] pair is a duration effect; its total is what
+				# one cast lays down, and dotFactor is not this function's job
+				amount = amount[0] * amount[1] if isinstance(amount, list) else amount
+				own[bonus] = own.get(bonus, 0) + amount
+	return share, own
+
+
 def applyDamagePriority(stats, weights, priority, attributeBonus=None):
 	"""Split one priority per damage type into flat and % weights using the sheet.
 
@@ -185,21 +226,47 @@ def applyDamagePriority(stats, weights, priority, attributeBonus=None):
 					 "nothing at all; set it in the block to say otherwise"
 					 % (CATCH_ALL, catchAll))
 
+	# How much of the sheet's flat damage your own attack actually delivers, and
+	# what it brings of its own. A weapon build is 1.0 and nothing, which is
+	# what every model assumed before anything could say otherwise.
+	share, own = mainAttackDamage(stats)
+
 	def value(damage):
+		"""(flat, perc, what a point of flat is worth when it lands, ditto a percent).
+
+		"When it lands" is the distinction the share makes. A point of flat X on
+		your gear is worth 1 + X%/100 to anything that delivers it - a proc's
+		weapon damage, an auto-attack - but your own attack delivers only its
+		weapon share of it, which for a spell carrying no weapon component is
+		none. So the landed value is what a proc is priced against and the
+		shared one is what gear flat is worth to you, and they are not the same
+		number for a caster.
+
+		A percent multiplies everything of that type one cast lands: the share
+		of the sheet it delivers, plus whatever the cast brings of its own.
+		"""
 		flat = stats.get(damage, 0)
 		perc = stats.get(damage + " %", 0) + attributeBonus.get(damage, 0)
-		return flat, perc, 1.0 + perc / 100.0, flat / 100.0
+		return (flat, perc, 1.0 + perc / 100.0,
+				(share * flat + own.get(damage, 0)) / 100.0)
 
 	# The mean of what the per-type divisors used to be, over the types named
 	# outright, so a block whose types agree on their split lands where it
 	# always did and only one that disagrees moves. A block that names nothing
 	# but the catch-all has no split to reconcile and divides by one, which is
 	# exactly what a bare "damage" weight used to do.
-	named = [d for d in priority if stats.get(d) or stats.get(d + " %")
-			 or attributeBonus.get(d)]
+	#
+	# A type contributing nothing at all is left out rather than averaged in as
+	# a zero: hela carries 250% vitality and no vitality damage from any source,
+	# and counting that as a divisor of nothing would scale the whole block by
+	# how many such types happened to be listed.
+	named = [d for d in priority
+			 if (stats.get(d) or stats.get(d + " %") or attributeBonus.get(d))
+			 and (value(d)[2] or value(d)[3])]
 	norm = (sum((value(d)[2] + value(d)[3]) / 2.0 for d in named) / len(named)
 			if named else 1.0)
 
+	swing = 0.0     # what one full weapon swing is worth, for weapon damage %
 	for damage in damages:
 		# aggregates rather than types you can be dealt, priced from their parts
 		if damage in ("elemental", "all damage"):
@@ -211,7 +278,9 @@ def applyDamagePriority(stats, weights, priority, attributeBonus=None):
 		else:
 			continue
 		factor = dotFactor(damage, stats)
-		flat, perc, vFlat, vPerc = value(damage)
+		flat, perc, landed, vPerc = value(damage)
+		# what a point of gear flat is worth to you, as opposed to when it lands
+		vFlat = share * landed
 		# "triggered X" is priced per point of damage actually delivered, and
 		# calculateBonus has already taken a proc's [dps, seconds] down to what
 		# one application lands - min(duration, interval), the very thing
@@ -219,8 +288,14 @@ def applyDamagePriority(stats, weights, priority, attributeBonus=None):
 		# or a proc's bleed would be discounted for refreshing twice. What it
 		# does carry is the division by attacks/s, because a proc lands once
 		# where a point on the sheet lands on every swing.
+		#
+		# And it is priced off the landed value rather than the shared one. A
+		# proc's damage is the proc's, not your weapon's - hela's beam carries
+		# no weapon component, so her gear's flat aether is worth nothing to
+		# her, but a devotion that deals aether still deals it.
 		rate = float(stats.get("attacks/s") or 0)
-		triggered = p * vFlat / norm / rate if rate else p * vFlat / norm
+		triggered = p * landed / norm / (rate or 1.0)
+		swing += stats.get(damage, 0) * p * landed * factor / norm
 		for key, amount in ((damage, p * vFlat * factor / norm),
 							(damage + " %", p * vPerc * factor / norm),
 							("triggered " + damage, triggered)):
@@ -237,6 +312,16 @@ def applyDamagePriority(stats, weights, priority, attributeBonus=None):
 					 % (damage, p, damage, weights.get(damage, 0),
 						damage, weights.get(damage + " %", 0), flat, perc,
 						" incl %g from attributes" % round(bonus) if bonus else ""))
+
+	# A proc's "% Weapon Damage" swings your weapon, whatever your own attack
+	# does, so it is priced off the landed value too - the same sum checkModel
+	# used to build out of the weights above, but before the share is applied.
+	# Those are zero for a caster, which would have said a weapon-damage proc
+	# is worth nothing to her when it is the one thing that does put her gear's
+	# flat damage to work.
+	rate = float(stats.get("attacks/s") or 0)
+	if swing and "weapon damage %" not in weights:
+		weights["weapon damage %"] = swing / 100.0 / (rate or 1.0)
 
 	unnamed = [d for d in damages if d not in priority
 			   and d not in ("elemental", "all damage")]

@@ -212,22 +212,53 @@ def evalItemMods(slot, pool=None, count=8, detail=4, level=None):
 			print("       %-37s %8s" % ("(%s not worth using)" % item.ability.name[:24], "-"))
 
 def evalItems(itemList, slot=None):
-	"""Side by side for Items you already have in hand, best first.
+	"""Side by side for Items, best first, by name or as objects.
 
-	compareGear takes names and finds them; this takes the objects, for
-	something built here that the game has no record of.
+		evalItems("vicious spikes")
+		evalItems(["vicious spikes", "bloody whetstone"])
+		evalItems([myOwnItem], "axe")
+
+	One item or several, named or handed over as objects, so this and
+	compareGear differ only in how they lay the answer out. It used to take a
+	list of objects and look a string up in `equipment` by exact key, which
+	failed two ways at once on a bare name: a string is a list of its own
+	characters, so evalItems("vicious spikes") asked for an item called "v",
+	and Vicious Spikes is a component, which is not in `equipment` under any
+	spelling. Names now go through the same resolver compareGear uses - every
+	pool, punctuation and case ignored, falling back to the game's own database
+	for anything the data files have not got.
 	"""
-	items = [equipment[i] if isinstance(i, str) else i for i in itemList]
+	if isinstance(itemList, str) or isinstance(itemList, Item):
+		itemList = [itemList]
+	import gearcompare
+	names = [i for i in itemList if isinstance(i, str)]
+	found, missing = gearcompare.resolve(names) if names else ([], [])
+	for name in missing:
+		print("  no item found called %r" % name)
+	# resolve returns what it found in its own order - data files first, then
+	# anything it had to build from the database - and that is fine here,
+	# because the columns get sorted by score and slot is one value for all of
+	# them. Nothing downstream depends on the order these arrive in.
+	items = [i for i in itemList if not isinstance(i, str)] + found
+	if not items:
+		return
+
 	where = [slot or (i.location if isinstance(i.location, str)
 					  else (i.location[0] if i.location else "")) for i in items]
 	scored = sorted(((item.evaluate(model, w), item, w) for item, w in zip(items, where)),
 					reverse=True, key=lambda row: row[0])
 	# same row arithmetic gearcompare prints, so the two agree and neither keeps
-	# its own copy of what a bonus is worth
+	# its own copy of what a bonus is worth. A granted skill's bonuses are part
+	# of the total, so they are part of the rows too - left out, a column did
+	# not add up to the figure printed under it.
 	from gearcompare import bonusWorth
-	columns = [(item, {b: bonusWorth(item, b, model)
-					   for b in item.bonuses if model.get(b)})
-			   for _, item, _ in scored]
+	columns = []
+	for _, item, _ in scored:
+		named = set(item.bonuses)
+		if item.ability and item.abilityCounted:
+			named |= set(item.ability.bonuses)
+		columns.append((item, {b: bonusWorth(item, b, model)
+							   for b in named if bonusWorth(item, b, model)}))
 	bonuses = {b for _, worth in columns for b in worth}
 	rows = [(b, [worth.get(b, 0) for _, worth in columns])
 			for b in sorted(bonuses, key=lambda b: -max(w.get(b, 0) for _, w in columns))]
@@ -301,5 +332,6 @@ def evalCon(*constellations):
 # compareGear("bloodreaper's cleaver", "bloodreaper's claw", "duelist's sabre", "pit master's axe", "gorefeast")
 # compareGear("Briarthorn Band", "band of black ice", "blackwatch seal", "reddan memento ring")
 # evalCon(tsunami, assassin)
-# evalItemMods("axe", components)
-dumpGear("Blessed Steel")
+evalItemMods("medal", components)
+# dumpGear("vicious spikes")
+# evalItems("vicious spikes")

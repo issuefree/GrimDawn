@@ -175,6 +175,11 @@ def statVocabulary():
 				  # costs all of them. Derived from the named skill's geometry;
 				  # set this only for an attack the skill data does not describe.
 				  "main attack %", "main attack", "main attack targets",
+				  # How many swings a cast really costs you, if one is not the
+				  # answer - a cast that drops a stacking buff costs more than
+				  # the swing it replaced. The multiple is yours; what a swing
+				  # is worth comes off the sheet.
+				  "attack opportunity cost x",
 				  # energy a second a granted skill may spend, when regeneration
 				  # is not the story - a leech build sustains on something the
 				  # sheet's regen figure does not show

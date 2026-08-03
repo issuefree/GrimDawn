@@ -11,7 +11,7 @@ from dataModel import *
 from itemData import *
 from constellationData import *
 
-devotionPoints = 53
+devotionPoints = 27
 
 stats = {
 		# The character, not the plan. This was 85 with the sheet below written
@@ -29,7 +29,12 @@ stats = {
 		],
 		"hits/s":2,
 		"blocks/s":0,
-		"kills/s":1.5,	
+		"kills/s":1.5,
+		# I like basic attacks since they stack my savagery plus the auto attack
+		# replacements, so a cast costs three swings rather than the one it
+		# literally replaces. What a swing is worth is derived; this is the only
+		# part of it that was ever a preference.
+		"attack opportunity cost x":3,
 		# crit chance was pinned here. It is derived now, from offensive
 		# ability against the enemy defence that level and difficulty give -
 		# so it tracks the sheet instead of going stale against it.
@@ -37,45 +42,24 @@ stats = {
 
 		"fight length":20, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
 
-		# Worth checking against the sheet. This file began as a copy of
-		# armitage's and the level and devotion points came along with it - 85
-		# and 53 against his 86 and 57 - so the header that used to sit here
-		# calling these "estimated sheet stats for target level" was inherited
-		# too and proves nothing either way about the numbers below it. They are
-		# a lightning build's and armitage's are a fire tank's, so they have
-		# been reworked; whether they were reworked from the game or from
-		# memory is the open question.
-		#
-		# One thing the level change does make wrong on its own: devotionPoints
-		# above is still 53, which is armitage's and not reachable at 59.
-		#
-		# And the flat damage lines are missing outright, which is its own
-		# problem: with no flat physical or lightning there is nothing for
-		# weapon damage to scale, nothing to split a damage priority against,
-		# and no pool for a conversion to trade - which is why "weapon damage %"
-		# and "attack opportunity cost" below are hand-set numbers with nothing
-		# underneath them.
-		"physique":842,
-		"cunning":388,
-		"spirit":488,
+		"physique":752,
+		"cunning":392,
+		"spirit":448,
 
-		"offense":2128,
-		"defense":1722,
+		"offense":1946,
+		"defense":1608,
 
-		"health":10331,
-		"health/s":249,
-		"health/s %":9+18+18+8+6+6+6+11+10+40,
+		"health":10000,
+		"health/s":145,
 
-		"armor":1507,
-		# "armor absorb":76,
+		"armor":1353,
 
 		"energy":2265,
-		"energy/s":19.08,
-		"energy/s %":154.9,
+		"energy/s":34,
 		
-		"physical %":420+159,
-		"lightning %":1523+229,
-		"electrocute %":1280+244,
+		"physical %":640, "physical":150,
+		"lightning %":930, "lightning":5000,
+		"electrocute %":1000, "electrocute":500,
 
 		"playStyle":"melee", # playstyle for weighting constellation abilities. [ranged/shortranged/melee/tank]
 		"weapons":[
@@ -112,11 +96,20 @@ weights = {
 		"aether":7.5,
 		"fire":9,
 
-		"physical to lightning":5,
-		"physical to elemental":1,
+		# "physical to lightning" and "physical to elemental" were 5 and 1 here.
+		# Both are derived from the sheet now that it carries flat damage - 24
+		# and 8.5 - because what a conversion is worth is not a preference: it
+		# moves a hundredth of your 150 flat physical onto lightning's weight
+		# instead of physical's, and the sheet says what that trade is.
 
-		"weapon damage %":100, 
-		"attack opportunity cost":-150-100-50, # I like basic attacks since they stack my savagery plus the auto attack replacements
+		# "weapon damage %" was 100 by hand and is derived now - it is your flat
+		# damage pool priced at the weights below, over attacks/s. The 100
+		# predates the sheet carrying any flat damage at all.
+		#
+		# "attack opportunity cost" was -300, which was three of those hundreds:
+		# a cast drops your savagery stacks, so it costs more than the swing it
+		# replaced. The three is still yours and lives in stats as
+		# "attack opportunity cost x"; what a swing is worth is the sheet's.
 
 		"resist":5,
 		"physical resist":125,
@@ -136,8 +129,10 @@ weights = {
 		"chaos resist":25,
 		"vitality resist":0,
 
+		# "stun %" is the stun duration modifier - the game has no second field
+		# for it, so the "stun duration":5 that used to sit under here could
+		# never be paid.
 		"stun %":25,
-		"stun duration":5,
 
 		"move speed":20,
 

@@ -15,7 +15,7 @@ import difflib
 import os
 
 from dataModel import Constellation
-from constants import damages, resists, primaryDamages
+from constants import damages, resists, primaryDamages, conversions
 
 # Must be supplied; there is no defensible default for these.
 REQUIRED_POINTS = "devotionPoints"
@@ -144,6 +144,11 @@ def bonusVocabulary():
 					  "reduce " + d + " resist", "reduce " + d + " resist %",
 					  d + " duration"})
 	vocab.update({"reduce resist %", "reduce elemental resist %"})
+	# 34 items carry one of these and nothing scored them, so a conversion read
+	# as a free bonus - and it is not free, it is a trade. checkModel derives a
+	# weight for each from the sheet, which is why they belong here rather than
+	# being a preference anyone has to state.
+	vocab.update(conversions())
 	for r in resists:
 		vocab.update({r, "pet " + r, "max " + r, "pet max " + r, "reduce " + r})
 	return vocab

@@ -111,3 +111,19 @@ elementals = [
 	"lightning"
 ]
 
+# Damage types the game will convert between. "10% of Physical Damage converted
+# to Fire Damage" is one bonus named "physical to fire", and gddata writes it
+# from a record's conversionInType/conversionOutType pair - these are the eleven
+# names that pair can produce, so a name built from this list is one the item
+# data can actually carry.
+convertible = [
+	"physical", "pierce", "fire", "cold", "lightning",
+	"acid", "vitality", "aether", "chaos", "bleed", "elemental"
+]
+
+
+def conversions():
+	"""Every "X to Y" bonus name, in the spelling the item data uses."""
+	return ["%s to %s" % (source, target)
+			for source in convertible for target in convertible if source != target]
+

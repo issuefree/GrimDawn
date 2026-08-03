@@ -964,6 +964,42 @@ class Model:
 			for (weight, multiplier), names in sorted(bands.items(), reverse=True):
 				print("    %7.3f  (x%.2f)  %s" % (weight, multiplier, ", ".join(sorted(names))))
 
+		# "10% of Physical Damage converted to Fire Damage" is a trade, and 34
+		# items carry one - most of them weapon components, which is the slot
+		# anyone actually compares. Nothing scored them, so every conversion
+		# read as a free bonus and the ones that are a straight loss read as
+		# free too: morena has 425 flat physical and no elemental damage at all,
+		# and Blessed Steel was ranking second in her axe slot while quietly
+		# moving a tenth of her physical into a type she has nothing invested
+		# in.
+		#
+		# What one percentage point is worth follows from the sheet the same way
+		# applyDamagePriority's split does. It moves a hundredth of the source
+		# type's flat pool onto the target type's weight instead of the source
+		# type's, so it is worth base/100 times the difference between the two.
+		# Negative when the trade is bad, which is the whole point.
+		#
+		# What it does not model: the enemy resists the new type rather than the
+		# old, which is a real part of why a conversion is taken and is no more
+		# visible here than it is in the weight of a point of flat damage.
+		# Conversions of the same source also stack up to a cap of 100% in the
+		# game, and each item is scored on its own.
+		converted = []
+		for source in convertible:
+			base = float(self.getStat(source) or 0)
+			if not base:
+				continue        # nothing of that type to trade away
+			for target in convertible:
+				if target == source:
+					continue
+				weight = base * (self.get(target) - self.get(source)) / 100.0
+				if self.setIfNull("%s to %s" % (source, target), weight) and abs(weight) >= .01:
+					converted.append(("%s to %s" % (source, target), weight))
+		if converted:
+			print("  damage conversions, priced off the sheet (a point of each):")
+			for name, weight in sorted(converted, key=lambda row: -row[1]):
+				print("    %7.3f  %s" % (weight, name))
+
 		# What one swing is worth, and therefore what a point of weapon damage %
 		# is worth: a skill's "% Weapon Damage" scales the whole flat damage of
 		# the attack, so one point of it is one percent of your flat damage
@@ -1145,8 +1181,11 @@ class Model:
 			print("* " + out + str(self.get(key)) + " (" + str(value) + ")")
 
 	def setIfNull(self, key, value):
+		"""Set a weight the model did not state. True if this was the one that set it."""
 		if not key in self.bonuses:
 			self.set(key, value)
+			return True
+		return False
 
 	def getStat(self, key):
 		if key in self.stats:

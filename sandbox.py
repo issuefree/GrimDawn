@@ -211,6 +211,91 @@ def evalItemMods(slot, pool=None, count=8, detail=4, level=None):
 		if item.ability and not item.abilityCounted:
 			print("       %-37s %8s" % ("(%s not worth using)" % item.ability.name[:24], "-"))
 
+# Bonus names that count as keeping you alive, for the share sweepDefense
+# reports. Substring matching, so "physical resist" and "health/s %" are in
+# without listing every spelling.
+DEFENSIVE = ("health", "armor", "defense", "resist", "physique", "avoid",
+			 "absorb", "lifesteal", "block")
+
+
+def defensiveShare(solution, model):
+	"""How much of what a solution buys is keeping you alive, as a fraction."""
+	bonuses = getBonuses(solution, model)
+	total = defensive = 0.0
+	for bonus, value in bonuses.items():
+		worth = evaluateBonuses(model, {bonus: value})
+		total += worth
+		if any(word in bonus for word in DEFENSIVE):
+			defensive += worth
+	return defensive / total if total else 0.0
+
+
+def sweepDefense(values=(0.1, 0.2, 0.4, 0.6, 1.0), budget=1.0, seeds=3):
+	"""What each defensePriority actually buys, since the share is an outcome.
+
+		sweepDefense()
+		sweepDefense([0.05, 0.1, 0.15])
+
+	You cannot ask for "a third of my solution defensive" and have it obeyed -
+	the share falls out of a solve, so the only way to hit one is to try. Worth
+	trying rather than guessing, because the response is steppy: twenty points
+	buys five constellations and each is in or out, so the share jumps where you
+	would expect it to slide.
+
+	Leaves the model as it found it.
+	"""
+	import subprocess
+	print("\n  defensePriority     score   defensive share")
+	for value in values:
+		out = subprocess.run([sys.executable, "-c", _SWEEP, model.name, str(value),
+							  str(budget), str(seeds)],
+							 capture_output=True, text=True, cwd=os.path.dirname(
+								 os.path.abspath(__file__)))
+		line = [l for l in out.stdout.splitlines() if l.startswith("SWEEP")]
+		if not line:
+			print("  %15g  %s" % (value, (out.stderr or "no result").strip().splitlines()[-1:]))
+			continue
+		_, score, share = line[-1].split()
+		print("  %15g  %8.0f   %5.0f%%" % (value, float(score), 100 * float(share)))
+
+
+# One process per point, for two reasons. Patching the weights in place and
+# re-solving does not reproduce the real pipeline - health/s and physique are
+# derived from the health weight during checkModel, so deleting the defensive
+# weights and putting new ones back leaves the derived ones stale. And
+# initialize() removes constellations this character cannot use from a
+# module-level list, so loading a model twice in one process is not the same as
+# loading it once.
+_SWEEP = '''
+import sys, io, contextlib
+sys.path.insert(0, ".")
+import modelspec
+name, value, budget, seeds = sys.argv[1], float(sys.argv[2]), float(sys.argv[3]), int(sys.argv[4])
+real = modelspec.applyDefensePriority
+modelspec.applyDefensePriority = lambda stats, weights, priority: real(stats, weights, value)
+buf = io.StringIO()
+with contextlib.redirect_stdout(buf):
+    # deliberately not "import sandbox": that loads Morena at module scope, and
+    # initialize() strips constellations from a module-level list, so the model
+    # under test would be solved against whatever Morena left behind
+    from models import Model
+    from utils import getBonuses, evaluateBonuses
+    from fastsolve import solveModel
+    words = ("health", "armor", "defense", "resist", "physique", "avoid",
+             "absorb", "lifesteal", "block")
+    model = Model.loadModel(name)
+    _, cons, score, _ = solveModel(model, budget, seeds)
+    total = defensive = 0.0
+    for bonus, amount in getBonuses(cons, model).items():
+        worth = evaluateBonuses(model, {bonus: amount})
+        total += worth
+        if any(w in bonus for w in words):
+            defensive += worth
+    share = defensive / total if total else 0.0
+print("SWEEP %f %f" % (score, share))
+'''
+
+
 def evalItems(itemList, slot=None):
 	"""Side by side for Items, best first, by name or as objects.
 

@@ -99,6 +99,29 @@ damagePriority = {
 		"damage":1,
 	}
 
+# How much of what the solution buys should be keeping him alive. One number,
+# because what a point of armor is worth against a point of health is not a
+# preference - it follows from the sheet, the same way the flat-versus-percent
+# damage split does. Only the scale is a choice.
+#
+# Everything is priced in effective health: how much more damage he can take
+# before dying, per point of the stat, so health is 1 by definition and the
+# rest are quoted against it. At 0.28 that comes out as
+#
+#     health          0.28      armor absorb   21
+#     armor            2.9      avoid melee    17
+#     defense          1.1      avoid ranged   17
+#
+# 0.28 buys 40% of the solution defensive - sweepDefense() in the sandbox is
+# how that was found, and it shows why it cannot just be asked for:
+#
+#     0.22 -> 8%     0.28 -> 40%     0.6 -> 78%
+#     0.25 -> 9%     0.30 -> 42%     1.0 -> 95%
+#
+# Nothing between 9% and 40% is reachable. Twenty points buys five
+# constellations and each is in or out, so the share steps rather than slides.
+defensePriority = 0.28
+
 weights = {
 		# "attack opportunity cost" was -100 and is derived now, at -30.71 -
 		# one swing, which is what pressing a granted skill costs. The -100 is
@@ -118,32 +141,4 @@ weights = {
 		"lifesteal %":33,
 		"move speed": 10,
 
-		# Staying alive. Nothing here was weighted at all until now, so the
-		# optimiser had been told a squishy level 43 melee character wants
-		# nothing but damage.
-		#
-		# These are starting values, not derived ones - what a point of health
-		# is worth against a point of pierce is a preference, and there is
-		# nothing in the game to read it off. They are scaled so defence comes
-		# out at 38% of what the solution buys, which is a guess at "squishy
-		# and would like not to be" rather than a measurement.
-		#
-		# It is not a smooth dial. Scaling all seven together by 0.4 rather
-		# than 0.6 drops defence from 38% to 7%: Fox and Behemoth fall out of
-		# the solution whole rather than shrinking, because twenty points buys
-		# five constellations and each is in or out. Expect the same if you
-		# push them up - the next thing that happens is another constellation
-		# swaps in, not a gradual tilt.
-		#
-		# health carries the most of this. A point of it is worth 0.3 here, but
-		# checkModel turns that into 9 per point of health/s - health times
-		# fight length - and health/s is 2908 of the 3582 defence buys.
-		#
-		# No block: he carries no shield, so "block %", "blocked damage %" and
-		# "shield recovery" are deliberately absent rather than forgotten.
-		"health":0.3,
-		"armor":0.9, "armor absorb":6,
-		"defense":2.4,
-		"resist":3.6, "physical resist":12,
-		"avoid melee":4.8,
 	}

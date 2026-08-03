@@ -15,7 +15,7 @@ if __name__ == "__main__":
 	import devotion
 	sys.exit(devotion.runModelFile(__file__))
 
-devotionPoints = 55
+devotionPoints = 41
 
 stats = {
 	"attacks/s": 2.0,            # attacks per second, as swung in practice
@@ -42,15 +42,22 @@ stats = {
 	# "enemy resist": 25,           # ditto, for every damage type at once
 	# "enemy density": 0.03,
 
-	# "weapons": ["sword", "shield"],   # omit to allow every constellation
-	# "physique": 0, "cunning": 0, "spirit": 0,
-	# "offense": 0, "defense": 0,
-	# "health": 0, "health/s": 0, "armor": 0,
+	"weapons": ["2h ranged"],   # omit to allow every constellation
+	"physique": 950, "cunning": 550, "spirit": 450,
+	"offense": 2082, "defense": 1900,
+	"health": 8000, "health/s": 320, 
+	"energy": 2500, "energy/s": 28,
+	"armor": 900,
 	# "fight length": 30,
 
 	# Flat and % damage for the types you care about. damagePriority below
 	# uses these to work out what a point of each is actually worth.
-	# "pierce": 350, "pierce %": 200,
+	"physical": 100, "physical %": 300,
+	"pierce": 675, "pierce %": 625,
+	"fire": 3000, "fire %": 1400,
+	"lightning": 25, "lightning %": 625,
+	"burn": 2000, "burn %": 1000, "burn duration": 200,
+	"electrocute": 0, "electrocute %": 400, "electrocute duration": 50,
 }
 
 # One number per damage type saying how much you care about it. The flat vs %
@@ -59,13 +66,15 @@ stats = {
 # physical at all, "physical %" multiplies nothing. You should not have to work
 # that out by hand, and hand-written weights usually get it wrong.
 damagePriority = {
-	"physical": 10,
-	"pierce": 5,
+	"fire":10,
+	"burn":10,
+	"physical": 5,
+	"damage":1,
 }
 
 # Everything else - defence, speed, utility. Anything named here also overrides
 # whatever damagePriority would have derived.
 weights = {
-	"offense": 5, "attack speed": 10,
-	"weapon damage %": 7.5,
+	# "offense": 5, "attack speed": 10,
+	# "weapon damage %": 7.5,
 }

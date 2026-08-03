@@ -76,6 +76,12 @@ DIFFICULTY_DEFENSE = {"normal": (35.0, -15.0), "elite": (60.0, -8.0),
 					  "ultimate": (75.0, -8.0)}
 DEFENSE_PER_LEVEL = 12.0     # defensiveAbilityEquation: characterLevel * 12
 DEFENSE_BASE = 53.0          # and its trailing + 53
+# characterOffensiveAbility and characterOffensiveAbilityModifier from the same
+# pak, read the same way. offensiveAbilityEquation is the defensive one with the
+# words changed - same level term, same trailing 53 - so what a point of your
+# own defensive ability buys can be worked out against it.
+DIFFICULTY_OFFENSE = {"normal": (0.0, -12.0), "elite": (40.0, -8.0),
+					  "ultimate": (50.0, -8.0)}
 
 # Resistance the enemy is assumed to have, per damage type, as a percentage.
 # Nothing in the database states a resistance equation - the shield line in
@@ -155,6 +161,18 @@ def enemyDefense(level, difficulty):
 	flat part and the modifier.
 	"""
 	flat, modifier = DIFFICULTY_DEFENSE.get(difficulty, DIFFICULTY_DEFENSE[DEFAULT_DIFFICULTY])
+	return (flat + float(level) * DEFENSE_PER_LEVEL) * (1 + modifier / 100.0) + DEFENSE_BASE
+
+
+def enemyOffense(level, difficulty):
+	"""Offensive ability of a level-appropriate enemy, the mirror of enemyDefense.
+
+	offensiveAbilityEquation is defensiveAbilityEquation with the words changed:
+	(base + level*12 + dexterity*0.5) * (1 + mod/100) + 53, and enemy records
+	leave their own base and dexterity at zero the same way. So this is what the
+	enemy swings at you with, and your defensive ability is what it swings at.
+	"""
+	flat, modifier = DIFFICULTY_OFFENSE.get(difficulty, DIFFICULTY_OFFENSE[DEFAULT_DIFFICULTY])
 	return (flat + float(level) * DEFENSE_PER_LEVEL) * (1 + modifier / 100.0) + DEFENSE_BASE
 
 
@@ -523,6 +541,9 @@ class Model:
 		if priority:
 			notes += modelspec.applyDamagePriority(stats, weights, priority,
 												   Model.attributeBonus(stats))
+		if namespace.get("defensePriority"):
+			notes += modelspec.applyDefensePriority(stats, weights,
+												    float(namespace["defensePriority"]))
 		warnings = modelspec.validate(name, namespace["devotionPoints"], stats, weights,
 									  priority)
 		for note in notes:

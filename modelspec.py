@@ -24,6 +24,21 @@ from constants import (damages, DOT_SECONDS, resists, primaryDamages,
 # replaces was spelled, so a model moving one line keeps the same word.
 CATCH_ALL = "damage"
 
+# Three things about the incoming side that no record states, used only by
+# applyDefensePriority and named every run it uses them.
+#
+# A character absorbs 70% of physical damage up to their armor value with
+# nothing on their gear saying otherwise; "armor absorb" on the sheet wins.
+ARMOR_ABSORB_DEFAULT = 70.0
+# How often you are hit. Not "hits/s", which is hits you land - a hit-triggered
+# proc fires off yours, not theirs.
+HITS_TAKEN_DEFAULT = 1.0
+# And how much of what hits you is physical, which is the only thing armor
+# reduces. A guess, and the one number here with nothing behind it: monster
+# damage lives on their skills rather than their records, so it is not a mean
+# over anything the way ENEMY_RESIST_BASE is.
+PHYSICAL_SHARE = 0.5
+
 REQUIRED_POINTS = "devotionPoints"
 REQUIRED_STATS = {
 	"attacks/s": "attacks per second, used to scale everything trigger-based",
@@ -46,6 +61,10 @@ CONTROL_STATS = {
 	# reach. Density cannot say it: a chain jumps to a fixed number of separate
 	# targets however sparse the room, and against a boss it jumps to one.
 	"enemies",
+	# how often you are hit, which is not "hits/s" - that is hits you land, and
+	# it is what a hit-triggered proc fires off. Only applyDefensePriority reads
+	# this, to say what armor stops over a fight.
+	"hits taken/s",
 }
 
 
@@ -152,6 +171,130 @@ def mainAttackDamage(stats):
 				amount = amount[0] * amount[1] if isinstance(amount, list) else amount
 				own[name] = own.get(name, 0) + amount
 	return share, own
+
+
+def applyDefensePriority(stats, weights, priority):
+	"""Turn one "how much do I care about surviving" number into every defensive weight.
+
+	Seven or eight hand-written numbers used to say this, and their ratios to
+	each other were guesses - what a point of armor is worth against a point of
+	health is not a preference, it follows from what you already have, exactly
+	the way the flat-versus-percent damage split does. Only the overall scale is
+	yours, and that is what `priority` is.
+
+	Everything is priced in effective health: how much more damage you can take
+	before dying, per point of the stat. A point of health is one point of that
+	by definition, so it is the unit the rest are quoted in.
+
+	    health          1, being the unit
+	    armor           what it stops per hit, times the hits you take, times
+	                    the share of them that is physical
+	    armor absorb    ditto, the percentage half of the same pair
+	    resist          health / (100 - your resist), the mirror of
+	                    resistReductionValue: the same curve read on your own
+	                    resistance instead of the enemy's
+	    defense         how much of the enemy's hit chance a point buys off,
+	                    against the offensive ability its level and difficulty
+	                    give it
+	    avoid melee     a straight percentage of hits that never land
+	    avoid ranged
+
+	The two that are a pair rather than a single number are armor and armor
+	absorb, and they work the way flat and percent damage do. The game says
+	damage taken is (protection * (1 - absorption)) + (damage - protection)
+	whenever the hit is bigger than your armor, which is damage - armor*absorb:
+	a point of armor stops `absorb` of a point, and a point of absorb stops
+	`armor/100`. Neither needs to know how hard the enemy hits, which is the
+	one thing about the incoming side that is not in the records.
+	"""
+	notes = []
+	if not priority:
+		return notes
+	health = float(stats.get("health") or 0)
+	fight = float(stats.get("fight length") or 30)
+	if not health:
+		notes.append("defensePriority ignored: no health on the sheet, and every "
+					 "defensive weight is quoted per point of effective health")
+		return notes
+
+	derived, missing, assumed = {}, [], []
+	derived["health"] = 1.0
+
+	# Armor and armor absorb, the flat-and-percent pair, and the only two that
+	# need to know anything about the incoming side. "hits/s" is no use here -
+	# that is hits you land, which is what drives a hit-triggered proc - so how
+	# often you are hit is its own number and defaults to once a second.
+	armor = float(stats.get("armor") or 0)
+	absorb = float(stats.get("armor absorb") or ARMOR_ABSORB_DEFAULT)
+	taken = float(stats.get("hits taken/s") or 0)
+	if not taken:
+		taken = HITS_TAKEN_DEFAULT
+		assumed.append("hits taken/s %g" % taken)
+	if stats.get("armor absorb") is None:
+		assumed.append("armor absorb %g%%" % absorb)
+	if armor:
+		# Armor stops absorb% of a point per hit, per the game's own
+		# physicalDamageDefenseEquationDGP, and it stops it on physical damage
+		# only - so what it is worth depends on how much of what hits you is
+		# physical, which no record states and PHYSICAL_SHARE is a guess at.
+		blows = taken * fight * PHYSICAL_SHARE
+		derived["armor"] = absorb / 100.0 * blows
+		derived["armor absorb"] = armor / 100.0 * blows
+		assumed.append("physical share of incoming %g" % PHYSICAL_SHARE)
+
+	# Resistance, read off your own the way resistReductionValue reads it off
+	# the enemy's. Damage taken is (1 - R/100), so a point takes it to
+	# (99 - R)/(100 - R) and buys health/(100 - R) of effective health.
+	held = [float(stats.get(r) or 0) for r in resists if stats.get(r) is not None]
+	if held:
+		mean = sum(held) / len(held)
+		derived["resist"] = health / (100.0 - mean) if mean < 100 else 0.0
+	else:
+		missing.append("your resistances, without which 'resist' cannot be priced "
+					   "- state them as 'fire resist' and so on")
+
+	# Defensive ability, against what the enemy swings with. A point buys off
+	# some of its chance to hit, and the derivative is taken numerically because
+	# the game's PTH equation is a blend of two terms and not worth inverting.
+	from models import enemyOffense, hitChance, difficultyOf
+	level = float(stats.get("level") or 0)
+	defense = float(stats.get("defense") or 0)
+	if level and defense:
+		oa = enemyOffense(level, difficultyOf(_Stats(stats)))
+		before, after = hitChance(oa, defense), hitChance(oa, defense + 1.0)
+		if before > 0:
+			derived["defense"] = health * (before - after) / before
+	elif defense:
+		missing.append("'level', without which the enemy's offensive ability is unknown")
+
+	# Avoidance is a flat share of hits that never land at all.
+	for key in ("avoid melee", "avoid ranged"):
+		have = float(stats.get(key) or 0)
+		derived[key] = health / (100.0 - have) if have < 100 else 0.0
+
+	for key, perPoint in sorted(derived.items()):
+		if key in weights:
+			continue        # explicit weight wins, as everywhere else
+		weights[key] = priority * perPoint
+	notes.append("defensePriority %g -> %s"
+				 % (priority, ", ".join("%s %.3g" % (k, weights.get(k, 0))
+										for k, _ in sorted(derived.items()))))
+	for gap in missing:
+		notes.append("defensePriority: nothing derived for %s" % gap)
+	if assumed:
+		notes.append("defensePriority assumed %s - none of it is on the sheet"
+					 % ", ".join(assumed))
+	return notes
+
+
+class _Stats(object):
+	"""Just enough of a Model for difficultyOf, which takes one."""
+
+	def __init__(self, stats):
+		self.stats = stats
+
+	def getStat(self, key):
+		return self.stats.get(key, 0)
 
 
 def applyDamagePriority(stats, weights, priority, attributeBonus=None):

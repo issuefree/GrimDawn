@@ -33,7 +33,9 @@ stats = {
 		"hits/s":4,
 		"blocks/s":1.5,
 		"kills/s":1,
-		"crit chance":.10,
+		# crit chance was pinned here. It is derived now, from offensive
+		# ability against the enemy defence that level and difficulty give -
+		# so it tracks the sheet instead of going stale against it.
 		"low healths/s":1.0/30, # total guesswork.
 
 		"physique":1000,

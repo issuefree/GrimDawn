@@ -57,7 +57,9 @@ stats =	{
 		"hits/s":.25,
 		"blocks/s":0,
 		"kills/s":1.5,		
-		"crit chance":.15,
+		# crit chance was pinned here. It is derived now, from offensive
+		# ability against the enemy defence that level and difficulty give -
+		# so it tracks the sheet instead of going stale against it.
 		"low healths/s":1.0/45, # total guesswork.
 
 		"fight length":20, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.

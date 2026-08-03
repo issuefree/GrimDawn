@@ -247,10 +247,29 @@ def unratedTriggers(stats):
 	return out
 
 
+# Names that are real things in Grim Dawn but that no weight can ever be paid
+# for, with the reason. Without this they read as typos: the validator said
+# "unknown weight 'damage reflect %'" in the same breath it says it for
+# 'aether reist', and offered 'burn duration' for 'stun duration', which is a
+# confident wrong answer to a question with a real one.
+#
+# Every entry here has been checked against the database rather than assumed.
+UNSCORED = {
+	"damage reflect %":
+		"real, and gddata reads it from defensiveReflect - but of 25867 item "
+		"records only two carry that field and both are loot affixes, no "
+		"devotion carries it at all, and skillgen does not emit it for Blade "
+		"Barrier. Nothing you can pick grants it, so a weight cannot be spent",
+	"stun duration":
+		"the game has no separate field for it - offensiveStunModifier is the "
+		"stun duration modifier and is already the weight called 'stun %'",
+}
+
+
 def _suggest(key, vocab):
-	# 0.80 catches real typos ('peirce', 'aether reist', 'physiacl resist') while
-	# staying quiet on keys that are simply unsupported ('damage reflect %'),
-	# where a confident-looking wrong suggestion would be worse than none.
+	# 0.80 catches real typos ('peirce', 'aether reist', 'physiacl resist'). Keys
+	# that are unsupported rather than misspelt are answered by UNSCORED above
+	# and never reach here, which is what stops a confident wrong suggestion.
 	close = difflib.get_close_matches(key, sorted(vocab), n=1, cutoff=0.80)
 	return "  (did you mean %r?)" % close[0] if close else ""
 
@@ -289,7 +308,9 @@ def validate(name, points, stats, weights, priority=None):
 	warnings = []
 	bonusVocab, statVocab = bonusVocabulary(), statVocabulary()
 	for key in weights:
-		if key not in bonusVocab:
+		if key in UNSCORED:
+			warnings.append("weight %r cannot score: %s" % (key, UNSCORED[key]))
+		elif key not in bonusVocab:
 			warnings.append("unknown weight %r - nothing scores against it%s"
 							% (key, _suggest(key, bonusVocab)))
 	for key in stats:

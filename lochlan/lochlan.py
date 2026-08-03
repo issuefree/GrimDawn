@@ -107,13 +107,22 @@ weights = {
 		# lightning, electrocute and physical are split out of damagePriority
 		# above. Duration is not a split of anything, so it stays here.
 		"electrocute duration":2.5,
-		"bleed":7, "bleed %":3,
-		"cold":10, "cold %":2,
-		"frostburn":10,
-		"internal":7.5,
-		"burn":7.5,
-		"aether":7.5,
-		"fire":9,
+
+		# Everything he is not building for. Seven types were listed here at 7
+		# to 10 apiece, which is a lot of numbers to say one thing: he will
+		# never chase poison, but a bit of poison is still a bit of damage.
+		#
+		# One number says it, and says it about every type rather than the seven
+		# that happened to get written down - acid, chaos, pierce, vitality and
+		# the rest were scoring zero, so a devotion that offered them read as
+		# offering nothing.
+		#
+		# 4 rather than the 8.36 those seven averaged, because a stated weight
+		# is final and this one is not: it is multiplied by what a point of the
+		# type actually delivers, which for a type with nothing on the sheet is
+		# still the 2.6x his cunning or the 3.1x his spirit adds. Those seven
+		# come out at 8.75 on average, which is where they were.
+		"damage":4,
 
 		# "physical to lightning" and "physical to elemental" were 5 and 1 here.
 		# Both are derived from the sheet now that it carries flat damage,

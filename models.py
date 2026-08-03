@@ -528,7 +528,10 @@ class Model:
 			raise ValueError("%s does not define: %s" % (path, ", ".join(missing)))
 
 		stats, weights = namespace["stats"], namespace["weights"]
-		notes = modelspec.applyDefaults(stats)
+		# before applyDefaults, which reads allAttacks/s to decide whether it
+		# needs defaulting, and before anything else looks at it as numbers
+		notes = modelspec.resolveAttackRates(stats)
+		notes += modelspec.applyDefaults(stats)
 		priority = dict(namespace.get("damagePriority") or {})
 		# A model that still spells its catch-all as a weight is read as though
 		# it had written it in the block, because that is what it always meant.

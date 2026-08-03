@@ -21,37 +21,31 @@ stats = {
 	"attacks/s": 2.0,            # attacks per second, as swung in practice
 	"playStyle": "ranged",        # melee | shortranged | ranged | tank
 
-	# Read off bots/gwyr.ahk, which is the rotation he actually plays, against
-	# the cooldowns the skill records state. A skill fires no faster than its
-	# cooldown and no faster than he presses it, so the rate is one over
-	# whichever of the two is longer - and which one wins is different for
-	# almost every line below.
+	# His rotation, read off bots/gwyr.ahk, which is a machine-readable
+	# statement of how he actually plays. Each entry is the skill and its rank,
+	# and where he presses a button slower than the skill recharges, the
+	# interval he presses at - because a skill fires no faster than its
+	# cooldown and no faster than you press it.
 	#
-	#                     presses   cooldown   limited by
-	#   Flashbang            3.0s       1s     the button
-	#   Rune of Hagarrad     3.7s       4s     the cooldown
-	#   Rune of Kalastor     3.7s       4s     the cooldown
-	#   Inquisitor Seal      5.0s       5s     both, near enough
-	#   Thermite Mine        5.0s       -      the button; the record states no
-	#                                          cooldown at all, which is worth
-	#                                          a look
-	#   Mortar Trap         15.0s     2.5s     the button, by six times over
+	# The cooldowns come from the game rather than from here, so the rates are
+	# printed on load instead of being written down. Which constraint wins
+	# differs almost every line, and where it is the button that wins it is
+	# deliberate: a short cooldown is not always worth spamming. Flashbang is
+	# the check on the lot - the script says "really 1 second" beside it and
+	# the record says 1.
 	#
-	# The ones where the button wins are deliberate: a skill on a short cooldown
-	# is not always worth spamming, which is what the script says about
-	# Flashbang in as many words and what the 15s on Mortar Trap means too.
-	#
-	# Flashbang is the check on all of it: the script says "really 1 second"
-	# beside it and the record agrees.
+	# Fire Strike is first because it is what he holds the left button down on.
+	# It has no cooldown, so it falls through to attacks/s above.
 	"allAttacks/s": [
-		2.0,      # Fire Strike, held on left button, so it runs continuously
-		0.333,    # Flashbang         1/3.0
-		0.25,     # Rune of Hagarrad  1/4
-		0.25,     # Rune of Kalastor  1/4
-		0.20,     # Inquisitor Seal   1/5
-		0.20,     # Thermite Mine     1/5
-		0.167,    # "gaze", key 9     1/6, cooldown unknown - which skill is it?
-		0.067,    # Mortar Trap       1/15
+		("Fire Strike", 12),
+		("Flashbang", 12, 3.0),
+		("Rune of Hagarrad", 12),
+		("Rune of Kalastor", 12),
+		("Inquisitor Seal", 12),
+		("Thermite Mine", 12, 5.0),     # the record states no cooldown at all
+		("Mortar Trap", 12, 15.0),
+		0.167,                          # "gaze" on key 9, pressed every 6s -
+										# an item or devotion skill, not named yet
 	],
 
 	# STUB - the ranks are placeholders and every damage weight is priced

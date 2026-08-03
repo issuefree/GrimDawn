@@ -91,6 +91,69 @@ def applyDefaults(stats):
 	return notes
 
 
+def resolveAttackRates(stats):
+	"""Turn named skills in allAttacks/s into the rate each actually fires at.
+
+	An entry may be a plain number, as it always could, or a skill:
+
+	    ("Mortar Trap", 12)          fires on its own cooldown
+	    ("Flashbang", 12, 3.0)       ...unless you press it slower than that
+
+	A skill fires no faster than its cooldown and no faster than you press it,
+	so the rate is one over whichever is longer. Which one wins is not obvious
+	and differs per line - gwyr presses Rune of Hagarrad every 3.7 seconds
+	against a 4 second cooldown, and Mortar Trap every 15 against 2.5, the
+	second because a short cooldown is not always worth spamming.
+
+	Written out as numbers this was a column of magic constants with the
+	arithmetic in a comment beside it, going stale the moment a rank changed or
+	the game was patched. Named, the cooldown comes from the records and the
+	press interval stays what it is: a fact about how you play.
+
+	A skill with no cooldown at all - a basic attack like Fire Strike, or
+	Thermite Mine, whose record states none - falls back to the press interval,
+	and failing that to attacks/s, which is what a button you hold down does.
+
+	"% Reduced Skill Cooldown" off the sheet is taken off first, the same
+	reduction and the same 90% cap Ability.resolveTiming applies to a proc.
+	"""
+	entries = stats.get("allAttacks/s")
+	if not entries or not any(isinstance(e, (tuple, list)) for e in entries):
+		return []
+	import skillData                       # noqa: F401 - registers the skills
+	from models import Skill
+	reduction = min(90.0, float(stats.get("reduce cooldown") or 0)) / 100.0
+	swing = float(stats.get("attacks/s") or 0)
+	rates, notes, rows = [], [], []
+	for entry in entries:
+		if not isinstance(entry, (tuple, list)):
+			rates.append(float(entry))
+			continue
+		name, level, press = (list(entry) + [0])[:3]
+		skill = Skill.skills.get(name)
+		if skill is None:
+			notes.append("allAttacks/s: no skill called %r, so it contributes "
+						 "no rate at all" % name)
+			continue
+		cooldown = float(skill.getAbility(level).gc("recharge") or 0) * (1.0 - reduction)
+		press = float(press or 0)
+		interval = max(cooldown, press)
+		why = "cooldown %gs" % cooldown if cooldown >= press else "pressed every %gs" % press
+		if not interval:
+			# no cooldown and no stated interval: a button you hold down
+			interval, why = (1.0 / swing if swing else 0), "held, so attacks/s"
+		if not interval:
+			notes.append("allAttacks/s: %r has no cooldown and no press interval, "
+						 "and there is no attacks/s to fall back on" % name)
+			continue
+		rates.append(1.0 / interval)
+		rows.append("%s at %g: %.3g/s (%s)" % (name, level, 1.0 / interval, why))
+	stats["allAttacks/s"] = rates
+	if rows:
+		notes.append("allAttacks/s from the skill data - " + "; ".join(rows))
+	return notes
+
+
 def dotFactor(damage, stats):
 	"""What a point of flat damage of this type delivers, against a point of physical.
 
@@ -725,7 +788,11 @@ stats = {
 	"playStyle": "%(style)s",%(styles)s
 
 	# Break out each trigger source for a better estimate of stacked procs.
-	# "allAttacks/s": [2.0, 1.0, 0.5],
+	# Name the skill and its rank and the rate comes from the game's own
+	# cooldown; add a third number where you press it slower than it recharges,
+	# because a short cooldown is not always worth spamming. Plain numbers still
+	# work. A skill with no cooldown falls back to attacks/s above.
+	# "allAttacks/s": [("Fire Strike", 12), ("Mortar Trap", 12, 15.0), 0.5],
 
 	# What the first of those swings for. Pressing a skill an item grants costs
 	# you one of these, and a skill only earns its place by beating it - leave

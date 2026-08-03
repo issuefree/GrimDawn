@@ -66,11 +66,9 @@ stats = {
 # split is derived from the sheet above, and so is every damage weight in the
 # model - this is the only place a damage number belongs.
 #
-# There is no "damage" key here, and that is a decision rather than an
-# omission: it is the priority for every type not named, and without it acid,
-# chaos, bleed, pierce, physical, cold and the rest are worth exactly nothing,
-# so a devotion offering them reads as offering nothing at all. Add
-# "damage": 1 or so if a bit of off-type damage is still worth a bit.
+# "damage" is the priority for every type not named, and it defaults to half
+# the lowest one that is - 1.25 here. Write it in if that is wrong; leaving it
+# out no longer means acid and chaos are worth nothing.
 damagePriority = {
 	"aether": 10,
 	"lightning": 5,

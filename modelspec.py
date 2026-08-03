@@ -167,6 +167,23 @@ def applyDamagePriority(stats, weights, priority, attributeBonus=None):
 	notes = []
 	priority = dict(priority)
 	catchAll = priority.pop(CATCH_ALL, None)
+	if catchAll is None and priority:
+		# Standard rather than opt-in, because leaving it out never meant what
+		# it looked like. It looked like "I have not thought about poison"; it
+		# scored as "poison is worth exactly nothing", and a devotion offering
+		# a type you did not name read as offering nothing at all. Nobody
+		# builds a character who would rather have no acid damage than some.
+		#
+		# Half the least thing you did name: below all of them, because not
+		# naming a type says at least that much, and not zero, because a bit of
+		# damage is a bit of damage. It is the one number here that is a
+		# judgement rather than a reading, so it is stated in the notes every
+		# run and overridden by writing "damage" in the block yourself.
+		catchAll = min(priority.values()) / 2.0
+		notes.append("%s not set, so it defaults to %g - half the lowest priority "
+					 "named. Without it every type you did not name is worth "
+					 "nothing at all; set it in the block to say otherwise"
+					 % (CATCH_ALL, catchAll))
 
 	def value(damage):
 		flat = stats.get(damage, 0)

@@ -912,10 +912,6 @@ class Model:
 			if damage in self.bonuses:
 				self.setCalculated("triggered "+damage, self.bonuses[damage]/self.getStat("attacks/s"))
 
-		#calculate elemental damage and triggered elemental damage if not set
-		self.setCalculated("elemental", sum([self.get(elemental) for elemental in elementals])/3.0)
-		self.setCalculated("triggered elemental", sum([self.get("triggered " + elemental) for elemental in elementals])/3.0)
-
 		# Catch-all for a damage type the model never named. A point of flat X
 		# is worth (1 + X%/100), because that is what it multiplies out to -
 		# which is exactly how applyDamagePriority prices a type you did name,
@@ -941,9 +937,11 @@ class Model:
 							  + self.getStat("all damage %")) / 100.0
 
 			# "elemental" and "all damage" are aggregates rather than types you
-			# can be dealt, and are reported by their components instead
-			if (damage not in self.bonuses and self.get("damage")
-					and damage not in ("elemental", "all damage")):
+			# can be dealt, and are reported by - and now priced from - their
+			# components instead.
+			if damage in ("elemental", "all damage"):
+				continue
+			if damage not in self.bonuses and self.get("damage"):
 				derived.append((damage, self.get("damage")*factor*multiplier, multiplier))
 			self.setIfNull(damage, self.get("damage")*factor*multiplier)
 			self.setIfNull("pet "+damage, self.get("pet damage")*factor)
@@ -963,6 +961,22 @@ class Model:
 			print("  damage types the model did not name, priced off their multiplier:")
 			for (weight, multiplier), names in sorted(bands.items(), reverse=True):
 				print("    %7.3f  (x%.2f)  %s" % (weight, multiplier, ", ".join(sorted(names))))
+
+		# "Elemental" damage is dealt as an equal third of each, so its weight is
+		# the mean of the three - which means it has to be taken after the three
+		# are final, and it was being taken before. morena names cold and not
+		# fire or lightning, so the mean was cold's 8.83 over three and the other
+		# two counted as nothing: 2.94 where the three settle at 4.46. Every
+		# "triggered elemental" on an item was priced at two thirds of what it is
+		# worth, and so was every conversion into elemental.
+		# "pet elemental" is on the data too, and gets the same treatment for the
+		# same reason. It usually lands where the catch-all left it, because a
+		# pet's types are all priced off one "pet damage" figure and the mean of
+		# three equal numbers is that number - but not for a model that names
+		# one of the three.
+		for prefix in ("", "triggered ", "pet "):
+			self.setCalculated(prefix + "elemental",
+							   sum(self.get(prefix + e) for e in elementals)/3.0)
 
 		# "10% of Physical Damage converted to Fire Damage" is a trade, and 34
 		# items carry one - most of them weapon components, which is the slot

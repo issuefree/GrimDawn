@@ -54,6 +54,27 @@ durationDamages = [
 	"vitality decay"
 ]
 
+# How long a point of flat duration damage takes to deliver, in seconds. Read
+# off the item records rather than guessed: every one of the 264 items carrying
+# flat bleeding states three seconds, and the other six types are as close to
+# unanimous - 101 of 102 for burn, 63 of 63 for internal trauma, 137 of 139 for
+# poison. The game states a duration beside every flat DoT on every item; there
+# was no reason for this to be a judgement call.
+#
+# It matters because a DoT you reapply refreshes rather than stacks, so a point
+# of flat bleed delivers min(duration, your attack interval) / duration of what
+# a point of flat physical delivers. At three attacks a second that is a ninth,
+# where it used to be flatly halved.
+DOT_SECONDS = {
+	"bleed": 3.0,
+	"burn": 3.0,
+	"frostburn": 3.0,
+	"electrocute": 3.0,
+	"vitality decay": 3.0,
+	"internal": 5.0,
+	"poison": 5.0,
+}
+
 magicalDamage = [
 	"acid",
 	"aether",

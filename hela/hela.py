@@ -15,11 +15,11 @@ if __name__ == "__main__":
 	import devotion
 	sys.exit(devotion.runModelFile(__file__))
 
-devotionPoints = 55
+devotionPoints = 22
 
 stats = {
 	"attacks/s": 2.0,            # attacks per second, as swung in practice
-	"playStyle": "melee",        # melee | shortranged | ranged | tank
+	"playStyle": "ranged",        # melee | shortranged | ranged | tank
 
 	# Break out each trigger source for a better estimate of stacked procs.
 	# "allAttacks/s": [2.0, 1.0, 0.5],
@@ -37,7 +37,7 @@ stats = {
 	# the game's records do not carry. "enemy density" is enemies per square
 	# metre and sizes every area proc.
 	"level": 58,                  # the one number we have
-	"difficulty": "elite",        # normal | elite | ultimate
+	"difficulty": "normal",        # normal | elite | ultimate
 	# "enemy defense": 1400,        # overrides what level+difficulty derive
 	# "enemy resist": 25,           # ditto, for every damage type at once
 	# "enemy density": 0.03,

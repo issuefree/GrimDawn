@@ -18,7 +18,7 @@ stats = {
 		# as estimates for that level - see the block marked "still level 85"
 		# further down, which is what now has to come off the real sheet.
 		"level":59,
-		"difficulty":"elite",
+		"difficulty":"veteran",
 		# estimate how frequent combat events are for calculating dynamic stats and abilities
 		"attacks/s":2,
 		"allAttacks/s":[

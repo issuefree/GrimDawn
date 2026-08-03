@@ -15,7 +15,7 @@ import difflib
 import os
 
 from dataModel import Constellation
-from constants import (damages, durationDamages, resists, primaryDamages,
+from constants import (damages, DOT_SECONDS, resists, primaryDamages,
                        conversions)
 
 # Must be supplied; there is no defensible default for these.
@@ -72,6 +72,41 @@ def applyDefaults(stats):
 	return notes
 
 
+def dotFactor(damage, stats):
+	"""What a point of flat damage of this type delivers, against a point of physical.
+
+	One for anything that lands on the swing. Less for a damage over time,
+	because reapplying one refreshes it rather than stacking it: a point of
+	bleed is three seconds' worth of bleed, and if you swing again in a third of
+	a second you collected a ninth of it before overwriting the rest.
+
+	So it is min(duration, attack interval) / duration - which is the same rule
+	calculateBonus already applies to a proc's [dps, seconds] pair, now applied
+	to the flat damage on the sheet as well. Both durations come from the game:
+	DOT_SECONDS is read off the item records, where it is all but unanimous per
+	type.
+
+	This replaced a flat half, applied to a type reached through the catch-all
+	and not to one named outright - which was the same number meaning two
+	things again, and neither of them measured. A half is right at two attacks
+	a second against a three second bleed and generous at anything faster;
+	morena swings three times a second, where the answer is a ninth.
+
+	A duration bonus deliberately does not lengthen the duration here. Grim
+	Dawn's "+% Duration" raises the total damage by as much as it raises the
+	time, so the damage per second is unchanged and so is what you collect
+	before refreshing. What a longer duration buys is what the separate
+	"X duration" weight is for.
+	"""
+	if damage not in DOT_SECONDS:
+		return 1.0
+	rate = float(stats.get("attacks/s") or 0)
+	if not rate:
+		return 1.0
+	seconds = DOT_SECONDS[damage]
+	return min(seconds, 1.0 / rate) / seconds
+
+
 def applyDamagePriority(stats, weights, priority, attributeBonus=None):
 	"""Split one priority per damage type into flat and % weights using the sheet.
 
@@ -99,10 +134,10 @@ def applyDamagePriority(stats, weights, priority, attributeBonus=None):
 	priorities of 8.25 to 27.5. Here it is a priority like any other and is
 	compared with the ones above it by reading them.
 
-	A type reached through the catch-all has its duration damage counted for
-	half, since a duration you did not ask for is one you will cut short. A type
-	you named keeps its full value: saying "bleed 5" is saying what a bleed
-	build's bleed is worth to it.
+	Duration damage is discounted by dotFactor, the same for a type you named
+	and a type the catch-all reached. It used to be halved for one and left
+	alone for the other, which made "bleed 5" mean two different things
+	depending on whether bleed was written down.
 
 	The scaling factor is one number for the whole block, not one per type, and
 	that is the difference between a weight meaning something and not. Per type
@@ -153,19 +188,25 @@ def applyDamagePriority(stats, weights, priority, attributeBonus=None):
 		if damage in ("elemental", "all damage"):
 			continue
 		if damage in priority:
-			# named outright, so its duration is counted at face value: saying
-			# "bleed 5" is saying what a bleed build's bleed is worth to it
-			p, factor = priority[damage], 1.0
+			p = priority[damage]
 		elif catchAll is not None:
-			# and a type you did not name is counted for half if it ticks,
-			# because a duration you did not ask for is one you will cut short
 			p = catchAll
-			factor = 0.5 if damage in durationDamages else 1.0
 		else:
 			continue
+		factor = dotFactor(damage, stats)
 		flat, perc, vFlat, vPerc = value(damage)
+		# "triggered X" is priced per point of damage actually delivered, and
+		# calculateBonus has already taken a proc's [dps, seconds] down to what
+		# one application lands - min(duration, interval), the very thing
+		# dotFactor measures. So the triggered weight is the undiscounted one,
+		# or a proc's bleed would be discounted for refreshing twice. What it
+		# does carry is the division by attacks/s, because a proc lands once
+		# where a point on the sheet lands on every swing.
+		rate = float(stats.get("attacks/s") or 0)
+		triggered = p * vFlat / norm / rate if rate else p * vFlat / norm
 		for key, amount in ((damage, p * vFlat * factor / norm),
-							(damage + " %", p * vPerc * factor / norm)):
+							(damage + " %", p * vPerc * factor / norm),
+							("triggered " + damage, triggered)):
 			if key in weights:
 				continue # explicit weight wins
 			# unrounded: the notes below round for reading, but a weight that

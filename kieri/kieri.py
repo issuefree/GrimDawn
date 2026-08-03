@@ -6,6 +6,15 @@ if __name__ == "__main__":
 	import devotion
 	sys.exit(devotion.runModelFile(__file__))
 
+# What every damage type is worth, in one place. This one names none of
+# them individually: "damage" is the priority for everything not named,
+# and it was the weight of the same name until damage numbers were
+# gathered here. A block that names nothing else divides by one, so it
+# means exactly what it meant as a weight.
+damagePriority = {
+		"damage":1,
+	}
+
 weights = {
 		"armor":.25,
 		"attack speed":40, 
@@ -22,7 +31,6 @@ weights = {
 		"health":.66, 
 		"energy":.5, 
 
-		"damage":1,
 		"physical":10, "physical %":15, 
 		#"pierce":0, "pierce %":0, 
 		"burn":5, "burn %":5, "burn duration":2.5, "triggered burn":7.5,

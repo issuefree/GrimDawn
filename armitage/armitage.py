@@ -72,6 +72,15 @@ stats = {
 		]
 	}
 
+# What every damage type is worth, in one place. This one names none of
+# them individually: "damage" is the priority for everything not named,
+# and it was the weight of the same name until damage numbers were
+# gathered here. A block that names nothing else divides by one, so it
+# means exactly what it meant as a weight.
+damagePriority = {
+		"damage":1,
+	}
+
 weights = {
 		"attack opportunity cost":-100,
 		"attack speed":10,
@@ -109,7 +118,6 @@ weights = {
 
 		"offense": 12.5, # "offense %": ,
 
-		"damage":1,
 		"physical": 5, "triggered physical":2.5, "physical %": 5,
 		"fire":15, "triggered fire":7.5, "fire %": 15,
 		"burn":7.5, "triggered burn":5, "burn %": 5, "burn duration":5,

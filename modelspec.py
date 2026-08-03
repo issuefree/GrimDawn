@@ -15,9 +15,15 @@ import difflib
 import os
 
 from dataModel import Constellation
-from constants import damages, resists, primaryDamages, conversions
+from constants import (damages, durationDamages, resists, primaryDamages,
+                       conversions)
 
 # Must be supplied; there is no defensible default for these.
+# The one key in a damagePriority block that is not a damage type: what
+# every type you did not name is worth. Spelled the way the weight it
+# replaces was spelled, so a model moving one line keeps the same word.
+CATCH_ALL = "damage"
+
 REQUIRED_POINTS = "devotionPoints"
 REQUIRED_STATS = {
 	"attacks/s": "attacks per second, used to scale everything trigger-based",
@@ -85,6 +91,19 @@ def applyDamagePriority(stats, weights, priority, attributeBonus=None):
 	cold"). Anything already named explicitly in `weights` wins, so you can
 	always pin a value you disagree with.
 
+	One key is not a damage type: "damage" is the priority for every type you
+	did not name, and it is the only place a catch-all belongs. It used to be a
+	weight of its own, evaluated somewhere else entirely and against a different
+	divisor, which meant the same number meant two things depending on which
+	half of the model you wrote it in - lochlan's read as 60.8 next to
+	priorities of 8.25 to 27.5. Here it is a priority like any other and is
+	compared with the ones above it by reading them.
+
+	A type reached through the catch-all has its duration damage counted for
+	half, since a duration you did not ask for is one you will cut short. A type
+	you named keeps its full value: saying "bleed 5" is saying what a bleed
+	build's bleed is worth to it.
+
 	The scaling factor is one number for the whole block, not one per type, and
 	that is the difference between a weight meaning something and not. Per type
 	it was (vFlat + vPerc) / 2 for that type, which held weight(X) + weight(X %)
@@ -111,38 +130,72 @@ def applyDamagePriority(stats, weights, priority, attributeBonus=None):
 	"""
 	attributeBonus = attributeBonus or {}
 	notes = []
-	usable = {}
-	for damage, value in sorted(priority.items()):
+	priority = dict(priority)
+	catchAll = priority.pop(CATCH_ALL, None)
+
+	def value(damage):
 		flat = stats.get(damage, 0)
 		perc = stats.get(damage + " %", 0) + attributeBonus.get(damage, 0)
-		if not flat and not perc:
-			# Nothing on the sheet to reason from. Splitting here would just
-			# invent a ratio, so leave it to an explicit weight.
-			notes.append("%s priority ignored: no %s on the sheet, so flat vs %% "
-						 "cannot be inferred - set both weights explicitly" % (damage, damage))
+		return flat, perc, 1.0 + perc / 100.0, flat / 100.0
+
+	# The mean of what the per-type divisors used to be, over the types named
+	# outright, so a block whose types agree on their split lands where it
+	# always did and only one that disagrees moves. A block that names nothing
+	# but the catch-all has no split to reconcile and divides by one, which is
+	# exactly what a bare "damage" weight used to do.
+	named = [d for d in priority if stats.get(d) or stats.get(d + " %")
+			 or attributeBonus.get(d)]
+	norm = (sum((value(d)[2] + value(d)[3]) / 2.0 for d in named) / len(named)
+			if named else 1.0)
+
+	for damage in damages:
+		# aggregates rather than types you can be dealt, priced from their parts
+		if damage in ("elemental", "all damage"):
 			continue
-		vFlat = 1.0 + perc / 100.0   # value of +1 flat point
-		vPerc = flat / 100.0         # value of +1 percentage point
-		usable[damage] = (value, flat, perc, vFlat, vPerc)
-
-	if not usable:
-		return notes
-	# The mean of what the per-type divisors used to be, so a block of types
-	# that agree on their split lands where it always did and only a block that
-	# disagrees moves.
-	norm = sum((vFlat + vPerc) / 2.0 for _, _, _, vFlat, vPerc in usable.values()) / len(usable)
-
-	for damage, (value, flat, perc, vFlat, vPerc) in usable.items():
-		derived = {damage: value * vFlat / norm, damage + " %": value * vPerc / norm}
-		for key, amount in derived.items():
+		if damage in priority:
+			# named outright, so its duration is counted at face value: saying
+			# "bleed 5" is saying what a bleed build's bleed is worth to it
+			p, factor = priority[damage], 1.0
+		elif catchAll is not None:
+			# and a type you did not name is counted for half if it ticks,
+			# because a duration you did not ask for is one you will cut short
+			p = catchAll
+			factor = 0.5 if damage in durationDamages else 1.0
+		else:
+			continue
+		flat, perc, vFlat, vPerc = value(damage)
+		for key, amount in ((damage, p * vFlat * factor / norm),
+							(damage + " %", p * vPerc * factor / norm)):
 			if key in weights:
 				continue # explicit weight wins
-			weights[key] = round(amount, 3)
+			# unrounded: the notes below round for reading, but a weight that
+			# has been rounded to three places is a weight that has been
+			# changed, and these feed bareSwing and every damage comparison
+			weights[key] = amount
+		if damage not in priority:
+			continue        # reported in one line below, not thirty
 		bonus = attributeBonus.get(damage, 0)
 		notes.append("%s priority %g -> %s %g, %s %% %g  (%g flat, %g%%%s)"
-					 % (damage, value, damage, weights.get(damage, 0),
+					 % (damage, p, damage, weights.get(damage, 0),
 						damage, weights.get(damage + " %", 0), flat, perc,
 						" incl %g from attributes" % round(bonus) if bonus else ""))
+
+	unnamed = [d for d in damages if d not in priority
+			   and d not in ("elemental", "all damage")]
+	if catchAll is not None and unnamed:
+		bands = {}
+		for d in unnamed:
+			bands.setdefault(round(weights.get(d, 0), 3), []).append(d)
+		notes.append("%s priority %g -> everything not named above, at what a point "
+					 "of each delivers: %s"
+					 % (CATCH_ALL, catchAll,
+						"; ".join("%g for %s" % (w, ", ".join(sorted(names)))
+								  for w, names in sorted(bands.items(), reverse=True))))
+	for damage in priority:
+		if damage not in named:
+			notes.append("%s has nothing on the sheet, so its priority buys flat %s only "
+						 "- there is no percentage of nothing to be worth anything"
+						 % (damage, damage))
 	return notes
 
 
@@ -324,6 +377,8 @@ def validate(name, points, stats, weights, priority=None):
 	if not weights and not priority:
 		problems.append("weights is empty, so every constellation scores 0")
 	for key in (priority or {}):
+		if key == CATCH_ALL:
+			continue        # the one key that names every type rather than one
 		if key not in damages:
 			problems.append("damagePriority key %r is not a damage type%s"
 							% (key, _suggest(key, damages)))

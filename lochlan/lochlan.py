@@ -88,6 +88,20 @@ stats = {
 # from, so bleed, cold, frostburn, internal, burn, aether and fire stay as
 # stated weights below - add them to the sheet and they can move up here.
 damagePriority = {
+		# Everything not named below, at one number. Seven types used to be
+		# listed as weights at 7 to 10 apiece to say one thing: he will never
+		# chase poison, but a bit of poison is still a bit of damage. This says
+		# it about every type rather than the seven that got written down -
+		# acid, chaos, pierce and vitality were scoring nothing at all, so a
+		# devotion offering them read as offering nothing.
+		#
+		# 6.1 sits under physical's 8.25 and well under lightning's 27.5, which
+		# is what "never going to chase it" means. It is on the same scale as
+		# them now: it was a weight called "damage" living in the block below,
+		# which divided by nothing where these divide by the block's norm, so
+		# the same number meant two different things depending on where in the
+		# file it was written.
+		"damage":6.1,
 		"lightning": 27.5,
 		"electrocute": 15,
 		"physical": 8.25,
@@ -110,33 +124,6 @@ weights = {
 		# lightning, electrocute and physical are split out of damagePriority
 		# above. Duration is not a split of anything, so it stays here.
 		"electrocute duration":2.5,
-
-		# Everything he is not building for. Seven types were listed here at 7
-		# to 10 apiece, which is a lot of numbers to say one thing: he will
-		# never chase poison, but a bit of poison is still a bit of damage.
-		#
-		# One number says it, and says it about every type rather than the seven
-		# that happened to get written down - acid, chaos, pierce, vitality and
-		# the rest were scoring zero, so a devotion that offered them read as
-		# offering nothing.
-		#
-		# This is a priority like the three above it, not a finished weight: it
-		# gets multiplied by what a point of the type actually delivers, which
-		# for a type with nothing on the sheet is still the 2.6x his cunning or
-		# the 3.1x his spirit adds.
-		#
-		# It is not on the same scale as those three, though, which is worth
-		# knowing before touching it. damagePriority divides by the block's
-		# shared norm and this does not, so one point here is 15.2 points of
-		# priority. 0.4 puts these types at an effective 6.1 - under physical's
-		# 8.25 and well under lightning's 27.5, which is what "never going to
-		# chase poison, but a bit of poison is a bit of damage" means.
-		#
-		# It was 4, which read as 60.8: twice the priority of the damage type
-		# the whole build is about. That was not wrong when it was written - the
-		# norm was per type then and 4 came out at an effective 6.2 - it went
-		# wrong when the norm became shared.
-		"damage":0.4,
 
 		# "physical to lightning" and "physical to elemental" were 5 and 1 here.
 		# Both are derived from the sheet now that it carries flat damage,

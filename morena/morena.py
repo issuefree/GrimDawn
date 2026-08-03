@@ -59,6 +59,7 @@ stats = {
 	}
 
 damagePriority = {
+		"damage":4.5,   # everything not named below
 		"pierce": 10,
 		"physical": 7.5,
 		"bleed": 5,
@@ -71,7 +72,6 @@ weights = {
 
 		"offense": 5, # "offense %": ,
 
-		"damage":1,
 		"health":.1,
 		"energy":.1,
 

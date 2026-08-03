@@ -511,11 +511,20 @@ class Model:
 
 		stats, weights = namespace["stats"], namespace["weights"]
 		notes = modelspec.applyDefaults(stats)
-		if namespace.get("damagePriority"):
-			notes += modelspec.applyDamagePriority(stats, weights, namespace["damagePriority"],
+		priority = dict(namespace.get("damagePriority") or {})
+		# A model that still spells its catch-all as a weight is read as though
+		# it had written it in the block, because that is what it always meant.
+		# A block that names nothing else divides by one, so this changes
+		# nothing for a model that only ever had the weight.
+		if modelspec.CATCH_ALL in weights and modelspec.CATCH_ALL not in priority:
+			priority[modelspec.CATCH_ALL] = weights.pop(modelspec.CATCH_ALL)
+			notes.append('"%s" moved from weights into damagePriority, where every '
+						 "damage number now lives" % modelspec.CATCH_ALL)
+		if priority:
+			notes += modelspec.applyDamagePriority(stats, weights, priority,
 												   Model.attributeBonus(stats))
 		warnings = modelspec.validate(name, namespace["devotionPoints"], stats, weights,
-									  namespace.get("damagePriority"))
+									  priority)
 		for note in notes:
 			print("  note: " + note)
 		for warning in warnings:
@@ -912,22 +921,17 @@ class Model:
 			if damage in self.bonuses:
 				self.setCalculated("triggered "+damage, self.bonuses[damage]/self.getStat("attacks/s"))
 
-		# Catch-all for a damage type the model never named. A point of flat X
-		# is worth (1 + X%/100), because that is what it multiplies out to -
-		# which is exactly how applyDamagePriority prices a type you did name,
-		# so a named and an unnamed type are now on the same footing instead of
-		# the unnamed one getting a flat number that ignored the sheet.
+		# What a point of each damage type is worth is settled before this, in
+		# modelspec.applyDamagePriority, for every type at once - the ones the
+		# model names and the ones it reaches through the block's "damage"
+		# catch-all alike. It used to be settled in two places against two
+		# different divisors, so the same number meant different things
+		# depending on which half of the model file it was written in.
 		#
-		# It matters most for a damage type you only get from a devotion. It is
-		# never on your gear, so it is never on the sheet, so there was nothing
-		# to derive a priority from and it fell through to "damage" - and
-		# frostburn on a build with 200 spirit is a x2 multiplier being scored
-		# as x1.
-		#
-		# Retaliation is deliberately left flat: the game's own tooltip for it
-		# says "% All Damage does not affect Retaliation damage", and a pet
-		# scales off its own bonuses rather than yours.
-		derived = []
+		# What is left here is the three things that hang off a damage weight
+		# rather than competing with it. Retaliation is deliberately flat: the
+		# game's own tooltip says "% All Damage does not affect Retaliation
+		# damage", and a pet scales off its own bonuses rather than yours.
 		for damage in damages:
 			# duration damage is counted for half if not specified manually
 			factor = 1
@@ -941,9 +945,6 @@ class Model:
 			# components instead.
 			if damage in ("elemental", "all damage"):
 				continue
-			if damage not in self.bonuses and self.get("damage"):
-				derived.append((damage, self.get("damage")*factor*multiplier, multiplier))
-			self.setIfNull(damage, self.get("damage")*factor*multiplier)
 			self.setIfNull("pet "+damage, self.get("pet damage")*factor)
 
 			self.setIfNull("triggered "+damage,
@@ -951,16 +952,6 @@ class Model:
 
 			self.setIfNull(damage+" retaliation", self.get("retaliation")*factor)
 			self.setIfNull("pet "+damage+" retaliation", self.get("pet retaliation")*factor)
-
-		if derived:
-			# grouped, because they come out in a handful of bands - one per
-			# attribute and duration combination - and a line each is noise
-			bands = {}
-			for damage, weight, multiplier in derived:
-				bands.setdefault((round(weight, 3), round(multiplier, 2)), []).append(damage)
-			print("  damage types the model did not name, priced off their multiplier:")
-			for (weight, multiplier), names in sorted(bands.items(), reverse=True):
-				print("    %7.3f  (x%.2f)  %s" % (weight, multiplier, ", ".join(sorted(names))))
 
 		# "Elemental" damage is dealt as an equal third of each, so its weight is
 		# the mean of the three - which means it has to be taken after the three

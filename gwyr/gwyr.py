@@ -21,13 +21,55 @@ stats = {
 	"attacks/s": 2.0,            # attacks per second, as swung in practice
 	"playStyle": "ranged",        # melee | shortranged | ranged | tank
 
-	# Break out each trigger source for a better estimate of stacked procs.
-	# "allAttacks/s": [2.0, 1.0, 0.5],
+	# Read off bots/gwyr.ahk, which is the rotation he actually plays, against
+	# the cooldowns the skill records state. A skill fires no faster than its
+	# cooldown and no faster than he presses it, so the rate is one over
+	# whichever of the two is longer - and which one wins is different for
+	# almost every line below.
+	#
+	#                     presses   cooldown   limited by
+	#   Flashbang            3.0s       1s     the button
+	#   Rune of Hagarrad     3.7s       4s     the cooldown
+	#   Rune of Kalastor     3.7s       4s     the cooldown
+	#   Inquisitor Seal      5.0s       5s     both, near enough
+	#   Thermite Mine        5.0s       -      the button; the record states no
+	#                                          cooldown at all, which is worth
+	#                                          a look
+	#   Mortar Trap         15.0s     2.5s     the button, by six times over
+	#
+	# The ones where the button wins are deliberate: a skill on a short cooldown
+	# is not always worth spamming, which is what the script says about
+	# Flashbang in as many words and what the 15s on Mortar Trap means too.
+	#
+	# Flashbang is the check on all of it: the script says "really 1 second"
+	# beside it and the record agrees.
+	"allAttacks/s": [
+		2.0,      # Fire Strike, held on left button, so it runs continuously
+		0.333,    # Flashbang         1/3.0
+		0.25,     # Rune of Hagarrad  1/4
+		0.25,     # Rune of Kalastor  1/4
+		0.20,     # Inquisitor Seal   1/5
+		0.20,     # Thermite Mine     1/5
+		0.167,    # "gaze", key 9     1/6, cooldown unknown - which skill is it?
+		0.067,    # Mortar Trap       1/15
+	],
 
-	# What the first of those swings for. Pressing a skill an item grants costs
-	# you one of these, and a skill only earns its place by beating it - leave
-	# it out and every component skill is measured against a bare 100% swing.
-	# "main attack %": 100,
+	# STUB - the ranks are placeholders and every damage weight is priced
+	# against them. Left button held is the attack, and for a Demolitionist
+	# holding down fire that is Fire Strike: 100% weapon damage, so his sheet's
+	# 3000 flat fire is delivered in full every shot. The modifiers are the ones
+	# that carry his fire and burn. Correct the numbers from the skill screen.
+	"main attack": [("Fire Strike", 12), ("Explosive Strike", 12),
+					("Brimstone", 12), ("Static Strike", 1)],
+
+	# STUB - nothing on the sheet says these and they are guesses in the shape
+	# of a ranged character who kites. hits/s is hits he lands, which drives
+	# every hit-triggered proc; hits taken/s is how often he is hit, which is
+	# what armor is counted against.
+	"hits/s": 4,
+	"hits taken/s": 0.5,
+	"low healths/s": 1.0/30,
+	"blocks/s": 0,          # two-handed ranged, so this one is not a guess
 
 	# Your level, and what you fight. Crit chance is derived from your offensive
 	# ability against the enemy's defensive one using the game's own hit
@@ -69,12 +111,33 @@ damagePriority = {
 	"fire":10,
 	"burn":10,
 	"physical": 5,
+	# STUB - both were falling through to the catch-all at 1, and both are
+	# large on the sheet: 675 flat pierce at 625%, which for a gun is most of
+	# what it fires, and the Inquisitor half of him is where the lightning
+	# comes from. Priced at 1 they were worth 0.65 and 0.64 a point against
+	# fire's 11.71. These two numbers are guesses at how much he cares; the
+	# split between flat and percent is not.
+	"pierce": 5,
+	"lightning": 2,
 	"damage":1,
 }
 
-# Everything else - defence, speed, utility. Anything named here also overrides
-# whatever damagePriority would have derived.
+# How much of the solution should be keeping him alive, priced in effective
+# health - see fenris for what the number means. sweepDefense() says:
+#
+#     0.1 -> 1%    0.3 -> 9%     0.6 -> 37%
+#     0.2 -> 3%    0.4 -> 10%
+#
+# 0.4 for now, which is 10%. He kites at range and is not the one dying, so
+# this is deliberately lower than fenris's 40% - and it is a stub like the rest
+# of him. The step up to 37% is one constellation swapping in, not a slope.
+defensePriority = 0.4
+
+# Everything that is not damage or defence. Both of these are preferences with
+# nothing to derive them from, and both are STUBS at the values every other
+# model happens to use.
 weights = {
-	# "offense": 5, "attack speed": 10,
-	# "weapon damage %": 7.5,
+	"offense": 5,
+	"attack speed": 10,
+	"move speed": 10,
 }

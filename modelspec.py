@@ -140,11 +140,17 @@ def mainAttackDamage(stats):
 		ability = skill.getAbility(level)
 		share += ability.gb("weapon damage %") / 100.0
 		for bonus, amount in ability.bonuses.items():
-			if bonus in damages:
+			# skillgen names an attack's own damage "triggered X" and a buff's
+			# plain "X" - the same damage either way, so the prefix comes off.
+			# Feral Claws states its 117 pierce as "triggered pierce", and
+			# fenris carries 200% pierce with no flat pierce on his sheet
+			# precisely because that 117 is where his pierce comes from.
+			name = bonus[len("triggered "):] if bonus.startswith("triggered ") else bonus
+			if name in damages:
 				# a [dps, seconds] pair is a duration effect; its total is what
 				# one cast lays down, and dotFactor is not this function's job
 				amount = amount[0] * amount[1] if isinstance(amount, list) else amount
-				own[bonus] = own.get(bonus, 0) + amount
+				own[name] = own.get(name, 0) + amount
 	return share, own
 
 

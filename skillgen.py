@@ -81,18 +81,40 @@ def skillsOf(db, classNumber):
 	An aura keeps its name on the buff record it delegates to rather than on the
 	skill the tree points at, so the name is taken from the first record that has
 	one - without that, Field Command and Mogdrogen's Pact have no name at all.
+
+	Two sources, because the buttons are not the whole mastery. A skill a
+	transformation grants has no button of its own - it appears on the bar the
+	form gives you - so walking the UI alone missed the four skills the Berserker
+	gets in Werewolf form, Feral Claws among them. That is not a corner: Feral
+	Claws is the primary attack of every Werewolf build there is, and a model
+	naming it as its main attack could not look it up.
+
+	The class tree record lists everything the mastery grants, so it is read as
+	well. Across the other nine masteries it adds exactly one entry each, the
+	mastery bar itself, which is a real node and is kept.
 	"""
 	out = []
-	for index in range(1, 40):
-		button = db.read("records/ui/skills/class%02d/skill%02d.dbr" % (classNumber, index))
-		path = button.get("skillName") if button else None
+	seen = set()
+
+	def add(path):
 		skill = db.read(path) if path else None
 		if not skill:
-			continue
+			return
 		skill = resolve(skill, db)
 		name = next((db.name(r) for r in procRecords(skill, db) if db.name(r)), "")
-		if name and not any(name == other for other, _ in out):
+		if name and name not in seen:
+			seen.add(name)
 			out.append((name, skill))
+
+	for index in range(1, 40):
+		button = db.read("records/ui/skills/class%02d/skill%02d.dbr" % (classNumber, index))
+		add(button.get("skillName") if button else None)
+
+	tree = db.read("records/skills/playerclass%02d/_classtree_class%02d.dbr"
+				   % (classNumber, classNumber))
+	for field, path in sorted((tree or {}).items()):
+		if re.fullmatch(r"skillName\d+", field) and isinstance(path, str):
+			add(path)
 	return out
 
 

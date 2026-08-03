@@ -1089,6 +1089,11 @@ class Model:
 				self.mainAttackAbilities.append(ability)
 				percent += ability.gb("weapon damage %")
 				for bonus, value in ability.bonuses.items():
+					# skillgen names an attack's own damage "triggered X" and a
+					# buff's plain "X"; it is the same damage and the prefix
+					# comes off, or Feral Claws' 117 pierce reads as nothing
+					if bonus.startswith("triggered ") and bonus[10:] in damages:
+						bonus = bonus[10:]
 					if bonus in damages:
 						flat[bonus] = value if bonus not in flat else flat[bonus]
 					elif bonus.endswith(" %") and bonus[:-2] in damages:

@@ -27,6 +27,15 @@ stats = {
 			.33, # leap
 		],
 
+		# What he actually swings, which is what every damage weight is priced
+		# against. Werewolf is the form; Feral Claws is the attack it gives him,
+		# and it carries 110% weapon damage at rank 8 - so the flat damage on
+		# the sheet below is not decoration, he delivers 110% of it every swing.
+		# It also brings 117 pierce of its own, which is where the 200% pierce
+		# below has something to multiply: none of it is on the sheet.
+		"main attack": [("Feral Claws", 8), ("Werewolf", 8),
+						("Voracity", 4), ("Recklessness", 9)],
+
 		"hits/s":4,
 		"low healths/s":1.0/30, # total guesswork.
 
@@ -66,15 +75,14 @@ stats = {
 # These four are the halves of the pairs they replaced, so the preference is
 # unchanged and only the split moves. Against the current sheet:
 #
-#     physical    5    ->   5.05 / 5.45
-#     pierce     10    ->   7.91 / 0.00
-#     bleed      15    ->   2.49 / 3.63
-#     chaos      15    ->  12.84 / 8.71
+#     physical    5    ->   5.10 / 5.51
+#     pierce     10    ->   8.00 / 1.56
+#     bleed      15    ->   2.52 / 3.90
+#     chaos      15    ->  12.99 / 8.81
 #
-# pierce % is nothing because the sheet says 0 flat pierce, and 200% of
-# nothing is nothing. The priority is not wasted - the 7.91 still prices flat
-# pierce off a devotion - but if he does carry pierce damage, the sheet is
-# missing it.
+# pierce % has something to multiply only because Feral Claws brings 117
+# pierce of its own - the sheet says 0 flat pierce, and 200% of what is on the
+# sheet would be 200% of nothing. That is what naming the main attack buys.
 #
 # bleed is the low one at 2.49 despite 1500 flat and a priority of 15, because
 # it is a damage over time: he swings three times a second against a three

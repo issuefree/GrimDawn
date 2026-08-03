@@ -44,6 +44,25 @@ attack-triggered devotions - but it also sets the DoT refresh interval in
 `dotFactor`, and a channelled beam does not reapply a bleed the way a swing
 does.
 
+## Retaliation builds
+
+`damagePriority` splits one preference into a flat weight and a percentage
+weight using the sheet, and nothing does that for retaliation. `retaliation` and
+`retaliation %` are two hand-written weights with no relationship to each other,
+and `X retaliation` falls back to `retaliation` times a duration factor with no
+multiplier at all - deliberately, because the game's own tooltip says "% All
+Damage does not affect Retaliation damage".
+
+But "+% Retaliation Damage" does affect it, and that is the split nobody
+derives. armitage carries 450% retaliation on his sheet and no flat retaliation
+figure at all, so there is nothing to derive it from even if the code asked -
+the same shape as lochlan's missing flat damage. His retaliation lines are
+20716 of his 88696, so this is not a corner.
+
+What would fix it: flat retaliation per type on the sheet, then the same
+treatment damage gets - a `retaliationPriority` block, or retaliation folded
+into `damagePriority` as `X retaliation` entries.
+
 ## Duration damage on pets and retaliation
 
 `dotFactor` derives the refresh discount for your own flat damage from

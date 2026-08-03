@@ -59,31 +59,56 @@ stats = {
 		]
 	}
 
-# What every damage type is worth, in one place. This one names none of
-# them individually: "damage" is the priority for everything not named,
-# and it was the weight of the same name until damage numbers were
-# gathered here. A block that names nothing else divides by one, so it
-# means exactly what it meant as a weight.
+# What every damage type is worth, in one place. One number each, and the
+# flat-versus-percent split comes off the sheet - which is the part that cannot
+# be done by hand and the part the four pairs below were getting wrong.
+#
+# These four are the halves of the pairs they replace, so the preference is
+# unchanged and only the split moves:
+#
+#     physical    5 / 5     ->   4.88 / 0.00
+#     pierce     10 / 10    ->  11.70 / 2.58
+#     bleed      15 / 15    ->   3.57 / 2.15
+#     chaos      15 / 15    ->  20.85 / 11.59
+#
+# physical % goes to nothing because the sheet says 0 flat physical, and 75%
+# of nothing is nothing. bleed drops fourfold because it is a damage over time
+# and he swings three times a second against a three second bleed, so he
+# overwrites eight ninths of it before it lands - his triggered bleed is
+# untouched by that and goes up, to 10.72, because a devotion's bleed is not
+# reapplied by his swinging.
 damagePriority = {
+		"physical":5,
+		"pierce":10,
+		"bleed":15,
+		"chaos":15,
 		"damage":1,
 	}
 
 weights = {
-		"attack opportunity cost":-100,
+		# "attack opportunity cost" was -100 and is derived now, at -30.71 -
+		# one swing, which is what pressing a granted skill costs. The -100 is
+		# in armitage and lochlan too and looks like a number that was copied
+		# rather than chosen; state it here if he really does value a swing at
+		# three times what it is worth.
+		#
+		# "weapon damage %" was 7.5 and derives at 30.71: one percent of the
+		# flat damage on the sheet, over attacks/s.
 		"attack speed":10,
 		"cast speed":7.5,
-		
+
 		"offense": 20, # "offense %": ,
 
-		"physical": 5, "triggered physical":2.5, "physical %": 5,
-		"pierce": 10, "pierce %": 10,
-		"bleed":15, "bleed %": 15, "bleed duration":5,
-		"chaos":15, "chaos %": 15, 
-
-		"weapon damage %":7.5,
+		# not a split of anything, so not a priority
+		"bleed duration":5,
 
 		"crit damage": 1,
-		
+
 		"lifesteal %":33,
 		"move speed": 10,
+
+		# Nothing defensive is weighted, and playStyle says tank. With no
+		# weight on health, armor, defense, resist or block, the optimiser has
+		# been told a level 43 character wants nothing but damage and picks
+		# accordingly - armitage, who is the same archetype, weights all five.
 	}

@@ -37,7 +37,7 @@ stats = {
 	# the game's records do not carry. "enemy density" is enemies per square
 	# metre and sizes every area proc.
 	"level": 44,                  # the one number we have
-	# "difficulty": "ultimate",     # normal | elite | ultimate
+	"difficulty": "normal",        # normal | elite | ultimate
 	# "enemy defense": 1400,        # overrides what level+difficulty derive
 	# "enemy resist": 25,           # ditto, for every damage type at once
 	# "enemy density": 0.03,

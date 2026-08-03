@@ -14,6 +14,11 @@ stats = {
 		# without it every crit-triggered proc scores zero. It also decides which
 		# gear evalItemMods will show you.
 		"level":43,
+		# Which column of the difficulty table to read. It moves enemy
+		# defence, and every enemy resistance by up to twelve points, so
+		# it is not a detail. Taken from the level band; correct it if he
+		# is grinding a difficulty he has out-levelled.
+		"difficulty":"normal",
 		"attacks/s":3,
 		"allAttacks/s":[
 			1.5, # main attack (taking it down a notch due to using other abilities etc)

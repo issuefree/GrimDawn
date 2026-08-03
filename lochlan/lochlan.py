@@ -14,10 +14,11 @@ from constellationData import *
 devotionPoints = 53
 
 stats = {
-		"level":85,
-		# was 1, which meant nothing and silently read the default. Spelled out
-		# so it scores the same as it always has - correct it if he is on Elite.
-		"difficulty":"ultimate",
+		# The character, not the plan. This was 85 with the sheet below written
+		# as estimates for that level - see the block marked "still level 85"
+		# further down, which is what now has to come off the real sheet.
+		"level":59,
+		"difficulty":"elite",
 		# estimate how frequent combat events are for calculating dynamic stats and abilities
 		"attacks/s":2,
 		"allAttacks/s":[
@@ -34,7 +35,19 @@ stats = {
 
 		"fight length":20, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
 
-		# estimated sheet stats for target level
+		# STILL LEVEL 85. Everything from here to playStyle was estimated for a
+		# level-85 build, and the character is 59 - so is devotionPoints above,
+		# which is 53 and not reachable yet, and the crit chance pinned at .2,
+		# which overrides what level and offence would now derive. Read these
+		# off the sheet in game and this model describes him; until then it
+		# describes a plan wearing his name.
+		#
+		# The flat damage lines are missing outright, which is its own problem:
+		# with no flat physical or lightning there is nothing for weapon damage
+		# to scale, nothing to split a damage priority against, and no pool for
+		# a conversion to trade - which is why "weapon damage %" and
+		# "attack opportunity cost" below are hand-set numbers with nothing
+		# underneath them.
 		"physique":842,
 		"cunning":388,
 		"spirit":488,

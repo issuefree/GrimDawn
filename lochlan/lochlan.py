@@ -30,11 +30,6 @@ stats = {
 		"hits/s":2,
 		"blocks/s":0,
 		"kills/s":1.5,
-		# I like basic attacks since they stack my savagery plus the auto attack
-		# replacements, so a cast costs three swings rather than the one it
-		# literally replaces. What a swing is worth is derived; this is the only
-		# part of it that was ever a preference.
-		"attack opportunity cost x":3,
 		# crit chance was pinned here. It is derived now, from offensive
 		# ability against the enemy defence that level and difficulty give -
 		# so it tracks the sheet instead of going stale against it.
@@ -70,6 +65,31 @@ stats = {
 		]	
 	}
 
+# One number per damage type saying how much you care about it. The flat and %
+# weights are split out of it against the sheet, which is the part nobody can
+# do by hand: with 5000 flat lightning and 930% of it, a point of lightning %
+# multiplies fifty flat points and a point of flat multiplies nothing but
+# itself, so the percentage is worth four times as much. The hand-written pair
+# had them at 25 and 30 - all but equal.
+#
+# The totals are unchanged. applyDamagePriority guarantees flat + % is twice
+# the priority, so these three numbers are the halves of what was written
+# before and only the split moves:
+#
+#     lightning     25 / 30    ->  10.92 / 44.08
+#     electrocute   20 / 10    ->  21.78 /  8.22
+#     physical       9 / 7.5   ->  14.14 /  2.36
+#
+# Only these three are here because only these three are on the sheet. A type
+# with neither a flat nor a percentage figure has nothing to infer a split
+# from, so bleed, cold, frostburn, internal, burn, aether and fire stay as
+# stated weights below - add them to the sheet and they can move up here.
+damagePriority = {
+		"lightning": 27.5,
+		"electrocute": 15,
+		"physical": 8.25,
+	}
+
 weights = {
 		"armor":2.5, "armor absorb":30,
 		"avoid melee":30, "avoid ranged":25,
@@ -79,15 +99,14 @@ weights = {
 		"cast speed":25,
 
 		"offense":20,
-		# "crit damage":20,
 		
 		"health":1.5,
 		"energy":1,
 		"lifesteal %":100,
 
-		"electrocute":20, "electrocute %":10, "electrocute duration":2.5,
-		"physical":9, "physical %":7.5,
-		"lightning":25, "lightning %":30,
+		# lightning, electrocute and physical are split out of damagePriority
+		# above. Duration is not a split of anything, so it stays here.
+		"electrocute duration":2.5,
 		"bleed":7, "bleed %":3,
 		"cold":10, "cold %":2,
 		"frostburn":10,
@@ -97,19 +116,20 @@ weights = {
 		"fire":9,
 
 		# "physical to lightning" and "physical to elemental" were 5 and 1 here.
-		# Both are derived from the sheet now that it carries flat damage - 24
-		# and 8.5 - because what a conversion is worth is not a preference: it
-		# moves a hundredth of your 150 flat physical onto lightning's weight
-		# instead of physical's, and the sheet says what that trade is.
+		# Both are derived from the sheet now that it carries flat damage,
+		# because what a conversion is worth is not a preference: it moves a
+		# hundredth of your 150 flat physical onto lightning's weight instead
+		# of physical's, and the sheet says what that trade is.
 
-		# "weapon damage %" was 100 by hand and is derived now - it is your flat
-		# damage pool priced at the weights below, over attacks/s. The 100
-		# predates the sheet carrying any flat damage at all.
+		# "weapon damage %" was 100 by hand and is derived now - your flat
+		# damage pool priced at the weights above, over attacks/s.
 		#
-		# "attack opportunity cost" was -300, which was three of those hundreds:
-		# a cast drops your savagery stacks, so it costs more than the swing it
-		# replaced. The three is still yours and lives in stats as
-		# "attack opportunity cost x"; what a swing is worth is the sheet's.
+		# "attack opportunity cost" was -300 against that hand-set 100: three
+		# swings for one cast, for the savagery stacks a cast drops. It now
+		# derives at one swing, like every other model. If the three was right,
+		# state the whole figure here as a weight - but note it is three times
+		# whatever weapon damage % currently derives to, not three times 100,
+		# and it will need revisiting whenever the sheet moves.
 
 		"resist":5,
 		"physical resist":125,
@@ -140,35 +160,6 @@ weights = {
 		"Bysmiel's Command":0,
 		"Shepherd's Call":0,
 	}
-
-# The gear list that used to sit here is gone - some 170 lines of Item()
-# literals that nothing read: models.py's `model.items = locals()["items"]`
-# has been commented out for as long as git remembers. 26 of the 30 pieces
-# are in the extracted data now and can be asked for by name:
-#
-#     compareGear("ultos' stormseeker", "mythical glyph of kelphat'zoth")
-#     evalItems("ultos' hood")
-#
-# The four that are not are the Ultos' Storm set bonuses at 2/3/4/5 pieces,
-# including the Ultos' Wrath proc on the fifth. itemgen does not read set
-# records, so those are the one thing deleting this cost - see git history
-# for what they said.
-
-# items = [	Item( "Ultos' Stormseeker",
-# 		{"physical":(270+386)/2, "attacks/s":1.45, "lightning":(5+53)/2, "lightning %":203, "electrocute %":203, "physical to lightning":45, "offense":18, "attack speed":16, "cast speed":16, "reduce cooldown":16, "Stormcaller's Pact":3},
-# 		"twohand",
-# 	),
-# 	Item( "Mythical Touch of the Everliving Grove",
-# 		{"armor":1014, "health":452, "health %":4, "health/s":26, "health/s %":40, "elemental resist":18, "Hearth of the Wild":2, "Oak Skin":2,
-# 		"pet health %":10, "pet defense %":12, "pet vitality resist":39},
-# 		"arms",
-# 		Ability( "Healing Winds",
-# 			{"type":"heal", "trigger":"attack", "chance":.1, "recharge":6},
-# 			{"health %":3, "health":1650}
-# 		)
-# 	),
-
-# ]
 
 skills = [
 	{"Markovian's Advantage":6},

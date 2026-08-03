@@ -1052,19 +1052,11 @@ class Model:
 		# At a main attack of 100% the two agree by construction - giving up one
 		# swing costs exactly one swing's worth of flat damage.
 		#
-		# A character may reckon it costs more than that, and lochlan does: a
-		# cast drops his Savagery stacks, so he had it at three swings. That is
-		# a preference and it stays one - but only the multiple is. The swing it
-		# multiplies is a fact off the sheet, and writing the product out by
-		# hand pins the fact along with the preference. His -300 was three times
-		# a weapon damage % of 100 that predated his sheet carrying any flat
-		# damage at all; the sheet now says 681.75, and a hand-written -300 goes
-		# stale the moment either number moves.
-		#
-		# So the multiple is a stat and the product is derived from it.
-		swings = float(self.getStat("attack opportunity cost x") or 0) or 1.0
+		# A character who reckons a cast costs more than one swing - because it
+		# drops a stacking buff, say - states the whole figure as a weight, the
+		# way any other preference is stated.
 		if self.get("attack opportunity cost") == 0:
-			self.bonuses["attack opportunity cost"] = -swings * self.get("weapon damage %")
+			self.bonuses["attack opportunity cost"] = -self.get("weapon damage %")
 		print("  weapon damage %%: %.2f  -> attack opportunity cost %.2f"
 			  % (self.get("weapon damage %"), self.get("attack opportunity cost")))
 

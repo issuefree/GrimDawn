@@ -37,6 +37,7 @@ stats = {
 						("Voracity", 4), ("Recklessness", 9)],
 
 		"hits/s":4,
+		"blocks/s":0,   # no shield, so the block-triggered procs really are worth nothing
 		"low healths/s":1.0/30, # total guesswork.
 
 		"physique":600,
@@ -117,8 +118,32 @@ weights = {
 		"lifesteal %":33,
 		"move speed": 10,
 
-		# Nothing defensive is weighted, and playStyle says tank. With no
-		# weight on health, armor, defense, resist or block, the optimiser has
-		# been told a level 43 character wants nothing but damage and picks
-		# accordingly - armitage, who is the same archetype, weights all five.
+		# Staying alive. Nothing here was weighted at all until now, so the
+		# optimiser had been told a squishy level 43 melee character wants
+		# nothing but damage.
+		#
+		# These are starting values, not derived ones - what a point of health
+		# is worth against a point of pierce is a preference, and there is
+		# nothing in the game to read it off. They are scaled so defence comes
+		# out at 38% of what the solution buys, which is a guess at "squishy
+		# and would like not to be" rather than a measurement.
+		#
+		# It is not a smooth dial. Scaling all seven together by 0.4 rather
+		# than 0.6 drops defence from 38% to 7%: Fox and Behemoth fall out of
+		# the solution whole rather than shrinking, because twenty points buys
+		# five constellations and each is in or out. Expect the same if you
+		# push them up - the next thing that happens is another constellation
+		# swaps in, not a gradual tilt.
+		#
+		# health carries the most of this. A point of it is worth 0.3 here, but
+		# checkModel turns that into 9 per point of health/s - health times
+		# fight length - and health/s is 2908 of the 3582 defence buys.
+		#
+		# No block: he carries no shield, so "block %", "blocked damage %" and
+		# "shield recovery" are deliberately absent rather than forgotten.
+		"health":0.3,
+		"armor":0.9, "armor absorb":6,
+		"defense":2.4,
+		"resist":3.6, "physical resist":12,
+		"avoid melee":4.8,
 	}

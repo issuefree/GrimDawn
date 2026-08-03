@@ -19,7 +19,7 @@ devotionPoints = 55
 
 stats = {
 	"attacks/s": 2.0,            # attacks per second, as swung in practice
-	"playStyle": "melee",        # melee | shortranged | ranged | tank
+	"playStyle": "ranged",        # melee | shortranged | ranged | tank
 
 	# Break out each trigger source for a better estimate of stacked procs.
 	# "allAttacks/s": [2.0, 1.0, 0.5],

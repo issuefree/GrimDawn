@@ -469,6 +469,13 @@ def unratedTriggers(stats):
 	out = []
 	for trigger, procs in sorted(counts.items()):
 		groups, hint = TRIGGER_RATES[trigger]
+		# A stated zero is an answer, not a gap. fenris does not block, and
+		# saying "blocks/s": 0 used to be indistinguishable from not having
+		# thought about it - the test was truthiness, so the model got told to
+		# set a key it had already set. The procs still score zero either way;
+		# what changes is whether that is news.
+		if any(all(key in stats for key in group) for group in groups):
+			continue
 		if not any(all(stats.get(key) for key in group) for group in groups):
 			out.append("nothing gives %s-triggered procs a rate, so all %d of them "
 					   "score 0 - %s" % (trigger, procs, hint))

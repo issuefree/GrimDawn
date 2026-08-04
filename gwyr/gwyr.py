@@ -102,18 +102,18 @@ stats = {
 # physical at all, "physical %" multiplies nothing. You should not have to work
 # that out by hand, and hand-written weights usually get it wrong.
 damagePriority = {
-	"fire":10,
-	"burn":10,
-	"physical": 5,
-	# STUB - both were falling through to the catch-all at 1, and both are
-	# large on the sheet: 675 flat pierce at 625%, which for a gun is most of
-	# what it fires, and the Inquisitor half of him is where the lightning
-	# comes from. Priced at 1 they were worth 0.65 and 0.64 a point against
-	# fire's 11.71. These two numbers are guesses at how much he cares; the
-	# split between flat and percent is not.
-	"pierce": 5,
-	"lightning": 2,
-	"damage":1,
+	# Derived from the rotation above rather than stated. What a build cares
+	# about is what it deals, and the skills and their cooldowns say what that
+	# is: 59% fire, 32% burn, 8% pierce, 1% physical, 0.3% lightning.
+	#
+	# The hand-written priorities this replaces had physical and pierce both at
+	# 5 while physical is a ninth of pierce's damage, and fire and burn equal
+	# while fire is nearly twice burn.
+	#
+	# 30 is what the largest weight comes out at, so the rest of the model does
+	# not have to be rescaled. Name a type beside it to lean - "fire": 1.5 - for
+	# something you want to build toward rather than already deal.
+	"rotation": 30,
 }
 
 # How much of the solution should be keeping him alive, priced in effective

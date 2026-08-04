@@ -24,6 +24,11 @@ from constants import (damages, DOT_SECONDS, resists, primaryDamages,
 # replaces was spelled, so a model moving one line keeps the same word.
 CATCH_ALL = "damage"
 
+# The other reserved key in a damagePriority block: derive every damage weight
+# from what the rotation deals, instead of stating a preference per type. Its
+# value is what the largest weight should come out at.
+ROTATION = "rotation"
+
 # Three things about the incoming side that no record states, used only by
 # applyDefensePriority and named every run it uses them.
 #
@@ -65,6 +70,10 @@ CONTROL_STATS = {
 	# it is what a hit-triggered proc fires off. Only applyDefensePriority reads
 	# this, to say what armor stops over a fight.
 	"hits taken/s",
+	# the rotation as resolveAttackRates worked it out - (skill, rank, rate) -
+	# kept because converting allAttacks/s to bare rates throws the names away
+	# and rotationDamage needs them
+	"rotation",
 }
 
 
@@ -124,7 +133,7 @@ def resolveAttackRates(stats):
 	from models import Skill
 	reduction = min(90.0, float(stats.get("reduce cooldown") or 0)) / 100.0
 	swing = float(stats.get("attacks/s") or 0)
-	rates, notes, rows = [], [], []
+	rates, notes, rows, resolved = [], [], [], []
 	for index, entry in enumerate(entries):
 		if not isinstance(entry, (tuple, list)):
 			rates.append(float(entry))
@@ -155,11 +164,74 @@ def resolveAttackRates(stats):
 						 % name)
 			continue
 		rates.append(1.0 / interval)
+		resolved.append((name, level, 1.0 / interval))
 		rows.append("%s at %g: %.3g/s (%s)" % (name, level, 1.0 / interval, why))
 	stats["allAttacks/s"] = rates
+	# Kept because the names are the interesting part and converting to bare
+	# rates throws them away. rotationDamage reads this to work out what the
+	# build actually deals, and it cannot do that from a column of numbers.
+	stats["rotation"] = resolved
 	if rows:
 		notes.append("allAttacks/s from the skill data - " + "; ".join(rows))
 	return notes
+
+
+def rotationDamage(stats):
+	"""What the rotation deals per second, per damage type, and per point of what.
+
+	The rotation says which skills fire and how often; the skill data says what
+	each one delivers; the sheet says what it delivers it with. Between them
+	there is no need to guess how much a build cares about fire - it deals what
+	it deals.
+
+	    D(X) = sum over skills of rate * (sheetFlat(X) * weaponPct/100 + own(X))
+	                                   * (1 + X%/100)
+
+	and the two derivatives that matter are what a weight is supposed to be:
+
+	    d D(X) / d(flat X) = (1 + X%/100) * sum(rate * weaponPct/100)
+	    d D(X) / d(X %)    = sum(rate * (sheetFlat(X) * weaponPct/100 + own(X))) / 100
+
+	The first is the same for every type but for its percentage, because a point
+	of flat damage rides on whatever share of your rotation swings a weapon. The
+	second is where builds differ: it is what a percentage has to multiply, and
+	a type you deal none of has nothing.
+
+	Returns {damage: (perSecond, dFlat, dPerc)}. Empty if the rotation is bare
+	numbers, since then there is nothing to read the skills off.
+	"""
+	rotation = stats.get("rotation")
+	if not rotation:
+		return {}
+	import skillData                       # noqa: F401 - registers the skills
+	from models import Skill, Model
+	bonus = Model.attributeBonus(stats)
+	# swings per second, weighted by how much weapon damage each skill carries
+	swings = 0.0
+	own = {}
+	for name, level, rate in rotation:
+		skill = Skill.skills.get(name)
+		if skill is None:
+			continue
+		ability = skill.getAbility(level)
+		swings += rate * ability.gb("weapon damage %") / 100.0
+		for key, amount in ability.bonuses.items():
+			plain = key[len("triggered "):] if key.startswith("triggered ") else key
+			if plain not in damages:
+				continue
+			amount = amount[0] * amount[1] if isinstance(amount, list) else amount
+			own[plain] = own.get(plain, 0.0) + rate * amount
+
+	out = {}
+	for damage in damages:
+		if damage in ("elemental", "all damage"):
+			continue
+		flat = float(stats.get(damage, 0) or 0)
+		perc = float(stats.get(damage + " %", 0) or 0) + bonus.get(damage, 0)
+		multiplier = 1.0 + perc / 100.0
+		base = flat * swings + own.get(damage, 0.0)
+		out[damage] = (base * multiplier, multiplier * swings, base / 100.0)
+	return out
 
 
 def dotFactor(damage, stats):
@@ -368,6 +440,67 @@ class _Stats(object):
 		return self.stats.get(key, 0)
 
 
+def fromRotation(stats, weights, priority):
+	"""Every damage weight from what the rotation actually deals.
+
+	    damagePriority = {"rotation": 30}
+	    damagePriority = {"rotation": 30, "fire": 1.5}
+
+	The number beside "rotation" is what the largest damage weight should come
+	out at, so it lands in the same range as the hand-written ones it replaces
+	and nothing else in the model has to be rescaled. A damage type named
+	alongside it is a lean - a multiplier on what the rotation says, for when
+	you want to push a build somewhere it is not already.
+
+	This is the last of the guessing to go. A priority was a preference, and
+	the honest answer to "how much do I care about fire" is "as much fire as I
+	deal", which the rotation and the skill records know between them. gwyr had
+	physical at 5 and pierce at 5 while dealing 0.9% physical and 8.1% pierce.
+
+	What it cannot see is a type you deal none of yet and want to build into.
+	That is what the lean is for, and it is a real preference rather than a
+	number standing in for arithmetic nobody did.
+	"""
+	notes = []
+	rows = rotationDamage(stats)
+	if not rows:
+		notes.append("damagePriority asked for %r, but allAttacks/s is bare numbers - "
+					 "name the skills and their ranks and it can read them" % ROTATION)
+		return notes
+	scale = float(priority.get(ROTATION) or 0) or 1.0
+	lean = {k: float(v) for k, v in priority.items() if k != ROTATION}
+
+	# Everything is quoted against the biggest, so "rotation": 30 means "my
+	# largest damage weight should be about 30" rather than asking anyone to
+	# guess at units of damage per second.
+	peak = max(max(dFlat, dPerc) * lean.get(d, 1.0)
+			   for d, (_, dFlat, dPerc) in rows.items()) or 1.0
+	rate = float(stats.get("attacks/s") or 0)
+	total = sum(perSecond for perSecond, _, _ in rows.values()) or 1.0
+	swing, shares = 0.0, []
+	for damage, (perSecond, dFlat, dPerc) in rows.items():
+		factor = dotFactor(damage, stats) * lean.get(damage, 1.0) * scale / peak
+		landed = dFlat * lean.get(damage, 1.0) * scale / peak
+		for key, amount in ((damage, dFlat * factor),
+							(damage + " %", dPerc * factor),
+							# a proc's damage is not refreshed by your swinging,
+							# so it keeps the undiscounted value, over attacks/s
+							# because it lands once where a point on the sheet
+							# lands on every swing
+							("triggered " + damage, landed / (rate or 1.0))):
+			if key not in weights:
+				weights[key] = amount
+		swing += float(stats.get(damage, 0) or 0) * dFlat * factor
+		if perSecond > total * 0.005:
+			shares.append("%s %.0f%%" % (damage, 100 * perSecond / total))
+	if swing and "weapon damage %" not in weights:
+		weights["weapon damage %"] = swing / 100.0 / (rate or 1.0)
+	notes.append("damage weights from the rotation, which deals: " + ", ".join(shares))
+	if lean:
+		notes.append("leaning on " + ", ".join("%s x%g" % (k, v) for k, v in sorted(lean.items())))
+	return notes
+
+
 def applyDamagePriority(stats, weights, priority, attributeBonus=None):
 	"""Split one priority per damage type into flat and % weights using the sheet.
 
@@ -427,6 +560,8 @@ def applyDamagePriority(stats, weights, priority, attributeBonus=None):
 	attributeBonus = attributeBonus or {}
 	notes = []
 	priority = dict(priority)
+	if ROTATION in priority:
+		return fromRotation(stats, weights, priority)
 	catchAll = priority.pop(CATCH_ALL, None)
 	if catchAll is None and priority:
 		# Standard rather than opt-in, because leaving it out never meant what
@@ -747,8 +882,8 @@ def validate(name, points, stats, weights, priority=None):
 	if not weights and not priority:
 		problems.append("weights is empty, so every constellation scores 0")
 	for key in (priority or {}):
-		if key == CATCH_ALL:
-			continue        # the one key that names every type rather than one
+		if key in (CATCH_ALL, ROTATION):
+			continue        # the two keys that are not damage types
 		if key not in damages:
 			problems.append("damagePriority key %r is not a damage type%s"
 							% (key, _suggest(key, damages)))

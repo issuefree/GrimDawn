@@ -46,25 +46,32 @@ does.
 
 ## One "hits taken/s" cannot serve a boss and a pack
 
-Retaliation is derived now, and its rate is "hits taken/s". But that is not one
-number: a boss is a single slow heavy hitter and a pack is everything swinging
-at once, so a retribution build's whole damage profile moves between the two
-fights. armitage runs 20% retaliation at a quarter of a hit a second and 80% at
-four, and the constellations change with it - Autumn Boar, Anvil and Tsunami at
-boss rates against Wraith and Harvestman's Scythe at pack rates. Not a rescale:
-a different answer.
+**Half fixed.** The rate is derived now rather than stated: it is the same
+circle `Ability.effectiveTargets` measures for a point-blank area effect, read
+from the other end, so how many enemies are close enough to swing at you falls
+out of density and playStyle. A tank takes 2.78 hits a second in a room, a
+kiting archer 0.23, and one enemy is one hit a second whoever you are. The one
+a second per enemy is measured - `characterAttackSpeed` has a median of exactly
+1.000 across 3052 Monster records.
 
-This is exactly the question showBothFights already answers for enemy count, by
-scoring the same solution against one enemy and against a room. It cannot be
-answered the same way here. Enemy count is read during evaluation, so changing
-it and re-scoring works; the retaliation weights are worked out once, in
-loadModel, so a fight cannot change them.
+What is not fixed is that it cannot differ between the boss column and the pack
+column. Enemy count is read during evaluation, so `showBothFights` can change it
+and re-score; the retaliation and armor weights are worked out once in
+`loadModel`, so a fight cannot change them. armitage runs 50% retaliation at one
+hit a second and 74% at 2.78, and the constellations move with it - not a
+rescale, a different answer.
 
-sweepHitsTaken() in the sandbox is the stopgap - one process per rate, so each
-gets an honest load. The real fix is for hits taken/s to be read where the
-enemy count is read, which would let the boss and pack columns differ properly
-and would make armor per-fight as well, since armor is counted against the same
-figure.
+`sweepHitsTaken()` in the sandbox is the stopgap: one process per rate, so each
+gets an honest load. Sweep between the boss and pack figures for that playStyle
+rather than round numbers.
+
+The real fix is for the weights that depend on the fight to be worked out where
+the fight is known. That would give proper boss and pack columns for retaliation
+and for armor at once.
+
+The one guess left in the chain is `ENGAGEMENT_RADIUS`, three metres. Monster
+attack ranges live on their skills rather than their records, the same reason
+`PHYSICAL_SHARE` is a guess.
 
 ## Retaliation builds
 
@@ -150,3 +157,20 @@ caught gwyr's model sitting a level behind.
 
 `kieri` and `lachesis` state no `devotionPoints`, which is not a thing that can
 be inferred. `gwyr` and `lethe` are scaffolds with a level and nothing else.
+
+## Per-character data still outstanding
+
+Not modelling gaps - transcription. Every one of these is a number only the game
+can supply.
+
+| character | needs |
+|---|---|
+| all with a rotation | **skill ranks.** Every rank is a stub except fenris's four in `main attack` and hela's two. Every damage weight is priced against them |
+| kieri, lachesis | `devotionPoints`. Neither loads without it |
+| kieri, lachesis, lethe, lilith | which skill is the main attack, and their rotations - none has a named skill yet |
+| armitage, pakse | confirm the main attack. Fire Strike and Righteous Fervor are guesses; pakse's matters more, because his weapon pool claims 100% of swings at stub ranks so Righteous Fervor never fires |
+| hela, kieri, lachesis, lethe, lilith, lochlan, pakse | `attacks/s` off the sheet. All are round numbers or the old whole-bar aggregate. The three that have been read moved 3 -> 1.64, 3 -> 1.91 and 2 -> 2.43 |
+| everyone | resistances. `applyDefensePriority` derives nothing for `resist` because no sheet carries them |
+| armitage | `hits taken/s` if 2.78 is wrong - it drives 76% of what he deals |
+| fenris | is his slam Brutal Slam off Severed Claw or the plainer Slam off Chipped Claw? Same cooldown, different damage |
+| nyx | level 24, Occultist/Shaman, no model at all |

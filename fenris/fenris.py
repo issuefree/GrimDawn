@@ -20,11 +20,29 @@ stats = {
 		# is grinding a difficulty he has out-levelled.
 		"difficulty":"normal",
 		"attacks/s":3,
+		# His rotation, from bots/fenris.ahk against the cooldowns the records
+		# state. A skill fires no faster than its cooldown and no faster than
+		# he presses it, so the rate is one over whichever is longer, and the
+		# load prints which one won for each.
+		#
+		# Feral Claws is what the left button holds down; the rest are buttons
+		# on the bar, including the two buffs, since a devotion can be bound to
+		# a buff as readily as to an attack.
+		#
+		# RANKS ARE STUBS at 8 except the four in "main attack" above, which
+		# are real.
 		"allAttacks/s":[
-			1.5, # main attack (taking it down a notch due to using other abilities etc)
-			1,   # slam
-			.5,  # rip
-			.33, # leap
+			("Feral Claws", 8),            # held; the Werewolf form's attack
+			("Brutal Slam", 1.0),          # off Severed Claw. Chipped Claw's
+										   # plain "Slam" is the weaker version
+										   # and has the same 2s cooldown, so
+										   # only its damage would differ
+			("Curse of Frailty", 8, 2.5),
+			("Leap", 8),
+			("Bonechilling Cry", 8, 3.0),
+			("Blood of Dreeg", 8, 3.0),
+			("Rip and Tear", 8),
+			("Rallying Cry", 8, 4.0),
 		],
 
 		# What he actually swings, which is what every damage weight is priced
@@ -69,34 +87,20 @@ stats = {
 		]
 	}
 
-# What every damage type is worth, in one place. One number each, and the
-# flat-versus-percent split comes off the sheet - which is the part that cannot
-# be done by hand and the part the four pairs below were getting wrong.
+# Derived from the rotation rather than stated. He deals 66% bleed, 23%
+# physical, 9% chaos, 2% pierce - against hand-written priorities of 15, 5, 15
+# and 10, which had chaos level with bleed while dealing a seventh of it, and
+# pierce second-highest while dealing a fiftieth.
 #
-# These four are the halves of the pairs they replaced, so the preference is
-# unchanged and only the split moves. Against the current sheet:
+# The bleed is that large because Voracity puts a bleed on the Werewolf form
+# and his sheet carries 1500 flat of it. It is still discounted for refreshing
+# - he swings three times a second against a three second bleed - which is why
+# his flat bleed weight stays modest while his bleed % does not.
 #
-#     physical    5    ->   5.10 / 5.51
-#     pierce     10    ->   8.00 / 1.56
-#     bleed      15    ->   2.52 / 3.90
-#     chaos      15    ->  12.99 / 8.81
-#
-# pierce % has something to multiply only because Feral Claws brings 117
-# pierce of its own - the sheet says 0 flat pierce, and 200% of what is on the
-# sheet would be 200% of nothing. That is what naming the main attack buys.
-#
-# bleed is the low one at 2.49 despite 1500 flat and a priority of 15, because
-# it is a damage over time: he swings three times a second against a three
-# second bleed, so eight ninths of each application is overwritten before it
-# lands. His triggered bleed is untouched by that and comes out far higher,
-# because a devotion's bleed is not reapplied by his swinging - which is why
-# his solution buys 3295 of it.
+# 13 is what his largest damage weight was before this, so the rest of the
+# model keeps its scale. Name a type beside it to lean.
 damagePriority = {
-		"physical":5,
-		"pierce":10,
-		"bleed":15,
-		"chaos":15,
-		"damage":1,
+		"rotation":13,
 	}
 
 # How much of what the solution buys should be keeping him alive. One number,

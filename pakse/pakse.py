@@ -38,9 +38,9 @@ stats = {
 			("Shield Slam", 3.0),          # off Battered Shell
 			("Blade Ward", 3.0),           # off Reinforced Shell; 12s cooldown
 										   # wins, so the press does not matter
-			.4,     # "stomp" and "dreegsGaze", on key 9 - devotion procs
-					# rather than item skills, so they fire on their own
-					# triggers and there is nothing here to name
+			# "stomp" and "dreegsGaze" on key 9 were a rate here. Both are
+			# devotion procs: they fire on their own triggers and the devotion
+			# system already scores them, so a rate here counted them twice.
 		],
 		"blocks/s":1,
 		"hits/s":1.5, # assuming a non-trivial fight

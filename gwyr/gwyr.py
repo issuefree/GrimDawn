@@ -44,8 +44,9 @@ stats = {
 		("Inquisitor Seal", 12),
 		("Thermite Mine", 12, 5.0),     # the record states no cooldown at all
 		("Mortar Trap", 12, 15.0),
-		0.167,                          # "gaze" on key 9, pressed every 6s -
-										# an item or devotion skill, not named yet
+		# "gaze" on key 9 was a rate here. It is a devotion proc: it fires on
+		# its own trigger and the devotion system already scores it, so a rate
+		# in the rotation was counting it a second time as an attack source.
 	],
 
 	# STUB - the ranks are placeholders and every damage weight is priced

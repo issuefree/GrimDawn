@@ -21,11 +21,22 @@ stats = {
 		"difficulty":"veteran",
 		# estimate how frequent combat events are for calculating dynamic stats and abilities
 		"attacks/s":2,
+		# His rotation, from bots/lochlan.ahk against the cooldowns the records
+		# state. A skill fires no faster than its cooldown and no faster than
+		# it is pressed, so the rate is one over whichever is longer; the load
+		# prints which one won for each. RANKS ARE STUBS.
 		"allAttacks/s":[
-			2,	#savagery
-			2,	#storm totem
-			1,	#wind devil
-			.33,#primal strike
+			("Savagery", 10),                  # held on left button
+			("Primal Strike", 10, 1.0),
+			("Storm Totem", 10, 4.3),
+			("Wendigo Totem", 10, 5.0),
+			("War Cry", 10, 5.0),
+			0.29,   # "oleronsMight", pressed every 3.5s. Soldier has an
+					# Oleron's Rage and this is probably not it - most likely
+					# the item skill off Chains of Oleron, which he wears
+			1,      # Wind Devil. Really is missing from skillData: its record
+					# yields no bonuses skillgen can read, so there is nothing
+					# to name. See NOTES.md
 		],
 		"hits/s":2,
 		"blocks/s":0,

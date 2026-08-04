@@ -20,15 +20,21 @@ stats = {
 		# is grinding a difficulty he has out-levelled.
 		"difficulty":"ultimate",
 		"attacks/s":2.75,
+		# His rotation, from bots/armitage.ahk against the cooldowns the records
+		# state. A skill fires no faster than its cooldown and no faster than
+		# it is pressed, so the rate is one over whichever is longer; the load
+		# prints which one won for each. RANKS ARE STUBS.
 		"allAttacks/s":[
-			2, # main attack (fire strike) (taking it down a notch due to using other abilities etc)
-			1, # stormfire - seal of destruction
-			.75, # mortar
-			.75, # thermite mine
-			2*.25, # zolhan's 
-			2*.25, # markovian's advantage
-			.5, # brutal shield slam: 3s recharge, 3 target max. Call it 2 targets and 4 seconds between = .5 aps
-			.4, #war cry: 7.5 s recharge, big radius, call it 3 hits = 3/7.5 = .4
+			("Fire Strike", 12),               # held on left button
+			("Thermite Mine", 12, 5.0),
+			("War Cry", 12, 7.5),
+			("Mortar Trap", 12, 15.0),
+			2*.25,  # Zolhan's Technique, and below Markovian's Advantage. Both
+			2*.25,  # are weapon pool procs rather than buttons - they fire on a
+					# chance when he swings, so a press interval says nothing
+					# about them and the rate is attacks/s times that chance
+			.5,     # "brutal shield slam", pressed every 3s - an item skill
+			1,      # stormfire, off Seal of Destruction
 		],
 		"hits/s":4,
 		"blocks/s":1.5,

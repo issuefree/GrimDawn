@@ -86,6 +86,19 @@ pieces - including the Ultos' Wrath proc on the fifth - are invisible. lochlan
 wears that set. They used to be hand-written in his model file; see the history
 of `lochlan/lochlan.py` for what they said.
 
+## Skills that yield no bonuses are dropped entirely
+
+skillgen writes a Skill only if some level of it produced a bonus it could
+read, so a skill whose whole payload is in fields the FLAT/DIRECT maps do not
+cover vanishes rather than appearing empty. Wind Devil is the one that has come
+up - a `Skill_TargetedSpawnPet` whose levelAbility returns `{}` - and lochlan
+plays it, so his rotation has to carry a bare number where every other line
+names a skill.
+
+Worth a census: how many skills across the ten masteries produce nothing, and
+which fields they have that nothing reads. The count is easy to get, since
+skillsOf yields 33 for Soldier where skillData holds 27.
+
 ## skillgen emits no parent/child links
 
 `Ability.augment` and `Skill.childSkills` exist and are dead, because nothing

@@ -20,15 +20,24 @@ stats = {
 		# is grinding a difficulty he has out-levelled.
 		"difficulty":"elite",
 		"attacks/s":2,
+		# His rotation, from bots/pakse.ahk against the cooldowns the records
+		# state. A skill fires no faster than its cooldown and no faster than
+		# it is pressed, so the rate is one over whichever is longer; the load
+		# prints which one won for each. RANKS ARE STUBS.
 		"allAttacks/s":[
-			1, # main attack, half value due to spamming abilities
-			1*.19, # smite 
-			1*.18, # smash
-			1*.15, # zolhan's 
-			1*.15, # markovian's advantage
-			.5, # aegis
-			.5, # brutal shield slam: 3s recharge, 3 target max. Call it 2 targets and 4 seconds between = .5 aps
-			.4, # war cry: 7.5 s recharge, big radius, call it 3 hits = 3/7.5 = .4
+			("Righteous Fervor", 12),          # held on left button
+			("Aegis of Menhir", 12, 0.5),
+			("Judgment", 12, 4.8),
+			("Overguard", 12, 5.0),
+			("Ascension", 12, 5.0),
+			("War Cry", 12, 7.5),
+			1*.19,  # Smite, and below Shattering Smash, Zolhan's Technique and
+			1*.18,  # Markovian's Advantage. All four are weapon pool procs - a
+			1*.15,  # chance on each swing rather than a button - so no press
+			1*.15,  # interval describes them and they keep hand-figured rates
+			.4,     # "bladeWard", "stomp", "dreegsGaze", "shieldSlam" - the
+					# rest of his bar is item and devotion skills, on keys 9
+					# and 0, which skillData has no entry for
 		],
 		"blocks/s":1,
 		"hits/s":1.5, # assuming a non-trivial fight

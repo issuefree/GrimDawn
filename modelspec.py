@@ -125,7 +125,7 @@ def resolveAttackRates(stats):
 	reduction = min(90.0, float(stats.get("reduce cooldown") or 0)) / 100.0
 	swing = float(stats.get("attacks/s") or 0)
 	rates, notes, rows = [], [], []
-	for entry in entries:
+	for index, entry in enumerate(entries):
 		if not isinstance(entry, (tuple, list)):
 			rates.append(float(entry))
 			continue
@@ -139,12 +139,20 @@ def resolveAttackRates(stats):
 		press = float(press or 0)
 		interval = max(cooldown, press)
 		why = "cooldown %gs" % cooldown if cooldown >= press else "pressed every %gs" % press
-		if not interval:
-			# no cooldown and no stated interval: a button you hold down
+		if not interval and index == 0:
+			# The first entry is the attack you hold the button down on, and a
+			# basic attack has no cooldown to read, so it runs at attacks/s.
 			interval, why = (1.0 / swing if swing else 0), "held, so attacks/s"
 		if not interval:
-			notes.append("allAttacks/s: %r has no cooldown and no press interval, "
-						 "and there is no attacks/s to fall back on" % name)
+			# Anything else with no cooldown is not a button at all - a weapon
+			# pool skill like Smite fires on a chance when you swing, and there
+			# is no interval that describes it. Falling back to attacks/s here
+			# gave pakse three separate skills at his full swing rate.
+			notes.append("allAttacks/s: %r states no cooldown, and it is not the "
+						 "first entry, so it is not something you hold down. If it "
+						 "is a weapon pool proc give it a plain rate - attacks/s "
+						 "times its chance; otherwise say how often you press it"
+						 % name)
 			continue
 		rates.append(1.0 / interval)
 		rows.append("%s at %g: %.3g/s (%s)" % (name, level, 1.0 / interval, why))

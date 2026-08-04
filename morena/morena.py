@@ -21,12 +21,20 @@ stats = {
 		"armor":366,
 
 		"attacks/s":3,
+		# His rotation, from bots/morena.ahk against the cooldowns the records
+		# state. A skill fires no faster than its cooldown and no faster than
+		# it is pressed, so the rate is one over whichever is longer; the load
+		# prints which one won for each. RANKS ARE STUBS.
 		"allAttacks/s":[
-			1.88, # main attack
-			1,   # slam
-			.75,  # ring
-			.75,  # blades
-			.75,  # shadow
+			("Onslaught", 1),                  # held on left button
+			("Shadow Strike", 8, 1.75),
+			("Ring of Steel", 8, 1.5),
+			("Leap", 8, 1.5),
+			("Bonechilling Cry", 8, 4.5),
+			("Rallying Cry", 8, 8.0),
+			("Amarasta's Blade Burst", 8, 10.0),
+			0.67,   # Sacred Strike off Blessed Steel, pressed every 1.5s - an
+					# item skill, so not in skillData to look a cooldown up in
 		],
 		# The first of those, with the modifiers that only apply to it. Read for
 		# what a swing is worth, which is what pressing a skill an item grants

@@ -44,24 +44,42 @@ attack-triggered devotions - but it also sets the DoT refresh interval in
 `dotFactor`, and a channelled beam does not reapply a bleed the way a swing
 does.
 
+## One "hits taken/s" cannot serve a boss and a pack
+
+Retaliation is derived now, and its rate is "hits taken/s". But that is not one
+number: a boss is a single slow heavy hitter and a pack is everything swinging
+at once, so a retribution build's whole damage profile moves between the two
+fights. armitage runs 20% retaliation at a quarter of a hit a second and 80% at
+four, and the constellations change with it - Autumn Boar, Anvil and Tsunami at
+boss rates against Wraith and Harvestman's Scythe at pack rates. Not a rescale:
+a different answer.
+
+This is exactly the question showBothFights already answers for enemy count, by
+scoring the same solution against one enemy and against a room. It cannot be
+answered the same way here. Enemy count is read during evaluation, so changing
+it and re-scoring works; the retaliation weights are worked out once, in
+loadModel, so a fight cannot change them.
+
+sweepHitsTaken() in the sandbox is the stopgap - one process per rate, so each
+gets an honest load. The real fix is for hits taken/s to be read where the
+enemy count is read, which would let the boss and pack columns differ properly
+and would make armor per-fight as well, since armor is counted against the same
+figure.
+
 ## Retaliation builds
 
-`damagePriority` splits one preference into a flat weight and a percentage
-weight using the sheet, and nothing does that for retaliation. `retaliation` and
-`retaliation %` are two hand-written weights with no relationship to each other,
-and `X retaliation` falls back to `retaliation` times a duration factor with no
-multiplier at all - deliberately, because the game's own tooltip says "% All
-Damage does not affect Retaliation damage".
+**Fixed.** `retaliationDamage` derives the flat and percentage weights the way
+`rotationDamage` derives the attack ones, off flat retaliation per type on the
+sheet times "% Retaliation Damage", at the rate you are hit. Retaliation keeps
+its own multiplier and takes no attribute bonus, because the game's tooltip
+says "% All Damage does not affect Retaliation damage".
 
-But "+% Retaliation Damage" does affect it, and that is the split nobody
-derives. armitage carries 450% retaliation on his sheet and no flat retaliation
-figure at all, so there is nothing to derive it from even if the code asked -
-the same shape as lochlan's missing flat damage. His retaliation lines are
-20716 of his 88696, so this is not a corner.
+The part that mattered was putting it on the same scale as the rotation. What
+you deal by swinging against what you deal by being hit was the one balance
+nobody could set honestly, since the two halves were hand-set in different
+units. Both are damage a second per point now, so the split falls out.
 
-What would fix it: flat retaliation per type on the sheet, then the same
-treatment damage gets - a `retaliationPriority` block, or retaliation folded
-into `damagePriority` as `X retaliation` entries.
+What remains is which rate to use, above.
 
 ## Duration damage on pets and retaliation
 

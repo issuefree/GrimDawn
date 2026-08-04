@@ -296,6 +296,73 @@ print("SWEEP %f %f" % (score, share))
 '''
 
 
+
+def sweepHitsTaken(values=(0.25, 0.5, 1, 2, 4), budget=1.0, seeds=3):
+	"""What a retaliation build is worth against a boss and against a pack.
+
+		sweepHitsTaken()
+		sweepHitsTaken([0.2, 1, 3])
+
+	Retaliation fires off being hit, so how often you are hit is its rate the
+	way attacks/s is the rotation's - and that is not one number. A boss is one
+	slow heavy hitter; a pack is everything swinging at once. So a retribution
+	build's whole damage profile moves between the two fights, and the
+	constellations worth taking may move with it.
+
+	This is the same question showBothFights asks about enemy count, and it
+	cannot be answered the same way: the enemy count is read during evaluation,
+	but the retaliation weights are worked out once when the model loads. So it
+	is a sweep rather than two columns - see NOTES.md.
+
+	Prints the share of what you deal that is retaliation, the score, and the
+	solution, so you can see whether the answer changes or only its size does.
+
+	Read the shares and the solutions, not the scores. Each row renormalises
+	its damage weights to a peak, so the totals are in different units and a
+	bigger number on one row does not mean a better build - only that its
+	weights are scaled differently.
+	"""
+	import subprocess
+	print("\n  hits taken/s     retal   attack     score   solution")
+	for value in values:
+		out = subprocess.run([sys.executable, "-c", _TAKEN, model.name, str(value),
+							  str(budget), str(seeds)],
+							 capture_output=True, text=True, cwd=os.path.dirname(
+								 os.path.abspath(__file__)))
+		line = [l for l in out.stdout.splitlines() if l.startswith("TAKEN")]
+		if not line:
+			print("  %12g  %s" % (value, (out.stderr or "no result").strip().splitlines()[-1:]))
+			continue
+		_, share, score, path = line[-1].split(" ", 3)
+		print("  %12g  %5.0f%%  %6.0f%%  %8.0f   %s"
+			  % (value, 100 * float(share), 100 * (1 - float(share)), float(score), path))
+
+
+_TAKEN = '''
+import sys, io, contextlib
+sys.path.insert(0, ".")
+name, taken, budget, seeds = sys.argv[1], float(sys.argv[2]), float(sys.argv[3]), int(sys.argv[4])
+import modelspec
+realDefaults = modelspec.applyDefaults
+def patched(stats):
+    stats["hits taken/s"] = taken
+    return realDefaults(stats)
+modelspec.applyDefaults = patched
+buf = io.StringIO()
+with contextlib.redirect_stdout(buf):
+    from models import Model
+    from fastsolve import solveModel
+    model = Model.loadModel(name)
+    rows = modelspec.rotationDamage(model.stats)
+    retal, _ = modelspec.retaliationDamage(model.stats)
+    attack = sum(v[0] for v in rows.values())
+    r = sum(v[0] for v in retal.values())
+    _, cons, score, _ = solveModel(model, budget, seeds)
+print("TAKEN %f %f %s" % (r / (attack + r) if attack + r else 0, score,
+                          ", ".join(c.name for c in cons)))
+'''
+
+
 def evalItems(itemList, slot=None):
 	"""Side by side for Items, best first, by name or as objects.
 

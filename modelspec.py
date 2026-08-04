@@ -35,9 +35,26 @@ ROTATION = "rotation"
 # A character absorbs 70% of physical damage up to their armor value with
 # nothing on their gear saying otherwise; "armor absorb" on the sheet wins.
 ARMOR_ABSORB_DEFAULT = 70.0
-# How often you are hit. Not "hits/s", which is hits you land - a hit-triggered
-# proc fires off yours, not theirs.
-HITS_TAKEN_DEFAULT = 1.0
+def hitsTaken(stats):
+	"""How often you are hit. Stated if you say so, otherwise derived.
+
+	Not "hits/s", which is hits you land - a hit-triggered proc fires off yours,
+	not theirs.
+
+	Derived, it is the same circle Ability.effectiveTargets measures for a
+	point-blank area effect, read from the other end: the enemies your own pbaoe
+	would cover are the enemies close enough to swing at you. Same density, same
+	playStyle adjustment, same ceiling. So a tank standing in a room takes four
+	hits a second where a kiting archer takes half of one, and against a single
+	boss both take one - which is the shape a retribution build actually has.
+	"""
+	stated = float(stats.get("hits taken/s") or 0)
+	if stated:
+		return stated
+	import devotionderive
+	return devotionderive.hitsTakenFor(stats.get("playStyle"),
+									   stats.get("enemy density") or None,
+									   stats.get("enemies"))
 # And how much of what hits you is physical, which is the only thing armor
 # reduces. A guess, and the one number here with nothing behind it: monster
 # damage lives on their skills rather than their records, so it is not a mean
@@ -374,7 +391,7 @@ def retaliationDamage(stats):
 
 	Returns ({damage: (perSecond, dFlat)}, dPercent).
 	"""
-	taken = float(stats.get("hits taken/s") or 0) or HITS_TAKEN_DEFAULT
+	taken = hitsTaken(stats)
 	percent = float(stats.get("all retaliation %", 0)
 					or stats.get("retaliation %", 0) or 0)
 	multiplier = 1.0 + percent / 100.0
@@ -525,10 +542,10 @@ def applyDefensePriority(stats, weights, priority):
 	# often you are hit is its own number and defaults to once a second.
 	armor = float(stats.get("armor") or 0)
 	absorb = float(stats.get("armor absorb") or ARMOR_ABSORB_DEFAULT)
-	taken = float(stats.get("hits taken/s") or 0)
-	if not taken:
-		taken = HITS_TAKEN_DEFAULT
-		assumed.append("hits taken/s %g" % taken)
+	taken = hitsTaken(stats)
+	if not stats.get("hits taken/s"):
+		assumed.append("hits taken/s %.2f, from %s standing in a room at the "
+					   "default density" % (taken, stats.get("playStyle") or "?"))
 	if stats.get("armor absorb") is None:
 		assumed.append("armor absorb %g%%" % absorb)
 	if armor:
@@ -672,9 +689,9 @@ def fromRotation(stats, weights, priority):
 	notes.append("damage weights from the rotation, which deals: " + ", ".join(shares))
 	if retalTotal:
 		notes.append("retaliation is %.0f%% of what he deals - %.0f a second against "
-					 "%.0f from the rotation, at %g hits taken a second"
+					 "%.0f from the rotation, at %.2f hits taken a second"
 					 % (100 * retalTotal / (total + retalTotal), retalTotal, total,
-						float(stats.get("hits taken/s") or 0) or HITS_TAKEN_DEFAULT))
+						hitsTaken(stats)))
 	if lean:
 		notes.append("leaning on " + ", ".join("%s x%g" % (k, v) for k, v in sorted(lean.items())))
 	return notes

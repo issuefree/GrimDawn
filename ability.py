@@ -305,7 +305,7 @@ class Ability:
 			elif shape == "circle":
 				pass
 			elif shape == "pbaoe":
-				targets = targets * .125
+				targets = targets * devotionderive.PBAOE_BY_STYLE["ranged"]
 			elif shape == "melee":
 				targets = targets * .05
 
@@ -324,7 +324,7 @@ class Ability:
 			elif shape == "circle":
 				targets = targets * 1.25
 			elif shape == "pbaoe":
-				targets = targets * .75
+				targets = targets * devotionderive.PBAOE_BY_STYLE["shortranged"]
 			elif shape == "melee":
 				targets = targets * .1
 
@@ -361,7 +361,7 @@ class Ability:
 			elif shape == "circle":
 				pass
 			elif shape == "pbaoe":
-				targets = targets * 1.5
+				targets = targets * devotionderive.PBAOE_BY_STYLE["tank"]
 			elif shape == "melee":
 				pass
 

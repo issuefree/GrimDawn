@@ -70,6 +70,47 @@ SHAPE_BY_CLASS = {
 DEFAULT_DENSITY = 0.03
 MAX_TARGETS = 4.0
 
+# How many enemies end up inside a circle centred on you, relative to what the
+# geometry alone would give - which is a statement about how you fight rather
+# than about the skill. A kiting archer barely gets anything into arm's reach; a
+# tank is standing in the middle of them on purpose.
+#
+# These are the pbaoe numbers out of Ability.effectiveTargets, which reads them
+# from here so there is one copy. They answer two questions at once: how many
+# enemies a pbaoe of yours covers, and how many are close enough to be hitting
+# you - which is the same circle seen from either end.
+PBAOE_BY_STYLE = {"ranged": 0.125, "shortranged": 0.75, "melee": 1.0, "tank": 1.5}
+
+# Monsters swing about once a second: the median of characterAttackSpeed over
+# the 3052 Monster records that state one is exactly 1.000, the mean 1.016.
+# So the rate you are hit at is very nearly the number of them in reach.
+MONSTER_SWINGS = 1.0
+
+# Metres around you that enemies attack from. The one figure here with nothing
+# measured behind it - monster attack ranges live on their skills rather than
+# their records, the same reason PHYSICAL_SHARE is a guess. Three metres is
+# arm's reach and a step.
+ENGAGEMENT_RADIUS = 3.0
+
+
+def hitsTakenFor(playStyle, density=None, enemies=None):
+	"""How often you are hit, from how many enemies get within reach of you.
+
+	The same circle Ability.effectiveTargets measures for a pbaoe, read from the
+	other end: the enemies your own point-blank area effect would cover are the
+	enemies close enough to be swinging at you. So it is the same density, the
+	same playStyle adjustment and the same ceiling, times what a monster swings
+	at - which the records say is once a second.
+
+	Which makes a retribution build's rate fall out of the fight rather than
+	being stated: one enemy is one hit a second, a room of them is four, and a
+	kiting character is barely touched whatever the room holds.
+	"""
+	targets = targetsFor("Skill_AttackRadius", radius=ENGAGEMENT_RADIUS, density=density)
+	targets *= PBAOE_BY_STYLE.get(playStyle, 1.0)
+	limit = enemies if enemies else MAX_TARGETS
+	return min(targets, MAX_TARGETS, limit) * MONSTER_SWINGS
+
 
 def shapeFor(skillClass):
 	"""The shape a class implies, or "single" where the table has no entry.

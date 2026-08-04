@@ -20,7 +20,7 @@ is triggered:
 """
 import re
 
-from gddata import Database, atLevel, lastValue, procRecords
+from gddata import Database, atLevel, firstOf, lastValue, procRecords
 from devotiongen import dictLiteral, procBonuses
 
 MASTERY = re.compile(r"/_classtraining_class(\d+)\.dbr$")
@@ -131,6 +131,25 @@ def resolve(skill, db):
 	return nested or skill
 
 
+def topLevel(skill, db):
+	"""How many points the skill takes, ultimate ranks included.
+
+	A buff skill keeps its ladder where it keeps its name: on the buff record it
+	delegates to, not on the node the tree points at. curse1.dbr states no
+	skillMaxLevel at all - curse1_buff.dbr states 10 and 20 - so reading the node
+	alone gave a top of 1 for fifty of the three hundred skills, Curse of
+	Frailty, Blood of Dreeg and Word of Pain among them. They came out one level
+	long, and since Skill.getAbility clamps to maxLevel, every rank a model
+	stated for one of them was silently pinned to the first point spent.
+
+	So the ladder is taken from the first record in the chain that states one,
+	the same way skillsOf takes the name.
+	"""
+	records = procRecords(skill, db)
+	top = firstOf(records, "skillUltimateLevel") or firstOf(records, "skillMaxLevel")
+	return int(top or 1)
+
+
 def levelAbility(skill, db, level):
 	"""What one skill looks like at one level."""
 	view = atLevel(skill, level)
@@ -177,8 +196,7 @@ def generate(path="skillData.py", root=None):
 	for classNumber, mastery in sorted(masteries(db).items()):
 		lines.append("# === %s ===" % mastery)
 		for name, skill in skillsOf(db, classNumber):
-			top = int(lastValue(skill.get("skillUltimateLevel", 0))
-					  or lastValue(skill.get("skillMaxLevel", 0)) or 1)
+			top = topLevel(skill, db)
 			levels = []
 			for level in range(1, top + 1):
 				conditions, bonuses = levelAbility(skill, db, level)

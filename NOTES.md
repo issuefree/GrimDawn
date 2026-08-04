@@ -124,6 +124,24 @@ Worth a census: how many skills across the ten masteries produce nothing, and
 which fields they have that nothing reads. The count is easy to get, since
 skillsOf yields 33 for Soldier where skillData holds 27.
 
+## Buff skills came out one rank long
+
+**Fixed.** `skillgen` read a skill's ladder off the node the tree points at, and
+a buff skill does not keep it there - `curse1.dbr` states no `skillMaxLevel` at
+all, while `curse1_buff.dbr` states 10 and 20. Fifty of the three hundred skills
+came out with a single level, and `Skill.getAbility` clamps, so a model naming
+Blood of Dreeg at 8 silently got it at 1. `topLevel` now takes the ladder from
+the first record in the chain that states one, the same way `skillsOf` takes the
+name; 32 skills grew their real ladders and the remaining 18 are transmuters,
+which genuinely take one point.
+
+No score moved. The four affected skills in the current models - Curse of
+Frailty, Bonechilling Cry, Blood of Dreeg and Rallying Cry, in fenris and morena
+- are buffs that deal no damage and are pressed slower than they recharge, so
+neither the damage split nor the rate depended on their rank. It matters for the
+transcription below: until this, a rank written down for one of those was thrown
+away on load.
+
 ## skillgen emits no parent/child links
 
 `Ability.augment` and `Skill.childSkills` exist and are dead, because nothing

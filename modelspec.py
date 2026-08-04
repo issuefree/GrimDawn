@@ -46,7 +46,8 @@ PHYSICAL_SHARE = 0.5
 
 REQUIRED_POINTS = "devotionPoints"
 REQUIRED_STATS = {
-	"attacks/s": "attacks per second, used to scale everything trigger-based",
+	"attacks/s": "your Attack Speed off the sheet - one weapon swing. Not a sum "
+				 "of everything you press; that is allAttacks/s",
 	"playStyle": "one of: melee, shortranged, ranged, tank",
 }
 PLAY_STYLES = ("melee", "shortranged", "ranged", "tank")
@@ -1046,7 +1047,7 @@ if __name__ == "__main__":
 devotionPoints = %(points)d
 
 stats = {
-	"attacks/s": 2.0,            # attacks per second, as swung in practice
+	"attacks/s": 2.0,            # Attack Speed off the sheet: one weapon swing
 	"playStyle": "%(style)s",%(styles)s
 
 	# Break out each trigger source for a better estimate of stacked procs.

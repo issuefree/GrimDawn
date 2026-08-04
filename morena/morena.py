@@ -21,14 +21,21 @@ stats = {
 		"armor":366,
 
 		# Off the sheet - her Attack Speed, which is what one weapon swing
-		# takes. Not a sum of everything she presses: that is allAttacks/s
+		# takes. Not a sum of everything she presses: that is the rotation
 		# below, and counting the bar in both places counted it twice.
 		"attacks/s":1.91,
-		# His rotation, from bots/morena.ahk against the cooldowns the records
+		# Her rotation, from bots/morena.ahk against the cooldowns the records
 		# state. A skill fires no faster than its cooldown and no faster than
 		# it is pressed, so the rate is one over whichever is longer; the load
-		# prints which one won for each. RANKS ARE STUBS.
-		"allAttacks/s":[
+		# prints which one won for each.
+		#
+		# Onslaught is first, so it is what she holds the button down on and it
+		# is her main attack. The last two are not buttons at all - passives
+		# that only apply to it - so the load reads them as modifiers on her
+		# swing. That is what pressing a skill an item grants costs her, and it
+		# moves as these get levelled: a component skill that beats Onslaught at
+		# 1 will not beat it at 10. RANKS ARE STUBS.
+		"rotation":[
 			("Onslaught", 1),                  # held on left button
 			("Shadow Strike", 8, 1.75),
 			("Ring of Steel", 8, 1.5),
@@ -37,12 +44,9 @@ stats = {
 			("Rallying Cry", 8, 8.0),
 			("Amarasta's Blade Burst", 8, 10.0),
 			("Sacred Strike", 1.5),        # off Blessed Steel
+			("Open Wounds", 3),            # not buttons: passives on Onslaught
+			("Endless Rage", 1),
 		],
-		# The first of those, with the modifiers that only apply to it. Read for
-		# what a swing is worth, which is what pressing a skill an item grants
-		# costs you - update it as these get levelled, because a component skill
-		# that beats Onslaught at 1 will not beat it at 10.
-		"main attack":[("Onslaught", 1), ("Open Wounds", 3), ("Endless Rage", 1)],
 
 		"hits/s":2,
 		"low healths/s":1.0/30, # total guesswork.

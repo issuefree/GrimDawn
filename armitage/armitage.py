@@ -20,14 +20,15 @@ stats = {
 		# is grinding a difficulty he has out-levelled.
 		"difficulty":"ultimate",
 		# Off the sheet - his Attack Speed, which is what one weapon swing
-		# takes. Not a sum of everything he presses: that is allAttacks/s
+		# takes. Not a sum of everything he presses: that is the rotation
 		# below, which lists the bar skill by skill.
 		"attacks/s":2.41,
 		# His rotation, from bots/armitage.ahk against the cooldowns the records
 		# state. A skill fires no faster than its cooldown and no faster than
 		# it is pressed, so the rate is one over whichever is longer; the load
-		# prints which one won for each. RANKS ARE STUBS.
-		"allAttacks/s":[
+		# prints which one won for each. The first entry is what he holds the
+		# button down on, and it is his main attack. RANKS ARE STUBS.
+		"rotation":[
 			("Fire Strike", 12),               # held on left button
 			("Thermite Mine", 12, 5.0),
 			("War Cry", 12, 7.5),

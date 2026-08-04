@@ -20,7 +20,7 @@ stats = {
 		# is grinding a difficulty he has out-levelled.
 		"difficulty":"normal",
 		# Off the sheet - his Attack Speed, which is what one weapon swing
-		# takes. Not a sum of everything he presses: that is what allAttacks/s
+		# takes. Not a sum of everything he presses: that is what the rotation
 		# below is for, and adding the two together counted his bar twice.
 		"attacks/s":1.64,
 		# His rotation, from bots/fenris.ahk against the cooldowns the records
@@ -28,13 +28,20 @@ stats = {
 		# he presses it, so the rate is one over whichever is longer, and the
 		# load prints which one won for each.
 		#
-		# Feral Claws is what the left button holds down; the rest are buttons
-		# on the bar, including the two buffs, since a devotion can be bound to
-		# a buff as readily as to an attack.
+		# Feral Claws is first, which is what the left button holds down: it
+		# runs at attacks/s and it is his main attack. The rest are buttons on
+		# the bar, including the two buffs, since a devotion can be bound to a
+		# buff as readily as to an attack - except the last three, which are
+		# never pressed at all. Werewolf is the form Feral Claws comes from and
+		# the other two are passives on it, so the load reads them as modifiers
+		# on his swing rather than as attacks of their own. Those three carry
+		# 110% weapon damage between them, which is why the flat damage on the
+		# sheet below is not decoration, and 117 pierce, which is what the 200%
+		# pierce below has to multiply: none of it is on the sheet.
 		#
-		# RANKS ARE STUBS at 8 except the four in "main attack" above, which
-		# are real.
-		"allAttacks/s":[
+		# RANKS ARE STUBS at 8 except Werewolf, Voracity and Recklessness, and
+		# Feral Claws, which are real.
+		"rotation":[
 			("Feral Claws", 8),            # held; the Werewolf form's attack
 			("Brutal Slam", 1.0),          # off Severed Claw. Chipped Claw's
 										   # plain "Slam" is the weaker version
@@ -46,16 +53,10 @@ stats = {
 			("Blood of Dreeg", 8, 3.0),
 			("Rip and Tear", 8),
 			("Rallying Cry", 8, 4.0),
+			("Werewolf", 8),               # not buttons: the form, and two
+			("Voracity", 4),               # passives that modify what he swings
+			("Recklessness", 9),
 		],
-
-		# What he actually swings, which is what every damage weight is priced
-		# against. Werewolf is the form; Feral Claws is the attack it gives him,
-		# and it carries 110% weapon damage at rank 8 - so the flat damage on
-		# the sheet below is not decoration, he delivers 110% of it every swing.
-		# It also brings 117 pierce of its own, which is where the 200% pierce
-		# below has something to multiply: none of it is on the sheet.
-		"main attack": [("Feral Claws", 8), ("Werewolf", 8),
-						("Voracity", 4), ("Recklessness", 9)],
 
 		"hits/s":4,
 		"blocks/s":0,   # no shield, so the block-triggered procs really are worth nothing

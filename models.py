@@ -528,9 +528,10 @@ class Model:
 			raise ValueError("%s does not define: %s" % (path, ", ".join(missing)))
 
 		stats, weights = namespace["stats"], namespace["weights"]
-		# before applyDefaults, which reads allAttacks/s to decide whether it
-		# needs defaulting, and before anything else looks at it as numbers
-		notes = modelspec.resolveAttackRates(stats)
+		# before applyDefaults, which reads the allAttacks/s this fills in to
+		# decide whether it needs defaulting, and before anything else looks at
+		# the rotation as numbers
+		notes = modelspec.resolveRotation(stats)
 		notes += modelspec.applyDefaults(stats)
 		priority = dict(namespace.get("damagePriority") or {})
 		# A model that still spells its catch-all as a weight is read as though
@@ -1138,8 +1139,8 @@ class Model:
 				  "upside. Give the model some flat damage.")
 		elif not self.getStat("main attack %"):
 			print("  note: no 'main attack %' - a component skill is priced against a bare "
-				  "100% swing, so one that beats that reads as an upgrade. Name your attack "
-				  "as \"main attack\":(\"Cadence\", 12) and it is read from the skill data.")
+				  "100% swing, so one that beats that reads as an upgrade. Name the attack "
+				  "you hold down first in \"rotation\" and it is read from the skill data.")
 
 		total = 0
 		for speed in ["attack speed", "cast speed", "move speed"]:
@@ -1263,8 +1264,8 @@ class Model:
 	#stats
 		# estimate how frequent combat events are for calculating dynamic stats and abilities
 		# "attacks/s":1.75,		
-		# "allAttacks/s":[
-		# 	# list of attack skills that can be linked to abilities. remember to include your main attack.
+		# "rotation":[
+		# 	# your skill bar; the first entry is what you hold the button down on
 		# 	1.75, #main attack (fire strike)
 		# 	.5, # brutal shield slam: 3s recharge, 3 target max. Call it 2 targets and 4 seconds between = .5 aps
 		# 	.4, #war cry: 7.5 s recharge, big radius, call it 3 hits = 3/7.5 = .4

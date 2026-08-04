@@ -18,7 +18,9 @@ stats =	{
 		# is grinding a difficulty he has out-levelled.
 		"difficulty":"elite",
 		"attacks/s":3.5,
-		"allAttacks/s":[
+		# Bare rates: nothing here is named, so no main attack is read. Name the
+		# skills and their ranks and the cooldowns come from the game.
+		"rotation":[
 			3.5, # sigil
 			2.5, # lightning totem
 			2.5, # grasping roots

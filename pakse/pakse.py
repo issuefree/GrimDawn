@@ -23,8 +23,9 @@ stats = {
 		# His rotation, from bots/pakse.ahk against the cooldowns the records
 		# state. A skill fires no faster than its cooldown and no faster than
 		# it is pressed, so the rate is one over whichever is longer; the load
-		# prints which one won for each. RANKS ARE STUBS.
-		"allAttacks/s":[
+		# prints which one won for each. The first entry is what he holds the
+		# button down on, and it is his main attack. RANKS ARE STUBS.
+		"rotation":[
 			("Righteous Fervor", 12),          # held on left button
 			("Aegis of Menhir", 12, 0.5),
 			("Judgment", 12, 4.8),

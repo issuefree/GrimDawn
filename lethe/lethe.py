@@ -21,12 +21,16 @@ stats = {
 	"attacks/s": 2.0,            # attacks per second, as swung in practice
 	"playStyle": "melee",        # melee | shortranged | ranged | tank
 
-	# Break out each trigger source for a better estimate of stacked procs.
-	# "allAttacks/s": [2.0, 1.0, 0.5],
+	# Your skill bar. Name the skill and its rank and the rate comes from the
+	# game's own cooldown; add a third number where you press it slower than it
+	# recharges. The first entry is what you hold the button down on, and
+	# passives and toggles anywhere in the list are read as modifiers on it.
+	# "rotation": [("Cadence", 12), ("Blitz", 12, 4.0), 0.5],
 
-	# What the first of those swings for. Pressing a skill an item grants costs
-	# you one of these, and a skill only earns its place by beating it - leave
-	# it out and every component skill is measured against a bare 100% swing.
+	# What that swings for. Pressing a skill an item grants costs you one of
+	# these, and a skill only earns its place by beating it - without a rotation
+	# every component skill is measured against a bare 100% swing. Derived from
+	# the rotation; set this only for an attack the skill data cannot describe.
 	# "main attack %": 100,
 
 	# Your level, and what you fight. Crit chance is derived from your offensive

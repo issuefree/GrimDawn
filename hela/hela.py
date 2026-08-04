@@ -18,7 +18,7 @@ if __name__ == "__main__":
 devotionPoints = 22
 
 stats = {
-	"attacks/s": 2.0,            # attacks per second, as swung in practice
+	"attacks/s": 2.0,            # casts per second, as channelled in practice
 	"playStyle": "ranged",        # melee | shortranged | ranged | tank
 
 	# Rates the procs are scored against. attacks/s above covers 14 attack
@@ -27,16 +27,18 @@ stats = {
 	# zero - a third of everything the optimiser could offer her.
 	# "hits/s": 2, "blocks/s": 0, "low healths/s": 1.0/30,
 
-	# Break out each trigger source for a better estimate of stacked procs;
-	# without it this is just [attacks/s] and stacked procs read optimistic.
-	# "allAttacks/s": [2.0, 1.0, 0.5],
-
-	# What she actually casts, which is the thing every damage weight is priced
-	# against. Albrecht's Aether Ray carries no weapon component at all, so
-	# none of the flat damage on the sheet below reaches it - the 1700 aether
-	# is what an auto-attack she never makes would do, and her aether % is
-	# multiplying the 294 the beam brings of its own.
-	"main attack": [("Albrecht's Aether Ray", 26), ("Disintegration", 6)],
+	# Her whole bar is one channelled beam and a rank on it, so the rotation is
+	# two lines. Albrecht's Aether Ray is first, which makes it the thing she
+	# holds the button down on and the thing every damage weight is priced
+	# against; Disintegration is a passive, so the load reads it as a modifier
+	# rather than as a second attack.
+	#
+	# The beam carries no weapon component at all, so none of the flat damage on
+	# the sheet below reaches it - the 1700 aether is what an auto-attack she
+	# never makes would do, and her aether % is multiplying the 294 the beam
+	# brings of its own. The rest of her bar is still missing; adding it would
+	# stop every proc being scored against attacks/s alone.
+	"rotation": [("Albrecht's Aether Ray", 26), ("Disintegration", 6)],
 
 	"level": 58,
 	"difficulty": "normal",       # from the level band, not from the save

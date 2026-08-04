@@ -21,8 +21,10 @@ stats = {
 		"difficulty":"elite",
 		# estimate how frequent combat events are for calculating dynamic stats and abilities
 		"attacks/s":2,
-		"allAttacks/s":[
-			# list of attack skills that can be linked to abilities. remember to include your main attack.
+		"rotation":[
+			# Bare rates: nothing here is named, so no main attack is read and
+			# every granted skill is priced against a bare 100% swing. Name the
+			# skills and their ranks and both come out of the skill data.
 			# 9, # skeletons (1 per skeleton)
 			# 1, # zombie
 			# 1, # raven

@@ -10,10 +10,10 @@ not mean rediscovering it.
 
 `applyDamagePriority` used to assume everything you deal goes through your
 weapon: a point of flat X was worth `1 + X%/100` and a point of `X %` was worth
-the sheet's flat X over a hundred. Naming `main attack` now supplies the
-attack's weapon share and its own damage, so the split is taken against what one
-cast actually delivers. A pure caster's gear flat prices at zero and her
-percentages price against the spell.
+the sheet's flat X over a hundred. The held attack - the first entry in the
+rotation - now supplies its weapon share and its own damage, so the split is
+taken against what one cast actually delivers. A pure caster's gear flat prices
+at zero and her percentages price against the spell.
 
 What is still wrong, all of it visible in a hela run:
 
@@ -101,8 +101,8 @@ pair), and retaliation is not reapplied by your attacks at all.
 
 `gameengine.dbr` carries `procRate * (1 + cooldown*81/100) * (1 - attackDuration*11/100)`
 and nothing reads it. Blocked on two things: whether `cooldown` means the proc's
-or the bound skill's, which one in-game tooltip check settles, and on
-`allAttacks/s` carrying only rates and no cooldowns.
+or the bound skill's, which one in-game tooltip check settles, and on the
+resolved rotation carrying only rates and no cooldowns.
 
 ## Set bonuses are not extracted
 
@@ -148,6 +148,13 @@ away on load.
 says which skill modifies which. The `onslaught1/2/3` naming plus `isCircular`
 would give them.
 
+`modelspec.isModifier` reads the half of this that the records do state: a
+`SkillSecondary_` fires with its parent and a passive or a toggle is not a press,
+so a rotation can say which of its entries are modifiers without saying what they
+modify. It does not need to, because they all hang off the one held attack. A
+model that wanted Blood Burst counted against Dreeg's Evil Eye rather than
+against the attack it holds down would need the real link.
+
 ## Reading skills out of the save files
 
 `savefile.py` decodes a player.gdc header - name, mastery pair and level - and
@@ -183,10 +190,10 @@ can supply.
 
 | character | needs |
 |---|---|
-| all with a rotation | **skill ranks.** Every rank is a stub except fenris's four in `main attack` and hela's two. Every damage weight is priced against them |
+| all with a rotation | **skill ranks.** Every rank is a stub except fenris's four and hela's two. Every damage weight is priced against them |
 | kieri, lachesis | `devotionPoints`. Neither loads without it |
-| kieri, lachesis, lethe, lilith | which skill is the main attack, and their rotations - none has a named skill yet |
-| armitage, pakse | confirm the main attack. Fire Strike and Righteous Fervor are guesses; pakse's matters more, because his weapon pool claims 100% of swings at stub ranks so Righteous Fervor never fires |
+| kieri, lachesis, lethe, lilith | their rotations - each is bare rates, so no skill is named and no main attack can be read |
+| armitage, pakse | confirm the held attack, which is now whichever skill the rotation lists first. Fire Strike and Righteous Fervor are guesses; pakse's matters more, because his weapon pool claims 100% of swings at stub ranks so Righteous Fervor never fires |
 | hela, kieri, lachesis, lethe, lilith, lochlan, pakse | `attacks/s` off the sheet. All are round numbers or the old whole-bar aggregate. The three that have been read moved 3 -> 1.64, 3 -> 1.91 and 2 -> 2.43 |
 | everyone | resistances. `applyDefensePriority` derives nothing for `resist` because no sheet carries them |
 | armitage | `hits taken/s` if 2.78 is wrong - it drives 76% of what he deals |

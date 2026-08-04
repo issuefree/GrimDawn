@@ -19,7 +19,7 @@ devotionPoints = 41
 
 stats = {
 	# Off the sheet - his Attack Speed, which is what one weapon swing takes.
-	# Not a sum of everything he presses: that is allAttacks/s below.
+	# Not a sum of everything he presses: that is the rotation below.
 	"attacks/s": 2.43,
 	"playStyle": "ranged",        # melee | shortranged | ranged | tank
 
@@ -36,9 +36,17 @@ stats = {
 	# the check on the lot - the script says "really 1 second" beside it and
 	# the record says 1.
 	#
-	# Fire Strike is first because it is what he holds the left button down on.
-	# It has no cooldown, so it falls through to attacks/s above.
-	"allAttacks/s": [
+	# Fire Strike is first because it is what he holds the left button down on,
+	# which makes it his main attack and runs it at attacks/s above.
+	#
+	# The last three are not buttons. Explosive Strike goes off with Fire Strike
+	# rather than on its own, and the other two are passives - so the load reads
+	# all three as modifiers on his swing. They are the ones that carry his fire
+	# and burn, and none of it is on the sheet.
+	#
+	# STUB - the ranks are placeholders and every damage weight is priced
+	# against them. Correct the numbers from the skill screen.
+	"rotation": [
 		("Fire Strike", 12),
 		("Flashbang", 12, 3.0),
 		("Rune of Hagarrad", 12),
@@ -49,15 +57,10 @@ stats = {
 		# "gaze" on key 9 was a rate here. It is a devotion proc: it fires on
 		# its own trigger and the devotion system already scores it, so a rate
 		# in the rotation was counting it a second time as an attack source.
+		("Explosive Strike", 12),       # not buttons: one fires with Fire
+		("Brimstone", 12),              # Strike, two are passives on it
+		("Static Strike", 1),
 	],
-
-	# STUB - the ranks are placeholders and every damage weight is priced
-	# against them. Left button held is the attack, and for a Demolitionist
-	# holding down fire that is Fire Strike: 100% weapon damage, so his sheet's
-	# 3000 flat fire is delivered in full every shot. The modifiers are the ones
-	# that carry his fire and burn. Correct the numbers from the skill screen.
-	"main attack": [("Fire Strike", 12), ("Explosive Strike", 12),
-					("Brimstone", 12), ("Static Strike", 1)],
 
 	# STUB - nothing on the sheet says these and they are guesses in the shape
 	# of a ranged character who kites. hits/s is hits he lands, which drives

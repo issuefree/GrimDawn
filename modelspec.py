@@ -63,9 +63,22 @@ PHYSICAL_SHARE = 0.5
 
 REQUIRED_POINTS = "devotionPoints"
 REQUIRED_STATS = {
-	"attacks/s": "your Attack Speed off the sheet - one weapon swing. Not a sum "
-				 "of everything you press; that is allAttacks/s",
+	"attacks/s": "your Attack Speed off the sheet - how fast you swing. Not a "
+				 "sum of everything you press; that is what 'rotation' lists",
 	"playStyle": "one of: melee, shortranged, ranged, tank",
+}
+
+# Keys a model used to write that resolveRotation now derives. Both said things
+# the one rotation list already says, and saying them twice let them disagree:
+# every model wrote its held attack in both, and three wrote it only in
+# allAttacks/s and so were priced against a bare swing they never made.
+RETIRED_STATS = {
+	"allAttacks/s": "renamed to 'rotation' - it lists skills, not rates, and "
+					"'allAttacks/s' beside 'attacks/s' read as a total of it",
+	"main attack": "derived from 'rotation' now. The first entry is the attack "
+				   "you hold the button on, and a passive, a toggle or a "
+				   "SkillSecondary_ anywhere in the list is a modifier on it - "
+				   "so put the modifiers in the rotation and delete this",
 }
 PLAY_STYLES = ("melee", "shortranged", "ranged", "tank")
 
@@ -88,10 +101,14 @@ CONTROL_STATS = {
 	# it is what a hit-triggered proc fires off. Only applyDefensePriority reads
 	# this, to say what armor stops over a fight.
 	"hits taken/s",
-	# the rotation as resolveAttackRates worked it out - (skill, rank, rate) -
-	# kept because converting allAttacks/s to bare rates throws the names away
-	# and rotationDamage needs them
+	# the skill bar. Stated as skills and ranks; resolveRotation replaces it with
+	# (skill, ability, rate) triples, because the names are the interesting part
+	# and rotationDamage cannot work out what a build deals from bare rates.
 	"rotation",
+	# both derived from it, and both listed here because they end up in stats:
+	# the bare rates a proc's trigger is scored against, and the attack you hold
+	# the button on together with the modifiers that hang off it.
+	"allAttacks/s", "main attack",
 }
 
 
@@ -108,8 +125,10 @@ def applyDefaults(stats):
 	notes = []
 	if "allAttacks/s" not in stats and "attacks/s" in stats:
 		stats["allAttacks/s"] = [stats["attacks/s"]]
-		notes.append("allAttacks/s defaulted to [attacks/s]; list your individual "
-					 "attack sources for a better estimate")
+		notes.append("%s, so every proc is scored against attacks/s alone - list "
+					 "the skills on your bar and their ranks for a better estimate"
+					 % ("no 'rotation'" if "rotation" not in stats
+						else "nothing in 'rotation' resolved to a rate"))
 	if "weapons" not in stats:
 		stats["weapons"] = weaponTypes()
 		notes.append("weapons defaulted to all types (no constellation excluded)")
@@ -153,13 +172,31 @@ def items():
 	return _ITEM_ABILITIES
 
 
-def resolveAttackRates(stats):
-	"""Turn named skills in allAttacks/s into the rate each actually fires at.
+def isModifier(ability):
+	"""True for a skill that is never pressed but changes the one you hold down.
 
-	An entry may be a plain number, as it always could, or a skill:
+	Two ways to tell, both off the record rather than off which key the model
+	filed it under. A SkillSecondary_ goes off as part of its parent - Explosive
+	Strike fires with Fire Strike, and carries 30% weapon damage of its own. A
+	passive or a toggle is not a press at all: Open Wounds bleeds for Onslaught,
+	Werewolf is the form Feral Claws comes from, Disintegration is a rank on a
+	beam. None of them is a button, and all of them modify what you swing.
+	"""
+	return (str(ability.gc("skillClass") or "").startswith("SkillSecondary_")
+			or ability.gc("trigger") in ("passive", "toggle"))
+
+
+def resolveRotation(stats):
+	"""Turn the skill bar into the rate each skill actually fires at.
+
+	One list says what you play. An entry is a mastery skill and its rank, an
+	item skill and how often you press it, or a bare rate for anything the data
+	cannot name:
 
 	    ("Mortar Trap", 12)          fires on its own cooldown
 	    ("Flashbang", 12, 3.0)       ...unless you press it slower than that
+	    ("Sacred Strike", 1.5)       an item skill has no rank, so that is the press
+	    0.5
 
 	A skill fires no faster than its cooldown and no faster than you press it,
 	so the rate is one over whichever is longer. Which one wins is not obvious
@@ -172,36 +209,81 @@ def resolveAttackRates(stats):
 	the game was patched. Named, the cooldown comes from the records and the
 	press interval stays what it is: a fact about how you play.
 
-	A skill with no cooldown at all - a basic attack like Fire Strike, or
-	Thermite Mine, whose record states none - falls back to the press interval,
-	and failing that to attacks/s, which is what a button you hold down does.
+	Three sorts of entry are not presses, and the records say which is which
+	rather than the model sorting them into keys of their own:
+
+	  a weapon pool skill  fires instead of an ordinary swing, so its rate is
+	                       attacks/s times its chance and the held attack keeps
+	                       whatever is left. The pool is competitive, so chances
+	                       that sum past one are normalised the way the game does
+	  a modifier           never pressed - see isModifier. It hangs off the held
+	                       attack instead of contributing a rate of its own
+	  the held attack      the first entry that is neither, which runs at
+	                       attacks/s: that is what holding a button down means,
+	                       and a stated cooldown does not describe it
+
+	So "main attack" is read out of the same list rather than written down a
+	second time. Every model used to state its held attack in both places, and
+	three stated it only here - which left armitage, pakse and lochlan pricing
+	every granted skill against a bare 100% swing none of them makes.
 
 	"% Reduced Skill Cooldown" off the sheet is taken off first, the same
 	reduction and the same 90% cap Ability.resolveTiming applies to a proc.
+
+	Fills in, for everything downstream: "allAttacks/s", the bare rates a proc's
+	trigger is scored against; "main attack", the held attack and its modifiers;
+	and "rotation" itself, resolved to (name, ability, rate).
 	"""
-	entries = stats.get("allAttacks/s")
-	if not entries or not any(isinstance(e, (tuple, list)) for e in entries):
-		return []
+	notes = []
+	for retired, why in RETIRED_STATS.items():
+		if retired in stats:
+			raise ValueError("stats[%r] is no longer read - %s" % (retired, why))
+	entries = stats.get("rotation")
+	if not entries:
+		return notes
+	if not any(isinstance(e, (tuple, list)) for e in entries):
+		# A rotation of bare rates names nothing, so there is no cooldown to look
+		# up and no held attack to find - but the rates themselves are still what
+		# a proc's trigger is scored against, and dropping them here left
+		# applyDefaults to replace the whole bar with a single attacks/s.
+		stats["allAttacks/s"] = [float(e) for e in entries]
+		return notes
 	import skillData                       # noqa: F401 - registers the skills
 	from models import Skill
 	reduction = min(90.0, float(stats.get("reduce cooldown") or 0)) / 100.0
 	swing = float(stats.get("attacks/s") or 0)
-	# Weapon pool skills first, because they change what the held attack does.
-	# A "% chance of" skill fires instead of your ordinary swing, so its rate is
-	# attacks/s times its chance and the basic attack keeps whatever is left.
-	# The pool is competitive: the game normalises the chances when they sum
-	# past one, and pakse's four sum to 1.06.
-	notes = []
-	pool = {}
+
+	# Look every named entry up first, so what kind of thing it is comes from
+	# its record and not from where it sits in the list. Each becomes
+	# (name, ability, rank, press, source); source is None for a mastery skill.
+	looked = []
 	for entry in entries:
 		if not isinstance(entry, (tuple, list)):
+			looked.append((None, None, 0, 0.0, None))
 			continue
-		skill = Skill.skills.get(entry[0])
-		if skill is None:
+		name, second, press = (list(entry) + [0, 0])[:3]
+		skill = Skill.skills.get(name)
+		if skill is not None:
+			looked.append((name, skill.getAbility(second), second, float(press or 0), None))
 			continue
-		ability = skill.getAbility(entry[1])
-		if str(ability.gc("skillClass")).startswith("Skill_WPAttack_"):
-			pool[entry[0]] = float(ability.gc("chance") or 0)
+		# Not a mastery skill, so try what the items grant. There is no rank on
+		# an item skill, so the second element is the press interval rather than
+		# a level - ("Sacred Strike", 1.5).
+		granted = items().get(name)
+		if granted is None:
+			notes.append("rotation: nothing called %r in the mastery skills or the "
+						 "item skills, so it contributes no rate at all" % name)
+			looked.append((name, None, 0, 0.0, None))
+			continue
+		ability, source = granted
+		looked.append((name, ability, None, float(second or 0), source))
+
+	# The weapon pool comes first because it changes what the held attack does.
+	pool = {}
+	for name, ability, _, _, source in looked:
+		if ability is not None and source is None and not isModifier(ability) \
+		   and str(ability.gc("skillClass") or "").startswith("Skill_WPAttack_"):
+			pool[name] = float(ability.gc("chance") or 0)
 	claimed = sum(pool.values())
 	if claimed > 1.0:
 		pool = {k: v / claimed for k, v in pool.items()}
@@ -209,34 +291,30 @@ def resolveAttackRates(stats):
 					 "down the way the game does" % (100 * claimed))
 		claimed = 1.0
 
-	rates, rows, resolved = [], [], []
-	for index, entry in enumerate(entries):
-		if not isinstance(entry, (tuple, list)):
+	# The held attack: the first entry that is neither a modifier nor a pool
+	# skill. Taking it by position rather than by class is what lets a beam,
+	# a shapeshifted claw and a weapon pool basic attack all be one thing.
+	held, heldRank = next(((name, rank) for name, ability, rank, _, source in looked
+						   if ability is not None and source is None
+						   and not isModifier(ability) and name not in pool), (None, 0))
+
+	rates, rows, resolved, modifiers = [], [], [], []
+	for entry, (name, ability, rank, press, source) in zip(entries, looked):
+		if name is None:
 			rates.append(float(entry))
 			continue
-		name, level, press = (list(entry) + [0])[:3]
-		skill = Skill.skills.get(name)
-		if skill is None:
-			# Not a mastery skill, so try what the items grant. There is no
-			# rank on an item skill, so the second element is the press
-			# interval rather than a level - ("Sacred Strike", 1.5).
-			granted = items().get(name)
-			if granted is None:
-				notes.append("allAttacks/s: nothing called %r in the mastery skills "
-							 "or the item skills, so it contributes no rate at all"
-							 % name)
-				continue
-			ability, source = granted
+		if ability is None:
+			continue                       # already complained about by name
+		if source is not None:
 			if ability.gc("trigger") != "manual":
-				notes.append("allAttacks/s: %r off %s fires on %r rather than being "
-							 "pressed, so it belongs to its own trigger rather than "
-							 "in a rotation" % (name, source, ability.gc("trigger")))
+				notes.append("rotation: %r off %s fires on %r rather than being "
+							 "pressed, so it belongs to its own trigger rather "
+							 "than in a rotation" % (name, source, ability.gc("trigger")))
 				continue
 			cooldown = float(ability.gc("recharge") or 0) * (1.0 - reduction)
-			press = float(level or 0)      # the second element, for an item skill
 			interval = max(cooldown, press)
 			if not interval:
-				notes.append("allAttacks/s: %r off %s has no cooldown, so say how "
+				notes.append("rotation: %r off %s has no cooldown, so say how "
 							 "often you press it" % (name, source))
 				continue
 			rates.append(1.0 / interval)
@@ -246,59 +324,76 @@ def resolveAttackRates(stats):
 						   "cooldown %gs" % cooldown if cooldown >= press
 						   else "pressed every %gs" % press))
 			continue
+		if isModifier(ability):
+			# No rate of its own: it lands whenever the held attack does, which
+			# is what mainAttackDamage and swingPercent price it as.
+			modifiers.append((name, rank))
+			continue
 		if name in pool:
-			# a chance on each swing rather than a button; no interval describes it
 			rate = swing * pool[name]
 			rates.append(rate)
-			resolved.append((name, skill.getAbility(level), rate))
+			resolved.append((name, ability, rate))
 			rows.append("%s at %g: %.3g/s (weapon pool, %.0f%% of swings)"
-						% (name, level, rate, 100 * pool[name]))
+						% (name, rank, rate, 100 * pool[name]))
 			continue
-		cooldown = float(skill.getAbility(level).gc("recharge") or 0) * (1.0 - reduction)
-		press = float(press or 0)
-		interval = max(cooldown, press)
-		why = "cooldown %gs" % cooldown if cooldown >= press else "pressed every %gs" % press
-		if not interval and index == 0:
-			# The first entry is the attack you hold the button down on, and a
-			# basic attack has no cooldown to read, so it runs at attacks/s -
-			# less whatever share of those swings the weapon pool takes over,
-			# since a pool skill fires instead of the ordinary attack.
-			held = swing * (1.0 - claimed)
-			interval = (1.0 / held) if held else 0
-			why = ("held, so attacks/s" if not claimed else
-				   "held, less the %.0f%% of swings the weapon pool takes" % (100 * claimed))
-			if not held:
+		if name == held:
+			# Held down, so it runs at your swing rate - less whatever share of
+			# those swings the weapon pool takes over, since a pool skill fires
+			# instead of the ordinary attack.
+			rate = swing * (1.0 - claimed)
+			if not rate:
 				# A pool that claims every swing means the attack it replaces
-				# never happens - which is a real thing to build, but it should
-				# be said rather than the entry quietly disappearing. Said once:
-				# the general "no cooldown" complaint below is about a different
-				# problem and would only muddy this one.
-				notes.append("allAttacks/s: the weapon pool claims every swing, so "
-							 "%r never fires on its own and contributes nothing. "
+				# never happens - a real thing to build, but it should be said
+				# rather than the entry quietly disappearing.
+				notes.append("rotation: the weapon pool claims every swing, so %r "
+							 "never fires on its own and contributes nothing. "
 							 "Check the ranks: chances that sum past 100%% are "
 							 "usually a sign one of them is guessed too high" % name)
 				continue
+			rates.append(rate)
+			resolved.append((name, ability, rate))
+			rows.append("%s at %g: %.3g/s (%s)"
+						% (name, rank, rate,
+						   "held, so attacks/s" if not claimed else
+						   "held, less the %.0f%% of swings the weapon pool takes"
+						   % (100 * claimed)))
+			continue
+		cooldown = float(ability.gc("recharge") or 0) * (1.0 - reduction)
+		interval = max(cooldown, press)
 		if not interval:
-			# Anything else with no cooldown is not a button at all - a weapon
-			# pool skill like Smite fires on a chance when you swing, and there
-			# is no interval that describes it. Falling back to attacks/s here
-			# gave pakse three separate skills at his full swing rate.
-			notes.append("allAttacks/s: %r states no cooldown, and it is not the "
-						 "first entry, so it is not something you hold down. If it "
-						 "is a weapon pool proc give it a plain rate - attacks/s "
-						 "times its chance; otherwise say how often you press it"
-						 % name)
+			# Not held, not a modifier, and nothing says how often it happens.
+			notes.append("rotation: %r states no cooldown and is not the attack you "
+						 "hold down, so nothing says how often it fires - say how "
+						 "often you press it" % name)
 			continue
 		rates.append(1.0 / interval)
-		resolved.append((name, skill.getAbility(level), 1.0 / interval))
-		rows.append("%s at %g: %.3g/s (%s)" % (name, level, 1.0 / interval, why))
+		resolved.append((name, ability, 1.0 / interval))
+		rows.append("%s at %g: %.3g/s (%s)"
+					% (name, rank, 1.0 / interval,
+					   "cooldown %gs" % cooldown if cooldown >= press
+					   else "pressed every %gs" % press))
+
 	stats["allAttacks/s"] = rates
 	# Kept because the names are the interesting part and converting to bare
 	# rates throws them away. rotationDamage reads this to work out what the
 	# build actually deals, and it cannot do that from a column of numbers.
 	stats["rotation"] = resolved
+	if held:
+		# The held attack first: models.py reads this to work out what one swing
+		# is worth, and the modifiers only mean anything against it.
+		stats["main attack"] = [(held, heldRank)] + modifiers
+	elif modifiers:
+		notes.append("rotation: %s modify the attack you hold down, but nothing in "
+					 "the list is one - every entry is a modifier, a weapon pool "
+					 "skill or on a cooldown, so they are not scored"
+					 % ", ".join(repr(n) for n, _ in modifiers))
 	if rows:
-		notes.append("allAttacks/s from the skill data - " + "; ".join(rows))
+		notes.append("rotation from the skill data - " + "; ".join(rows))
+	if held:
+		notes.append("main attack: %s at %g%s"
+					 % (held, heldRank,
+						", modified by " + ", ".join("%s at %g" % m for m in modifiers)
+						if modifiers else " - nothing in the rotation modifies it"))
 	return notes
 
 
@@ -333,19 +428,26 @@ def rotationDamage(stats):
 	from models import Skill, Model
 	bonus = Model.attributeBonus(stats)
 	# The modifiers hanging off the attack you hold the button on. They are not
-	# separate presses so they are not in the rotation, but their damage lands
-	# every time it does - Open Wounds bleeds for Onslaught and nothing else,
-	# and without this morena's bleed is only what her sheet carries.
+	# separate presses so they carry no rate of their own, but their damage
+	# lands every time it does - Open Wounds bleeds for Onslaught and nothing
+	# else, and without this morena's bleed is only what her sheet carries.
+	#
+	# So they fire at the held attack's rate, which is looked up rather than
+	# taken as the first line of the rotation. Those differ when the held attack
+	# is not in the rotation at all: pakse's weapon pool claims every swing, so
+	# Righteous Fervor never fires, and reading the first line instead gave its
+	# modifiers the rate of Aegis of Menhir.
 	firing = [(ability, rate) for _, ability, rate in rotation]
 	stated = stats.get("main attack")
-	if stated and rotation:
+	if stated:
 		if isinstance(stated[0], str):
 			stated = [stated]
-		named = {name for name, _, _ in rotation}
-		for name, level in stated:
+		rates = {name: rate for name, _, rate in rotation}
+		heldRate = rates.get(stated[0][0], 0.0)
+		for name, level in stated[1:]:
 			skill = Skill.skills.get(name)
-			if skill is not None and name not in named:
-				firing.append((skill.getAbility(level), rotation[0][2]))
+			if skill is not None and name not in rates:
+				firing.append((skill.getAbility(level), heldRate))
 
 	# swings per second, weighted by how much weapon damage each skill carries
 	swings = 0.0
@@ -637,7 +739,7 @@ def fromRotation(stats, weights, priority):
 	notes = []
 	rows = rotationDamage(stats)
 	if not rows:
-		notes.append("damagePriority asked for %r, but allAttacks/s is bare numbers - "
+		notes.append("damagePriority asked for %r, but the rotation is bare numbers - "
 					 "name the skills and their ranks and it can read them" % ROTATION)
 		return notes
 	scale = float(priority.get(ROTATION) or 0) or 1.0
@@ -949,11 +1051,12 @@ def statVocabulary():
 				  # alike - and it was not readable before.
 				  "reduce cooldown",
 				  # weapon damage of the attack you actually swing with, which is
-				  # what a granted skill interrupts and has to beat. Name the
-				  # skill as ("Cadence", 12) and the percentage is looked up.
-				  # and how many enemies that swing reaches, since giving it up
-				  # costs all of them. Derived from the named skill's geometry;
-				  # set this only for an attack the skill data does not describe.
+				  # what a granted skill interrupts and has to beat, and how many
+				  # enemies that swing reaches, since giving it up costs all of
+				  # them. Both derive from the held attack resolveRotation picks
+				  # out; state one only for an attack the skill data cannot
+				  # describe. "main attack" itself is derived and lives here
+				  # because it ends up in stats, not because a model may write it.
 				  "main attack %", "main attack", "main attack targets",
 				  # energy a second a granted skill may spend, when regeneration
 				  # is not the story - a leech build sustains on something the
@@ -1130,19 +1233,28 @@ if __name__ == "__main__":
 devotionPoints = %(points)d
 
 stats = {
-	"attacks/s": 2.0,            # Attack Speed off the sheet: one weapon swing
+	"attacks/s": 2.0,            # Attack Speed off the sheet: how fast you swing
 	"playStyle": "%(style)s",%(styles)s
 
-	# Break out each trigger source for a better estimate of stacked procs.
-	# Name the skill and its rank and the rate comes from the game's own
-	# cooldown; add a third number where you press it slower than it recharges,
-	# because a short cooldown is not always worth spamming. Plain numbers still
-	# work. A skill with no cooldown falls back to attacks/s above.
-	# "allAttacks/s": [("Fire Strike", 12), ("Mortar Trap", 12, 15.0), 0.5],
+	# Your skill bar, in the order you would describe it. Name the skill and its
+	# rank and the rate comes from the game's own cooldown; add a third number
+	# where you press it slower than it recharges, because a short cooldown is
+	# not always worth spamming. An item skill has no rank, so its second number
+	# is the press interval. Plain rates still work for anything unnameable.
+	#
+	# The first entry is the attack you hold the button down on, and it runs at
+	# attacks/s above. Passives, toggles and secondary attacks are not presses -
+	# the records say so - so they are read as modifiers on that attack rather
+	# than as rates, which is where "main attack" used to be written by hand.
+	# "rotation": [("Fire Strike", 12),        # held
+	#              ("Explosive Strike", 12),   # a modifier on it, not a button
+	#              ("Mortar Trap", 12, 15.0),  # pressed every 15s
+	#              ("Sacred Strike", 1.5),     # off an item, pressed every 1.5s
+	#              0.5],
 
-	# What the first of those swings for. Pressing a skill an item grants costs
-	# you one of these, and a skill only earns its place by beating it - leave
-	# it out and every component skill is measured against a bare 100%% swing.
+	# Pressing a skill an item grants costs you one swing of the above, and a
+	# skill only earns its place by beating it. Derived from the rotation; set
+	# this only for an attack the skill data does not describe.
 	# "main attack %%": 100,
 
 	# Your level, and what you fight. Crit chance is derived from your offensive

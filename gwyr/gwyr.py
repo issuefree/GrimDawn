@@ -18,7 +18,9 @@ if __name__ == "__main__":
 devotionPoints = 41
 
 stats = {
-	"attacks/s": 2.0,            # attacks per second, as swung in practice
+	# Off the sheet - his Attack Speed, which is what one weapon swing takes.
+	# Not a sum of everything he presses: that is allAttacks/s below.
+	"attacks/s": 2.43,
 	"playStyle": "ranged",        # melee | shortranged | ranged | tank
 
 	# His rotation, read off bots/gwyr.ahk, which is a machine-readable

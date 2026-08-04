@@ -11,6 +11,7 @@ This module gives the required keys sensible defaults, and checks both dicts
 against the vocabulary the optimiser can actually score, suggesting a correction
 when a key looks like a near miss.
 """
+import collections
 import difflib
 import os
 
@@ -556,6 +557,99 @@ def dotFactor(damage, stats):
 	return min(seconds, 1.0 / rate) / seconds
 
 
+# One cast of your own attack, read out of the skills that make it up.
+# percent    "% Weapon Damage" summed over the attack and its modifiers
+# flat       damage of its own, per type, in calculateBonus's units
+# boost      percentages it adds for itself, which the sheet does not carry
+# longer     duration bonuses of its own, ditto
+# abilities  the skills themselves, for asking how wide the swing is
+# named      "<skill> at <rank>" per skill, for the note the load prints
+# missing    names nothing in the skill data answers to
+# mixed      (skill, damage) where a type arrived as both a number and a pair
+MainAttack = collections.namedtuple(
+	"MainAttack", "percent flat boost longer abilities named missing mixed")
+
+
+def addFlat(store, damage, value):
+	"""Add one skill's flat damage of a type to what the others already give.
+
+	Two abilities of one attack can both carry a type - gwyr's Fire Strike has
+	55 fire and Brimstone adds 60 more - and the game adds them. The value is
+	either a number, meaning damage on the hit, or a [dps, seconds] pair,
+	meaning a duration effect; calculateBonus prices the two differently, so
+	they are summed in their own units and never converted into each other.
+
+	Returns False without storing anything if the type arrives as both at once,
+	which no record in the game does and which there is no honest sum for.
+	"""
+	if damage not in store:
+		store[damage] = list(value) if isinstance(value, list) else value
+		return True
+	old = store[damage]
+	if isinstance(old, list) != isinstance(value, list):
+		return False
+	if isinstance(old, list):
+		# the same duration effect twice: the damage adds and the longer of the
+		# two windows is the one it runs over
+		store[damage] = [old[0] + value[0], max(old[1], value[1])]
+	else:
+		store[damage] = old + value
+	return True
+
+
+def mainAttack(stats):
+	"""Read stats["main attack"] into what one cast of it is built from.
+
+	The held attack and the modifiers hanging off it, which resolveRotation
+	picks out of the rotation. Nothing any of them carries reaches the character
+	sheet: the sheet is what applies to every attack you make, and a skill and
+	its modifiers apply to that skill. Open Wounds bleeds for Onslaught and
+	nothing else, and Endless Rage's 12% bleed lifts Onslaught's bleed on top of
+	the sheet's own rather than being part of the 450% that applies to
+	everything. So a cast is worked out from all three: the weapon damage it
+	scales, the flat damage it adds, and the percentages it adds for itself.
+
+	Returns a MainAttack, empty where nothing is named. This is read twice per
+	load - once to price a swing against a granted skill, once to price the
+	damage weights - and it used to be walked separately for each, which is how
+	the two came to disagree about whether two skills carrying the same damage
+	type add up.
+	"""
+	percent, flat, boost, longer = 0.0, {}, {}, {}
+	abilities, named, missing, mixed = [], [], [], []
+	stated = stats.get("main attack")
+	if stated:
+		if isinstance(stated[0], str):
+			stated = [stated]
+		import skillData                   # noqa: F401 - registers the skills
+		from models import Skill
+		for name, level in stated:
+			skill = Skill.skills.get(name)
+			if skill is None:
+				missing.append(name)
+				continue
+			ability = skill.getAbility(level)
+			# Kept so mainAttackTargets can ask them how wide they are. Not
+			# scored here: how many enemies a swing covers depends on how many
+			# there are, and that changes between the boss column and the pack.
+			abilities.append(ability)
+			percent += ability.gb("weapon damage %")
+			for bonus, value in ability.bonuses.items():
+				# fenris carries 200% pierce with no flat pierce on his sheet
+				# precisely because Feral Claws' own 117 is where his pierce
+				# comes from, which is what plainDamage is here to not lose.
+				damage = plainDamage(bonus)
+				if damage:
+					if not addFlat(flat, damage, value):
+						mixed.append((name, damage))
+				elif bonus.endswith(" %") and bonus[:-2] in damages:
+					boost[bonus[:-2]] = boost.get(bonus[:-2], 0) + value
+				elif bonus.endswith(" duration") and bonus[:-9] in damages:
+					longer[bonus[:-9]] = longer.get(bonus[:-9], 0) + value
+			named.append("%s at %d" % (name, level))
+	return MainAttack(percent, flat, boost, longer, abilities, named, missing, mixed)
+
+
 def mainAttackDamage(stats):
 	"""What one cast of your own attack is built from: (weapon share, its own flat).
 
@@ -574,31 +668,14 @@ def mainAttackDamage(stats):
 	Returns (1.0, {}) when no main attack is named, which is the old behaviour:
 	assume everything you deal goes through your weapon.
 	"""
-	stated = stats.get("main attack")
-	if not stated:
+	read = mainAttack(stats)
+	if not read.named:
 		return 1.0, {}
-	if isinstance(stated[0], str):
-		stated = [stated]
-	import skillData                       # noqa: F401 - registers the skills
-	from models import Skill
-	share, own = 0.0, {}
-	for name, level in stated:
-		skill = Skill.skills.get(name)
-		if skill is None:
-			continue                        # checkModel warns about this by name
-		ability = skill.getAbility(level)
-		share += ability.gb("weapon damage %") / 100.0
-		for bonus, amount in ability.bonuses.items():
-			# fenris carries 200% pierce with no flat pierce on his sheet
-			# precisely because Feral Claws' own 117 is where his pierce comes
-			# from, which is what plainDamage is here to not throw away.
-			plain = plainDamage(bonus)
-			if plain:
-				# a [dps, seconds] pair is a duration effect; its total is what
-				# one cast lays down, and dotFactor is not this function's job
-				amount = amount[0] * amount[1] if isinstance(amount, list) else amount
-				own[plain] = own.get(plain, 0) + amount
-	return share, own
+	# a [dps, seconds] pair is a duration effect; its total is what one cast
+	# lays down, and dotFactor is not this function's job
+	own = {damage: (value[0] * value[1] if isinstance(value, list) else value)
+		   for damage, value in read.flat.items()}
+	return read.percent / 100.0, own
 
 
 def applyDefensePriority(stats, weights, priority):

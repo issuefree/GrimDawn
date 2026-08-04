@@ -142,6 +142,23 @@ neither the damage split nor the rate depended on their rank. It matters for the
 transcription below: until this, a rank written down for one of those was thrown
 away on load.
 
+## Two skills carrying one damage type
+
+**Fixed.** The main attack was walked twice - once in `checkModel` to price a
+swing against a granted skill, once in `mainAttackDamage` to price the damage
+weights - and the two accumulated flat damage differently. `checkModel` kept the
+first value per type and `mainAttackDamage` summed. gwyr is the case: Fire Strike
+carries 55 fire and Brimstone adds 60, which the game adds, so a swing was being
+measured at 55 while the weights were built on 115.
+
+`modelspec.mainAttack` is the one walk now, and `addFlat` says what adding means
+in each of `calculateBonus`'s two units - numbers on the hit sum, `[dps, seconds]`
+pairs sum their damage over the longer of the two windows, and a type arriving as
+both is refused rather than converted. No record in the game does that, and the
+load warns by name if one ever does.
+
+gwyr's `main attack %` went 178.7 -> 180.3. Nothing else moved, and no total did.
+
 ## skillgen emits no parent/child links
 
 `Ability.augment` and `Skill.childSkills` exist and are dead, because nothing

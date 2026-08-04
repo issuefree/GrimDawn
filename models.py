@@ -1076,57 +1076,24 @@ class Model:
 			  % (self.get("weapon damage %"), self.get("attack opportunity cost")))
 
 		# What your main attack swings for is a fact about your skill bar, not a
-		# preference, and the generated skill data already knows it - name the
-		# skill and the level and it is looked up. skillData is imported here
-		# rather than at the top because it is six thousand lines and only a
-		# model that names an attack needs it.
+		# preference, and the generated skill data already knows it - the
+		# rotation names the skill and the rank and it is looked up. modelspec
+		# does the reading, because applyDamagePriority needs the same numbers
+		# and walking them twice is how the two came to disagree.
 		if not self.getStat("main attack %") and self.getStat("main attack"):
-			# One (skill, level) pair, or a list of them where the modifiers
-			# that hang off the attack also carry weapon damage. Most do not -
-			# Onslaught's Open Wounds and Endless Rage add bleed and a bleed
-			# duration, not a bigger swing - but Blood Burst adds 85%, so the
-			# list is worth accepting rather than assuming the base is all of it.
-			stated = self.getStat("main attack")
-			if stated and isinstance(stated[0], str):
-				stated = [stated]
-			import skillData                       # noqa: F401 - registers the skills
-			# Nothing a skill carries reaches the character sheet. The sheet is
-			# what applies to every attack you make; a skill and its modifiers
-			# apply to that skill. Open Wounds bleeds for Onslaught and nothing
-			# else, and Endless Rage's 12% bleed lifts Onslaught's bleed on top
-			# of the sheet's own - it is not part of the 450% that applies to
-			# everything. So the swing is worked out from all three: the weapon
-			# damage it scales, the flat damage it adds, and the percentages it
-			# adds for itself.
-			percent, flat, boost, longer, named = 0, {}, {}, {}, []
-			self.mainAttackAbilities = []
-			for name, level in stated:
-				skill = Skill.skills.get(name)
-				if skill is None:
-					print("  WARNING: no skill called %r - it adds nothing to 'main attack'" % name)
-					continue
-				ability = skill.getAbility(level)
-				# Kept so mainAttackTargets can ask them how wide they are. Not
-				# scored here: how many enemies a swing covers depends on how
-				# many there are, and that changes between the boss column and
-				# the pack one.
-				self.mainAttackAbilities.append(ability)
-				percent += ability.gb("weapon damage %")
-				for bonus, value in ability.bonuses.items():
-					bonus = modelspec.plainDamage(bonus) or bonus
-					if bonus in damages:
-						flat.setdefault(bonus, value)
-					elif bonus.endswith(" %") and bonus[:-2] in damages:
-						boost[bonus[:-2]] = boost.get(bonus[:-2], 0) + value
-					elif bonus.endswith(" duration") and bonus[:-9] in damages:
-						longer[bonus[:-9]] = longer.get(bonus[:-9], 0) + value
-				named.append("%s at %d" % (name, level))
-
-			if named:
-				self.stats["main attack %"] = self.swingPercent(percent, flat, boost, longer)
+			read = modelspec.mainAttack(self.stats)
+			self.mainAttackAbilities = read.abilities
+			for name in read.missing:
+				print("  WARNING: no skill called %r - it adds nothing to your main attack" % name)
+			for name, damage in read.mixed:
+				print("  WARNING: %r states %s both on the hit and over time, which nothing "
+					  "in the game does - only the first of the two is counted" % (name, damage))
+			if read.named:
+				self.stats["main attack %"] = self.swingPercent(
+					read.percent, read.flat, read.boost, read.longer)
 				print("  main attack %%: %.1f  (%s: %g%% weapon damage, and its own damage "
 					  "and modifiers, none of which is on the sheet)"
-					  % (self.stats["main attack %"], ", ".join(named), percent))
+					  % (self.stats["main attack %"], ", ".join(read.named), read.percent))
 
 		if not self.get("weapon damage %"):
 			print("  WARNING: nothing on the sheet for weapon damage to scale, so pressing "

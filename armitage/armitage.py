@@ -19,7 +19,10 @@ stats = {
 		# it is not a detail. Taken from the level band; correct it if he
 		# is grinding a difficulty he has out-levelled.
 		"difficulty":"ultimate",
-		"attacks/s":2.75,
+		# Off the sheet - his Attack Speed, which is what one weapon swing
+		# takes. Not a sum of everything he presses: that is allAttacks/s
+		# below, which lists the bar skill by skill.
+		"attacks/s":2.41,
 		# His rotation, from bots/armitage.ahk against the cooldowns the records
 		# state. A skill fires no faster than its cooldown and no faster than
 		# it is pressed, so the rate is one over whichever is longer; the load
@@ -31,7 +34,10 @@ stats = {
 			("Mortar Trap", 12, 15.0),
 			("Zolhan's Technique", 12),
 			("Markovian's Advantage", 12),
-			("Shield Slam", 3.0),          # off Battered Shell
+			("Brutal Shield Slam", 3.0),   # off Serrated Shell: 300% weapon
+										   # damage where the plain Shield Slam off a
+										   # Battered Shell is 230%. Same 3s cooldown,
+										   # so only the damage differs
 			("Stormfire", 1.0),            # off Seal of Destruction, no cooldown
 										   # of its own so the press is the rate
 		],
@@ -94,7 +100,10 @@ damagePriority = {
 	}
 
 weights = {
-		"attack opportunity cost":-100,
+		# "attack opportunity cost" was -100 and "weapon damage %" 7.5, both
+		# hand-set and both now derived - the second is his flat damage pool
+		# over his swing rate, and the first is one swing of it. The -100 is in
+		# fenris and lochlan too and reads as copied rather than chosen.
 		"attack speed":10,
 		"cast speed":7.5,
 		
@@ -137,7 +146,6 @@ weights = {
 		#"elemental": 6, "triggered elemental":5, # "elemental %": 20,
 
 
-		"weapon damage %":7.5,
 
 		# "crit damage": ,
 		"damage reflect %": 35,

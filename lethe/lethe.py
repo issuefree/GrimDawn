@@ -67,5 +67,4 @@ damagePriority = {
 # whatever damagePriority would have derived.
 weights = {
 	"offense": 5, "attack speed": 10,
-	"weapon damage %": 7.5,
 }

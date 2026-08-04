@@ -47,7 +47,6 @@ weights = {
 		"slow move":10, 
 		"stun %":50, "stun duration":10, 
 
-		"weapon damage %":25, 
 	}
 stats =	{
 		# Character level. Enemy defence follows from it and from the difficulty,

@@ -167,9 +167,7 @@ weights = {
 		"poison":7.5, "triggered poison":1, "poison %":15, "poison duration":2,
 
 
-		"weapon damage %": 7.5,
 
-		"crit damage": 10,
 		"damage reflect %": 35,
 		"retaliation": 15, 
 		"retaliation %": 25,

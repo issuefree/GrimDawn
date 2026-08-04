@@ -105,7 +105,6 @@ weights = {
 		"triggered life leech":5,
 		"triggered damage":1,
 		
-		"weapon damage %":1,
 		"attack opportunity cost":0, # I don't auto attack.
 		"slow move":2.5,
 		"stun %":20,

@@ -143,7 +143,6 @@ weights = {
 		# not a split of anything, so not a priority
 		"bleed duration":5,
 
-		"crit damage": 1,
 
 		"lifesteal %":33,
 		"move speed": 10,

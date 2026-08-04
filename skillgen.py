@@ -25,6 +25,15 @@ from devotiongen import dictLiteral, procBonuses
 
 MASTERY = re.compile(r"/_classtraining_class(\d+)\.dbr$")
 
+# Which skill a modifier modifies, from the name of its record. Nothing on the
+# record says it - see parentOf - so these take the naming convention apart.
+# A pet modifier and Nightblade's "_mod<N>" hang the suffix off the base name.
+PARENT_SUFFIX = re.compile(r"(_petmodifier|_petmod|_mod\d*)$")
+# <base><number><letter>, any part of which may be absent.
+NUMBERED = re.compile(r"^(.*?)(\d+)([a-z]?)$")
+# A skill is a candidate for a parent only if it is one of these.
+MODIFIER_CLASSES = ("Modifier", "Transmuter", "SkillSecondary_")
+
 # class fragment -> (type, trigger). First match wins, so the specific
 # PassiveOn... forms have to come before plain Passive.
 KINDS = (
@@ -92,6 +101,12 @@ def skillsOf(db, classNumber):
 	The class tree record lists everything the mastery grants, so it is read as
 	well. Across the other nine masteries it adds exactly one entry each, the
 	mastery bar itself, which is a real node and is kept.
+
+	Yields (name, record, stem), where the stem is the record's file name without
+	its extension. That is the only thing that says which skill a modifier
+	modifies - see parentStems - and it is taken from the path the tree points
+	at rather than from the record resolve() may swap in, since a pet modifier's
+	payload lives on the pet's skill while its place in the tree does not.
 	"""
 	out = []
 	seen = set()
@@ -100,11 +115,12 @@ def skillsOf(db, classNumber):
 		skill = db.read(path) if path else None
 		if not skill:
 			return
+		stem = path.split("/")[-1].rsplit(".", 1)[0]
 		skill = resolve(skill, db)
 		name = next((db.name(r) for r in procRecords(skill, db) if db.name(r)), "")
 		if name and name not in seen:
 			seen.add(name)
-			out.append((name, skill))
+			out.append((name, skill, stem))
 
 	for index in range(1, 40):
 		button = db.read("records/ui/skills/class%02d/skill%02d.dbr" % (classNumber, index))
@@ -129,6 +145,47 @@ def resolve(skill, db):
 	target = skill.get("petSkillName") if "PetModifier" in (skill.get("Class") or "") else None
 	nested = db.read(target) if target else None
 	return nested or skill
+
+
+def parentStems(stem):
+	"""Record names the skill at `stem` could be a modifier of, best first.
+
+	Nothing on a modifier's record names its parent - `onslaught2.dbr` is Open
+	Wounds and says only that it is a Skill_Modifier - so the tree's naming is
+	all there is, and it is consistent enough to take apart:
+
+	    onslaught2, onslaught3   -> onslaught1     a numbered modifier
+	    onslaught1b              -> onslaught1     a letter is a transmuter
+	    arcanemissile2           -> arcanemissile  where the base takes no 1
+	    ringofsteel_mod1         -> ringofsteel    Nightblade spells it this way
+	    mortartrap2_petmod       -> mortartrap1    a modifier on a summon
+	    stormtotem01b_petmod...  -> stormtotem01   both at once
+
+	A zero-padded number is deliberately not treated as a family. `passive01`
+	through `passive04` are four separate skills a mastery grants, not three
+	modifiers on the first, and Form of the Beast is `passive04` - so reading
+	that as a child of `passive01` would attach a mastery passive to an
+	unrelated one. Only a trailing letter makes a padded name a child.
+
+	Returns () where the name says nothing, which is the honest answer for the
+	four skills in the game that this cannot place.
+	"""
+	suffixed = PARENT_SUFFIX.sub("", stem)
+	match = NUMBERED.match(suffixed)
+	if not match:
+		# "ringofsteel_mod1" leaves "ringofsteel", which is the base itself
+		return (suffixed + "1", suffixed) if suffixed != stem else ()
+	base, digits, letter = match.groups()
+	if letter:
+		return (base + digits,)
+	if digits.startswith("0"):
+		return ()
+	return (base + "1", base)
+
+
+def parentOf(stem, records):
+	"""The record name `stem` modifies, or None. `records` is one mastery's tree."""
+	return next((p for p in parentStems(stem) if p in records and p != stem), None)
 
 
 def topLevel(skill, db):
@@ -192,10 +249,15 @@ def generate(path="skillData.py", root=None):
 			 "from dataModel import Skill",
 			 "from ability import Ability",
 			 ""]
-	skillCount = 0
+	skillCount, orphans = 0, []
 	for classNumber, mastery in sorted(masteries(db).items()):
 		lines.append("# === %s ===" % mastery)
-		for name, skill in skillsOf(db, classNumber):
+		# Read the whole mastery before writing any of it. A parent has to be
+		# named as a string, so it has to have been emitted - and a skill whose
+		# every level yields no bonuses is dropped, which is not knowable until
+		# its levels have been read.
+		written = []
+		for name, skill, stem in skillsOf(db, classNumber):
 			top = topLevel(skill, db)
 			levels = []
 			for level in range(1, top + 1):
@@ -206,13 +268,41 @@ def generate(path="skillData.py", root=None):
 							  % (str(level), dictLiteral(conditions), dictLiteral(bonuses)))
 			if not levels:
 				continue
+			written.append((name, stem, levels, skill.get("Class") or ""))
+
+		byStem = {stem: name for name, stem, _, _ in written}
+		parents = {}
+		for name, stem, _, skillClass in written:
+			if not any(kind in skillClass for kind in MODIFIER_CLASSES):
+				continue
+			parent = parentOf(stem, byStem)
+			if parent:
+				parents[name] = byStem[parent]
+			else:
+				orphans.append((mastery, name, stem))
+
+		# Parents first, so the Skill constructor can link a child to one that
+		# already exists. One pass is enough - a modifier never has modifiers -
+		# but it is written as a loop so that a deeper tree would not silently
+		# emit a forward reference.
+		order, pending = [], list(written)
+		while pending:
+			ready = [s for s in pending if parents.get(s[0]) in (None,)
+					 or parents[s[0]] in {n for n, _, _, _ in order}]
+			if not ready:
+				ready = pending          # a cycle, which the data does not have
+			order += ready
+			pending = [s for s in pending if s not in ready]
+
+		for name, stem, levels, _ in order:
+			parent = parents.get(name)
 			lines.append("Skill(%r, %r, [" % (name, mastery))
 			lines.append('\t\t"",')
 			lines.extend(levels)
-			lines.append("\t])")
+			lines.append("\t]%s)" % (", %r" % parent if parent else ""))
 			skillCount += 1
 		lines.append("")
 
 	with open(path, "w", encoding="utf-8") as handle:
 		handle.write("\n".join(lines) + "\n")
-	return len(masteries(db)), skillCount
+	return len(masteries(db)), skillCount, orphans

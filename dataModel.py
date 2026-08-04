@@ -579,8 +579,17 @@ class Skill:
 			Skill.skillsByClass[profession] = []
 		Skill.skillsByClass[profession] += [name]
 
-		if parentSkillName:
-			Skill.skills[parentSkillName].addChildSkill(self)
+		# skillgen emits parents before their children, so this normally finds
+		# one. Tolerated rather than indexed because a generated file that has
+		# gone stale against a hand-edit should lose a link, not fail to import:
+		# parentSkillName is kept either way, and that is what reads the tree.
+		parent = Skill.skills.get(parentSkillName) if parentSkillName else None
+		if parent:
+			parent.addChildSkill(self)
+
+	def parent(self):
+		"""The skill this one modifies, or None. Open Wounds returns Onslaught."""
+		return Skill.skills.get(self.parentSkillName) if self.parentSkillName else None
 
 	def getAbility(self, level, verbose=False):
 		level = min(self.maxLevel, level)

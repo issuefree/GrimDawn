@@ -532,13 +532,18 @@ def main(argv=None, modelName=None):
 		try:
 			count, procs = devotiongen.generate()
 			items = itemgen.generate()
-			masteries, skills = skillgen.generate()
+			masteries, skills, orphans = skillgen.generate()
 		except FileNotFoundError as e:
 			sys.exit("Could not read the Grim Dawn database: %s. Set GRIM_DAWN_DIR if the game is installed elsewhere." % e)
 		print("Wrote constellationData.py: %d constellations, %d procs" % (count, procs))
 		print("Wrote itemData.py: %d components, %d augments, %d named pieces"
 			  % (items["components"], items["augments"], items["equipment"]))
 		print("Wrote skillData.py: %d skills across %d masteries" % (skills, masteries))
+		if orphans:
+			print("  modifiers whose record name does not say what they modify, so they "
+				  "cannot be attached to a skill:")
+			for mastery, name, stem in orphans:
+				print("    %-13s %-24s (%s)" % (mastery, name, stem))
 		if items["missing"]:
 			print("  not found in the game files, check the spelling in equipmentWanted.py:")
 			for name in items["missing"]:

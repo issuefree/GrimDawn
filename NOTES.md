@@ -159,18 +159,38 @@ load warns by name if one ever does.
 
 gwyr's `main attack %` went 178.7 -> 180.3. Nothing else moved, and no total did.
 
-## skillgen emits no parent/child links
+## Which skill a modifier modifies
 
-`Ability.augment` and `Skill.childSkills` exist and are dead, because nothing
-says which skill modifies which. The `onslaught1/2/3` naming plus `isCircular`
-would give them.
+**Fixed.** `isModifier` said an entry was not a press; nothing said what it
+modified, so every modifier was attached to the attack you hold down. That is
+right for Open Wounds and wrong for Fault Line, and the two are indistinguishable
+without the link. Ten skills the current models press have modifiers in the data
+- Leap, Ring of Steel, Shadow Strike, Amarasta's Blade Burst, War Cry, Judgment,
+Aegis of Menhir, Primal Strike, Flashbang, Inquisitor Seal - and each would have
+had its modifier's damage credited to the held attack, inflating `main attack %`
+and every weight priced against a swing.
 
-`modelspec.isModifier` reads the half of this that the records do state: a
-`SkillSecondary_` fires with its parent and a passive or a toggle is not a press,
-so a rotation can say which of its entries are modifiers without saying what they
-modify. It does not need to, because they all hang off the one held attack. A
-model that wanted Blood Burst counted against Dreeg's Evil Eye rather than
-against the attack it holds down would need the real link.
+Nothing on a modifier's record names its parent, but the tree's record names do:
+`onslaught2` is Open Wounds and `leap2` is Fault Line. `skillgen.parentStems`
+takes that apart and `skillgen` emits the parent, which fills in the
+`Skill.parentSkillName` and `Skill.childSkills` that had been dead since they
+were written. 129 of 309 skills carry one.
+
+A zero-padded number is deliberately not a family: `passive01` through
+`passive04` are four separate skills a mastery grants, so reading Form of the
+Beast as a child of `passive01` would invent a link. Five modifiers cannot be
+placed at all - two of them because the game misspells `natureblessing1` as the
+parent of `naturesblessing2` - and `--regenerate` names them rather than
+guessing.
+
+`modelspec.modifierTarget` walks up from the modifier to the first ancestor that
+fires at a rate. That is what makes a modifier on a modifier work: Voracity's
+parent is Werewolf, which is a form rather than a press, so the walk carries on
+through it to Feral Claws. A chain that leaves the rotation - Heart Seeker
+without Phantasmal Blades on the bar - is dropped with a note rather than landing
+somewhere convenient.
+
+`Ability.augment` is still dead.
 
 ## Reading skills out of the save files
 

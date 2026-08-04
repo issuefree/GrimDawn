@@ -199,6 +199,40 @@ def isModifier(ability):
 			or ability.gc("trigger") in ("passive", "toggle"))
 
 
+def modifierTarget(name, rated, alsoModifiers):
+	"""Which skill in the rotation a modifier lands on.
+
+	skillgen reads the parent out of the record names, so Open Wounds knows it
+	is Onslaught's and Fault Line knows it is Leap's - which is the whole point,
+	because those two want opposite treatment and nothing else distinguishes
+	them.
+
+	Walking up rather than taking the first parent is what makes a modifier on a
+	modifier work. Voracity's parent is Werewolf, which fires at no rate of its
+	own, so the walk carries on through it and lands where Werewolf lands.
+
+	Returns the name of the rated skill to attach to, or "" for the attack you
+	hold down, or None where the chain leaves the rotation - Heart Seeker
+	without Phantasmal Blades on the bar, which is not yours to score.
+	"""
+	from models import Skill
+	skill, seen = Skill.skills.get(name), {name}
+	while skill is not None:
+		parent = skill.parent()
+		if parent is None:
+			# The records give the root no parent, so nothing says what it
+			# modifies. Werewolf and the four mastery passives are the cases;
+			# the attack you hold down is the only sensible place for them.
+			return ""
+		if parent.name in rated:
+			return parent.name
+		if parent.name not in alsoModifiers or parent.name in seen:
+			return None
+		seen.add(parent.name)
+		skill = parent
+	return ""
+
+
 def resolveRotation(stats):
 	"""Turn the skill bar into the rate each skill actually fires at.
 
@@ -338,9 +372,9 @@ def resolveRotation(stats):
 						   else "pressed every %gs" % press))
 			continue
 		if isModifier(ability):
-			# No rate of its own: it lands whenever the held attack does, which
-			# is what mainAttackDamage and swingPercent price it as.
-			modifiers.append((name, rank))
+			# No rate of its own: it lands whenever the skill it modifies does.
+			# Which skill that is needs every rate settled first, so it waits.
+			modifiers.append((name, ability, rank))
 			continue
 		if name in pool:
 			rate = swing * pool[name]
@@ -386,6 +420,28 @@ def resolveRotation(stats):
 					   "cooldown %gs" % cooldown if cooldown >= press
 					   else "pressed every %gs" % press))
 
+	# Now that every rate is settled, put each modifier on the skill it modifies.
+	# One goes to the held attack, where it is priced as part of a swing; one on
+	# a skill you press rides that skill's rate instead. Reading them all as
+	# modifiers on the held attack was the bug this replaces - it would have
+	# credited Fault Line's damage to Onslaught and inflated every weight priced
+	# against a swing.
+	rated = {name for name, _, _ in resolved}
+	alsoModifiers = {name for name, _, _ in modifiers}
+	onHeld, elsewhere = [], []
+	for name, ability, rank in modifiers:
+		target = modifierTarget(name, rated, alsoModifiers)
+		if target == "" or target == held:
+			onHeld.append((name, rank))
+		elif target is None:
+			notes.append("rotation: %r modifies a skill that is not in your rotation, "
+						 "so there is nothing for it to land on and it is not scored"
+						 % name)
+		else:
+			rate = next(r for n, _, r in resolved if n == target)
+			resolved.append((name, ability, rate))
+			elsewhere.append("%s at %g on %s" % (name, rank, target))
+
 	stats["allAttacks/s"] = rates
 	# Kept because the names are the interesting part and converting to bare
 	# rates throws them away. rotationDamage reads this to work out what the
@@ -394,19 +450,22 @@ def resolveRotation(stats):
 	if held:
 		# The held attack first: models.py reads this to work out what one swing
 		# is worth, and the modifiers only mean anything against it.
-		stats["main attack"] = [(held, heldRank)] + modifiers
-	elif modifiers:
+		stats["main attack"] = [(held, heldRank)] + onHeld
+	elif onHeld:
 		notes.append("rotation: %s modify the attack you hold down, but nothing in "
 					 "the list is one - every entry is a modifier, a weapon pool "
 					 "skill or on a cooldown, so they are not scored"
-					 % ", ".join(repr(n) for n, _ in modifiers))
+					 % ", ".join(repr(n) for n, _ in onHeld))
 	if rows:
 		notes.append("rotation from the skill data - " + "; ".join(rows))
+	if elsewhere:
+		notes.append("modifiers on skills you press, at that skill's rate - "
+					 + "; ".join(elsewhere))
 	if held:
 		notes.append("main attack: %s at %g%s"
 					 % (held, heldRank,
-						", modified by " + ", ".join("%s at %g" % m for m in modifiers)
-						if modifiers else " - nothing in the rotation modifies it"))
+						", modified by " + ", ".join("%s at %g" % m for m in onHeld)
+						if onHeld else " - nothing in the rotation modifies it"))
 	return notes
 
 

@@ -67,11 +67,17 @@ stats = {
 	}
 
 damagePriority = {
-		"damage":4.5,   # everything not named below
-		"pierce": 10,
-		"physical": 7.5,
-		"bleed": 5,
-		"cold": 5,
+		# Derived from the rotation rather than stated. She deals 50% pierce,
+		# 25% bleed, 22% physical, 3% cold - against hand-written priorities of
+		# 10, 5, 7.5 and 5, which had cold level with bleed while dealing an
+		# eighth of it. The bleed is a quarter of her output only because Open
+		# Wounds is counted: it hangs off Onslaught rather than being pressed,
+		# so it is in "main attack" above and not in the rotation, and folding
+		# it in took her bleed from 17% to 25%.
+		#
+		# 16 is what her largest damage weight was before this, so the rest of
+		# the model keeps its scale. Name a type beside it to lean.
+		"rotation": 16,
 	}
 
 weights = {

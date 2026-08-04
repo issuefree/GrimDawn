@@ -206,10 +206,23 @@ def rotationDamage(stats):
 	import skillData                       # noqa: F401 - registers the skills
 	from models import Skill, Model
 	bonus = Model.attributeBonus(stats)
+	# The modifiers hanging off the attack you hold the button on. They are not
+	# separate presses so they are not in the rotation, but their damage lands
+	# every time it does - Open Wounds bleeds for Onslaught and nothing else,
+	# and without this morena's bleed is only what her sheet carries.
+	firing = list(rotation)
+	stated = stats.get("main attack")
+	if stated and rotation:
+		if isinstance(stated[0], str):
+			stated = [stated]
+		named = {name for name, _, _ in rotation}
+		firing += [(name, level, rotation[0][2])
+				   for name, level in stated if name not in named]
+
 	# swings per second, weighted by how much weapon damage each skill carries
 	swings = 0.0
 	own = {}
-	for name, level, rate in rotation:
+	for name, level, rate in firing:
 		skill = Skill.skills.get(name)
 		if skill is None:
 			continue

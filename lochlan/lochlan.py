@@ -99,23 +99,15 @@ stats = {
 # from, so bleed, cold, frostburn, internal, burn, aether and fire stay as
 # stated weights below - add them to the sheet and they can move up here.
 damagePriority = {
-		# Everything not named below, at one number. Seven types used to be
-		# listed as weights at 7 to 10 apiece to say one thing: he will never
-		# chase poison, but a bit of poison is still a bit of damage. This says
-		# it about every type rather than the seven that got written down -
-		# acid, chaos, pierce and vitality were scoring nothing at all, so a
-		# devotion offering them read as offering nothing.
+		# Derived from the rotation rather than stated. He deals 88% lightning,
+		# 9% electrocute, 2% physical - against hand-written priorities of 27.5,
+		# 15 and 8.25, which had electrocute at over half of lightning while
+		# dealing a ninth of it, and physical at a third while dealing a
+		# fortieth.
 		#
-		# 6.1 sits under physical's 8.25 and well under lightning's 27.5, which
-		# is what "never going to chase it" means. It is on the same scale as
-		# them now: it was a weight called "damage" living in the block below,
-		# which divided by nothing where these divide by the block's norm, so
-		# the same number meant two different things depending on where in the
-		# file it was written.
-		"damage":6.1,
-		"lightning": 27.5,
-		"electrocute": 15,
-		"physical": 8.25,
+		# 90 is what his largest damage weight was before this, so the rest of
+		# the model keeps its scale. Name a type beside it to lean.
+		"rotation": 90,
 	}
 
 weights = {

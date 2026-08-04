@@ -183,6 +183,14 @@ placed at all - two of them because the game misspells `natureblessing1` as the
 parent of `naturesblessing2` - and `--regenerate` names them rather than
 guessing.
 
+A rotation entry can name the parent itself - `("Fault Line", 8, "Leap")` -
+which is what the five unplaceable modifiers need, and what a mod or a patch
+that spells its records differently would need. The last element is a press
+interval when it is a number and a parent when it is a string, which do not
+collide because a modifier is never pressed. A stated parent wins, and the load
+says so where it disagrees with the records, so a typo shows up rather than
+quietly moving damage.
+
 `modelspec.modifierTarget` walks up from the modifier to the first ancestor that
 fires at a rate. That is what makes a modifier on a modifier work: Voracity's
 parent is Werewolf, which is a form rather than a press, so the walk carries on

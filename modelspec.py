@@ -133,7 +133,30 @@ def resolveAttackRates(stats):
 	from models import Skill
 	reduction = min(90.0, float(stats.get("reduce cooldown") or 0)) / 100.0
 	swing = float(stats.get("attacks/s") or 0)
-	rates, notes, rows, resolved = [], [], [], []
+	# Weapon pool skills first, because they change what the held attack does.
+	# A "% chance of" skill fires instead of your ordinary swing, so its rate is
+	# attacks/s times its chance and the basic attack keeps whatever is left.
+	# The pool is competitive: the game normalises the chances when they sum
+	# past one, and pakse's four sum to 1.06.
+	notes = []
+	pool = {}
+	for entry in entries:
+		if not isinstance(entry, (tuple, list)):
+			continue
+		skill = Skill.skills.get(entry[0])
+		if skill is None:
+			continue
+		ability = skill.getAbility(entry[1])
+		if str(ability.gc("skillClass")).startswith("Skill_WPAttack_"):
+			pool[entry[0]] = float(ability.gc("chance") or 0)
+	claimed = sum(pool.values())
+	if claimed > 1.0:
+		pool = {k: v / claimed for k, v in pool.items()}
+		notes.append("weapon pool chances sum to %.0f%%, so they are normalised "
+					 "down the way the game does" % (100 * claimed))
+		claimed = 1.0
+
+	rates, rows, resolved = [], [], []
 	for index, entry in enumerate(entries):
 		if not isinstance(entry, (tuple, list)):
 			rates.append(float(entry))
@@ -144,14 +167,35 @@ def resolveAttackRates(stats):
 			notes.append("allAttacks/s: no skill called %r, so it contributes "
 						 "no rate at all" % name)
 			continue
+		if name in pool:
+			# a chance on each swing rather than a button; no interval describes it
+			rate = swing * pool[name]
+			rates.append(rate)
+			resolved.append((name, level, rate))
+			rows.append("%s at %g: %.3g/s (weapon pool, %.0f%% of swings)"
+						% (name, level, rate, 100 * pool[name]))
+			continue
 		cooldown = float(skill.getAbility(level).gc("recharge") or 0) * (1.0 - reduction)
 		press = float(press or 0)
 		interval = max(cooldown, press)
 		why = "cooldown %gs" % cooldown if cooldown >= press else "pressed every %gs" % press
 		if not interval and index == 0:
 			# The first entry is the attack you hold the button down on, and a
-			# basic attack has no cooldown to read, so it runs at attacks/s.
-			interval, why = (1.0 / swing if swing else 0), "held, so attacks/s"
+			# basic attack has no cooldown to read, so it runs at attacks/s -
+			# less whatever share of those swings the weapon pool takes over,
+			# since a pool skill fires instead of the ordinary attack.
+			held = swing * (1.0 - claimed)
+			interval = (1.0 / held) if held else 0
+			why = ("held, so attacks/s" if not claimed else
+				   "held, less the %.0f%% of swings the weapon pool takes" % (100 * claimed))
+			if not held:
+				# A pool that claims every swing means the attack it replaces
+				# never happens - which is a real thing to build, but it should
+				# be said rather than the entry quietly disappearing.
+				notes.append("allAttacks/s: the weapon pool claims every swing, so "
+							 "%r never fires on its own and contributes nothing. "
+							 "Check the ranks: chances that sum past 100%% are "
+							 "usually a sign one of them is guessed too high" % name)
 		if not interval:
 			# Anything else with no cooldown is not a button at all - a weapon
 			# pool skill like Smite fires on a chance when you swing, and there

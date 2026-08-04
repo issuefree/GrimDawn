@@ -31,10 +31,10 @@ stats = {
 			("Overguard", 12, 5.0),
 			("Ascension", 12, 5.0),
 			("War Cry", 12, 7.5),
-			1*.19,  # Smite, and below Shattering Smash, Zolhan's Technique and
-			1*.18,  # Markovian's Advantage. All four are weapon pool procs - a
-			1*.15,  # chance on each swing rather than a button - so no press
-			1*.15,  # interval describes them and they keep hand-figured rates
+			("Smite", 12),
+			("Shattering Smash", 12),
+			("Zolhan's Technique", 12),
+			("Markovian's Advantage", 12),
 			.4,     # "bladeWard", "stomp", "dreegsGaze", "shieldSlam" - the
 					# rest of his bar is item and devotion skills, on keys 9
 					# and 0, which skillData has no entry for
@@ -88,7 +88,15 @@ stats = {
 # gathered here. A block that names nothing else divides by one, so it
 # means exactly what it meant as a weight.
 damagePriority = {
-		"damage":3,
+		# Derived from the rotation rather than stated. He deals 66% acid, 17%
+		# physical, 15% internal, 2% fire - which is worth reading twice, since
+		# nothing in this file suggested acid was two thirds of him. It comes
+		# off the sheet's 500 flat acid at 500%, delivered by a weapon pool that
+		# claims every one of his swings.
+		#
+		# 25 is what his largest damage weight was before this, so the rest of
+		# the model keeps its scale. Name a type beside it to lean.
+		"rotation": 25,
 	}
 
 weights = {

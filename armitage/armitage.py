@@ -29,10 +29,8 @@ stats = {
 			("Thermite Mine", 12, 5.0),
 			("War Cry", 12, 7.5),
 			("Mortar Trap", 12, 15.0),
-			2*.25,  # Zolhan's Technique, and below Markovian's Advantage. Both
-			2*.25,  # are weapon pool procs rather than buttons - they fire on a
-					# chance when he swings, so a press interval says nothing
-					# about them and the rate is attacks/s times that chance
+			("Zolhan's Technique", 12),
+			("Markovian's Advantage", 12),
 			.5,     # "brutal shield slam", pressed every 3s - an item skill
 			1,      # stormfire, off Seal of Destruction
 		],
@@ -84,7 +82,14 @@ stats = {
 # gathered here. A block that names nothing else divides by one, so it
 # means exactly what it meant as a weight.
 damagePriority = {
-		"damage":1,
+		# Derived from the rotation rather than stated. He deals 62% fire, 18%
+		# physical, 16% burn, 2% internal, 2% lightning - which nothing in this
+		# file said before: every damage weight came from a bare "damage": 1
+		# catch-all, so fire and internal were priced the same way.
+		#
+		# 15 is what his largest damage weight was before this, so the rest of
+		# the model keeps its scale. Name a type beside it to lean.
+		"rotation": 15,
 	}
 
 weights = {

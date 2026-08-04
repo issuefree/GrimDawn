@@ -20,7 +20,10 @@ stats = {
 		"defense":835,
 		"armor":366,
 
-		"attacks/s":3,
+		# Off the sheet - her Attack Speed, which is what one weapon swing
+		# takes. Not a sum of everything she presses: that is allAttacks/s
+		# below, and counting the bar in both places counted it twice.
+		"attacks/s":1.91,
 		# His rotation, from bots/morena.ahk against the cooldowns the records
 		# state. A skill fires no faster than its cooldown and no faster than
 		# it is pressed, so the rate is one over whichever is longer; the load

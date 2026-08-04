@@ -31,18 +31,21 @@ stats = {
 		# Feral Claws is first, which is what the left button holds down: it
 		# runs at attacks/s and it is his main attack. The rest are buttons on
 		# the bar, including the two buffs, since a devotion can be bound to a
-		# buff as readily as to an attack - except the last three, which are
-		# never pressed at all. Werewolf is the form Feral Claws comes from and
-		# the other two are passives on it, so the load reads them as modifiers
-		# on his swing rather than as attacks of their own. Those three carry
-		# 110% weapon damage between them, which is why the flat damage on the
-		# sheet below is not decoration, and 117 pierce, which is what the 200%
-		# pierce below has to multiply: none of it is on the sheet.
+		# buff as readily as to an attack.
+		#
+		# The three nested inside Feral Claws are not buttons and never fire on
+		# their own - they change what it swings for. Between them they carry
+		# its 110% weapon damage, which is why the flat damage on the sheet
+		# below is not decoration, and 117 pierce, which is what the 200% pierce
+		# below has to multiply: none of it is on the sheet.
 		#
 		# RANKS ARE STUBS at 8 except Werewolf, Voracity and Recklessness, and
 		# Feral Claws, which are real.
 		"rotation":[
-			("Feral Claws", 8),            # held; the Werewolf form's attack
+			# Held; the Werewolf form's attack, with the form itself and its two
+			# passives nested inside, since all three modify what he swings.
+			("Feral Claws", 8, [("Werewolf", 8), ("Voracity", 4),
+								("Recklessness", 9)]),
 			("Brutal Slam", 1.0),          # off Severed Claw. Chipped Claw's
 										   # plain "Slam" is the weaker version
 										   # and has the same 2s cooldown, so
@@ -53,9 +56,6 @@ stats = {
 			("Blood of Dreeg", 8, 3.0),
 			("Rip and Tear", 8),
 			("Rallying Cry", 8, 4.0),
-			("Werewolf", 8),               # not buttons: the form, and two
-			("Voracity", 4),               # passives that modify what he swings
-			("Recklessness", 9),
 		],
 
 		"hits/s":4,

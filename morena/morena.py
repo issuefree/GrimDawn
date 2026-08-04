@@ -30,13 +30,15 @@ stats = {
 		# prints which one won for each.
 		#
 		# Onslaught is first, so it is what she holds the button down on and it
-		# is her main attack. The last two are not buttons at all - passives
-		# that only apply to it - so the load reads them as modifiers on her
-		# swing. That is what pressing a skill an item grants costs her, and it
-		# moves as these get levelled: a component skill that beats Onslaught at
-		# 1 will not beat it at 10. RANKS ARE STUBS.
+		# is her main attack. What it swings for is what pressing a skill an
+		# item grants costs her, and it moves as these get levelled: a component
+		# skill that beats Onslaught at 1 will not beat it at 10.
+		# RANKS ARE STUBS.
 		"rotation":[
-			("Onslaught", 1),                  # held on left button
+			# Held on the left button, with the two passives that modify it
+			# nested inside - they are not buttons, and Onslaught is the only
+			# thing they can apply to.
+			("Onslaught", 1, [("Open Wounds", 3), ("Endless Rage", 1)]),
 			("Shadow Strike", 8, 1.75),
 			("Ring of Steel", 8, 1.5),
 			("Leap", 8, 1.5),
@@ -44,8 +46,6 @@ stats = {
 			("Rallying Cry", 8, 8.0),
 			("Amarasta's Blade Burst", 8, 10.0),
 			("Sacred Strike", 1.5),        # off Blessed Steel
-			("Open Wounds", 3),            # not buttons: passives on Onslaught
-			("Endless Rage", 1),
 		],
 
 		"hits/s":2,

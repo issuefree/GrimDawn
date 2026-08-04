@@ -38,7 +38,7 @@ stats = {
 	# never makes would do, and her aether % is multiplying the 294 the beam
 	# brings of its own. The rest of her bar is still missing; adding it would
 	# stop every proc being scored against attacks/s alone.
-	"rotation": [("Albrecht's Aether Ray", 26), ("Disintegration", 6)],
+	"rotation": [("Albrecht's Aether Ray", 26, [("Disintegration", 6)])],
 
 	"level": 58,
 	"difficulty": "normal",       # from the level band, not from the save

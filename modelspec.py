@@ -199,50 +199,34 @@ def isModifier(ability):
 			or ability.gc("trigger") in ("passive", "toggle"))
 
 
-def modifierTarget(name, rated, alsoModifiers, stated=None):
-	"""Which skill in the rotation a modifier lands on.
-
-	skillgen reads the parent out of the record names, so Open Wounds knows it
-	is Onslaught's and Fault Line knows it is Leap's - which is the whole point,
-	because those two want opposite treatment and nothing else distinguishes
-	them. `stated` is a parent named in the rotation, which takes the first hop
-	instead: five modifiers in the game have no parent the record names can
-	find, and a mod or a patch is under no obligation to keep the convention.
-
-	Walking up rather than taking the first parent is what makes a modifier on a
-	modifier work. Voracity's parent is Werewolf, which fires at no rate of its
-	own, so the walk carries on through it and lands where Werewolf lands.
-
-	Returns the name of the rated skill to attach to, or "" for the attack you
-	hold down, or None where the chain leaves the rotation - Heart Seeker
-	without Phantasmal Blades on the bar, which is not yours to score.
-	"""
-	from models import Skill
-	seen, current, hop = {name}, name, stated
-	while True:
-		if hop is None:
-			skill = Skill.skills.get(current)
-			parent = skill.parent() if skill else None
-			hop = parent.name if parent else None
-		if hop is None:
-			# Nothing says what it modifies. Werewolf and the four mastery
-			# passives are the cases; the attack you hold down is the only
-			# sensible place for them.
-			return ""
-		if hop in rated:
-			return hop
-		if hop not in alsoModifiers or hop in seen:
-			return None
-		seen.add(hop)
-		current, hop = hop, None
-
-
 def recordedParent(name):
-	"""What the records say `name` modifies, for checking a stated parent against."""
+	"""What the records say `name` modifies, or None.
+
+	skillgen reads it out of the tree's record names, so Open Wounds knows it is
+	Onslaught's and Fault Line knows it is Leap's. The rotation says where a
+	modifier goes; this is what checks it, and what tells you where to put one
+	you have written in the wrong place.
+	"""
 	from models import Skill
 	skill = Skill.skills.get(name)
 	parent = skill.parent() if skill else None
 	return parent.name if parent else None
+
+
+def splitEntry(entry):
+	"""(name, rank, press, modifiers) out of one rotation entry.
+
+	The elements after the name are read by type rather than by position, since
+	a press interval is optional and a skill with modifiers and no interval
+	would otherwise leave a hole to count past. A list is the modifiers; the
+	numbers are the rank and then the press.
+	"""
+	rest = list(entry[1:])
+	modifiers = next((r for r in rest if isinstance(r, list)), [])
+	numbers = [r for r in rest if not isinstance(r, list)]
+	rank = numbers[0] if numbers else 0
+	press = float(numbers[1] or 0) if len(numbers) > 1 else 0.0
+	return entry[0], rank, press, modifiers
 
 
 def resolveRotation(stats):
@@ -255,15 +239,23 @@ def resolveRotation(stats):
 	    ("Mortar Trap", 12)          fires on its own cooldown
 	    ("Flashbang", 12, 3.0)       ...unless you press it slower than that
 	    ("Sacred Strike", 1.5)       an item skill has no rank, so that is the press
-	    ("Fault Line", 8, "Leap")    a modifier, on the skill it modifies
 	    0.5
 
-	The last element is a press interval when it is a number and the skill being
-	modified when it is a string. They do not collide, because a modifier is
-	never pressed and so has no interval to state. Naming the parent is only
-	needed where the records cannot supply it - five modifiers in the game, and
-	whatever a mod or a patch spells differently - but it is accepted anywhere,
-	and it is checked against the records rather than believed quietly.
+	A skill that is never pressed but changes one that is - see isModifier - goes
+	inside the entry for the skill it modifies, because that is the only thing it
+	can modify:
+
+	    ("Leap", 8, 1.5, [("Fault Line", 8)])
+	    ("Onslaught", 1, [("Open Wounds", 3), ("Endless Rage", 1)])
+
+	The nesting is the link, so there is nothing to spell and nothing to keep in
+	step with a name written elsewhere. The elements after the name are read by
+	type rather than by position - see splitEntry - so a skill with modifiers and
+	no press interval does not leave a hole to count past.
+
+	The records say what each modifier really modifies, and that is used to check
+	the nesting rather than to decide it: one nested under the wrong skill says
+	so, and one left at the top level is told which entry to move inside.
 
 	A skill fires no faster than its cooldown and no faster than you press it,
 	so the rate is one over whichever is longer. Which one wins is not obvious
@@ -283,10 +275,9 @@ def resolveRotation(stats):
 	                       attacks/s times its chance and the held attack keeps
 	                       whatever is left. The pool is competitive, so chances
 	                       that sum past one are normalised the way the game does
-	  a modifier           never pressed - see isModifier. It rides the rate of
-	                       the skill it modifies, which modifierTarget works out
-	                       from the parent skillgen reads off the record names,
-	                       or from the one this entry states
+	  a modifier           never pressed. It rides the rate of the entry it is
+	                       nested in, and where that entry is the held attack it
+	                       is priced into a swing instead
 	  the held attack      the first entry that is neither, which runs at
 	                       attacks/s: that is what holding a button down means,
 	                       and a stated cooldown does not describe it
@@ -322,48 +313,60 @@ def resolveRotation(stats):
 	reduction = min(90.0, float(stats.get("reduce cooldown") or 0)) / 100.0
 	swing = float(stats.get("attacks/s") or 0)
 
-	# Look every named entry up first, so what kind of thing it is comes from
-	# its record and not from where it sits in the list. Each becomes
-	# (name, ability, rank, press, source, parent); source is None for a mastery
-	# skill and parent is set only where the model names one.
-	#
-	# The last element of an entry is a press interval when it is a number and
-	# the skill it modifies when it is a string, which do not collide: a
-	# modifier is never pressed, so it has no interval to state.
-	looked = []
-	for entry in entries:
-		if not isinstance(entry, (tuple, list)):
-			looked.append((None, None, 0, 0.0, None, None))
-			continue
-		name, second, third = (list(entry) + [0, 0])[:3]
-		parent = third if isinstance(third, str) else None
-		press = 0.0 if parent else float(third or 0)
+	# Look every named entry up first, so what kind of thing it is comes from its
+	# record and not from where it sits in the list. Each becomes
+	# (name, ability, rank, press, source, modifiers); source is None for a
+	# mastery skill, and modifiers are the ones nested inside this entry, each
+	# already looked up the same way.
+	def look(entry, nested=False):
+		if not entry or not isinstance(entry[0], str):
+			notes.append("rotation: %r does not start with a skill name, so there is "
+						 "nothing to look up. A modifier goes inside the entry for the "
+						 "skill it modifies, not in a list of its own" % (entry,))
+			return (None, None, 0, 0.0, None, [])
+		name, rank, press, inner = splitEntry(entry)
+		if nested and inner:
+			notes.append("rotation: %r carries modifiers of its own, which is a level "
+						 "deeper than the bar goes - nest them beside it instead" % name)
+			inner = []
 		skill = Skill.skills.get(name)
 		if skill is not None:
-			looked.append((name, skill.getAbility(second), second, press, None, parent))
-			continue
+			return (name, skill.getAbility(rank), rank, press, None,
+					[look(m, True) for m in inner])
 		# Not a mastery skill, so try what the items grant. There is no rank on
-		# an item skill, so the second element is the press interval rather than
-		# a level - ("Sacred Strike", 1.5).
+		# an item skill, so its first number is the press interval - and it is a
+		# button of its own, which nothing in a mastery tree modifies.
 		granted = items().get(name)
 		if granted is None:
 			notes.append("rotation: nothing called %r in the mastery skills or the "
 						 "item skills, so it contributes no rate at all" % name)
-			looked.append((name, None, 0, 0.0, None, None))
-			continue
-		if parent:
-			notes.append("rotation: %r comes off an item, and an item skill is a button "
-						 "of its own rather than a modifier, so the %r it names is "
-						 "ignored" % (name, parent))
-			parent = None
+			return (name, None, 0, 0.0, None, [])
+		if inner:
+			notes.append("rotation: %r comes off an item, and nothing in a mastery tree "
+						 "modifies an item skill, so %s nested inside it is not scored"
+						 % (name, ", ".join(repr(splitEntry(m)[0]) for m in inner)))
 		ability, source = granted
-		looked.append((name, ability, None, float(second or 0), source, parent))
+		return (name, ability, None, float(rank or 0), source, [])
+
+	looked = [look(e) if isinstance(e, (tuple, list)) else (None, None, 0, 0.0, None, [])
+			  for e in entries]
+
+	# A modifier is not a button, so one at the top level is in the wrong place.
+	# The records know which entry it belongs inside, so say which.
+	for name, ability, rank, _, source, _ in looked:
+		if ability is None or source is not None or not isModifier(ability):
+			continue
+		parent = recordedParent(name)
+		notes.append("rotation: %r modifies a skill rather than being pressed, so it "
+					 "belongs inside that skill's entry - %s. It is not scored where "
+					 "it is"
+					 % (name, ("nest it in the %r line" % parent) if parent else
+						"the records do not say which, so nest it in whichever you play"))
 
 	# The weapon pool comes first because it changes what the held attack does.
 	pool = {}
-	for name, ability, _, _, source, parent in looked:
-		if ability is not None and source is None and not parent \
-		   and not isModifier(ability) \
+	for name, ability, _, _, source, _ in looked:
+		if ability is not None and source is None and not isModifier(ability) \
 		   and str(ability.gc("skillClass") or "").startswith("Skill_WPAttack_"):
 			pool[name] = float(ability.gc("chance") or 0)
 	claimed = sum(pool.values())
@@ -376,14 +379,52 @@ def resolveRotation(stats):
 	# The held attack: the first entry that is neither a modifier nor a pool
 	# skill. Taking it by position rather than by class is what lets a beam,
 	# a shapeshifted claw and a weapon pool basic attack all be one thing.
-	held, heldRank = next(((name, rank) for name, ability, rank, _, source, parent in looked
-						   if ability is not None and source is None and not parent
+	held, heldRank = next(((name, rank) for name, ability, rank, _, source, _ in looked
+						   if ability is not None and source is None
 						   and not isModifier(ability) and name not in pool), (None, 0))
 
-	rates, rows, resolved, modifiers = [], [], [], []
-	for entry, (name, ability, rank, press, source, parent) in zip(entries, looked):
+	rates, rows, resolved = [], [], []
+	onHeld, elsewhere = [], []
+
+	def attach(host, rate, nested):
+		"""Put an entry's modifiers on it, once its own rate is known.
+
+		A modifier on the attack you hold down is priced into a swing, which is
+		what "main attack" carries. One on a skill you press has no swing to be
+		part of, so it rides that skill's rate instead - which is the whole
+		difference between Open Wounds and Fault Line.
+		"""
+		siblings = {m[0] for m in nested}
+		for name, ability, rank, _, source, _ in nested:
+			if ability is None or source is not None:
+				continue                   # already complained about by name
+			if not isModifier(ability):
+				notes.append("rotation: %r is a %s, which the records call a button of "
+							 "its own - nested here it is read as a modifier on %r "
+							 "instead" % (name, ability.gc("skillClass"), host))
+			recorded = recordedParent(name)
+			if recorded and recorded != host and recorded not in siblings:
+				notes.append("rotation: %r is nested in %r, but the records say it "
+							 "modifies %r" % (name, host, recorded))
+			if host == held:
+				onHeld.append((name, rank))
+			else:
+				resolved.append((name, ability, rate))
+				elsewhere.append("%s at %g on %s" % (name, rank, host))
+
+	def orphaned(host, nested):
+		if nested:
+			notes.append("rotation: %s %s %r, which fires at no rate, so %s not scored "
+						 "either" % (", ".join(repr(m[0]) for m in nested),
+									 "modifies" if len(nested) == 1 else "modify", host,
+									 "it is" if len(nested) == 1 else "they are"))
+
+	for entry, (name, ability, rank, press, source, nested) in zip(entries, looked):
 		if name is None:
-			rates.append(float(entry))
+			# A bare rate, or an entry look could not read - which it has already
+			# complained about, and which is not a number to fall back on.
+			if not isinstance(entry, (tuple, list)):
+				rates.append(float(entry))
 			continue
 		if ability is None:
 			continue                       # already complained about by name
@@ -406,32 +447,24 @@ def resolveRotation(stats):
 						   "cooldown %gs" % cooldown if cooldown >= press
 						   else "pressed every %gs" % press))
 			continue
-		if parent or isModifier(ability):
-			# No rate of its own: it lands whenever the skill it modifies does.
-			# Which skill that is needs every rate settled first, so it waits.
-			if parent and not isModifier(ability):
-				notes.append("rotation: %r is a %s, which the records say is a button of "
-							 "its own - it is being read as a modifier on %r because you "
-							 "said so" % (name, ability.gc("skillClass"), parent))
-			recorded = recordedParent(name)
-			if parent and recorded and recorded != parent:
-				notes.append("rotation: you name %r as modifying %r where the records say "
-							 "%r - yours wins, but one of the two is wrong"
-							 % (name, parent, recorded))
-			modifiers.append((name, ability, rank, parent))
-			continue
+		if isModifier(ability):
+			continue                       # already complained about, by name
 		if name in pool:
 			rate = swing * pool[name]
 			rates.append(rate)
 			resolved.append((name, ability, rate))
 			rows.append("%s at %g: %.3g/s (weapon pool, %.0f%% of swings)"
 						% (name, rank, rate, 100 * pool[name]))
+			attach(name, rate, nested)
 			continue
 		if name == held:
 			# Held down, so it runs at your swing rate - less whatever share of
 			# those swings the weapon pool takes over, since a pool skill fires
 			# instead of the ordinary attack.
 			rate = swing * (1.0 - claimed)
+			# Attached either way: what a swing is worth is a fact about the
+			# skill even where the weapon pool leaves it no swings to make.
+			attach(name, rate, nested)
 			if not rate:
 				# A pool that claims every swing means the attack it replaces
 				# never happens - a real thing to build, but it should be said
@@ -456,6 +489,7 @@ def resolveRotation(stats):
 			notes.append("rotation: %r states no cooldown and is not the attack you "
 						 "hold down, so nothing says how often it fires - say how "
 						 "often you press it" % name)
+			orphaned(name, nested)
 			continue
 		rates.append(1.0 / interval)
 		resolved.append((name, ability, 1.0 / interval))
@@ -463,28 +497,7 @@ def resolveRotation(stats):
 					% (name, rank, 1.0 / interval,
 					   "cooldown %gs" % cooldown if cooldown >= press
 					   else "pressed every %gs" % press))
-
-	# Now that every rate is settled, put each modifier on the skill it modifies.
-	# One goes to the held attack, where it is priced as part of a swing; one on
-	# a skill you press rides that skill's rate instead. Reading them all as
-	# modifiers on the held attack was the bug this replaces - it would have
-	# credited Fault Line's damage to Onslaught and inflated every weight priced
-	# against a swing.
-	rated = {name for name, _, _ in resolved}
-	alsoModifiers = {name for name, _, _, _ in modifiers}
-	onHeld, elsewhere = [], []
-	for name, ability, rank, parent in modifiers:
-		target = modifierTarget(name, rated, alsoModifiers, parent)
-		if target == "" or target == held:
-			onHeld.append((name, rank))
-		elif target is None:
-			notes.append("rotation: %r modifies a skill that is not in your rotation, "
-						 "so there is nothing for it to land on and it is not scored"
-						 % name)
-		else:
-			rate = next(r for n, _, r in resolved if n == target)
-			resolved.append((name, ability, rate))
-			elsewhere.append("%s at %g on %s" % (name, rank, target))
+		attach(name, 1.0 / interval, nested)
 
 	stats["allAttacks/s"] = rates
 	# Kept because the names are the interesting part and converting to bare
@@ -495,11 +508,7 @@ def resolveRotation(stats):
 		# The held attack first: models.py reads this to work out what one swing
 		# is worth, and the modifiers only mean anything against it.
 		stats["main attack"] = [(held, heldRank)] + onHeld
-	elif onHeld:
-		notes.append("rotation: %s modify the attack you hold down, but nothing in "
-					 "the list is one - every entry is a modifier, a weapon pool "
-					 "skill or on a cooldown, so they are not scored"
-					 % ", ".join(repr(n) for n, _ in onHeld))
+
 	if rows:
 		notes.append("rotation from the skill data - " + "; ".join(rows))
 	if elsewhere:
@@ -1434,14 +1443,13 @@ stats = {
 	#
 	# The first entry is the attack you hold the button down on, and it runs at
 	# attacks/s above. Passives, toggles and secondary attacks are not presses -
-	# the records say so - so they are read as modifiers rather than as rates,
-	# and each rides the skill it modifies. Name that skill as a string where
-	# the records cannot say it; a number in the same place is a press interval.
-	# "rotation": [("Fire Strike", 12),        # held
-	#              ("Explosive Strike", 12),   # a modifier on it, not a button
-	#              ("Mortar Trap", 12, 15.0),  # pressed every 15s
-	#              ("Sacred Strike", 1.5),     # off an item, pressed every 1.5s
-	#              ("Fault Line", 8, "Leap"),  # a modifier, on what it modifies
+	# the records say so - and each goes inside the entry for the skill it
+	# modifies, which is the only thing it can modify.
+	# "rotation": [("Fire Strike", 12, [("Explosive Strike", 12)]),  # held, + a
+	#                                            # modifier on it, not a button
+	#              ("Mortar Trap", 12, 15.0),    # pressed every 15s
+	#              ("Leap", 12, [("Fault Line", 8)]),  # cooldown, + a modifier
+	#              ("Sacred Strike", 1.5),       # off an item, pressed every 1.5s
 	#              0.5],
 
 	# Pressing a skill an item grants costs you one swing of the above, and a

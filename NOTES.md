@@ -183,20 +183,21 @@ placed at all - two of them because the game misspells `natureblessing1` as the
 parent of `naturesblessing2` - and `--regenerate` names them rather than
 guessing.
 
-A rotation entry can name the parent itself - `("Fault Line", 8, "Leap")` -
-which is what the five unplaceable modifiers need, and what a mod or a patch
-that spells its records differently would need. The last element is a press
-interval when it is a number and a parent when it is a string, which do not
-collide because a modifier is never pressed. A stated parent wins, and the load
-says so where it disagrees with the records, so a typo shows up rather than
-quietly moving damage.
+A modifier goes inside the entry for the skill it modifies:
 
-`modelspec.modifierTarget` walks up from the modifier to the first ancestor that
-fires at a rate. That is what makes a modifier on a modifier work: Voracity's
-parent is Werewolf, which is a form rather than a press, so the walk carries on
-through it to Feral Claws. A chain that leaves the rotation - Heart Seeker
-without Phantasmal Blades on the bar - is dropped with a note rather than landing
-somewhere convenient.
+    ("Leap", 8, 1.5, [("Fault Line", 8)])
+    ("Onslaught", 1, [("Open Wounds", 3), ("Endless Rage", 1)])
+
+The nesting is the link, so there is nothing to spell and nothing to keep in step
+with a name written elsewhere. The elements after the name are read by type
+rather than by position, so a skill with modifiers and no press interval leaves
+no hole to count past.
+
+The derived parent is what checks the nesting rather than what decides it: a
+modifier nested under the wrong skill says so, and one left at the top level is
+told which entry to move inside. That keeps the derivation earning its place
+without it being the only way to say where something goes - which matters for the
+five it cannot place, and for whatever a mod spells differently.
 
 `Ability.augment` is still dead.
 

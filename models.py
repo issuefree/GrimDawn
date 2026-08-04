@@ -1,6 +1,7 @@
 import os
 
 import devotionderive
+import modelspec
 from dataModel import *
 from constellationData import *
 from utils import *
@@ -509,8 +510,6 @@ class Model:
 
 	@staticmethod
 	def loadModel(name):
-		import modelspec
-
 		path = name.lower() + "/" + name.lower() + ".py"
 		if not os.path.exists(path):
 			raise FileNotFoundError(
@@ -769,11 +768,11 @@ class Model:
 		print("Checking model...")
 		print("  "+self.name)
 
-		if not "allAttacks/s" in self.stats:
-			self.stats["allAttacks/s"] = [self.stats["attacks/s"]]
-
+		# resolveRotation fills this in from the rotation, and applyDefaults
+		# falls back to [attacks/s] where the rotation named nothing, so by here
+		# it is always set. Sorted because stacked procs are scored off the
+		# fastest sources first.
 		self.stats["allAttacks/s"].sort(reverse=True)
-
 
 		if not "fight length" in self.stats:
 			self.stats["fight length"] = 30
@@ -1114,13 +1113,9 @@ class Model:
 				self.mainAttackAbilities.append(ability)
 				percent += ability.gb("weapon damage %")
 				for bonus, value in ability.bonuses.items():
-					# skillgen names an attack's own damage "triggered X" and a
-					# buff's plain "X"; it is the same damage and the prefix
-					# comes off, or Feral Claws' 117 pierce reads as nothing
-					if bonus.startswith("triggered ") and bonus[10:] in damages:
-						bonus = bonus[10:]
+					bonus = modelspec.plainDamage(bonus) or bonus
 					if bonus in damages:
-						flat[bonus] = value if bonus not in flat else flat[bonus]
+						flat.setdefault(bonus, value)
 					elif bonus.endswith(" %") and bonus[:-2] in damages:
 						boost[bonus[:-2]] = boost.get(bonus[:-2], 0) + value
 					elif bonus.endswith(" duration") and bonus[:-9] in damages:

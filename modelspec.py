@@ -172,6 +172,18 @@ def items():
 	return _ITEM_ABILITIES
 
 
+def plainDamage(bonus):
+	"""The damage type a bonus key names, or None if it does not name one.
+
+	skillgen writes an attack's own damage as "triggered X" and a buff's as
+	plain "X". It is the same damage - Feral Claws' 117 pierce reads as nothing
+	if the prefix is left on - so the prefix comes off and the three places that
+	were each stripping it with their own comment ask here instead.
+	"""
+	plain = bonus[len("triggered "):] if bonus.startswith("triggered ") else bonus
+	return plain if plain in damages else None
+
+
 def isModifier(ability):
 	"""True for a skill that is never pressed but changes the one you hold down.
 
@@ -455,8 +467,8 @@ def rotationDamage(stats):
 	for ability, rate in firing:
 		swings += rate * ability.gb("weapon damage %") / 100.0
 		for key, amount in ability.bonuses.items():
-			plain = key[len("triggered "):] if key.startswith("triggered ") else key
-			if plain not in damages:
+			plain = plainDamage(key)
+			if plain is None:
 				continue
 			amount = amount[0] * amount[1] if isinstance(amount, list) else amount
 			own[plain] = own.get(plain, 0.0) + rate * amount
@@ -577,17 +589,15 @@ def mainAttackDamage(stats):
 		ability = skill.getAbility(level)
 		share += ability.gb("weapon damage %") / 100.0
 		for bonus, amount in ability.bonuses.items():
-			# skillgen names an attack's own damage "triggered X" and a buff's
-			# plain "X" - the same damage either way, so the prefix comes off.
-			# Feral Claws states its 117 pierce as "triggered pierce", and
 			# fenris carries 200% pierce with no flat pierce on his sheet
-			# precisely because that 117 is where his pierce comes from.
-			name = bonus[len("triggered "):] if bonus.startswith("triggered ") else bonus
-			if name in damages:
+			# precisely because Feral Claws' own 117 is where his pierce comes
+			# from, which is what plainDamage is here to not throw away.
+			plain = plainDamage(bonus)
+			if plain:
 				# a [dps, seconds] pair is a duration effect; its total is what
 				# one cast lays down, and dotFactor is not this function's job
 				amount = amount[0] * amount[1] if isinstance(amount, list) else amount
-				own[name] = own.get(name, 0) + amount
+				own[plain] = own.get(plain, 0) + amount
 	return share, own
 
 

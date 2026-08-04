@@ -354,6 +354,42 @@ def rotationDamage(stats):
 	return out
 
 
+def retaliationDamage(stats):
+	"""What you deal per second by being hit, and per point of what.
+
+	The other half of a retribution build, and the half no rotation can see:
+	retaliation does not come off anything you press, it comes off being hit.
+	So its rate is "hits taken/s" - the same figure armor is counted against -
+	and everything else follows the way the attack side does.
+
+	    R(X) = flat(X) * (1 + retaliation%/100) * hitsTaken
+
+	    d R(X) / d(flat X)        = (1 + retaliation%/100) * hitsTaken
+	    d R    / d(retaliation %) = sum(flat) * hitsTaken / 100
+
+	Retaliation has its own multiplier rather than sharing the damage one: the
+	game's tooltip says in as many words that "% All Damage does not affect
+	Retaliation damage". Nor do the attribute bonuses, which is why nothing is
+	added from cunning or spirit here.
+
+	Returns ({damage: (perSecond, dFlat)}, dPercent).
+	"""
+	taken = float(stats.get("hits taken/s") or 0) or HITS_TAKEN_DEFAULT
+	percent = float(stats.get("all retaliation %", 0)
+					or stats.get("retaliation %", 0) or 0)
+	multiplier = 1.0 + percent / 100.0
+	out, pool = {}, 0.0
+	for damage in damages:
+		if damage in ("elemental", "all damage"):
+			continue
+		flat = float(stats.get(damage + " retaliation", 0) or 0)
+		if not flat:
+			continue
+		pool += flat
+		out[damage] = (flat * multiplier * taken, multiplier * taken)
+	return out, pool * taken / 100.0
+
+
 def dotFactor(damage, stats):
 	"""What a point of flat damage of this type delivers, against a point of physical.
 
@@ -590,11 +626,20 @@ def fromRotation(stats, weights, priority):
 	scale = float(priority.get(ROTATION) or 0) or 1.0
 	lean = {k: float(v) for k, v in priority.items() if k != ROTATION}
 
+	# Retaliation is another source of damage per second, so it is priced on
+	# the same scale rather than by hand beside it. That balance - what he
+	# deals by swinging against what he deals by being hit - was the thing
+	# nobody could set honestly, because the two halves were in different
+	# units. They are in the same one now: damage a second, per point.
+	retal, retalPercent = retaliationDamage(stats)
+
 	# Everything is quoted against the biggest, so "rotation": 30 means "my
-	# largest damage weight should be about 30" rather than asking anyone to
-	# guess at units of damage per second.
-	peak = max(max(dFlat, dPerc) * lean.get(d, 1.0)
-			   for d, (_, dFlat, dPerc) in rows.items()) or 1.0
+	# largest weight should be about 30" rather than asking anyone to guess at
+	# units of damage per second.
+	peak = max([max(dFlat, dPerc) * lean.get(d, 1.0)
+				for d, (_, dFlat, dPerc) in rows.items()]
+			   + [dFlat * lean.get(d, 1.0) for d, (_, dFlat) in retal.items()]
+			   + [retalPercent]) or 1.0
 	rate = float(stats.get("attacks/s") or 0)
 	total = sum(perSecond for perSecond, _, _ in rows.values()) or 1.0
 	swing, shares = 0.0, []
@@ -615,7 +660,21 @@ def fromRotation(stats, weights, priority):
 			shares.append("%s %.0f%%" % (damage, 100 * perSecond / total))
 	if swing and "weapon damage %" not in weights:
 		weights["weapon damage %"] = swing / 100.0 / (rate or 1.0)
+
+	retalTotal = sum(perSecond for perSecond, _ in retal.values())
+	for damage, (_, dFlat) in retal.items():
+		key = damage + " retaliation"
+		if key not in weights:
+			weights[key] = dFlat * lean.get(damage, 1.0) * scale / peak
+	if retalPercent and "retaliation %" not in weights:
+		weights["retaliation %"] = retalPercent * scale / peak
+
 	notes.append("damage weights from the rotation, which deals: " + ", ".join(shares))
+	if retalTotal:
+		notes.append("retaliation is %.0f%% of what he deals - %.0f a second against "
+					 "%.0f from the rotation, at %g hits taken a second"
+					 % (100 * retalTotal / (total + retalTotal), retalTotal, total,
+						float(stats.get("hits taken/s") or 0) or HITS_TAKEN_DEFAULT))
 	if lean:
 		notes.append("leaning on " + ", ".join("%s x%g" % (k, v) for k, v in sorted(lean.items())))
 	return notes
@@ -859,6 +918,13 @@ def statVocabulary():
 				  "armor piercing", "attack speed", "cast speed", "move speed",
 				  "block %", "blocked damage %", "damage absorb %", "lifesteal %",
 				  "weapon damage %", "crit damage", "retaliation %", "pet damage %",
+				  # What you deal by being hit. The flat figures are per type,
+				  # the percentage is one number for all of them - the game's
+				  # own tooltip says "% All Damage does not affect Retaliation
+				  # damage", so retaliation has its own multiplier and this is
+				  # it. Both spellings, since the sheet says one and the weight
+				  # vocabulary has long said the other.
+				  "all retaliation %",
 				  "avoid melee", "avoid ranged", "elemental %", "elemental resist",
 				  "all damage %", "physical resist",
 				  # % Reduced Skill Cooldown off the sheet. Ability.resolveTiming
@@ -877,7 +943,7 @@ def statVocabulary():
 				  # sheet's regen figure does not show
 				  "energy for skills/s"})
 	for d in damages:
-		vocab.update({d, d + " %", d + " duration"})
+		vocab.update({d, d + " %", d + " duration", d + " retaliation"})
 	for r in resists:
 		vocab.update({r, "max " + r})
 	for d in primaryDamages:

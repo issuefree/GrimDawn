@@ -43,6 +43,12 @@ stats = {
 		],
 		"hits/s":4,
 		"blocks/s":1.5,
+		# STUB, and for a retribution build it is the most consequential number
+		# in the file: retaliation fires off being hit, so this is its rate the
+		# way attacks/s is the rotation's. It defaults to 1 and at 1 retaliation
+		# is 54% of what he deals; at 2 it is 70%, at 3 it is 78%. A shield tank
+		# standing in a pack is being hit rather more than once a second.
+		# "hits taken/s":2,
 		"kills/s":1,
 		# crit chance was pinned here. It is derived now, from offensive
 		# ability against the enemy defence that level and difficulty give -
@@ -72,7 +78,11 @@ stats = {
 		"electrocute %":650, "electrocute":1,
 		"chaos %":450, "chaos":1,
 
-		"retaliation %":350+100,
+		"physical retaliation": 6000,
+		"fire retaliation": 15000,
+		"lightning retaliation": 8000,
+
+		"all retaliation %":831,
 
 		"fight length":30,
 
@@ -149,8 +159,11 @@ weights = {
 
 		# "crit damage": ,
 		"damage reflect %": 35,
-		"retaliation":7, 
-		"retaliation %":15,
+		# "retaliation" 7 and "retaliation %" 15 were here. Both are derived
+		# now, off the flat retaliation on the sheet and the 831% that
+		# multiplies it, at the rate he is hit - which is what makes them
+		# comparable with the attack weights rather than a separate guess
+		# beside them.
 		
 		"stun %":-5,
 

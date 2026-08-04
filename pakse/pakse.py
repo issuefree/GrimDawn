@@ -35,9 +35,12 @@ stats = {
 			("Shattering Smash", 12),
 			("Zolhan's Technique", 12),
 			("Markovian's Advantage", 12),
-			.4,     # "bladeWard", "stomp", "dreegsGaze", "shieldSlam" - the
-					# rest of his bar is item and devotion skills, on keys 9
-					# and 0, which skillData has no entry for
+			("Shield Slam", 3.0),          # off Battered Shell
+			("Blade Ward", 3.0),           # off Reinforced Shell; 12s cooldown
+										   # wins, so the press does not matter
+			.4,     # "stomp" and "dreegsGaze", on key 9 - devotion procs
+					# rather than item skills, so they fire on their own
+					# triggers and there is nothing here to name
 		],
 		"blocks/s":1,
 		"hits/s":1.5, # assuming a non-trivial fight

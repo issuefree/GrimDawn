@@ -33,8 +33,7 @@ stats = {
 			("Bonechilling Cry", 8, 4.5),
 			("Rallying Cry", 8, 8.0),
 			("Amarasta's Blade Burst", 8, 10.0),
-			0.67,   # Sacred Strike off Blessed Steel, pressed every 1.5s - an
-					# item skill, so not in skillData to look a cooldown up in
+			("Sacred Strike", 1.5),        # off Blessed Steel
 		],
 		# The first of those, with the modifiers that only apply to it. Read for
 		# what a swing is worth, which is what pressing a skill an item grants

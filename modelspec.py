@@ -100,6 +100,41 @@ def applyDefaults(stats):
 	return notes
 
 
+def itemAbilities():
+	"""Every skill an item grants, by the name the game gives it.
+
+	115 components, augments and pieces of gear carry one, and a good part of
+	any bar is made of them - Sacred Strike off Blessed Steel, Shield Slam off
+	a Battered Shell. They are not in skillData, which holds mastery skills
+	only, so a rotation naming one used to have to fall back to a bare number
+	with the skill's name in a comment.
+
+	Returns {name: (ability, item name)}. First one wins where two items grant
+	the same skill, and the item is kept only so the note can say where it came
+	from.
+	"""
+	import itemData
+	out = {}
+	equipment = getattr(itemData, "equipment", {})
+	pools = (itemData.components, itemData.augments,
+			 list(equipment.values()) if isinstance(equipment, dict) else list(equipment))
+	for pool in pools:
+		for item in pool:
+			if item.ability and item.ability.name not in out:
+				out[item.ability.name] = (item.ability, item.name)
+	return out
+
+
+_ITEM_ABILITIES = {}
+
+
+def items():
+	"""itemAbilities(), built once - it walks every component and augment."""
+	if not _ITEM_ABILITIES:
+		_ITEM_ABILITIES.update(itemAbilities())
+	return _ITEM_ABILITIES
+
+
 def resolveAttackRates(stats):
 	"""Turn named skills in allAttacks/s into the rate each actually fires at.
 
@@ -164,14 +199,40 @@ def resolveAttackRates(stats):
 		name, level, press = (list(entry) + [0])[:3]
 		skill = Skill.skills.get(name)
 		if skill is None:
-			notes.append("allAttacks/s: no skill called %r, so it contributes "
-						 "no rate at all" % name)
+			# Not a mastery skill, so try what the items grant. There is no
+			# rank on an item skill, so the second element is the press
+			# interval rather than a level - ("Sacred Strike", 1.5).
+			granted = items().get(name)
+			if granted is None:
+				notes.append("allAttacks/s: nothing called %r in the mastery skills "
+							 "or the item skills, so it contributes no rate at all"
+							 % name)
+				continue
+			ability, source = granted
+			if ability.gc("trigger") != "manual":
+				notes.append("allAttacks/s: %r off %s fires on %r rather than being "
+							 "pressed, so it belongs to its own trigger rather than "
+							 "in a rotation" % (name, source, ability.gc("trigger")))
+				continue
+			cooldown = float(ability.gc("recharge") or 0) * (1.0 - reduction)
+			press = float(level or 0)      # the second element, for an item skill
+			interval = max(cooldown, press)
+			if not interval:
+				notes.append("allAttacks/s: %r off %s has no cooldown, so say how "
+							 "often you press it" % (name, source))
+				continue
+			rates.append(1.0 / interval)
+			resolved.append((name, ability, 1.0 / interval))
+			rows.append("%s off %s: %.3g/s (%s)"
+						% (name, source, 1.0 / interval,
+						   "cooldown %gs" % cooldown if cooldown >= press
+						   else "pressed every %gs" % press))
 			continue
 		if name in pool:
 			# a chance on each swing rather than a button; no interval describes it
 			rate = swing * pool[name]
 			rates.append(rate)
-			resolved.append((name, level, rate))
+			resolved.append((name, skill.getAbility(level), rate))
 			rows.append("%s at %g: %.3g/s (weapon pool, %.0f%% of swings)"
 						% (name, level, rate, 100 * pool[name]))
 			continue
@@ -191,11 +252,14 @@ def resolveAttackRates(stats):
 			if not held:
 				# A pool that claims every swing means the attack it replaces
 				# never happens - which is a real thing to build, but it should
-				# be said rather than the entry quietly disappearing.
+				# be said rather than the entry quietly disappearing. Said once:
+				# the general "no cooldown" complaint below is about a different
+				# problem and would only muddy this one.
 				notes.append("allAttacks/s: the weapon pool claims every swing, so "
 							 "%r never fires on its own and contributes nothing. "
 							 "Check the ranks: chances that sum past 100%% are "
 							 "usually a sign one of them is guessed too high" % name)
+				continue
 		if not interval:
 			# Anything else with no cooldown is not a button at all - a weapon
 			# pool skill like Smite fires on a chance when you swing, and there
@@ -208,7 +272,7 @@ def resolveAttackRates(stats):
 						 % name)
 			continue
 		rates.append(1.0 / interval)
-		resolved.append((name, level, 1.0 / interval))
+		resolved.append((name, skill.getAbility(level), 1.0 / interval))
 		rows.append("%s at %g: %.3g/s (%s)" % (name, level, 1.0 / interval, why))
 	stats["allAttacks/s"] = rates
 	# Kept because the names are the interesting part and converting to bare
@@ -254,23 +318,21 @@ def rotationDamage(stats):
 	# separate presses so they are not in the rotation, but their damage lands
 	# every time it does - Open Wounds bleeds for Onslaught and nothing else,
 	# and without this morena's bleed is only what her sheet carries.
-	firing = list(rotation)
+	firing = [(ability, rate) for _, ability, rate in rotation]
 	stated = stats.get("main attack")
 	if stated and rotation:
 		if isinstance(stated[0], str):
 			stated = [stated]
 		named = {name for name, _, _ in rotation}
-		firing += [(name, level, rotation[0][2])
-				   for name, level in stated if name not in named]
+		for name, level in stated:
+			skill = Skill.skills.get(name)
+			if skill is not None and name not in named:
+				firing.append((skill.getAbility(level), rotation[0][2]))
 
 	# swings per second, weighted by how much weapon damage each skill carries
 	swings = 0.0
 	own = {}
-	for name, level, rate in firing:
-		skill = Skill.skills.get(name)
-		if skill is None:
-			continue
-		ability = skill.getAbility(level)
+	for ability, rate in firing:
 		swings += rate * ability.gb("weapon damage %") / 100.0
 		for key, amount in ability.bonuses.items():
 			plain = key[len("triggered "):] if key.startswith("triggered ") else key

@@ -31,9 +31,11 @@ stats = {
 			("Storm Totem", 10, 4.3),
 			("Wendigo Totem", 10, 5.0),
 			("War Cry", 10, 5.0),
-			0.29,   # "oleronsMight", pressed every 3.5s. Soldier has an
-					# Oleron's Rage and this is probably not it - most likely
-					# the item skill off Chains of Oleron, which he wears
+					# "oleronsMight" was a rate here. It is Oleron's Might off
+					# Oleron's Blood, and it fires on attack rather than being
+					# pressed - so it is not a separate attack source at all,
+					# it rides the ones below. Counting it doubled a share of
+					# his rotation.
 			1,      # Wind Devil. Really is missing from skillData: its record
 					# yields no bonuses skillgen can read, so there is nothing
 					# to name. See NOTES.md

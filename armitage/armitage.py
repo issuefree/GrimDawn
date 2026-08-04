@@ -31,8 +31,9 @@ stats = {
 			("Mortar Trap", 12, 15.0),
 			("Zolhan's Technique", 12),
 			("Markovian's Advantage", 12),
-			.5,     # "brutal shield slam", pressed every 3s - an item skill
-			1,      # stormfire, off Seal of Destruction
+			("Shield Slam", 3.0),          # off Battered Shell
+			("Stormfire", 1.0),            # off Seal of Destruction, no cooldown
+										   # of its own so the press is the rate
 		],
 		"hits/s":4,
 		"blocks/s":1.5,

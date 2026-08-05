@@ -33,6 +33,9 @@ PARENT_SUFFIX = re.compile(r"(_petmodifier|_petmod|_mod\d*)$")
 NUMBERED = re.compile(r"^(.*?)(\d+)([a-z]?)$")
 # A skill is a candidate for a parent only if it is one of these.
 MODIFIER_CLASSES = ("Modifier", "Transmuter", "SkillSecondary_")
+# Conditions that are worth emitting a skill for on their own, where nothing in
+# its record is a bonus any map can read.
+TIMING = ("recharge", "recharge change", "duration")
 
 # class fragment -> (type, trigger). First match wins, so the specific
 # PassiveOn... forms have to come before plain Passive.
@@ -213,26 +216,43 @@ def levelAbility(skill, db, level):
 	skillClass = skill.get("Class", "")
 	kind, trigger = kindOf(skillClass)
 	conditions = {"type": kind, "trigger": trigger, "skillClass": skillClass}
+	# Every record in the chain is levelled, not just the top one: a toggled
+	# aura keeps its numbers on the buff it delegates to, and reading that at
+	# full rank gave every point in Emboldening Presence its level 22 value.
+	records = [atLevel(nested, level) for nested in procRecords(skill, db)]
 
-	chance = 0
+	conditions["chance"] = 1
 	for field in CHANCE_FIELDS:
-		chance = lastValue(view.get(field, 0)) or 0
+		chance = firstOf(records, field)
 		if chance:
+			conditions["chance"] = round(float(chance) / 100.0, 3)
 			break
-	conditions["chance"] = round(float(chance) / 100.0, 3) if chance else 1
-	for field, name in (("skillCooldownTime", "recharge"), ("skillActiveDuration", "duration")):
-		value = lastValue(view.get(field, 0)) or 0
-		if value:
-			conditions[name] = round(float(value), 2)
+
+	if any(kind in skillClass for kind in MODIFIER_CLASSES):
+		# A modifier's own skillCooldownTime is a change to the cooldown of the
+		# skill it modifies, not a cooldown of its own - Frenzied Cry takes four
+		# seconds off Rallying Cry and does nothing else whatever. Read off its
+		# own record and no further: Spectral Wrath delegates to a buff whose
+		# 0.5s is that buff's timing rather than anything Spectral Binding gains.
+		change = lastValue(view.get("skillCooldownTime", 0)) or 0
+		if change:
+			conditions["recharge change"] = round(float(change), 2)
+	else:
+		# Everything else states its timing where it states its name, which for
+		# a Skill_BuffRadius is the buff record rather than the tree node.
+		# rallyingcry1.dbr carries neither cooldown nor duration; its buff
+		# carries 12 and 60, and reading the node alone left ten skills looking
+		# like they had no cooldown at all.
+		for field, name in (("skillCooldownTime", "recharge"),
+							("skillActiveDuration", "duration")):
+			value = firstOf(records, field)
+			if value:
+				conditions[name] = round(float(value), 2)
 
 	# A buff hands you damage to put on your own attacks; an attack deals it
 	# itself. Same distinction the devotion procs make. A weapon attack sits with
 	# the buffs: its flat damage is damage your swing does, which is what the
 	# models weight when they weight "physical" rather than "triggered physical".
-	# Every record in the chain is levelled, not just the top one: a toggled
-	# aura keeps its numbers on the buff it delegates to, and reading that at
-	# full rank gave every point in Emboldening Presence its level 22 value.
-	records = [atLevel(nested, level) for nested in procRecords(skill, db)]
 	bonuses = procBonuses(records, db, triggered=kind in ("attack", "summon"))
 	return conditions, bonuses
 
@@ -262,7 +282,13 @@ def generate(path="skillData.py", root=None):
 			levels = []
 			for level in range(1, top + 1):
 				conditions, bonuses = levelAbility(skill, db, level)
-				if not bonuses:
+				# A skill with nothing the bonus maps can read used to vanish,
+				# which is right for a payload nobody scores and wrong for one
+				# whose whole point is timing. Frenzied Cry states -4 seconds of
+				# Rallying Cry's cooldown and not one other number, so it was
+				# not in the data at all and a rotation naming it was told there
+				# was no such skill.
+				if not bonuses and not any(k in conditions for k in TIMING):
 					continue
 				levels.append("\t\tAbility(%r, %s, %s),"
 							  % (str(level), dictLiteral(conditions), dictLiteral(bonuses)))

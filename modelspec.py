@@ -419,6 +419,23 @@ def resolveRotation(stats):
 									 "modifies" if len(nested) == 1 else "modify", host,
 									 "it is" if len(nested) == 1 else "they are"))
 
+	def cooldownOf(ability, nested):
+		"""A skill's cooldown, less what the modifiers nested in it take off.
+
+		Some modifiers exist to change the recharge and nothing else: Frenzied
+		Cry is four seconds off Rallying Cry and states no other number in its
+		whole record. A few go the other way - Focused Gaze makes Dreeg's Evil
+		Eye a charged shot and adds four seconds - so it is a sum, not a
+		discount. The flat change lands before the sheet's "% Reduced Skill
+		Cooldown", which is the order the game applies them in.
+
+		Returns (cooldown, what the modifiers changed).
+		"""
+		base = float(ability.gc("recharge") or 0)
+		change = sum(float(m[1].gc("recharge change") or 0)
+					 for m in nested if m[1] is not None)
+		return max(0.0, base + change) * (1.0 - reduction), change
+
 	for entry, (name, ability, rank, press, source, nested) in zip(entries, looked):
 		if name is None:
 			# A bare rate, or an entry look could not read - which it has already
@@ -482,7 +499,7 @@ def resolveRotation(stats):
 						   "held, less the %.0f%% of swings the weapon pool takes"
 						   % (100 * claimed)))
 			continue
-		cooldown = float(ability.gc("recharge") or 0) * (1.0 - reduction)
+		cooldown, change = cooldownOf(ability, nested)
 		interval = max(cooldown, press)
 		if not interval:
 			# Not held, not a modifier, and nothing says how often it happens.
@@ -495,8 +512,9 @@ def resolveRotation(stats):
 		resolved.append((name, ability, 1.0 / interval))
 		rows.append("%s at %g: %.3g/s (%s)"
 					% (name, rank, 1.0 / interval,
-					   "cooldown %gs" % cooldown if cooldown >= press
-					   else "pressed every %gs" % press))
+					   ("cooldown %gs%s" % (cooldown, ", %+gs from what modifies it" % change
+											if change else ""))
+					   if cooldown >= press else "pressed every %gs" % press))
 		attach(name, 1.0 / interval, nested)
 
 	stats["allAttacks/s"] = rates

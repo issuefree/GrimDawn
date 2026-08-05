@@ -9,21 +9,21 @@ if __name__ == "__main__":
 devotionPoints = 20
 
 stats = {
-		"level":38,
+		"level":39,
 		"difficulty":"normal",
 
-		"physique":449,
-		"cunning":677,
-		"spirit":273,
+		"physique":500,
+		"cunning":750,
+		"spirit":300,
 
-		"offense":1159,
-		"defense":835,
-		"armor":366,
+		"offense":1200,
+		"defense":900,
+		"armor":425,
 
 		# Off the sheet - her Attack Speed, which is what one weapon swing
 		# takes. Not a sum of everything she presses: that is the rotation
 		# below, and counting the bar in both places counted it twice.
-		"attacks/s":1.91,
+		"attacks/s":1.88,
 		# Her rotation, from bots/morena.ahk against the cooldowns the records
 		# state. A skill fires no faster than its cooldown and no faster than
 		# it is pressed, so the rate is one over whichever is longer; the load
@@ -39,13 +39,12 @@ stats = {
 			# nested inside - they are not buttons, and Onslaught is the only
 			# thing they can apply to.
 			("Onslaught", 1, [("Open Wounds", 3), ("Endless Rage", 1)]),
-			("Shadow Strike", 8, 1.75),
-			("Ring of Steel", 8, 1.5),
-			("Leap", 8, 1.5),
-			("Bonechilling Cry", 8, 4.5),
-			("Rallying Cry", 8, 8.0),
-			("Amarasta's Blade Burst", 8, 10.0),
-			("Sacred Strike", 1.5),        # off Blessed Steel
+			("Shadow Strike", 1),
+			("Ring of Steel", 3, [("Circle of Slaughter", 6)]),
+			("Leap", 1, [("Fault Line", 4)]),
+			("Bonechilling Cry", 1, 12),
+			("Rallying Cry", 1, [("Frenzied Cry", 1), ("Impulse", 1)]),
+			("Pneumatic Burst", 1, [("Breath of Belgothian", 1), ("Shadow Dance", 1), ("Elemental Awakening", 1)]),			
 		],
 
 		"hits/s":2,

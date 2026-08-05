@@ -113,16 +113,49 @@ of `lochlan/lochlan.py` for what they said.
 
 ## Skills that yield no bonuses are dropped entirely
 
-skillgen writes a Skill only if some level of it produced a bonus it could
-read, so a skill whose whole payload is in fields the FLAT/DIRECT maps do not
-cover vanishes rather than appearing empty. Wind Devil is the one that has come
-up - a `Skill_TargetedSpawnPet` whose levelAbility returns `{}` - and lochlan
-plays it, so his rotation has to carry a bare number where every other line
-names a skill.
+**Mostly fixed.** skillgen wrote a Skill only if some level produced a bonus it
+could read, so sixteen skills whose payload is in fields the FLAT/DIRECT maps do
+not cover vanished rather than appearing empty - and a rotation naming one was
+told there was no such skill. Frenzied Cry is the sharpest case: its whole
+record is `skillCooldownTime: -4.0` and not one other number.
 
-Worth a census: how many skills across the ten masteries produce nothing, and
-which fields they have that nothing reads. The count is easy to get, since
-skillsOf yields 33 for Soldier where skillData holds 27.
+A skill is now kept if it states a recharge, a recharge change or a duration,
+which brought back seven: Frenzied Cry, Runic Seal, Undead Legion, Unstable
+Anomaly, Blade Spirit, Wind Devil and Summon Guardian of Empyrion. Wind Devil is
+the one lochlan plays, so his rotation no longer has to carry a bare number.
+
+Nine are still dropped and all nine are transmuters whose payload is a damage
+conversion or a behaviour change with no number attached:
+
+    Skyfire Grenado, Ring of Frost, Tainted Power, Corrupted Storm,
+    Dreeg's Reproach, Scion of Dreeg, Covenant of Ch'thon,
+    Blight of Ch'thon, Talons of Ch'thon
+
+Those want the conversion fields read, which is a different job from this one.
+
+## Buff skills kept their timing where they kept their name
+
+**Fixed.** A `Skill_BuffRadius` states its cooldown and duration on the buff
+record it delegates to, not on the node the tree points at. `rallyingcry1.dbr`
+carries neither; `rallyingcry1_buff.dbr` carries 12 seconds and 60. `levelAbility`
+read the node alone, so ten skills looked like they had no cooldown at all -
+Rallying Cry, Bonechilling Cry, Blood of Dreeg, Word of Renewal, Ill Omen,
+Siphon Souls among them - and a rotation naming one either fell back to the
+press interval or was told nothing said how often it fired.
+
+It reads across the chain now, the same way `topLevel` and `skillsOf` do. fenris
+had three rates wrong on this: he says he presses Bonechilling Cry every 3
+seconds against a real 6, and Blood of Dreeg and Rallying Cry every 3 and 4
+against a real 12.
+
+A modifier is the exception and reads its own record only. Its
+`skillCooldownTime` is a change to what it modifies rather than a cooldown of
+its own, so it is emitted as `recharge change` and `resolveRotation` adds it to
+the host: Rallying Cry is 12 seconds, or 8 with Frenzied Cry nested in it. Twelve
+modifiers take time off and five add it - Focused Gaze makes Dreeg's Evil Eye a
+charged shot and costs four seconds - so it is a sum rather than a discount.
+Reading down the chain here would have been wrong: Spectral Wrath delegates to a
+buff whose 0.5s is that buff's timing and nothing Spectral Binding gains.
 
 ## Buff skills came out one rank long
 

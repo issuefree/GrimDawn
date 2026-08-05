@@ -113,8 +113,9 @@ damagePriority = {
 weights = {
 		# "attack opportunity cost" was -100 and "weapon damage %" 7.5, both
 		# hand-set and both now derived - the second is his flat damage pool
-		# over his swing rate, and the first is one swing of it. The -100 is in
-		# fenris and lochlan too and reads as copied rather than chosen.
+		# over what actually delivers it, and the first is one delivery of it.
+		# The -100 is in fenris and lochlan too and reads as copied rather than
+		# chosen.
 		"attack speed":10,
 		"cast speed":7.5,
 		

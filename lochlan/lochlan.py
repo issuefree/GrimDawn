@@ -138,7 +138,8 @@ weights = {
 		# of physical's, and the sheet says what that trade is.
 
 		# "weapon damage %" was 100 by hand and is derived now - your flat
-		# damage pool priced at the weights above, over attacks/s.
+		# damage pool priced at the weights above, over the weapon damage the
+		# rotation actually delivers a second.
 		#
 		# "attack opportunity cost" was -300 against that hand-set 100: three
 		# swings for one cast, for the savagery stacks a cast drops. It now

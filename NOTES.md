@@ -44,6 +44,37 @@ attack-triggered devotions - but it also sets the DoT refresh interval in
 `dotFactor`, and a channelled beam does not reapply a bleed the way a swing
 does.
 
+## Anything that lands once was priced against attacks/s
+
+**Fixed.** A point of flat damage on the sheet is delivered by weapon damage, so
+what delivers it is `sum(rate * weapon%)` over the rotation - `modelspec.
+deliveryRate`. `applyDamagePriority` divided by `attacks/s` instead, for both
+`triggered X` and `weapon damage %`, which are the two weights priced per
+delivery rather than per second.
+
+The two are only the same number when the whole bar is one plain 100% swing, and
+no model is:
+
+    armitage  2.41 attacks/s -> 5.49 delivered/s   2.28x
+    pakse     2.00            -> 5.32              2.66x
+    fenris    1.64            -> 3.82              2.33x
+    gwyr      2.43            -> 4.25              1.75x
+    lochlan   2.00            -> 3.50              1.75x
+    morena    1.88            -> 3.11              1.65x
+
+So every proc's damage and every proc's weapon damage was worth between 1.65 and
+2.66 times what it delivers. It showed up as Hyrian's Glare - 85% weapon damage
+on one star - taking 61% of morena's solution, which is what prompted looking.
+It is 52% now against a pack and 34% against a boss.
+
+Nothing else moved by much, because the error was uniform across every proc: it
+changed the balance between what a devotion adds and what the sheet already has,
+not the ranking within the devotions. armitage barely moved at all.
+
+hela is untouched. Her weights come from the hand-stated path, where the flat
+weights are built per cast off `mainAttackDamage` rather than per second off a
+rotation, and whether the same divisor is wrong there has not been checked.
+
 ## One "hits taken/s" cannot serve a boss and a pack
 
 **Half fixed.** The rate is derived now rather than stated: it is the same

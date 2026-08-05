@@ -9,8 +9,6 @@ from solution import *
 
 import os
 
-model = Model.loadModel("Morena")
-
 # getBestConstellations/getHighestScoring/getMostEfficient used to run here and
 # print the whole ranked list on every start. Nothing below reads any of it -
 # it was there to watch the branch-and-bound prune, and that search is gone.
@@ -474,6 +472,7 @@ def evalCon(*constellations):
 				print("  %-24s %-22s %s"
 					  % (c.name[:24], star.ability.name[:22], star.ability.describe()))
 
+model = Model.loadModel("Morena")
 
 # compareGear("thundertouch", "everliving grove")
 # bestInSlot("ring")
@@ -483,7 +482,8 @@ def evalCon(*constellations):
 # evalSol([xA, xC, owl, vulture, jackal, revenant])
 # compareGear("bloodreaper's cleaver", "bloodreaper's claw", "duelist's sabre", "pit master's axe", "gorefeast")
 # compareGear("Briarthorn Band", "band of black ice", "blackwatch seal", "reddan memento ring")
-# evalCon(tsunami, assassin)
-evalItemMods("medal", components)
+evalCon(hyrianHyrianGlare)
+# dumpCon(hyrianHyrianGlare)
+# evalItemMods("medal", components)
 # dumpGear("vicious spikes")
-evalItems("vicious spikes")
+# evalItems("vicious spikes")

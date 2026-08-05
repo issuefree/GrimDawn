@@ -137,8 +137,10 @@ weights = {
 		# rather than chosen; state it here if he really does value a swing at
 		# three times what it is worth.
 		#
-		# "weapon damage %" was 7.5 and derives at 42.19: one percent of the
-		# flat damage on the sheet, over attacks/s.
+		# "weapon damage %" was 7.5 and derives at 22.71: one percent of the
+		# flat damage on the sheet, over the 3.8 weapon deliveries a second
+		# his rotation makes - not over his 1.64 attacks, which counted a
+		# percentage point at more than twice what it delivers.
 		"attack speed":10,
 
 		# not a split of anything, so not a priority

@@ -44,7 +44,12 @@ stats = {
 			("Leap", 1, [("Fault Line", 4)]),
 			("Bonechilling Cry", 1, 12),
 			("Rallying Cry", 1, [("Frenzied Cry", 1), ("Impulse", 1)]),
-			("Pneumatic Burst", 1, [("Breath of Belgothian", 1), ("Shadow Dance", 1), ("Elemental Awakening", 1)]),			
+			("Pneumatic Burst", 1, [("Breath of Belgothian", 1), ("Shadow Dance", 1), ("Elemental Awakening", 1)]),
+			# WPS skills
+			("Bloodfangs", 3), ("Avalanche", 1), ("Belgothian's Shears", 3), ("Amarasta's Quick Cut", 5), ("Whirling Death", 3),
+			("Amatok's Pact", 1, [("Bloodfrenzy", 4), ("Icebound", 1)]),
+			("Battle Surge", 4),
+			("Untamed Rage", 1),
 		],
 
 		"hits/s":2,
@@ -98,7 +103,9 @@ weights = {
 
 		# "weapon damage %" left out on purpose: it is one percent of the flat
 		# damage on the sheet above, so it is derived rather than guessed. It
-		# came out at 71 where this said 25.
+		# comes out at 42 where this said 25 - and at 70 until the divisor was
+		# fixed, which is what had Hyrian's Glare taking 61% of her solution on
+		# its 85% weapon damage alone.
 
 		# "lifesteal %":33,
 		"move speed": 50,

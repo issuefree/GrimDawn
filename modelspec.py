@@ -307,6 +307,10 @@ def resolveRotation(stats):
 		# a proc's trigger is scored against, and dropping them here left
 		# applyDefaults to replace the whole bar with a single attacks/s.
 		stats["allAttacks/s"] = [float(e) for e in entries]
+		# Emptied rather than left as numbers: everything downstream reads this
+		# as (name, ability, rate) triples, and "no named rotation" is what a
+		# column of rates actually means to them.
+		stats["rotation"] = []
 		return notes
 	import skillData                       # noqa: F401 - registers the skills
 	from models import Skill
@@ -561,12 +565,14 @@ def rotationDamage(stats):
 	second is where builds differ: it is what a percentage has to multiply, and
 	a type you deal none of has nothing.
 
-	Returns {damage: (perSecond, dFlat, dPerc)}. Empty if the rotation is bare
-	numbers, since then there is nothing to read the skills off.
+	Returns ({damage: (perSecond, dFlat, dPerc)}, swings), where swings is how
+	much weapon damage the rotation delivers a second - the sum of rate times
+	weapon percentage, which is what every dFlat above is built on. Empty if the
+	rotation is bare numbers, since then there is nothing to read the skills off.
 	"""
 	rotation = stats.get("rotation")
 	if not rotation:
-		return {}
+		return {}, 0.0
 	import skillData                       # noqa: F401 - registers the skills
 	from models import Skill, Model
 	bonus = Model.attributeBonus(stats)
@@ -613,7 +619,7 @@ def rotationDamage(stats):
 		multiplier = 1.0 + perc / 100.0
 		base = flat * swings + own.get(damage, 0.0)
 		out[damage] = (base * multiplier, multiplier * swings, base / 100.0)
-	return out
+	return out, swings
 
 
 def retaliationDamage(stats):
@@ -778,6 +784,23 @@ def mainAttack(stats):
 					longer[bonus[:-9]] = longer.get(bonus[:-9], 0) + value
 			named.append("%s at %d" % (name, level))
 	return MainAttack(percent, flat, boost, longer, abilities, named, missing, mixed)
+
+
+def deliveryRate(stats):
+	"""How many times a second a point of flat damage on the sheet is delivered.
+
+	Not attacks/s. A point of flat damage rides on weapon damage, so what
+	delivers it is sum(rate * weapon%) over the rotation - which is more than
+	your attack speed whenever what you press carries more than 100% weapon
+	damage, and less when much of the bar carries none. morena runs 3.11 against
+	1.88 attacks a second.
+
+	This is the divisor for anything priced per delivery rather than per second:
+	a proc's flat damage and a proc's weapon damage both land once, where a
+	point on the sheet lands on every one of these. Falls back to attacks/s
+	where no rotation names a skill and there is nothing better to say.
+	"""
+	return rotationDamage(stats)[1] or float(stats.get("attacks/s") or 0)
 
 
 def mainAttackDamage(stats):
@@ -954,7 +977,7 @@ def fromRotation(stats, weights, priority):
 	number standing in for arithmetic nobody did.
 	"""
 	notes = []
-	rows = rotationDamage(stats)
+	rows, swings = rotationDamage(stats)
 	if not rows:
 		notes.append("damagePriority asked for %r, but the rotation is bare numbers - "
 					 "name the skills and their ranks and it can read them" % ROTATION)
@@ -976,7 +999,16 @@ def fromRotation(stats, weights, priority):
 				for d, (_, dFlat, dPerc) in rows.items()]
 			   + [dFlat * lean.get(d, 1.0) for d, (_, dFlat) in retal.items()]
 			   + [retalPercent]) or 1.0
-	rate = float(stats.get("attacks/s") or 0)
+	# How many times a second a point of flat damage on the sheet is delivered,
+	# which is what every dFlat above was built on: sum(rate * weapon%), not
+	# attacks/s. The two differ whenever the bar is not one plain swing - morena
+	# runs 3.11 weapon deliveries a second against 1.88 attacks, because most of
+	# what she presses carries more than 100% weapon damage and her weapon pool
+	# claims 83% of her swings on top. Dividing by attacks/s instead priced
+	# everything that lands once at 1.65 times what it is worth, and a proc
+	# carrying 85% weapon damage - Hyrian's Glare - took 61% of her solution on
+	# it.
+	delivered = swings or float(stats.get("attacks/s") or 0)
 	total = sum(perSecond for perSecond, _, _ in rows.values()) or 1.0
 	swing, shares = 0.0, []
 	for damage, (perSecond, dFlat, dPerc) in rows.items():
@@ -985,17 +1017,17 @@ def fromRotation(stats, weights, priority):
 		for key, amount in ((damage, dFlat * factor),
 							(damage + " %", dPerc * factor),
 							# a proc's damage is not refreshed by your swinging,
-							# so it keeps the undiscounted value, over attacks/s
-							# because it lands once where a point on the sheet
-							# lands on every swing
-							("triggered " + damage, landed / (rate or 1.0))):
+							# so it keeps the undiscounted value, over the
+							# deliveries a second because it lands once where a
+							# point on the sheet lands on every one of them
+							("triggered " + damage, landed / (delivered or 1.0))):
 			if key not in weights:
 				weights[key] = amount
 		swing += float(stats.get(damage, 0) or 0) * dFlat * factor
 		if perSecond > total * 0.005:
 			shares.append("%s %.0f%%" % (damage, 100 * perSecond / total))
 	if swing and "weapon damage %" not in weights:
-		weights["weapon damage %"] = swing / 100.0 / (rate or 1.0)
+		weights["weapon damage %"] = swing / 100.0 / (delivered or 1.0)
 
 	retalTotal = sum(perSecond for perSecond, _ in retal.values())
 	for damage, (_, dFlat) in retal.items():

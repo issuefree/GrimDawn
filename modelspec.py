@@ -64,8 +64,10 @@ PHYSICAL_SHARE = 0.5
 
 REQUIRED_POINTS = "devotionPoints"
 REQUIRED_STATS = {
-	"attacks/s": "your Attack Speed off the sheet - how fast you swing. Not a "
-				 "sum of everything you press; that is what 'rotation' lists",
+	"attacks/s": "your Attack Speed off the sheet. It is what the held attack "
+				 "runs at, what a damage over time is refreshed at, and the rate "
+				 "every attack-triggered proc fires off - so nothing derives "
+				 "without it. Not a sum of the bar; that is what 'rotation' lists",
 	"playStyle": "one of: melee, shortranged, ranged, tank",
 }
 

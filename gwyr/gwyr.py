@@ -18,8 +18,9 @@ if __name__ == "__main__":
 devotionPoints = 41
 
 stats = {
-	# Off the sheet - his Attack Speed, which is what one weapon swing takes.
-	# Not a sum of everything he presses: that is the rotation below.
+	# Attack Speed off the sheet. It is what the held attack runs at, what a
+	# damage over time is refreshed at, and the rate every attack-triggered
+	# proc fires off.
 	"attacks/s": 2.43,
 	"playStyle": "ranged",        # melee | shortranged | ranged | tank
 

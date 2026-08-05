@@ -159,20 +159,33 @@ weights = {
 
 		"offense": 12.5, # "offense %": ,
 
-		"physical": 10, "triggered physical":5, "physical %": 5,
-		# "fire":15, "triggered fire":7.5, "fire %": 15,
-		# "burn":7.5, "triggered burn":5, "burn %": 5, "burn duration":5,
-		# "lightning": 7.5, "triggered lightning":3.25, "lightning %":5,
-		#"elemental": 6, "triggered elemental":5, # "elemental %": 20,
-		"acid":15, "triggered acid":2.5, "acid %":25,
-		"poison":7.5, "triggered poison":1, "poison %":15, "poison duration":2,
-
-
+		# Nine damage weights were here - physical, acid and poison with their
+		# triggered and percentage forms - and every one beat the derivation
+		# above, because a stated weight wins. "rotation": 25 reads his bar and
+		# works out that he deals 72% acid and 16% physical; the hand-set
+		# numbers had physical at 10 against acid's 15, which is nothing like
+		# that split.
+		#
+		# "poison duration" stays: it is not a split of anything the rotation
+		# deals, so nothing derives it and it really is a preference.
+		"poison duration":2,
 
 		"damage reflect %": 35,
-		"retaliation": 15, 
+		# Kept, unlike armitage's, and the difference is the sheet. retaliation
+		# is derived off flat retaliation per type times the percentage that
+		# multiplies it - armitage states 6000 physical, 15000 fire and 8000
+		# lightning, so his derives. This sheet states "retaliation %":500 and
+		# no flat retaliation at all, so there is nothing for the 500% to
+		# multiply and the derivation produces nothing. Dropping these two on
+		# the assumption they were derived cost him 18181 of 47244, which is
+		# what a retribution build looks like with its retaliation priced at
+		# zero.
+		#
+		# Transcribe his flat retaliation per type and these can go the way
+		# armitage's did.
+		"retaliation": 15,
 		"retaliation %": 25,
-		
+
 		"lifesteal %": 20,
 		"move speed": 10,
 	}

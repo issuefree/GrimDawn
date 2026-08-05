@@ -19,9 +19,9 @@ stats = {
 		# it is not a detail. Taken from the level band; correct it if he
 		# is grinding a difficulty he has out-levelled.
 		"difficulty":"normal",
-		# Off the sheet - his Attack Speed, which is what one weapon swing
-		# takes. Not a sum of everything he presses: that is what the rotation
-		# below is for, and adding the two together counted his bar twice.
+		# Attack Speed off the sheet. It is what the held attack runs at, what a
+		# damage over time is refreshed at, and the rate every attack-triggered
+		# proc fires off.
 		"attacks/s":1.64,
 		# His rotation, from bots/fenris.ahk against the cooldowns the records
 		# state. A skill fires no faster than its cooldown and no faster than

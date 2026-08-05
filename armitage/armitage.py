@@ -19,9 +19,9 @@ stats = {
 		# it is not a detail. Taken from the level band; correct it if he
 		# is grinding a difficulty he has out-levelled.
 		"difficulty":"ultimate",
-		# Off the sheet - his Attack Speed, which is what one weapon swing
-		# takes. Not a sum of everything he presses: that is the rotation
-		# below, which lists the bar skill by skill.
+		# Attack Speed off the sheet. It is what the held attack runs at, what a
+		# damage over time is refreshed at, and the rate every attack-triggered
+		# proc fires off.
 		"attacks/s":2.41,
 		# His rotation, from bots/armitage.ahk against the cooldowns the records
 		# state. A skill fires no faster than its cooldown and no faster than
@@ -151,13 +151,17 @@ weights = {
 
 		"offense": 12.5, # "offense %": ,
 
-		"physical": 5, "triggered physical":2.5, "physical %": 5,
-		"fire":15, "triggered fire":7.5, "fire %": 15,
-		"burn":7.5, "triggered burn":5, "burn %": 5, "burn duration":5,
-		"lightning": 7.5, "triggered lightning":3.25, "lightning %":5,
-		#"elemental": 6, "triggered elemental":5, # "elemental %": 20,
-
-
+		# Twelve damage weights were here - physical, fire, burn and lightning
+		# with their triggered and percentage forms - and every one of them beat
+		# the derivation above, because a stated weight wins. So "rotation": 15
+		# was reading his bar, working out that he deals 62% fire and 3%
+		# lightning, and then being ignored for exactly the types he deals.
+		# The hand-set numbers had lightning level with burn at a sixth of its
+		# damage, which is the sort of thing deriving them is for.
+		#
+		# "burn duration" stays: it is not a split of anything the rotation
+		# deals, so nothing derives it and it really is a preference.
+		"burn duration":5,
 
 		# "crit damage": ,
 		"damage reflect %": 35,

@@ -20,20 +20,7 @@ stats = {
 		"defense":900,
 		"armor":425,
 
-		# Off the sheet - her Attack Speed, which is what one weapon swing
-		# takes. Not a sum of everything she presses: that is the rotation
-		# below, and counting the bar in both places counted it twice.
 		"attacks/s":1.88,
-		# Her rotation, from bots/morena.ahk against the cooldowns the records
-		# state. A skill fires no faster than its cooldown and no faster than
-		# it is pressed, so the rate is one over whichever is longer; the load
-		# prints which one won for each.
-		#
-		# Onslaught is first, so it is what she holds the button down on and it
-		# is her main attack. What it swings for is what pressing a skill an
-		# item grants costs her, and it moves as these get levelled: a component
-		# skill that beats Onslaught at 1 will not beat it at 10.
-		# RANKS ARE STUBS.
 		"rotation":[
 			# Held on the left button, with the two passives that modify it
 			# nested inside - they are not buttons, and Onslaught is the only
@@ -47,7 +34,6 @@ stats = {
 			("Pneumatic Burst", 1, [("Breath of Belgothian", 1), ("Shadow Dance", 1), ("Elemental Awakening", 1)]),
 			# WPS skills
 			("Bloodfangs", 3), ("Avalanche", 1), ("Belgothian's Shears", 3), ("Amarasta's Quick Cut", 5), ("Whirling Death", 3),
-			("Amatok's Pact", 1, [("Bloodfrenzy", 4), ("Icebound", 1)]),
 			("Battle Surge", 4),
 			("Untamed Rage", 1),
 		],
@@ -70,10 +56,7 @@ stats = {
 		"fight length":30,
 
 		"playStyle":"melee",
-		# Kept deliberately: this excludes shield and ranged constellations.
-		# Omitting it defaults to every weapon type, which is not the same thing.
-		"weapons":["sword", "axe", "dagger", "mace", "scepter", "spear", "twohand"],
-		# blacklist omitted - defaults to empty
+		"weapons":["sword", "axe", "dagger", "mace", "scepter", "spear"],
 	}
 
 damagePriority = {
@@ -100,12 +83,6 @@ weights = {
 		"energy":.1,
 
 		"bleed duration":5,
-
-		# "weapon damage %" left out on purpose: it is one percent of the flat
-		# damage on the sheet above, so it is derived rather than guessed. It
-		# comes out at 42 where this said 25 - and at 70 until the divisor was
-		# fixed, which is what had Hyrian's Glare taking 61% of her solution on
-		# its 85% weapon damage alone.
 
 		# "lifesteal %":33,
 		"move speed": 50,

@@ -472,6 +472,72 @@ def evalCon(*constellations):
 				print("  %-24s %-22s %s"
 					  % (c.name[:24], star.ability.name[:22], star.ability.describe()))
 
+
+def dumpCon(*constellations):
+	"""Print constellations as the literals constellationData.py holds.
+
+		dumpCon(hyrianHyrianGlare)
+		dumpCon(falcon, owl)
+
+	The counterpart to dumpGear, and for the same reasons: to read exactly what
+	a constellation gives without the scoring in the way, and to have something
+	paste-able for tinkering with a star the game has not given you.
+
+	Every star is printed even where it carries nothing, because an empty one is
+	usually the star an ability hangs off - hyrian_4 states no bonuses at all
+	and holds Hyrian Glare. Where evalCon says what a constellation is worth to
+	this character, this says what it is.
+
+	The "(Hyrian Glare)" variants are copies with the proc's damage already
+	folded into one star, so they print with that star carrying bonuses the
+	game's own record does not - which is worth seeing, and is why they are not
+	filtered out here.
+	"""
+	from devotiongen import dictLiteral
+
+	def affinity(value):
+		"""'6a 0c 8e 0o 0p' the way the source writes it, without the zeroes."""
+		return " ".join(t for t in str(value).split() if not t.startswith("0"))
+
+	for c in constellations:
+		ident = getattr(c, "id", None) or c.name.lower().replace(" ", "")
+		print("\n%s = Constellation(%r, %r, %r)"
+			  % (ident, c.name, affinity(c.requires), affinity(c.provides)))
+		if c.restricts:
+			print("%s.restricts = %r" % (ident, c.restricts))
+
+		# A star names the star it hangs off, so one has to be defined before
+		# anything requiring it. c.stars is in that order for the constellations
+		# the generator writes and in reverse for the ability variants, which
+		# are built by copying - so it is sorted rather than assumed.
+		order, placed = [], set()
+		remaining = list(c.stars)
+		while remaining:
+			ready = [s for s in remaining
+					 if all(r in placed for r in
+							(s.requires if isinstance(s.requires, list) else [s.requires]))]
+			if not ready:
+				ready = remaining      # a cycle, which the data does not have
+			order += ready
+			placed.update(ready)
+			remaining = [s for s in remaining if s not in ready]
+
+		number = {star: i for i, star in enumerate(order)}
+		for star in order:
+			requires = star.requires
+			if isinstance(requires, list):
+				needs = "[%s]" % ", ".join("%s_%d" % (ident, number[r]) for r in requires)
+			else:
+				needs = "%s_%d" % (ident, number[requires])
+			print("%s_%d = Star(%s, %s, %s)"
+				  % (ident, number[star], ident, needs, dictLiteral(star.bonuses)))
+			if star.ability:
+				a = star.ability
+				print("%s_%d.addAbility(Ability(%r, %s, %s))"
+					  % (ident, number[star], a.name, dictLiteral(a.conditions),
+						 dictLiteral(a.bonuses)))
+
+
 model = Model.loadModel("Morena")
 
 # compareGear("thundertouch", "everliving grove")

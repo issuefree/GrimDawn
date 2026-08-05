@@ -300,6 +300,7 @@ can supply.
 
 | character | needs |
 |---|---|
+| all with a rotation | **`+skills` off the gear** - `{"all": 1, "Berserker": 2}`. Ranks in a rotation are what you spent; the gear is stated once and added on load |
 | all with a rotation | **skill ranks.** Every rank is a stub except fenris's four and hela's two. Every damage weight is priced against them |
 | kieri, lachesis | `devotionPoints`. Neither loads without it |
 | kieri, lachesis, lethe, lilith | their rotations - each is bare rates, so no skill is named and no main attack can be read |

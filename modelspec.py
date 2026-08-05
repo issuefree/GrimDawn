@@ -110,6 +110,9 @@ CONTROL_STATS = {
 	# the bare rates a proc's trigger is scored against, and the attack you hold
 	# the button on together with the modifiers that hang off it.
 	"allAttacks/s", "main attack",
+	# ranks your gear adds, which are not on any skill's record and not part of
+	# what you spent - see skillBonus
+	"+skills",
 }
 
 
@@ -211,6 +214,40 @@ def recordedParent(name):
 	skill = Skill.skills.get(name)
 	parent = skill.parent() if skill else None
 	return parent.name if parent else None
+
+
+def skillBonus(name, plus):
+	"""Ranks that "+skills" on your gear adds to one named skill.
+
+	Three kinds, and they stack the way the game stacks them:
+
+	    {"all": 1}            +1 to all skills
+	    {"Berserker": 2}      +2 to all skills in a mastery
+	    {"Onslaught": 3}      +3 to one skill
+
+	A mastery bar is itself a skill with the mastery's name, so a key matching
+	both is counted once rather than twice.
+	"""
+	if not plus:
+		return 0
+	from models import Skill
+	skill = Skill.skills.get(name)
+	mastery = skill.profession if skill else None
+	total = float(plus.get("all", 0) or 0)
+	if mastery and mastery in plus:
+		total += float(plus[mastery] or 0)
+	if name in plus and name != mastery:
+		total += float(plus[name] or 0)
+	return int(total)
+
+
+def unknownSkillBonuses(plus):
+	"""Keys in "+skills" that name neither a mastery nor a skill nor "all"."""
+	if not plus:
+		return []
+	from models import Skill
+	known = set(Skill.skillsByClass) | set(Skill.skills) | {"all"}
+	return sorted(k for k in plus if k not in known)
 
 
 def splitEntry(entry):
@@ -316,6 +353,17 @@ def resolveRotation(stats):
 	from models import Skill
 	reduction = min(90.0, float(stats.get("reduce cooldown") or 0)) / 100.0
 	swing = float(stats.get("attacks/s") or 0)
+	# "+skills" off your gear. Applied where a rank turns into an ability, so
+	# every rank a model writes is the one you actually spent and the gear is
+	# stated once instead of being added into a dozen numbers by hand.
+	plus = stats.get("+skills") or {}
+	raised = []
+	unknown = unknownSkillBonuses(plus)
+	if unknown:
+		notes.append("+skills: %s %s neither a mastery, a skill, nor \"all\", so %s "
+					 "nothing" % (", ".join(repr(k) for k in unknown),
+								  "names" if len(unknown) == 1 else "name",
+								  "it raises" if len(unknown) == 1 else "they raise"))
 
 	# Look every named entry up first, so what kind of thing it is comes from its
 	# record and not from where it sits in the list. Each becomes
@@ -335,7 +383,15 @@ def resolveRotation(stats):
 			inner = []
 		skill = Skill.skills.get(name)
 		if skill is not None:
-			return (name, skill.getAbility(rank), rank, press, None,
+			# The rank in the file is what you spent. What the skill screen shows
+			# is that plus whatever your gear grants, and that is the rank every
+			# number is read at - getAbility clamps, so a bonus cannot push a
+			# skill past the ultimate rank the game caps it at.
+			bonus = skillBonus(name, plus)
+			effective = min(rank + bonus, skill.maxLevel)
+			if effective > rank:
+				raised.append("%s %g%+d" % (name, rank, effective - rank))
+			return (name, skill.getAbility(effective), effective, press, None,
 					[look(m, True) for m in inner])
 		# Not a mastery skill, so try what the items grant. There is no rank on
 		# an item skill, so its first number is the press interval - and it is a
@@ -531,6 +587,11 @@ def resolveRotation(stats):
 		# is worth, and the modifiers only mean anything against it.
 		stats["main attack"] = [(held, heldRank)] + onHeld
 
+	if raised:
+		notes.append("+skills from %s - %s. Ranks below are what the skill screen "
+					 "shows, not what you spent"
+					 % (", ".join("%+g %s" % (v, k) for k, v in sorted(plus.items())),
+						", ".join(raised)))
 	if rows:
 		notes.append("rotation from the skill data - " + "; ".join(rows))
 	if elsewhere:
@@ -1491,6 +1552,12 @@ stats = {
 	# not always worth spamming. An item skill has no rank, so its second number
 	# is the press interval. Plain rates still work for anything unnameable.
 	#
+	# Ranks your gear adds, on top of the points you spent. "all" is +X to all
+	# skills, a mastery name is +X to that mastery's, and a skill name is +X to
+	# one skill; they stack, and nothing goes past the rank the game caps it at.
+	# State it here and the ranks below stay what you actually spent.
+	# "+skills": {"all": 1, "Soldier": 2, "Cadence": 3},
+
 	# The first entry is the attack you hold the button down on, and it runs at
 	# attacks/s above. Passives, toggles and secondary attacks are not presses -
 	# the records say so - and each goes inside the entry for the skill it

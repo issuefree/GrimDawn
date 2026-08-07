@@ -100,6 +100,20 @@ DIRECT = {
     "defensiveLife": "vitality resist", "defensiveAether": "aether resist",
     "defensiveChaos": "chaos resist", "defensiveBleeding": "bleed resist",
     "defensiveElementalResistance": "elemental resist",
+    # "+X% Maximum Resistance" - it raises the 80 cap rather than your
+    # resistance, which is a different stat and was not read at all. Without it
+    # a star granting it scored nothing, and nothing could ever be spent on the
+    # one thing that makes resistance past the cap worth having.
+    "defensivePhysicalMaxResist": "max physical resist",
+    "defensivePierceMaxResist": "max pierce resist",
+    "defensiveFireMaxResist": "max fire resist",
+    "defensiveColdMaxResist": "max cold resist",
+    "defensiveLightningMaxResist": "max lightning resist",
+    "defensivePoisonMaxResist": "max acid resist",
+    "defensiveLifeMaxResist": "max vitality resist",
+    "defensiveAetherMaxResist": "max aether resist",
+    "defensiveChaosMaxResist": "max chaos resist",
+    "defensiveBleedingMaxResist": "max bleed resist",
     "defensiveStun": "stun resist", "defensiveFreeze": "freeze resist",
     "defensiveSlowLifeLeach": "life leech resist",
     "defensivePetrify": "petrify resist", "defensiveTrap": "trap resist",

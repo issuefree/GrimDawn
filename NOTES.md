@@ -75,6 +75,34 @@ hela is untouched. Her weights come from the hand-stated path, where the flat
 weights are built per cast off `mainAttackDamage` rather than per second off a
 rotation, and whether the same divisor is wrong there has not been checked.
 
+## Resistance had no cap and no per-type curve
+
+**Fixed.** `applyDefensePriority` took the mean of your ten resistances and
+derived one `resist` weight from `health / (100 - mean)`. Two things wrong with
+that. The curve is steep, so a mean is not a summary of it - at 20 fire and 79
+cold a point of cold is worth four points of fire, and one number said they were
+the same. And the game caps resistance at 80, where a point is worth nothing at
+all, which nothing in the model knew.
+
+Per type now, with `MAX_RESIST = 80` and `"max <type> resist"` on the sheet
+raising it. lochlan sits at the cap on fire, cold, lightning and pierce - worth
+nothing - and at 6 aether and 14 chaos, worth 28 and 31.
+
+The cap is not in the records. `gameengine.dbr` names a dozen caps for run
+speed, attack speed and cast speed and not this one, so 80 is stated in
+modelspec beside `PHYSICAL_SHARE` and `ENGAGEMENT_RADIUS` as a number the game
+documents and the data does not.
+
+`gddata` now reads `defensive<Type>MaxResist` as `max <type> resist`. That is
+what raises the cap, and it is a different stat from the resistance itself -
+nine constellations and six items grant it and none of them scored a thing for
+it. It is priced as the mirror of the above: worth a point of resistance once
+you are at the cap, worth nothing below it, because below it the cap is not what
+is stopping you.
+
+What is still hand-set is a resistance the sheet does not carry. lochlan states
+nine and not physical, so `physical resist` is the one weight left in his file.
+
 ## One "hits taken/s" cannot serve a boss and a pack
 
 **Half fixed.** The rate is derived now rather than stated: it is the same

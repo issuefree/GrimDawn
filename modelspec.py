@@ -62,6 +62,10 @@ def hitsTaken(stats):
 # damage lives on their skills rather than their records, so it is not a mean
 # over anything the way ENEMY_RESIST_BASE is.
 PHYSICAL_SHARE = 0.5
+# The cap the game puts on every resistance. Not in the records - gameengine.dbr
+# names a dozen other caps and not this one - so it is stated here, and
+# "+X% Maximum Resistance" on your gear raises it per type.
+MAX_RESIST = 80.0
 
 REQUIRED_POINTS = "devotionPoints"
 REQUIRED_STATS = {
@@ -967,12 +971,41 @@ def applyDefensePriority(stats, weights, priority):
 	# Resistance, read off your own the way resistReductionValue reads it off
 	# the enemy's. Damage taken is (1 - R/100), so a point takes it to
 	# (99 - R)/(100 - R) and buys health/(100 - R) of effective health.
-	held = [float(stats.get(r) or 0) for r in resists if stats.get(r) is not None]
-	if held:
-		mean = sum(held) / len(held)
-		derived["resist"] = health / (100.0 - mean) if mean < 100 else 0.0
+	#
+	# Per type, because the curve is steep and a character is never even. At 20
+	# fire and 79 cold, a point of cold is worth four points of fire - and at 80
+	# it is worth nothing at all, because the game caps resistance there. One
+	# mean across ten types said none of that: it priced a capped resistance and
+	# an unresisted one at the same number and called it "resist".
+	capped = []
+	for damage in resists:
+		have = stats.get(damage)
+		if have is None:
+			continue
+		have = float(have)
+		# "+X% Maximum Resistance" raises the cap rather than the resistance,
+		# and is a stat of its own. Nine constellations and six items grant it.
+		cap = MAX_RESIST + float(stats.get("max " + damage) or 0)
+		if have >= cap:
+			derived[damage] = 0.0
+			capped.append("%s at %g" % (damage, have))
+			# Raising the cap is the only thing that helps once you are at it,
+			# and it is worth what a point of the resistance would have been.
+			# Below the cap it is worth nothing, because the cap is not what is
+			# stopping you. Nine constellations and six items grant it, and
+			# until gddata read defensive<Type>MaxResist none of them scored.
+			derived["max " + damage] = health / (100.0 - cap)
+		else:
+			derived[damage] = health / (100.0 - have)
+			derived["max " + damage] = 0.0
+	perType = [v for k, v in derived.items() if k in resists]
+	if perType:
+		# The fallback for any type the sheet does not state, which is what the
+		# "resist" shorthand fills in for. Nothing in the game grants a bare
+		# "resist", so this is never scored directly.
+		derived["resist"] = sum(perType) / len(perType)
 	else:
-		missing.append("your resistances, without which 'resist' cannot be priced "
+		missing.append("your resistances, without which they cannot be priced "
 					   "- state them as 'fire resist' and so on")
 
 	# Defensive ability, against what the enemy swings with. A point buys off
@@ -998,9 +1031,26 @@ def applyDefensePriority(stats, weights, priority):
 		if key in weights:
 			continue        # explicit weight wins, as everywhere else
 		weights[key] = priority * perPoint
-	notes.append("defensePriority %g -> %s"
-				 % (priority, ", ".join("%s %.3g" % (k, weights.get(k, 0))
-										for k, _ in sorted(derived.items()))))
+	# Split, because the per-type resistances are twenty of the twenty-six rows
+	# and only ever a handful of them are interesting.
+	main = [k for k in sorted(derived) if k not in resists and not k.startswith("max ")]
+	notes.append("defensePriority %s -> %s"
+				 % (fmt(priority), ", ".join("%s %s" % (k, fmt(weights.get(k, 0)))
+											 for k in main)))
+	live = [(k, weights.get(k, 0)) for k in sorted(derived)
+			if k in resists and weights.get(k, 0)]
+	if live:
+		notes.append("  a point of resistance is worth %s"
+					 % ", ".join("%s %s" % (k.replace(" resist", ""), fmt(v))
+								 for k, v in live))
+	if capped:
+		atCap = sorted(k.split(" at ")[0].replace(" resist", "") for k in capped)
+		raise_ = next((weights.get("max " + r, 0) for r in resists
+					   if weights.get("max " + r, 0)), 0)
+		notes.append("  %s %s at the %s cap, so a point of resistance buys nothing "
+					 "there and a point of maximum resistance buys %s"
+					 % (", ".join(atCap), "is" if len(atCap) == 1 else "are",
+						fmt(MAX_RESIST), fmt(raise_)))
 	for gap in missing:
 		notes.append("defensePriority: nothing derived for %s" % gap)
 	if assumed:

@@ -57,6 +57,7 @@ stats = {
 		"health/s":145,
 
 		"armor":1353,
+		"armor absorb":84,
 
 		"energy":490, #base
 		"energy/s":34,
@@ -152,14 +153,16 @@ weights = {
 		"energy":1,
 		"lifesteal %":100,
 
-		"resist":5,
+		# "resist" and the nine per-type weights under it are derived now, off
+		# the resistances on the sheet: a point is worth health/(100 - what you
+		# have), so it is worth four times as much at 20 as at 79 and nothing at
+		# all at 80. The band table that used to sit here - 0-25 = 50, 25-50 =
+		# 33, and so on - was that curve worked out by hand, and this is the
+		# same shape read off the sheet instead of estimated in five steps.
+		#
+		# "physical resist" stays only because the sheet does not state his.
+		# Put it up there with the other nine and this can go too.
 		"physical resist":125,
-
-		# 0-25 = 50
-		# 25-50 = 33
-		# 50-60 = 25
-		# 60-75 = 20
-		# 75-85 = 10		
 
 		# "stun %" is the stun duration modifier - the game has no second field
 		# for it, so the "stun duration":5 that used to sit under here could

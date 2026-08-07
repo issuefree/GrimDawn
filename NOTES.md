@@ -103,6 +103,51 @@ is stopping you.
 What is still hand-set is a resistance the sheet does not carry. lochlan states
 nine and not physical, so `physical resist` is the one weight left in his file.
 
+## The sheet is read in town, so no temporary buff is on it
+
+The character sheets in these models are read in town with only passive buffs
+up. That is the right way to read them - it is repeatable - but it means nothing
+the rotation presses is in the numbers, and the model has to supply it.
+
+**Fixed for charged replacers.** Savagery and Righteous Fervor state their flat
+and percentage damage as charge bonuses: added in full from the first charge,
+kept while any charge is up, and applied to every weapon attack you make, a
+weapon pool skill included. `rotationDamage` counted them as damage the
+replacer's own swing deals, at the replacer's own rate. They ride the whole
+rotation's weapon delivery rate now, and their percentages join the multiplier
+the sheet cannot carry.
+
+The records draw the line rather than a guess: `Skill_WeaponPool_ChargedScaling`
+carries `skillChargeMultipliers`, where Fire Strike has no charge fields at all,
+Onslaught has a combo counter and Cadence a two-charge finale with no
+multiplier. So it is exactly those two skills.
+
+It only shows once there is a pool. lochlan's claims 61%, so Savagery swings
+0.69 times a second against 3.68 weapon deliveries and its flat lightning was
+counted at a fifth of what it lands - 84526 -> 83277, the drop being his
+lightning % rising by Savagery's 72 on top of the sheet's 930 and rescaling
+everything against it. pakse is sharper: his pool claims every swing, so
+Righteous Fervor was dropped from the rotation outright and took its damage with
+it. It is kept at a rate of nothing now, for its charge bonuses alone, and his
+burn appears for the first time - 47118 -> 47166.
+
+The charge multiplier is a different thing and is not modelled: up to 120% more
+at nine charges, applying to the replacer's own damage only, so it does not
+travel to a weapon pool skill.
+
+**Not fixed for everything else.** Every other buff in a rotation is in the same
+position and none of them is handled: Blood of Dreeg, Overguard, Ascension, War
+Cry, Rallying Cry, Pneumatic Burst. Their damage is counted at their own press
+rate, which is roughly right for damage they deal themselves and wrong for
+damage they hand your attacks; their armor, health, resistances and offensive
+ability are not counted at all, because nothing adds a buff's non-damage bonuses
+to the sheet. armitage's Overguard is invisible to his own model.
+
+Doing it properly wants an uptime: a buff with a 60 second duration on a 24
+second cooldown is always up, one at 12 on 24 is up half the time, and both
+numbers are on the records now that `levelAbility` reads timing across the
+chain.
+
 ## One "hits taken/s" cannot serve a boss and a pack
 
 **Half fixed.** The rate is derived now rather than stated: it is the same

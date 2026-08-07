@@ -71,6 +71,7 @@ stats = {
 		"aether resist":6,
 		"chaos resist":14,
 		"vitality resist":51,
+		"physical resist":8,
 
 		"physical %":640, "physical":150,
 		"lightning %":930, "lightning":5000,

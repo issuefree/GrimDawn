@@ -66,6 +66,12 @@ PHYSICAL_SHARE = 0.5
 # names a dozen other caps and not this one - so it is stated here, and
 # "+X% Maximum Resistance" on your gear raises it per type.
 MAX_RESIST = 80.0
+# The two default-attack replacers whose bonuses are charge bonuses rather than
+# damage their own swing deals - Savagery and Righteous Fervor. The records draw
+# the line: these two carry skillChargeMultipliers, where Fire Strike carries no
+# charge fields at all, Onslaught carries a combo counter and Cadence a
+# two-charge finale with no multiplier.
+CHARGED_REPLACER = "Skill_WeaponPool_ChargedScaling"
 
 REQUIRED_POINTS = "devotionPoints"
 REQUIRED_STATS = {
@@ -553,10 +559,21 @@ def resolveRotation(stats):
 				# A pool that claims every swing means the attack it replaces
 				# never happens - a real thing to build, but it should be said
 				# rather than the entry quietly disappearing.
+				#
+				# Kept in the rotation at a rate of nothing, because a charged
+				# replacer still hands its charge bonuses to every swing the
+				# pool makes instead of it. Dropped outright, Righteous Fervor
+				# took its flat physical and its percentages with it.
 				notes.append("rotation: the weapon pool claims every swing, so %r "
-							 "never fires on its own and contributes nothing. "
-							 "Check the ranks: chances that sum past 100%% are "
-							 "usually a sign one of them is guessed too high" % name)
+							 "makes none of its own%s. Check the ranks: chances "
+							 "that sum past 100%% are usually a sign one of them "
+							 "is guessed too high"
+							 % (name, " - its charge bonuses still apply to the "
+								"swings the pool makes"
+								if str(ability.gc("skillClass") or "") == CHARGED_REPLACER
+								else " and contributes nothing"))
+				if str(ability.gc("skillClass") or "") == CHARGED_REPLACER:
+					resolved.append((name, ability, 0.0))
 				continue
 			rates.append(rate)
 			resolved.append((name, ability, rate))
@@ -667,23 +684,45 @@ def rotationDamage(stats):
 				firing.append((skill.getAbility(level), heldRate))
 
 	# swings per second, weighted by how much weapon damage each skill carries
-	swings = 0.0
-	own = {}
+	swings = sum(rate * ability.gb("weapon damage %") / 100.0 for ability, rate in firing)
+
+	own, charged = {}, {}
 	for ability, rate in firing:
-		swings += rate * ability.gb("weapon damage %") / 100.0
+		# A charged replacer is the exception to "a skill's damage is its own".
+		# Savagery and Righteous Fervor state their flat and percentage damage as
+		# charge bonuses: added in full from the first charge, kept while any
+		# charge is up, and applied to every weapon attack you make - a weapon
+		# pool skill included. So they ride the rotation's whole weapon delivery
+		# rate rather than the share of swings the replacer itself keeps.
+		#
+		# It matters as soon as there is a pool. lochlan's claims 61%, so
+		# Savagery swings 0.69 times a second against 3.68 weapon deliveries,
+		# and its flat lightning was being counted at a fifth of what it lands.
+		# pakse is the sharper case: his pool claims every swing, so Righteous
+		# Fervor never fires and its damage was counted at nothing at all.
+		#
+		# The charge multiplier - up to 120% more at nine charges - is not this
+		# and does not travel. It applies to the replacer's own damage only, and
+		# nothing here models it.
+		full = str(ability.gc("skillClass") or "") == CHARGED_REPLACER
+		at = swings if full else rate
 		for key, amount in ability.bonuses.items():
 			plain = plainDamage(key)
-			if plain is None:
-				continue
-			amount = amount[0] * amount[1] if isinstance(amount, list) else amount
-			own[plain] = own.get(plain, 0.0) + rate * amount
+			if plain is not None:
+				amount = amount[0] * amount[1] if isinstance(amount, list) else amount
+				own[plain] = own.get(plain, 0.0) + at * amount
+			elif full and key.endswith(" %") and key[:-2] in damages:
+				# Same reasoning for the percentages, which the sheet cannot
+				# carry either: it is read in town, where nothing is charged.
+				charged[key[:-2]] = charged.get(key[:-2], 0.0) + amount
 
 	out = {}
 	for damage in damages:
 		if damage in ("elemental", "all damage"):
 			continue
 		flat = float(stats.get(damage, 0) or 0)
-		perc = float(stats.get(damage + " %", 0) or 0) + bonus.get(damage, 0)
+		perc = (float(stats.get(damage + " %", 0) or 0) + bonus.get(damage, 0)
+				+ charged.get(damage, 0.0))
 		multiplier = 1.0 + perc / 100.0
 		base = flat * swings + own.get(damage, 0.0)
 		out[damage] = (base * multiplier, multiplier * swings, base / 100.0)

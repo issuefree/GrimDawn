@@ -6,6 +6,9 @@ if __name__ == "__main__":
 	import devotion
 	sys.exit(devotion.runModelFile(__file__))
 
+
+devotionPoints = 15
+
 # What every damage type is worth, in one place. This one names none of
 # them individually: "damage" is the priority for everything not named,
 # and it was the weight of the same name until damage numbers were
@@ -60,7 +63,7 @@ stats =	{
 		# is grinding a difficulty he has out-levelled.
 		"difficulty":"normal",
 		# estimate how frequent combat events are for calculating dynamic stats and abilities
-		"attacks/s":3,		
+		"attacks/s":1.75,		
 		"hits/s":.25,
 		"blocks/s":0,
 		"kills/s":1.5,		
@@ -79,24 +82,28 @@ stats =	{
 		"offense":1200,
 		"defense":900,
 
-		"health":3500,
+		"health":4000,
 		"health/s %":10,
 
 		"armor":250,
 		"energy":2000,
 		
 		# estimated damage % for target level. add whatever damages are important to your build
-		"physical %":150,
-		"fire %":400, "burn %":200,
-		"lightning %":250, "electrocute %":100,
-		"pierce":100,
-		"chaos":100,
+		"physical": 200, "physical %":150,
+		"fire": 650, "fire %":450, 
+		"burn":50, "burn %":300,
+		"lightning %":300, 
+		"electrocute %":300,
 
 		"playStyle":"ranged", # playstyle for weighting constellation abilities. [ranged/shortranged/melee/tank]
+		"rotation": [
+			("Fire Strike", 8, [("Explosive Strike", 6), ("Static Strike", 2), ("Brimstone", 5)]),
+		],
 		"weapons":[
 			"ranged"
 		],
 		"blacklist":[
+			kraken, # 1hand ranged
 			# list of constellations that I want to manually exclude for some reason.
 		]	
 	}

@@ -15,10 +15,10 @@ if __name__ == "__main__":
 	import devotion
 	sys.exit(devotion.runModelFile(__file__))
 
-devotionPoints = 22
+devotionPoints = 25
 
 stats = {
-	"attacks/s": 2.0,            # casts per second, as channelled in practice
+	"attacks/s": 5.0,            # casts per second, as channelled in practice
 	"playStyle": "ranged",        # melee | shortranged | ranged | tank
 
 	# Rates the procs are scored against. attacks/s above covers 14 attack
@@ -38,21 +38,20 @@ stats = {
 	# never makes would do, and her aether % is multiplying the 294 the beam
 	# brings of its own. The rest of her bar is still missing; adding it would
 	# stop every proc being scored against attacks/s alone.
-	"rotation": [("Albrecht's Aether Ray", 26, [("Disintegration", 6)])],
+	"rotation": [
+		("Albrecht's Aether Ray", 26, [("Disintegration", 6)]),
+		("Reap Spirit", 9),
+		("Siphon Souls", 3, [("Sear Souls", 1), ("Blood Boil", 2)]),
+	],
 
 	"level": 58,
 	"difficulty": "normal",       # from the level band, not from the save
 
-	# omitted, and each has a live default: "weapons" allows every
-	# constellation, "enemy density" sizes area procs at 0.03 enemies a square
-	# metre, "fight length" is 30 seconds, and "enemy defense" comes from level
-	# and difficulty above - 674 here, which puts crit at 17.1%.
-
-	"physique": 582, "cunning": 380, "spirit": 1053,
-	"offense": 1450, "defense": 1295,
-	"health": 9500, "health/s": 50, 
-	"energy": 5200, "energy/s": 165,
-	"armor": 512,
+	"physique": 600, "cunning": 380, "spirit": 1053,
+	"offense": 1635, "defense": 1300,
+	"health": 9000, "health/s": 50, 
+	"energy": 4500, "energy/s": 165,
+	"armor": 479,
 
 	# Flat and % damage for the types you care about. damagePriority below
 	# uses these to work out what a point of each is actually worth.
@@ -62,8 +61,12 @@ stats = {
 	"aether": 1700, "aether %": 1200,
 	"lightning": 500, "lightning %": 750,
 	"vitality": 0, "vitality %": 250,
-	"fire": 250, "fire %": 550,
-
+	"fire": 250, "fire %": 450,
+	"cold": 250, "cold %": 450,
+	"weapons":["sceptre", "offhand"],
+	"blacklist":[
+		tsunami # Hela's range for ray and reap are outside the range of the proc so it doesn't hit much.
+	]
 }
 
 # One number per damage type saying how much you care about it. The flat vs %
@@ -87,9 +90,7 @@ stats = {
 # utility weights; that is the next thing to look at.
 damagePriority = {
 	"aether": 10,
-	"lightning": 5,
-	"vitality": 2.5,
-	"fire": 2.5,
+	"lightning": 10,
 }
 
 # Everything that is not damage - defence, speed, utility. Anything named here

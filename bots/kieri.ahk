@@ -3,8 +3,7 @@
 #Include timlib.ahk
 
 flashBang 	:= spell("f", 3000)
-canister 	:= spell("s", 4500)
-grenado 	:= spell("d", 2500)
+cocktail 	:= spell("d", 2000)
 breath 		:= spell("e", 3000, 1500)
 spread 		:= spell("r", 3000)
 
@@ -13,8 +12,7 @@ spread 		:= spell("r", 3000)
 		queueR := []
 		clockR := 1
 		queueSpell(&queueR, flashBang, 250)
-		queueSpell(&queueR, grenado, 500)
-		queueSpell(&queueR, canister, 500)
+		queueSpell(&queueR, cocktail, 500)
 		queueSpell(&queueR, breath, 500)
 		queueSpell(&queueR, spread, 500)
 

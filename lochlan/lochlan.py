@@ -11,37 +11,32 @@ from dataModel import *
 from itemData import *
 from constellationData import *
 
-devotionPoints = 27
+devotionPoints = 28
 
 stats = {
 		# The character, not the plan. This was 85 with the sheet below written
 		# as estimates for that level - see the block marked "still level 85"
 		# further down, which is what now has to come off the real sheet.
-		"level":59,
-		"difficulty":"veteran",
+		"level":60,
+		"difficulty":"normal",
 		# estimate how frequent combat events are for calculating dynamic stats and abilities
-		"attacks/s":2,
+		"attacks/s":1.76,
+		"crit damage": 70,
 		# His rotation, from bots/lochlan.ahk against the cooldowns the records
 		# state. A skill fires no faster than its cooldown and no faster than
 		# it is pressed, so the rate is one over whichever is longer; the load
 		# prints which one won for each. The first entry is what he holds the
 		# button down on, and it is his main attack. RANKS ARE STUBS.
 		"rotation":[
-			("Savagery", 10),                  # held on left button
-			("Primal Strike", 10, 1.0),
-			("Storm Totem", 10, 4.3),
-			("Wendigo Totem", 10, 5.0),
-			("War Cry", 10, 5.0),
-					# "oleronsMight" was a rate here. It is Oleron's Might off
-					# Oleron's Blood, and it fires on attack rather than being
-					# pressed - so it is not a separate attack source at all,
-					# it rides the ones below. Counting it doubled a share of
-					# his rotation.
-			1,      # Wind Devil. Really is missing from skillData: its record
-					# yields no bonuses skillgen can read, so there is nothing
-					# to name. See NOTES.md
+			("Savagery", 13, [("Might of the Bear", 3), ("Tenacity of the Boar", 2), ("Storm Touched", 4)]),                  # held on left button
+			("Primal Strike", 11, [("Torrent", 10), ("Storm Surge", 3)]),
+			("Storm Totem", 10),
+			("Wendigo Totem", 2, [("Blood Pact", 2)]),
+			("Wind Devil", 2, [("Raging Tempest", 3), ("Maelstrom", 4)]),
+			# WPS
+			("Feral Hunger", 8), ("Markovian's Advantage", 3), ("Zolhan's Technique", 3)
 		],
-		"hits/s":2,
+		"hits/s":1,
 		"blocks/s":0,
 		"kills/s":1.5,
 		# crit chance was pinned here. It is derived now, from offensive
@@ -49,7 +44,7 @@ stats = {
 		# so it tracks the sheet instead of going stale against it.
 		"low healths/s":1.0/20, # total guesswork.
 
-		"fight length":20, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
+		"fight length":15, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
 
 		"physique":752,
 		"cunning":392,
@@ -127,27 +122,6 @@ weights = {
 		"energy":1,
 		"lifesteal %":100,
 
-		# lightning, electrocute and physical are split out of damagePriority
-		# above. Duration is not a split of anything, so it stays here.
-		"electrocute duration":2.5,
-
-		# "physical to lightning" and "physical to elemental" were 5 and 1 here.
-		# Both are derived from the sheet now that it carries flat damage,
-		# because what a conversion is worth is not a preference: it moves a
-		# hundredth of your 150 flat physical onto lightning's weight instead
-		# of physical's, and the sheet says what that trade is.
-
-		# "weapon damage %" was 100 by hand and is derived now - your flat
-		# damage pool priced at the weights above, over the weapon damage the
-		# rotation actually delivers a second.
-		#
-		# "attack opportunity cost" was -300 against that hand-set 100: three
-		# swings for one cast, for the savagery stacks a cast drops. It now
-		# derives at one swing, like every other model. If the three was right,
-		# state the whole figure here as a weight - but note it is three times
-		# whatever weapon damage % currently derives to, not three times 100,
-		# and it will need revisiting whenever the sheet moves.
-
 		"resist":5,
 		"physical resist":125,
 
@@ -156,71 +130,24 @@ weights = {
 		# 50-60 = 25
 		# 60-75 = 20
 		# 75-85 = 10		
-		"pierce resist":25,
-		"fire resist":0, 
-		"cold resist":0, 
-		"lightning resist":0, 
-		"bleed resist":20,
-		"acid resist":20,
-		"aether resist":0,
-		"chaos resist":25,
-		"vitality resist":0,
+		"pierce resist":80,
+		"fire resist":80, 
+		"cold resist":80, 
+		"lightning resist":80, 
+		"bleed resist":73,
+		"acid resist":40,
+		"aether resist":6,
+		"chaos resist":14,
+		"vitality resist":51,
 
 		# "stun %" is the stun duration modifier - the game has no second field
 		# for it, so the "stun duration":5 that used to sit under here could
 		# never be paid.
 		"stun %":25,
 
-		"move speed":20,
+		"move speed":25,
 
 		# scales with pet damage and we're not using that
 		"Bysmiel's Command":0,
 		"Shepherd's Call":0,
 	}
-
-skills = [
-	{"Markovian's Advantage":6},
-	{"Fighting Spirit":4},
-	{"Menhir's Will":4},
-	{"Military Conditioning":5},
-	{"Zolhan's Technique":7},
-	{"Blitz":1},
-	{"Veterancy":1},
-	{"War Cry":3},
-	{"Field Command":9},
-	{"Terrify":3},
-	{"Decorated Soldier":1},
-	{"Blindside":2},
-	{"Squad Tactics":4},
-	{"Break Morale":1},
-	{"Counter Strike":1},
-	{"Scars of Battle":3},
-
-	{"Brute Force":1},
-	{"Savagery":9},
-	{"Primal Strike":6},
-	{"Might of the Bear":3},
-	{"Mogdrogen's Pact":3},
-	{"Feral Hunger":5},
-	{"Wind Devil":1},
-	{"Summon Briarthorn":1},
-	{"Torrent":4},
-	{"Tenacity of the Boar":5},
-	{"Heart of the Wild":5},
-	{"Wendigo Totem":2},
-	{"Raging Tempest":8},
-	{"Storm Surge":4},
-	{"Oak Skin":1},
-	{"Storm Totem":6},
-	{"Storm Touched":5},
-	{"Blood Pact":1},
-	{"Maelstrom":2},
-	{"Emboldening Presence":2},
-	{"Stormcaller's Pact":8},
-	{"Conjure Primal Spirit":1},
-]
-
-# skills = {}
-
-constellations = [xC, fiend, viper, tsunami, wraith, quill, kraken, tempest, hawk, eel, ultosHandofUltos, spearoftheHeavens]
-# constellations = [ultos]

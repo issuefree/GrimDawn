@@ -398,10 +398,12 @@ def showSolution(model, constellations, bonusCount=18):
 	if shown:
 		print("\n  What it buys:")
 		for worth, name, value in shown:
+			# %g gave six significant figures - "damage absorb % 5.85185" - which
+			# is precision nobody reads on a table of what a solution bought.
 			if isinstance(value, list):
-				value = "%g over %gs" % (value[0], value[1])
+				value = "%s over %ss" % (fmt(value[0]), fmt(value[1]))
 			else:
-				value = "%g" % value
+				value = fmt(value)
 			print("     %-30s %12s %8d" % (name, value, worth))
 		rest = sum(row[0] for row in ranked[len(shown):] if row[0] > 0)
 		if rest:

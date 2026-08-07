@@ -1,5 +1,22 @@
 from dataModel import *
 
+
+def fmt(value, places=2):
+	"""A number for reading rather than for round-tripping.
+
+	Two decimals, trailing zeroes and the trailing point dropped, so 0.25 stays
+	0.25, 19.800000000000001 becomes 19.8 and 8.957061529508433 becomes 8.96.
+	Anything that is not a number is handed back untouched - a few weights are
+	a [dps, seconds] pair.
+	"""
+	if isinstance(value, (list, tuple)):
+		return "[%s]" % ", ".join(fmt(v, places) for v in value)
+	if not isinstance(value, (int, float)) or isinstance(value, bool):
+		return str(value)
+	text = ("%%.%df" % places) % value
+	return text.rstrip("0").rstrip(".") if "." in text else text
+
+
 def getLinks(wanted, remaining=None):
 	maxAffinities = Affinity()
 	for c in wanted:

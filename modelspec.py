@@ -16,6 +16,7 @@ import difflib
 import os
 
 from dataModel import Constellation
+from utils import fmt
 from constants import (damages, DOT_SECONDS, resists, primaryDamages,
                        conversions)
 
@@ -1273,10 +1274,10 @@ def applyDamagePriority(stats, weights, priority, attributeBonus=None):
 		if damage not in priority:
 			continue        # reported in one line below, not thirty
 		bonus = attributeBonus.get(damage, 0)
-		notes.append("%s priority %g -> %s %g, %s %% %g  (%g flat, %g%%%s)"
-					 % (damage, p, damage, weights.get(damage, 0),
-						damage, weights.get(damage + " %", 0), flat, perc,
-						" incl %g from attributes" % round(bonus) if bonus else ""))
+		notes.append("%s priority %s -> %s %s, %s %% %s  (%s flat, %s%%%s)"
+					 % (damage, fmt(p), damage, fmt(weights.get(damage, 0)),
+						damage, fmt(weights.get(damage + " %", 0)), fmt(flat), fmt(perc),
+						" incl %s from attributes" % fmt(bonus) if bonus else ""))
 
 	# A proc's "% Weapon Damage" swings your weapon, whatever your own attack
 	# does, so it is priced off the landed value too - the same sum checkModel
@@ -1297,7 +1298,7 @@ def applyDamagePriority(stats, weights, priority, attributeBonus=None):
 		notes.append("%s priority %g -> everything not named above, at what a point "
 					 "of each delivers: %s"
 					 % (CATCH_ALL, catchAll,
-						"; ".join("%g for %s" % (w, ", ".join(sorted(names)))
+						"; ".join("%s for %s" % (fmt(w), ", ".join(sorted(names)))
 								  for w, names in sorted(bands.items(), reverse=True))))
 	for damage in priority:
 		if damage not in named:

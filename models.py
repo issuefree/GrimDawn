@@ -484,6 +484,9 @@ class Model:
 		# them up. Read by mainAttackTargets; empty where a model states a bare
 		# "main attack %" instead, or names nothing at all.
 		self.mainAttackAbilities = []
+		# Derived weights, collected by setCalculated and printed in columns
+		# at the end of checkModel rather than one line at a time.
+		self.calculated = []
 
 	@staticmethod
 	def attributeBonus(stats):
@@ -1024,10 +1027,18 @@ class Model:
 				weight = base * (self.get(target) - self.get(source)) / 100.0
 				if self.setIfNull("%s to %s" % (source, target), weight) and abs(weight) >= .01:
 					converted.append(("%s to %s" % (source, target), weight))
-		if converted:
-			print("  damage conversions, priced off the sheet (a point of each):")
-			for name, weight in sorted(converted, key=lambda row: -row[1]):
-				print("    %7.3f  %s" % (weight, name))
+		# Only the ones worth having. Every pair is priced both ways, so half of
+		# them are negative by construction - "fire to bleed" is a loss for a
+		# fire build and always will be - and printing all forty said nothing
+		# the top few did not.
+		gains = [row for row in sorted(converted, key=lambda row: -row[1]) if row[1] > 0]
+		if gains:
+			print("  Damage conversions worth having, per point:")
+			for name, weight in gains[:6]:
+				print("    %8s  %s" % (fmt(weight), name))
+			if len(gains) > 6:
+				print("    %8s  %d more, and %d that lose value"
+					  % ("...", len(gains) - 6, len(converted) - len(gains)))
 
 		# What one swing is worth, and therefore what a point of weapon damage %
 		# is worth: a skill's "% Weapon Damage" scales the whole flat damage of
@@ -1108,6 +1119,7 @@ class Model:
 		for speed in ["attack speed", "cast speed", "move speed"]:
 			total += self.get(speed)
 		self.setCalculated("total speed", total)
+		self.printCalculated()
 
 	def filterConstellations(self):
 		print("\n  Checking for weapon restricted constellations...")
@@ -1174,12 +1186,42 @@ class Model:
 		self.bonuses[key] = value
 
 	def setCalculated(self, key, value):
-		out = key + ": " 
-		if not key in self.bonuses:
+		"""Fill in a weight the model did not state, and remember it for the log.
+
+		Collected rather than printed line by line. Twenty-one call sites, most
+		of them once per damage type, put forty-odd lines of full-precision
+		float in the middle of every run - "cunning: 8.957061529508433" - and
+		buried the handful of lines worth reading. printCalculated lays the same
+		information out in columns at two decimals.
+		"""
+		stated = key in self.bonuses
+		if not stated:
 			self.set(key, value)
-			print("  " + out + str(self.get(key)))
-		else:
-			print("* " + out + str(self.get(key)) + " (" + str(value) + ")")
+		self.calculated.append((key, self.get(key), value if stated else None))
+
+	def printCalculated(self, perLine=3, width=38):
+		"""The derived weights, in columns.
+
+		A * marks one that was already set when checkModel reached it - either
+		the model stated it or a priority block derived it - in which case the
+		figure in brackets is what checkModel would have used and did not.
+		"""
+		if not self.calculated:
+			return
+		cells = []
+		for key, value, existing in self.calculated:
+			cell = "%s%s %s" % ("*" if existing is not None else " ", key, fmt(value))
+			if existing is not None and abs(existing - value) > 0.005:
+				cell += " (not %s)" % fmt(existing)
+			cells.append(cell)
+		print("\n  Derived weights (* was already set, so this one was not used):")
+		for row in range(0, len(cells), perLine):
+			line = cells[row:row + perLine]
+			# ljust alone runs cells together the moment one is over-long, which
+			# the triggered-damage rows are, so the pad is at least one space.
+			print("   " + "".join(c.ljust(width) if c is not line[-1] else c
+								  for c in (x + " " for x in line)).rstrip())
+		self.calculated = []
 
 	def setIfNull(self, key, value):
 		"""Set a weight the model did not state. True if this was the one that set it."""

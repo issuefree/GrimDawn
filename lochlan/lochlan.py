@@ -53,14 +53,24 @@ stats = {
 		"offense":1946,
 		"defense":1608,
 
-		"health":10000,
+		"health":1070, #base
 		"health/s":145,
 
 		"armor":1353,
 
-		"energy":2265,
+		"energy":490, #base
 		"energy/s":34,
 		
+		"pierce resist":80,
+		"fire resist":80, 
+		"cold resist":80, 
+		"lightning resist":80, 
+		"bleed resist":73,
+		"acid resist":40,
+		"aether resist":6,
+		"chaos resist":14,
+		"vitality resist":51,
+
 		"physical %":640, "physical":150,
 		"lightning %":930, "lightning":5000,
 		"electrocute %":1000, "electrocute":500,
@@ -108,17 +118,37 @@ damagePriority = {
 		"rotation": 90,
 	}
 
-weights = {
-		"armor":2.5, "armor absorb":30,
-		"avoid melee":30, "avoid ranged":25,
-		"defense":15,
+# How much of what the solution buys should be keeping him alive. Six weights
+# were hand-set here - armor, armor absorb, avoid melee, avoid ranged, defense
+# and health - and every one is derivable in effective health, so this replaces
+# the lot.
+#
+# They were not consistent with each other, which is the argument for deriving
+# them. Read back as a defensePriority each implied a different one, and the
+# spread was more than tenfold: armor absorb was the cheapest reading and
+# defensive ability the dearest, so a point of survival bought one way counted
+# for far more than the same point bought the other. That is not a preference
+# anybody held - it is what six numbers set one at a time look like.
+#
+# 2.5 lands closest to the 19% defensive share the hand-set numbers were
+# actually buying, so this is a re-derivation rather than a rebalancing.
+# Measured through the real runner with seeds cleared between runs:
+#
+#     0.5 ->  2%    1.5 -> 11%    2.5 -> 17%    4.0 -> 38%
+#     1.0 ->  2%    2.0 -> 14%    3.0 -> 31%
+#
+# The totals beside those are not comparable with the 84019 the hand-set
+# weights scored, and neither is 2.5's 82162: the derived weights are on a
+# different scale - armor absorb goes from 30 to 469 - so what moved is the
+# balance, not the build's worth. The share is what is comparable.
+defensePriority = 2.5
 
+weights = {
 		"attack speed":75,
 		"cast speed":25,
 
 		"offense":20,
-		
-		"health":1.5,
+
 		"energy":1,
 		"lifesteal %":100,
 
@@ -130,15 +160,6 @@ weights = {
 		# 50-60 = 25
 		# 60-75 = 20
 		# 75-85 = 10		
-		"pierce resist":80,
-		"fire resist":80, 
-		"cold resist":80, 
-		"lightning resist":80, 
-		"bleed resist":73,
-		"acid resist":40,
-		"aether resist":6,
-		"chaos resist":14,
-		"vitality resist":51,
 
 		# "stun %" is the stun duration modifier - the game has no second field
 		# for it, so the "stun duration":5 that used to sit under here could

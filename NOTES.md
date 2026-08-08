@@ -144,6 +144,50 @@ second measurement.
 `applyDamagePriority` - hela's hand-stated path - reads the corrected sheet too,
 since the correction is upstream of both paths.
 
+## The damage chain, checked against the game
+
+lochlan's Primal Strike, with Torrent and Storm Surge on it, at 309% weapon
+damage, against the breakdown the game gives:
+
+    type          model  measured   ratio
+    physical       1324      1000    1.32
+    lightning     25264     22000    1.15
+    electrocute    3297      2500    1.32
+    bleed          1369      1000    1.37
+    TOTAL         31254     26500    1.18
+
+Uniformly a fifth to a third over, with no type out of line - which is what a
+sheet carrying estimates looks like, and not what a modelling error looks like.
+Getting here took three corrections and two wrong guesses, and the wrong guesses
+are worth recording because each looked right:
+
+**The sheet's damage is already multiplied.** Before this the same skill read
+242408 lightning against 22000. Fixed, and confirmed twice - the second time by
+Stormcaller's Pact, whose tooltip reads ~1400 where the record's 30/s at rank 8
+times lochlan's own 15.70 electrocute multiplier gives 1413.
+
+**Conversion moved nothing.** 51% physical to lightning was priced as a weight
+and never applied, so physical read 2702 against 1000.
+
+**Electrocute was the last hold-out at 2.04, and it was not a units problem.**
+Two guesses missed: that the sheet's 500 electrocute was a double count of the
+skill's own, and that the gap was a damage-a-second against damage-a-total
+mix-up. It was neither. The 500 is Stormcaller's Pact, real and correctly on the
+sheet, and the Pact is its own damage over time rather than something Primal
+Strike carries - so it does not belong in that skill's number at all. Take it
+out and electrocute joins the cluster at 1.32.
+
+Two things the game does that are worth keeping straight, since both cost time
+here. The sheet reports a damage over time as a **rate** and a skill tooltip
+reports it as the **total over its duration** - lochlan's 500 and ~1400 are the
+same effect, three seconds apart. And the sheet is read in town, so it carries
+the three toggles that are up there and nothing else.
+
+What is not resolved is whether flat damage over time on the sheet should be
+scaled by a skill's weapon damage percentage the way flat hit damage is. The
+model scales it. It does not matter for the numbers above, because the one type
+it would have moved is the one that turned out not to belong.
+
 ## Damage conversion was a weight and nothing else
 
 **Fixed.** `conversions()` gave every "X to Y" name to the weight vocabulary, so

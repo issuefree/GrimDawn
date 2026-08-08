@@ -966,8 +966,33 @@ def unmultiplyFlat(stats):
 			continue
 		stats[damage] = flat / (1.0 + percent / 100.0)
 		changed.append("%s %g -> %s" % (damage, flat, fmt(stats[damage])))
-	return (["sheet damage is what the multiplier has already been applied to, so "
-			 "it is divided back out: " + ", ".join(changed)] if changed else [])
+
+	# A damage over time is reported on the sheet as a rate, and everything here
+	# works in what one application lays down. lochlan's sheet says 1001 bleed
+	# where Primal Strike's own tooltip says 2002 over two seconds - the same
+	# effect, stated twice, a duration apart. DOT_SECONDS is the duration per
+	# type, taken off the item records where it is all but unanimous.
+	#
+	# It composes with dotFactor rather than duplicating it: this says what one
+	# application is worth, and dotFactor says what share of it you collect
+	# before your next swing overwrites it.
+	rated = []
+	for damage, seconds in DOT_SECONDS.items():
+		if not stats.get(damage):
+			continue
+		rated.append("%s %s/s over %gs -> %s"
+					 % (damage, fmt(stats[damage]), seconds,
+						fmt(stats[damage] * seconds)))
+		stats[damage] = stats[damage] * seconds
+
+	notes = []
+	if changed:
+		notes.append("sheet damage is what the multiplier has already been applied "
+					 "to, so it is divided back out: " + ", ".join(changed))
+	if rated:
+		notes.append("a damage over time is stated on the sheet as a rate, so it is "
+					 "taken over its duration: " + ", ".join(rated))
+	return notes
 
 
 def deliveryRate(stats):

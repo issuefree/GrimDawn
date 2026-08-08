@@ -76,6 +76,10 @@ stats = {
 		"physical %":640, "physical":150,
 		"lightning %":930, "lightning":5000,
 		"electrocute %":1019, "electrocute":500,
+		# Off the sheet, which states a damage over time as a rate: Primal
+		# Strike's own tooltip reads 2002 bleed over two seconds against this
+		# 1001, which is the same effect a duration apart.
+		"bleed":1001,
 
 		# Off the weapon. The sheet does not show conversion, so it has to be
 		# stated: it moves flat damage before either multiplier applies, so

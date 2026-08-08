@@ -188,6 +188,41 @@ scaled by a skill's weapon damage percentage the way flat hit damage is. The
 model scales it. It does not matter for the numbers above, because the one type
 it would have moved is the one that turned out not to belong.
 
+## Flat damage over time and % weapon damage
+
+**Open, and the one thing left that is definitely wrong.**
+
+The sheet states a damage over time as a rate. lochlan's sheet says 1001 bleed
+where Primal Strike's own tooltip says 2002 over two seconds, and his sheet says
+500 electrocute where Stormcaller's Pact reads ~1400 over three. `unmultiplyFlat`
+takes the rate over `DOT_SECONDS` now, which is what everything downstream wants:
+what one application lays down.
+
+That fixed electrocute - 2.04 over against the game, then 1.16, in line with
+lightning's 1.15 and physical's 1.32.
+
+It broke bleed, to 8.33 over, and the reason is the question in the title. The
+model scales a sheet's flat damage over time by the skill's weapon damage
+percentage, the way it scales flat hit damage. Primal Strike carries 309%, so
+lochlan's 1050 bleed becomes 3244 before his multiplier touches it.
+
+The measurement says otherwise, and says it directly: Primal Strike's bleed rate
+*is* the sheet's bleed rate, 1001 either way. No weapon scaling and no addition
+of the skill's own 145. Taken at face value a flat damage over time is applied
+once at its stated rate whatever the attack's weapon percentage.
+
+But the same reading breaks electrocute back the other way, to 0.67 under,
+because Storm Surge's electrocute plainly does add to what the sheet carries.
+The two cannot both be right and I could not find the rule that separates them.
+
+Five characters carry a sheet damage over time and all five are affected:
+armitage's burn, fenris's and morena's bleed, gwyr's burn, lochlan's both.
+
+What would settle it: one skill with a large weapon damage percentage and one
+with none, both reporting the same duration type, off the same character. Primal
+Strike at 309% against something at 0% would say in one comparison whether the
+weapon percentage multiplies it.
+
 ## Damage conversion was a weight and nothing else
 
 **Fixed.** `conversions()` gave every "X to Y" name to the weight vocabulary, so

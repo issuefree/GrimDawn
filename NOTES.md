@@ -608,28 +608,53 @@ five it cannot place, and for whatever a mod spells differently.
 
 `Ability.augment` is still dead.
 
-## Reading skills out of the save files
+## Reading the save files
 
-`savefile.py` decodes a player.gdc header - name, mastery pair and level - and
-that much works for all eleven characters. The body does not.
+**The body opens now.** What had stalled it was four fields between the header
+and the first block that nothing was reading: a byte (7 on these saves, 3 on the
+older ones a reference implementation was written against), an int read *without*
+advancing the key, the data version, and a sixteen-byte uid. NOTES had listed
+"extra header fields in format version 2" as an untried candidate and that is
+what it was.
 
-The obfuscation is understood and implemented: the first word is a seed XORed
-with 0x55555555, a 256-entry table is built from it by rotating right one bit
-and multiplying by 39916801, and every read XORs against a running key which is
-then advanced by table[b] for each ciphertext byte consumed. The header proves
-it - `tagSkillClassName0207` does not fall out of a wrong key.
+With those consumed the blocks fall out with sane types and lengths and a zero
+trailer on each, which is the check that the key is still in step. Eleven of the
+twelve saves walk.
 
-What is not understood is what follows the header. Blocks should start with a
-small id and a length; nothing plausible appears at any offset, under any
-combination of key-updating on the id and length, and a byte-by-byte scan of
-the whole file finds no printable string at all - in a file that certainly
-contains item record paths. So the key state diverges at the header boundary in
-a way the header itself gives no sign of. Candidates not yet tried: extra
-header fields in format version 2, or a second seed for the body.
+**Block 2 is read**, forty-eight bytes on every character - a version and eleven
+fields:
 
-Worth finishing. It would take transcription out of the loop entirely - skills,
-devotions and gear, not just the level - and the level check it already does
-caught gwyr's model sitting a level behind.
+    level  experience  attribute points  skill points  devotion points
+    total devotion  physique  cunning  spirit  health  energy
+
+That is three things the models had been transcribing by hand or guessing.
+`total devotion` is the number kieri and lachesis could not be modelled without.
+The attributes are what you have before gear. And `health` is *base* health,
+which is on no character sheet at all and is what a "+% Health" bonus multiplies
+- lochlan's reads 1070 against the 1070 read off the game by hand, which is the
+check that the block is what it looks like.
+
+`python savefile.py` prints the lot and flags a model that disagrees. Every one
+of them disagreed about devotion:
+
+    armitage 52 (model 57)   fenris 13 (20)    kieri 13 (15)
+    lethe 20 (55)            lilith 34 (45)    pakse 34 (28)
+
+**What is left.** Block 3 is where the items live and the walk stops there. A
+block cannot be skipped - the key advances on every ciphertext byte consumed -
+and it cannot be walked blindly either, because a block containing items
+contains their lengths, and a length is read without advancing the key. Consume
+those four bytes as data and the key is out. So every block from the third on
+has to be parsed field by field.
+
+Worth doing for the skills block, which is the ranks - the single largest piece
+of transcription left, and the thing every damage weight is priced against.
+grimtools.com/calc reads all of this from an uploaded save, which is proof the
+rest of the format is no harder than what is already done.
+
+Nyx is the twelfth save and does not decode: her data version reads as garbage
+where every other save reads 8. Either an older format or a character the game
+wrote differently.
 
 ## Models that do not load
 

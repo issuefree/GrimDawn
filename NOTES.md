@@ -103,6 +103,47 @@ is stopping you.
 What is still hand-set is a resistance the sheet does not carry. lochlan states
 nine and not physical, so `physical resist` is the one weight left in his file.
 
+## The sheet's damage is already multiplied
+
+**Fixed, and measured against the game.** Grim Dawn computes damage as
+`flat * (1 + X%/100)` and the character sheet shows the left side *already
+multiplied*. So lochlan's `"lightning": 5000` beside `"lightning %": 1138` is
+not 5000 flat waiting for a multiplier - it is what 403 flat has already become.
+Everything downstream multiplied it a second time.
+
+One Primal Strike with Torrent and Storm Surge on it, 309% weapon damage,
+against the game's own damage breakdown:
+
+    lightning   242408 before    23391 after    22000 in the game
+
+Six percent, and lightning is 88% of what he deals. The reading also settles
+that his breakdown is taken uncharged like the sheet: charged, Savagery's +72%
+and +37 flat put the model at 26293, which is what he would actually hit for.
+
+`unmultiplyFlat` divides it back out once at load, before anything prices a
+damage type, so the rotation's damage, the weapon damage weight and what one
+swing is worth all read a number the game's equation would recognise. The
+percentages are untouched - they were always what they said.
+
+What this moves is the balance between flat and percentage. A point of gear flat
+was always priced right, because a point of it really does become `multiplier`
+more damage; it is the percentage weight that was overstated, by the size of the
+multiplier itself - ten to sixteen times on most of these models. Every solution
+had been buying `+% damage` stars over flat ones on a false rate.
+
+Scores move accordingly and are not comparable across the change: gwyr 36415 ->
+21870, morena 7261 -> 4436, lochlan 83277 -> 121795. The splits move too, and
+towards what the characters look like - gwyr's fire and burn separate from 60/31
+to 49/36, and morena's bleed and pierce swap places.
+
+The three types beyond lightning are still out by two or three: physical is
+over, which a conversion he carries would do, and the two duration types are the
+difference between damage a second and damage a tick. Worth chasing with a
+second measurement.
+
+`applyDamagePriority` - hela's hand-stated path - reads the corrected sheet too,
+since the correction is upstream of both paths.
+
 ## The sheet is read in town, so no temporary buff is on it
 
 The character sheets in these models are read in town with only passive buffs

@@ -46,20 +46,20 @@ stats = {
 
 		"fight length":15, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
 
-		"physique":752,
-		"cunning":392,
-		"spirit":448,
+		"physique":763,
+		"cunning":400,
+		"spirit":451,
 
-		"offense":1946,
-		"defense":1608,
+		"offense":1964,
+		"defense":1625,
 
-		"health":1070, #base
+		"health":10178,
 		"health/s":145,
 
 		"armor":1353,
 		"armor absorb":84,
 
-		"energy":490, #base
+		"energy":2358,
 		"energy/s":34,
 		
 		"pierce resist":80,
@@ -75,7 +75,7 @@ stats = {
 
 		"physical %":640, "physical":150,
 		"lightning %":930, "lightning":5000,
-		"electrocute %":1000, "electrocute":500,
+		"electrocute %":1019, "electrocute":500,
 
 		"playStyle":"melee", # playstyle for weighting constellation abilities. [ranged/shortranged/melee/tank]
 		"weapons":[

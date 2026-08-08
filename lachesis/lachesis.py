@@ -5,7 +5,7 @@ if __name__ == "__main__":
 	sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 	import devotion
 	sys.exit(devotion.runModelFile(__file__))
-
+devotionPoints = 28
 stats =	{
 		# Character level. Enemy defence follows from it and from the difficulty,
 		# and crit chance follows from that against your offensive ability - so
@@ -16,7 +16,7 @@ stats =	{
 		# defence, and every enemy resistance by up to twelve points, so
 		# it is not a detail. Taken from the level band; correct it if he
 		# is grinding a difficulty he has out-levelled.
-		"difficulty":"elite",
+		"difficulty":"normal",
 		"attacks/s":3.5,
 		# Bare rates: nothing here is named, so no main attack is read. Name the
 		# skills and their ranks and the cooldowns come from the game.

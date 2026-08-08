@@ -893,6 +893,46 @@ def mainAttack(stats):
 	return MainAttack(percent, flat, boost, longer, abilities, named, missing, mixed)
 
 
+def unmultiplyFlat(stats):
+	"""Turn the sheet's damage figures back into the flat the formula wants.
+
+	Grim Dawn computes damage as flat * (1 + X%/100), and the character sheet
+	shows you the left side already multiplied - so "lightning": 5000 beside
+	"lightning %": 1138 is not 5000 flat waiting for a multiplier, it is what
+	404 flat has already become. Everything downstream multiplied it a second
+	time.
+
+	Measured against lochlan's game, one Primal Strike with Torrent and Storm
+	Surge on it, at 309% weapon damage:
+
+	    lightning   242408 the old way    22781 this way    22000 in the game
+
+	The other three types come out within a factor of two or three, which for
+	physical is what a conversion he carries would do to it, and for the two
+	duration types is the difference between damage a second and damage a tick.
+	Lightning is 88% of what he deals and it lands within four percent.
+
+	Done once, here, so that everything reading stats[damage] afterwards - the
+	rotation's damage, the weapon damage weight, what one swing is worth - is
+	reading a number the game's own equation would recognise. The percentages
+	are left alone: they are already what they say.
+	"""
+	from models import Model
+	bonus = Model.attributeBonus(stats)
+	changed = []
+	for damage in damages:
+		flat = float(stats.get(damage) or 0)
+		if not flat:
+			continue
+		percent = float(stats.get(damage + " %", 0) or 0) + bonus.get(damage, 0)
+		if percent <= 0:
+			continue
+		stats[damage] = flat / (1.0 + percent / 100.0)
+		changed.append("%s %g -> %s" % (damage, flat, fmt(stats[damage])))
+	return (["sheet damage is what the multiplier has already been applied to, so "
+			 "it is divided back out: " + ", ".join(changed)] if changed else [])
+
+
 def deliveryRate(stats):
 	"""How many times a second a point of flat damage on the sheet is delivered.
 

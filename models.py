@@ -535,6 +535,9 @@ class Model:
 		# the rotation as numbers
 		notes = modelspec.resolveRotation(stats)
 		notes += modelspec.applyDefaults(stats)
+		# Before anything prices a damage type. The sheet reports flat damage
+		# with the percentage already applied; the formula wants it without.
+		notes += modelspec.unmultiplyFlat(stats)
 		priority = dict(namespace.get("damagePriority") or {})
 		# A model that still spells its catch-all as a weight is read as though
 		# it had written it in the block, because that is what it always meant.

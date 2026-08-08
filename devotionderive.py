@@ -85,6 +85,68 @@ PBAOE_BY_STYLE = {"ranged": 0.125, "shortranged": 0.75, "melee": 1.0, "tank": 1.
 # the 3052 Monster records that state one is exactly 1.000, the mean 1.016.
 # So the rate you are hit at is very nearly the number of them in reach.
 MONSTER_SWINGS = 1.0
+# What share of incoming damage is each type, measured off the game rather than
+# guessed. Monster records carry no damage of their own - it is all on the
+# skills they name - so this walks 2964 Monster records under
+# records/creatures/enemies to the 2934 whose skills deal anything, sums each
+# one's offensive damage by type, and takes the mean of their shares. Each
+# monster counts once, so a boss with six skills does not outvote a trash mob.
+#
+# It is the number that says what a point of fire resist is worth against a
+# point of aether resist, and before this there was none: every resistance was
+# priced identically, as if you took an equal beating from all ten.
+#
+# Regenerate with devotionderive.measureIncoming(); it takes about a minute and
+# is a literal here for the same reason ENEMY_RESIST_BASE is - it changes only
+# when the game does.
+INCOMING_SHARE = {
+	"physical": 0.407, "acid": 0.089, "cold": 0.084, "fire": 0.069,
+	"chaos": 0.068, "vitality": 0.068, "lightning": 0.065, "pierce": 0.057,
+	"aether": 0.051, "bleed": 0.040,
+}
+
+
+def measureIncoming(root=None):
+	r"""Re-measure INCOMING_SHARE from the game. Slow, and only run by hand."""
+	import collections, re
+	from gddata import Database, lastValue
+	db = Database(root) if root else Database()
+	direct = {"Physical": "physical", "Pierce": "pierce", "Fire": "fire",
+			  "Cold": "cold", "Lightning": "lightning", "Poison": "acid",
+			  "Life": "vitality", "Aether": "aether", "Chaos": "chaos",
+			  "Bleeding": "bleed"}
+	# a duration effect states only its rate here; the type is what matters
+	duration = {"SlowBleeding": "bleed", "SlowPoison": "acid", "SlowBurn": "fire",
+				"SlowFrostburn": "cold", "SlowElectrical": "lightning",
+				"SlowLifeLeach": "vitality"}
+	total, counted = collections.Counter(), 0
+	for path in db.under("records/creatures/enemies"):
+		record = db.read(path)
+		if not record or record.get("Class") != "Monster":
+			continue
+		got = collections.Counter()
+		for field, value in record.items():
+			if not re.fullmatch(r"skillName\d+", field) or not isinstance(value, str):
+				continue
+			skill = db.read(value)
+			if not skill:
+				continue
+			for name, damage in direct.items():
+				low = lastValue(skill.get("offensive%sMin" % name, 0)) or 0
+				high = lastValue(skill.get("offensive%sMax" % name, 0)) or low
+				if low or high:
+					got[damage] += (float(low) + float(high)) / 2.0
+			for name, damage in duration.items():
+				low = lastValue(skill.get("offensive%sMin" % name, 0)) or 0
+				if low:
+					got[damage] += float(low)
+		if not got:
+			continue
+		counted += 1
+		spread = sum(got.values())
+		for damage, amount in got.items():
+			total[damage] += amount / spread
+	return {d: round(v / counted, 3) for d, v in total.most_common()}
 
 # Metres around you that enemies attack from. The one figure here with nothing
 # measured behind it - monster attack ranges live on their skills rather than

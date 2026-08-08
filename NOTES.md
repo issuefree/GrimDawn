@@ -188,6 +188,39 @@ scaled by a skill's weapon damage percentage the way flat hit damage is. The
 model scales it. It does not matter for the numbers above, because the one type
 it would have moved is the one that turned out not to belong.
 
+## What share of incoming damage is each type
+
+**Derived.** Every resistance was priced identically - a point of bleed resist
+was worth a point of physical resist - which only makes sense if you take an
+equal beating from all ten types. You do not.
+
+Monster records carry no damage of their own; it is all on the skills they name.
+But they do name them, so `devotionderive.measureIncoming` walks 2964 Monster
+records under `records/creatures/enemies` to the 2934 whose skills deal
+anything, sums each one's offensive damage by type, and takes the mean of their
+shares - each monster counting once, so a boss with six skills does not outvote
+a trash mob:
+
+    physical 40.7%   chaos     6.8%   pierce  5.7%
+    acid      8.9%   vitality  6.8%   aether  5.1%
+    cold      8.4%   lightning 6.5%   bleed   4.0%
+    fire      6.9%
+
+`applyDefensePriority` weights each resistance by its share now, and `max <type>
+resist` with it. lochlan's bleed resist goes from 99 a point to 38, and his
+aether from 28 to 14 - he takes ten times as much physical as bleed and the
+model had been saying they were worth the same.
+
+It also retires `PHYSICAL_SHARE`, which was the one number in the defensive
+chain with nothing behind it. It guessed a half; the answer is 0.407, and armor
+is priced against that now.
+
+The weighting is a flat mean over the bestiary, which is the same footing
+`ENEMY_RESIST_BASE` and `characterAttackSpeed` already stand on. What it cannot
+know is what you personally fight - an Aetherial-heavy stretch of the game is
+not the mean - so a model that wants to say so should be able to override it.
+Nothing reads such an override yet.
+
 ## A weight cannot say "and no more than that"
 
 **Fixed for resistance, and the general case is still there.**
@@ -360,8 +393,9 @@ the fight is known. That would give proper boss and pack columns for retaliation
 and for armor at once.
 
 The one guess left in the chain is `ENGAGEMENT_RADIUS`, three metres. Monster
-attack ranges live on their skills rather than their records, the same reason
-`PHYSICAL_SHARE` is a guess.
+attack ranges live on their skills rather than their records - though the
+records do name the skills, which is how `INCOMING_SHARE` was measured, so this
+is reachable by the same route.
 
 ## Retaliation builds
 

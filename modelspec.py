@@ -15,6 +15,8 @@ import collections
 import difflib
 import os
 
+import devotionderive
+
 from dataModel import Constellation
 from utils import fmt
 from constants import (damages, DOT_SECONDS, resists, primaryDamages,
@@ -58,10 +60,10 @@ def hitsTaken(stats):
 									   stats.get("enemy density") or None,
 									   stats.get("enemies"))
 # And how much of what hits you is physical, which is the only thing armor
-# reduces. A guess, and the one number here with nothing behind it: monster
-# damage lives on their skills rather than their records, so it is not a mean
-# over anything the way ENEMY_RESIST_BASE is.
-PHYSICAL_SHARE = 0.5
+# reduces. It was a guess at a half and it is measured now: monster damage does
+# live on their skills rather than their records, but the skills are named on
+# the records, so devotionderive walks 2934 of them and the answer is 0.407.
+PHYSICAL_SHARE = devotionderive.INCOMING_SHARE["physical"]
 # The cap the game puts on every resistance. Not in the records - gameengine.dbr
 # names a dozen other caps and not this one - so it is stated here, and
 # "+X% Maximum Resistance" on your gear raises it per type.
@@ -1127,6 +1129,13 @@ def applyDefensePriority(stats, weights, priority):
 		# "+X% Maximum Resistance" raises the cap rather than the resistance,
 		# and is a stat of its own. Nine constellations and six items grant it.
 		cap = MAX_RESIST + float(stats.get("max " + damage) or 0)
+		# Weighted by how much of what hits you is that type. A point of fire
+		# resist only ever reduces the fire you take, so it is worth its share
+		# of the incoming stream - and the shares are not even, so pricing all
+		# ten alike said a point of bleed resist was worth a point of physical
+		# when you take ten times as much physical. INCOMING_SHARE is measured
+		# off 2934 monsters rather than guessed.
+		share = devotionderive.INCOMING_SHARE.get(damage.replace(" resist", ""), 0.0)
 		if have >= cap:
 			derived[damage] = 0.0
 			capped.append("%s at %g" % (damage, have))
@@ -1135,9 +1144,9 @@ def applyDefensePriority(stats, weights, priority):
 			# Below the cap it is worth nothing, because the cap is not what is
 			# stopping you. Nine constellations and six items grant it, and
 			# until gddata read defensive<Type>MaxResist none of them scored.
-			derived["max " + damage] = health / (100.0 - cap)
+			derived["max " + damage] = share * health / (100.0 - cap)
 		else:
-			derived[damage] = health / (100.0 - have)
+			derived[damage] = share * health / (100.0 - have)
 			derived["max " + damage] = 0.0
 	perType = [v for k, v in derived.items() if k in resists]
 	if perType:

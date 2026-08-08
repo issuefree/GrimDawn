@@ -51,25 +51,24 @@ stats = {
 		# RANKS ARE STUBS at 8 except Werewolf, Voracity and Recklessness, and
 		# Feral Claws, which are real.
 		"rotation":[
-			# Held; the Werewolf form's attack, with the form itself and its two
-			# passives nested inside, since all three modify what he swings.
-			# Ranks are points spent, off the save with
-			#     python savefile.py Fenris
-			# not the rank the skill screen shows. Gear is stated once, off the
-			# same save, rather than being folded into each of these. They were
-			# all 8 or 9 before, which was a placeholder rather than his build.
-			("Feral Claws", 6, [("Werewolf", 6), ("Voracity", 2),
-								("Recklessness", 4)]),
+			# Held; the Werewolf form's attack. Werewolf is named because it is
+			# the one link the records do not carry - nothing in the naming ties
+			# a form to the attack it grants, so it has to be said. Voracity and
+			# Recklessness then arrive on their own, by modifying Werewolf.
+			#
+			# Everything else here is just what is on the bar: the ranks are the
+			# points he has spent, off the save.
+			("Feral Claws", ["Werewolf"]),
 			("Brutal Slam", 1.0),          # off Severed Claw. Chipped Claw's
 										   # plain "Slam" is the weaker version
 										   # and has the same 2s cooldown, so
 										   # only its damage would differ
-			("Curse of Frailty", 2, 2.5, [("Vulnerability", 1)]),
-			("Leap", 2, [("Fault Line", 1)]),
-			("Bonechilling Cry", 1, 3.0),
-			("Blood of Dreeg", 1, 3.0),
-			("Rip and Tear", 6),
-			("Rallying Cry", 4, 4.0, [("Frenzied Cry", 1), ("Impulse", 1)]),
+			("Curse of Frailty", 2.5),
+			"Leap",
+			("Bonechilling Cry", 3.0),
+			("Blood of Dreeg", 3.0),
+			"Rip and Tear",
+			("Rallying Cry", 4.0),
 		],
 
 		"hits/s":4,

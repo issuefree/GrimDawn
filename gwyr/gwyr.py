@@ -54,21 +54,18 @@ stats = {
 	# STUB - the ranks are placeholders and every damage weight is priced
 	# against them. Correct the numbers from the skill screen.
 	"rotation": [
-		# Held, with the three that modify it nested inside: Explosive Strike
-		# fires with it rather than on its own, and the other two are passives.
-		# Ranks are points spent, off the save with
-		#     python savefile.py Gwyr
-		# not the rank the skill screen shows: gear is stated once, off the same
-		# save. Searing Might joins the nest because it modifies Explosive
-		# Strike, which modifies the button he holds.
-		("Fire Strike", 7, [("Explosive Strike", 3), ("Brimstone", 6),
-							("Searing Might", 3), ("Static Strike", 1)]),
-		("Flashbang", 3, 3.0, [("Searing Light", 1)]),
-		("Rune of Hagarrad", 1),
-		("Rune of Kalastor", 1),
-		("Inquisitor Seal", 6),
-		("Thermite Mine", 3, 5.0),      # the record states no cooldown at all
-		("Mortar Trap", 1, 15.0),
+		# What is on the bar and the order he plays it. Ranks are the points he
+		# has spent and the modifiers come off the records, so Explosive Strike,
+		# Brimstone, Searing Might, Static Strike and Searing Light all arrive
+		# without being named - Searing Might two links deep, through Explosive
+		# Strike.
+		"Fire Strike",                  # held on left button
+		("Flashbang", 3.0),
+		"Rune of Hagarrad",
+		"Rune of Kalastor",
+		"Inquisitor Seal",
+		("Thermite Mine", 5.0),         # the record states no cooldown at all
+		("Mortar Trap", 15.0),
 		# "gaze" on key 9 was a rate here. It is a devotion proc: it fires on
 		# its own trigger and the devotion system already scores it, so a rate
 		# in the rotation was counting it a second time as an attack source.

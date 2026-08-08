@@ -512,6 +512,29 @@ class Model:
 		return out
 
 	@staticmethod
+	def saveName(name):
+		"""The save's spelling of a character's name, or None if there is none.
+
+		A model is loaded by whatever the command line said - "lochlan" off
+		devotion.py, "Lochlan" from a call - and the saves are keyed the way the
+		game capitalises them. Matched here rather than at each use, because
+		missing meant an empty sheet and a model quietly scored without any of
+		its save behind it.
+		"""
+		import savefile
+		found = savefile.characters()
+		if name in found:
+			return name
+		return next((k for k in found if k.lower() == name.lower()), None)
+
+	@staticmethod
+	def spentRanks(name):
+		"""{skill: points spent} for one character, or {} without a save."""
+		import savefile
+		real = Model.saveName(name)
+		return dict(savefile.skillsOf(real)) if real else {}
+
+	@staticmethod
 	def fillFromSave(name, stats):
 		"""Fill in whatever the model did not state, off the character's save.
 
@@ -524,11 +547,15 @@ class Model:
 		unmultiplyFlat, which must not treat these as sheet figures.
 		"""
 		import savefile
+		real = Model.saveName(name)
+		if not real:
+			return (["no save called %r, so nothing is filled in and every stat "
+					 "the model does not state reads zero" % name], set())
 		try:
-			derived, _ = savefile.sheetOf(name)
-		except Exception as problem:                     # no save, or an unreadable one
-			return (["no save for %s, so every stat has to be stated: %s"
-					 % (name, problem)], set())
+			derived, _ = savefile.sheetOf(real)
+		except Exception as problem:                     # a save that will not read
+			return (["%s's save will not read, so every stat has to be stated: %s"
+					 % (real, problem)], set())
 
 		notes = []
 		# "+skills" is a dict rather than a number, and it is the one thing here
@@ -585,8 +612,9 @@ class Model:
 		notes, derivedFlat = Model.fillFromSave(name, stats)
 		# before applyDefaults, which reads the allAttacks/s this fills in to
 		# decide whether it needs defaulting, and before anything else looks at
-		# the rotation as numbers
-		notes += modelspec.resolveRotation(stats)
+		# the rotation as numbers. The ranks come from the save too, so a
+		# rotation says what is on the bar and in what order and nothing else.
+		notes += modelspec.resolveRotation(stats, Model.spentRanks(name))
 		notes += modelspec.applyDefaults(stats)
 		# Before anything prices a damage type. The sheet reports flat damage
 		# with the percentage already applied; the formula wants it without.

@@ -35,24 +35,21 @@ stats = {
 		# prints which one won for each. The first entry is what he holds the
 		# button down on, and it is his main attack. RANKS ARE STUBS.
 		"rotation":[
-			# Ranks are points spent, off the save with
-			#     python savefile.py Pakse
-			# not the rank the skill screen shows. Every line here was a flat
-			# 12, which was a placeholder: he has one point in most of them and
-			# has put ten into Retribution, which modifies what he holds. Gear
-			# is stated once, off the same save.
-			("Righteous Fervor", 1, [("Retribution", 10),
-									 ("Consecration", 1)]),  # held on left button
-			("Aegis of Menhir", 7, 0.5, [("Reprisal", 5), ("Avenging Shield", 4),
-										 ("Aegis of Thorns", 1)]),
-			("Judgment", 1, 4.8, [("Crushing Verdict", 1), ("Heart of Wrath", 1)]),
-			("Overguard", 1, 5.0),
-			("Ascension", 1, 5.0, [("Clarity of Purpose", 1)]),
-			("War Cry", 1, 7.5, [("Break Morale", 1)]),
-			("Smite", 2),
-			("Shattering Smash", 2),
-			("Zolhan's Technique", 1),
-			("Markovian's Advantage", 1),
+			# What is on the bar and the order he plays it. Every line here was
+			# a flat 12, which was a placeholder: he has one point in most of
+			# them, off the save, and ten in Retribution - which is a modifier
+			# on what he holds and now arrives as one, along with the eight
+			# others that were written out here.
+			"Righteous Fervor",            # held on left button
+			("Aegis of Menhir", 0.5),
+			("Judgment", 4.8),
+			("Overguard", 5.0),
+			("Ascension", 5.0),
+			("War Cry", 7.5),
+			"Smite",
+			"Shattering Smash",
+			"Zolhan's Technique",
+			"Markovian's Advantage",
 			("Shield Slam", 3.0),          # off Battered Shell
 			("Blade Ward", 3.0),           # off Reinforced Shell; 12s cooldown
 										   # wins, so the press does not matter

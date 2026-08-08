@@ -38,22 +38,19 @@ stats = {
 		# prints which one won for each. The first entry is what he holds the
 		# button down on, and it is his main attack. RANKS ARE STUBS.
 		"rotation":[
-			# Ranks are points spent, read out of the save with
-			#     python savefile.py Armitage
-			# and not the rank the skill screen shows - the gear is added on top
-			# of these, off the same save, and does not belong in these numbers.
-			# Every one of them was a flat 12 before, which was nobody's build.
-			#
-			# What modifies what is out of the records too: Searing Strike hangs
-			# off Explosive Strike rather than off Fire Strike directly, and is
-			# in here because the chain still ends at the button he holds.
-			("Fire Strike", 7, [("Explosive Strike", 2), ("Searing Strike", 3),
-								("Static Strike", 1)]),   # held on left button
-			("Thermite Mine", 2, 5.0),
-			("War Cry", 6, 7.5, [("Break Morale", 1)]),
-			("Mortar Trap", 1, 15.0),
-			("Zolhan's Technique", 6),
-			("Markovian's Advantage", 5),
+			# What is on the bar and the order he plays it. The rank is the
+			# points he has spent, off the save, and the modifiers come off the
+			# records - Explosive Strike, Searing Strike, Static Strike and
+			# Break Morale were all written out here and all come back on their
+			# own. Searing Might is the case that shows why they are derived
+			# rather than listed: it modifies Explosive Strike, which modifies
+			# Fire Strike, and only Fire Strike is a button.
+			"Fire Strike",                 # held on left button
+			("Thermite Mine", 5.0),
+			("War Cry", 7.5),
+			("Mortar Trap", 15.0),
+			"Zolhan's Technique",
+			"Markovian's Advantage",
 			("Brutal Shield Slam", 3.0),   # off Serrated Shell: 300% weapon
 										   # damage where the plain Shield Slam off a
 										   # Battered Shell is 230%. Same 3s cooldown,

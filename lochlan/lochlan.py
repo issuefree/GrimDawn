@@ -37,25 +37,19 @@ stats = {
 		# prints which one won for each. The first entry is what he holds the
 		# button down on, and it is his main attack.
 		#
-		# Ranks are points spent, read out of the save with
-		#     python savefile.py Lochlan
-		# and not the rank the skill screen shows. The gear is stated once in
-		# "+skills" below instead of being added into every line by hand, which
-		# is what these were: Savagery read 13 where he has spent 9 and his gear
-		# grants 3.
-		#
-		# Blood Pact, Raging Tempest and Maelstrom were nested in here and are
-		# gone - the save has no points in any of the three, so they were
-		# contributing nothing but a number.
+		# What is on his bar and the order he plays it. Nothing else: the rank is
+		# the points he has spent, off the save, and the modifiers are whatever
+		# the records say modifies these - Might of the Bear, Torrent, Storm
+		# Surge and the rest were all written out here and all come back on
+		# their own. The load prints them.
 		"rotation":[
-			("Savagery", 9, [("Might of the Bear", 3), ("Tenacity of the Boar", 1),
-							 ("Storm Touched", 3)]),          # held on left button
-			("Primal Strike", 4, [("Torrent", 5), ("Storm Surge", 2)]),
-			("Storm Totem", 4),
-			("Wendigo Totem", 1),
-			("Wind Devil", 1),
+			"Savagery",            # held on left button, so this is his main attack
+			"Primal Strike",
+			"Storm Totem",
+			"Wendigo Totem",
+			"Wind Devil",
 			# WPS
-			("Feral Hunger", 7), ("Markovian's Advantage", 2), ("Zolhan's Technique", 2)
+			"Feral Hunger", "Markovian's Advantage", "Zolhan's Technique",
 		],
 		# "+skills" was written out here by hand and is gone: the loader reads it
 		# off the save, and the two agreed entry for entry. Everything he wears

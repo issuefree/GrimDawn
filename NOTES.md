@@ -600,21 +600,13 @@ placed at all - two of them because the game misspells `natureblessing1` as the
 parent of `naturesblessing2` - and `--regenerate` names them rather than
 guessing.
 
-A modifier goes inside the entry for the skill it modifies:
+A modifier is no longer written into the rotation at all - see below.
 
-    ("Leap", 8, 1.5, [("Fault Line", 8)])
-    ("Onslaught", 1, [("Open Wounds", 3), ("Endless Rage", 1)])
-
-The nesting is the link, so there is nothing to spell and nothing to keep in step
-with a name written elsewhere. The elements after the name are read by type
-rather than by position, so a skill with modifiers and no press interval leaves
-no hole to count past.
-
-The derived parent is what checks the nesting rather than what decides it: a
-modifier nested under the wrong skill says so, and one left at the top level is
-told which entry to move inside. That keeps the derivation earning its place
-without it being the only way to say where something goes - which matters for the
-five it cannot place, and for whatever a mod spells differently.
+The derived parent used to only *check* the nesting: a modifier nested under the
+wrong skill said so, and one left at the top level was told which entry to move
+inside. It decides it now, and the nesting is what is left over for the links
+the records do not carry - the five it cannot place, a shapeshift form and the
+attack it grants, and whatever a mod spells differently.
 
 `Ability.augment` is still dead.
 
@@ -727,6 +719,56 @@ Two things are still out and one is a bug:
 So the attributes, the resistances, the conversions and `+skills` are worth
 taking; the rest is a cross-check against the sheet rather than a replacement
 for it, and the output says so.
+
+## A rotation says what is on the bar and nothing else
+
+Two of the three things a rotation entry carried were derivable, so they are
+derived. What is left is what nothing else can know: which skills are on the
+bar, the order you play them in, and where you press one slower than the game
+would let you.
+
+    "Mortar Trap"                 fires on its own cooldown
+    ("Flashbang", 3.0)            ...unless you press it slower than that
+    0.5                           a bare rate, for what cannot be named
+
+The **rank** is the points you have spent, off the save. Every model got it
+wrong: three stated a flat 12 on every line, morena stated her skill screen so
+her gear counted twice, and lethe named two skills she had never put a point in.
+Naming a skill with nothing in it is now said out loud rather than scored at
+rank zero.
+
+The **modifiers** come off the records. `deriveModifiers` walks each modifier
+you have points in up its parent chain, and the first entry on the bar it
+reaches is the one it rides. Fifty-one were written out across the models and
+all fifty-one come back on their own, including the two-deep ones - Searing
+Might modifies Explosive Strike modifies Fire Strike, and only Fire Strike is a
+button.
+
+One relationship is not in the records and still has to be nested by hand:
+
+    ("Feral Claws", ["Werewolf"])
+
+Nothing in the naming ties a shapeshift form to the attack it grants. Saying it
+is enough, though, because an explicitly nested name is an attachment point
+too - so Recklessness and Voracity reach Feral Claws by modifying Werewolf.
+
+The number after the name means the press interval now, where it used to mean
+the rank with the press second. There is no way to tell the two apart in an old
+model, so anything written against the old grammar reads its rank as a press.
+All eleven were converted with the change.
+
+## A model loaded by a lowercase name got no save at all
+
+`devotion.py lochlan` passes the name as typed and `savefile.characters()` keys
+on the game's capitalisation, so `sheetOf("lochlan")` returned an empty sheet -
+not an error, just nothing. Every model run from the command line was scored
+with none of its save behind it, which is every run except the ones made from a
+Python call. Lochlan scored 53428 that way against 65434 with his save.
+
+The lesson is the missing-data path rather than the case: `sheetOf` returns
+`({}, [])` for a character it does not have, which is indistinguishable from a
+character whose save contributes nothing. `Model.saveName` resolves the name
+once and says so when there is no save.
 
 ## A model states only what the save gets wrong
 

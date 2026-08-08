@@ -266,48 +266,125 @@ def unknownSkillBonuses(plus):
 
 
 def splitEntry(entry):
-	"""(name, rank, press, modifiers) out of one rotation entry.
+	"""(name, press, modifiers) out of one rotation entry.
 
-	The elements after the name are read by type rather than by position, since
-	a press interval is optional and a skill with modifiers and no interval
-	would otherwise leave a hole to count past. A list is the modifiers; the
-	numbers are the rank and then the press.
+	A bare name is a whole entry: the rank comes off the save and the modifiers
+	come off the records, so there is nothing else to say about most skills.
+
+	    "Mortar Trap"
+	    ("Flashbang", 3.0)              pressed slower than it recharges
+	    ("Feral Claws", ["Werewolf"])   a link the records do not state
+
+	The number after the name is the press interval. It used to be the rank,
+	with the press second, and both are derived now - the rank from the points
+	you spent and the modifiers from what the records say modifies what. What
+	is left is the part nothing can know: the order you play them in, and where
+	you press a button slower than the game would let you.
 	"""
+	if isinstance(entry, str):
+		return entry, 0.0, []
 	rest = list(entry[1:])
 	modifiers = next((r for r in rest if isinstance(r, list)), [])
 	numbers = [r for r in rest if not isinstance(r, list)]
-	rank = numbers[0] if numbers else 0
-	press = float(numbers[1] or 0) if len(numbers) > 1 else 0.0
-	return entry[0], rank, press, modifiers
+	return entry[0], float(numbers[0] or 0) if numbers else 0.0, modifiers
 
 
-def resolveRotation(stats):
+def entryName(entry):
+	"""The skill an entry names, or None for a bare rate."""
+	if isinstance(entry, str):
+		return entry
+	if isinstance(entry, (tuple, list)) and entry and isinstance(entry[0], str):
+		return entry[0]
+	return None
+
+
+def deriveModifiers(entries, spent):
+	"""{entry name: [the modifiers it carries]}, off the records and the save.
+
+	A modifier is never pressed, so which entry it belongs to is not a thing
+	anyone should have to write down: the records say what each one modifies -
+	see recordedParent - and the save says which ones you have points in. Walk
+	a modifier's parent chain and the first thing on the bar that it reaches is
+	the entry it rides.
+
+	The chain matters because modifiers stack two deep. Searing Might modifies
+	Explosive Strike, which modifies Fire Strike, and only Fire Strike is a
+	button - so Searing Might rides Fire Strike without either of them saying
+	so.
+
+	Anything a model nests by hand is an attachment point too, which is how the
+	one relationship the records do not carry still works: nothing links
+	Werewolf to the Feral Claws it grants, so fenris names Werewolf, and
+	Recklessness and Voracity then find their way in by modifying it.
+	"""
+	import skillData                       # noqa: F401 - registers the skills
+	from models import Skill
+
+	hosts, placed = {}, set()
+	for entry in entries:
+		name = entryName(entry)
+		if name is None:
+			continue
+		stated = [entryName(m) for m in splitEntry(entry)[2]]
+		hosts[name] = [m for m in stated if m]
+		placed.update(hosts[name])
+
+	# {a name the chain can end at: the entry it puts you on}. An explicitly
+	# nested skill is somewhere to attach to as well as something attached,
+	# which is what carries Recklessness in behind Werewolf.
+	anchors = {name: name for name in hosts}
+	for host, stated in hosts.items():
+		for name in stated:
+			anchors[name] = host
+
+	for name in sorted(spent):
+		skill = Skill.skills.get(name)
+		if skill is None or name in anchors:
+			continue
+		if not isModifier(skill.getAbility(1)):
+			continue
+		seen, cursor = set(), name
+		while True:
+			cursor = recordedParent(cursor)
+			if not cursor or cursor in seen:
+				break                      # unmodified, or a cycle in the naming
+			seen.add(cursor)
+			if cursor in anchors:
+				hosts[anchors[cursor]].append(name)
+				break
+	return hosts
+
+
+def resolveRotation(stats, spent=None):
 	"""Turn the skill bar into the rate each skill actually fires at.
 
-	One list says what you play. An entry is a mastery skill and its rank, an
-	item skill and how often you press it, or a bare rate for anything the data
-	cannot name:
+	One list says what you play, and only what nothing else can know: which
+	skills are on the bar, the order you play them in, and where you press one
+	slower than the game would let you.
 
-	    ("Mortar Trap", 12)          fires on its own cooldown
-	    ("Flashbang", 12, 3.0)       ...unless you press it slower than that
-	    ("Sacred Strike", 1.5)       an item skill has no rank, so that is the press
-	    0.5
+	    "Mortar Trap"                fires on its own cooldown
+	    ("Flashbang", 3.0)           ...unless you press it slower than that
+	    ("Sacred Strike", 1.5)       an item skill, same thing
+	    0.5                          a bare rate, for what the data cannot name
 
-	A skill that is never pressed but changes one that is - see isModifier - goes
-	inside the entry for the skill it modifies, because that is the only thing it
-	can modify:
+	The rank is not in here. It is the points you have spent, off your save, and
+	writing it down meant transcribing it - which every model got wrong: three
+	stated a flat 12 on every line, one stated her skill screen so her gear was
+	counted twice, and one named two skills she had never put a point in.
 
-	    ("Leap", 8, 1.5, [("Fault Line", 8)])
-	    ("Onslaught", 1, [("Open Wounds", 3), ("Endless Rage", 1)])
+	Nor are the modifiers. A skill that is never pressed but changes one that is
+	- see isModifier - rides the entry for the skill it modifies, and the
+	records already say which that is, so deriveModifiers works it out from what
+	you have points in. Fifty-one of them were written out across the models and
+	all fifty-one come back on their own.
 
-	The nesting is the link, so there is nothing to spell and nothing to keep in
-	step with a name written elsewhere. The elements after the name are read by
-	type rather than by position - see splitEntry - so a skill with modifiers and
-	no press interval does not leave a hole to count past.
+	What is left to nest by hand is a link the records do not carry:
 
-	The records say what each modifier really modifies, and that is used to check
-	the nesting rather than to decide it: one nested under the wrong skill says
-	so, and one left at the top level is told which entry to move inside.
+	    ("Feral Claws", ["Werewolf"])
+
+	Nothing in the naming ties a shapeshift form to the attack it grants, so
+	that one has to be said - and saying it is enough, because Recklessness and
+	Voracity then reach Feral Claws by modifying Werewolf.
 
 	A skill fires no faster than its cooldown and no faster than you press it,
 	so the rate is one over whichever is longer. Which one wins is not obvious
@@ -353,7 +430,7 @@ def resolveRotation(stats):
 	entries = stats.get("rotation")
 	if not entries:
 		return notes
-	if not any(isinstance(e, (tuple, list)) for e in entries):
+	if not any(entryName(e) for e in entries):
 		# A rotation of bare rates names nothing, so there is no cooldown to look
 		# up and no held attack to find - but the rates themselves are still what
 		# a proc's trigger is scored against, and dropping them here left
@@ -380,23 +457,40 @@ def resolveRotation(stats):
 								  "names" if len(unknown) == 1 else "name",
 								  "it raises" if len(unknown) == 1 else "they raise"))
 
+	# The points you have spent, off the save. A model that names a skill says
+	# it is on the bar; how far up the tree it is is not a thing to transcribe.
+	spent = dict(spent or {})
+	derived = deriveModifiers(entries, spent)
+	found = sorted(set(sum(derived.values(), [])) -
+				   {entryName(m) for e in entries if entryName(e)
+					for m in splitEntry(e)[2]})
+	if found:
+		notes.append("modifiers off the records and the save, not stated: "
+					 + ", ".join("%s on %s" % (m, h) for h in sorted(derived)
+								 for m in derived[h] if m in found))
+
 	# Look every named entry up first, so what kind of thing it is comes from its
 	# record and not from where it sits in the list. Each becomes
 	# (name, ability, rank, press, source, modifiers); source is None for a
 	# mastery skill, and modifiers are the ones nested inside this entry, each
 	# already looked up the same way.
 	def look(entry, nested=False):
-		if not entry or not isinstance(entry[0], str):
+		if entryName(entry) is None:
 			notes.append("rotation: %r does not start with a skill name, so there is "
 						 "nothing to look up. A modifier goes inside the entry for the "
 						 "skill it modifies, not in a list of its own" % (entry,))
 			return (None, None, 0, 0.0, None, [])
-		name, rank, press, inner = splitEntry(entry)
-		if nested and inner:
-			notes.append("rotation: %r carries modifiers of its own, which is a level "
-						 "deeper than the bar goes - nest them beside it instead" % name)
-			inner = []
+		name, press, inner = splitEntry(entry)
+		inner = derived.get(name, inner) if not nested else []
+		# The rank is what you have spent, off the save. A skill on the bar with
+		# nothing in it is worth saying out loud rather than scoring at rank
+		# zero: lethe named two she had never put a point in.
+		rank = int(spent.get(name, 0))
 		skill = Skill.skills.get(name)
+		if skill is not None and not rank and not skillBonus(name, plus):
+			notes.append("rotation: %r has no points in it and nothing on your gear "
+						 "grants it, so it fires but does nothing. Take it off the "
+						 "bar, or spend a point" % name)
 		if skill is not None:
 			# The rank in the file is what you spent. What the skill screen shows
 			# is that plus whatever your gear grants, and that is the rank every
@@ -408,9 +502,8 @@ def resolveRotation(stats):
 				raised.append("%s %g%+d" % (name, rank, effective - rank))
 			return (name, skill.getAbility(effective), effective, press, None,
 					[look(m, True) for m in inner])
-		# Not a mastery skill, so try what the items grant. There is no rank on
-		# an item skill, so its first number is the press interval - and it is a
-		# button of its own, which nothing in a mastery tree modifies.
+		# Not a mastery skill, so try what the items grant. An item skill has no
+		# rank of its own and is a button nothing in a mastery tree modifies.
 		granted = items().get(name)
 		if granted is None:
 			notes.append("rotation: nothing called %r in the mastery skills or the "
@@ -419,11 +512,11 @@ def resolveRotation(stats):
 		if inner:
 			notes.append("rotation: %r comes off an item, and nothing in a mastery tree "
 						 "modifies an item skill, so %s nested inside it is not scored"
-						 % (name, ", ".join(repr(splitEntry(m)[0]) for m in inner)))
+						 % (name, ", ".join(repr(entryName(m)) for m in inner)))
 		ability, source = granted
-		return (name, ability, None, float(rank or 0), source, [])
+		return (name, ability, None, press, source, [])
 
-	looked = [look(e) if isinstance(e, (tuple, list)) else (None, None, 0, 0.0, None, [])
+	looked = [look(e) if entryName(e) else (None, None, 0, 0.0, None, [])
 			  for e in entries]
 
 	# A modifier is not a button, so one at the top level is in the wrong place.
@@ -1779,16 +1872,18 @@ stats = {
 	# State it here and the ranks below stay what you actually spent.
 	# "+skills": {"all": 1, "Soldier": 2, "Cadence": 3},
 
-	# The first entry is the attack you hold the button down on, and it runs at
-	# attacks/s above. Passives, toggles and secondary attacks are not presses -
-	# the records say so - and each goes inside the entry for the skill it
-	# modifies, which is the only thing it can modify.
-	# "rotation": [("Fire Strike", 12, [("Explosive Strike", 12)]),  # held, + a
-	#                                            # modifier on it, not a button
-	#              ("Mortar Trap", 12, 15.0),    # pressed every 15s
-	#              ("Leap", 12, [("Fault Line", 8)]),  # cooldown, + a modifier
+	# What is on your bar, in the order you play it. Name a skill and that is
+	# the whole entry: the rank is the points you have spent, off your save, and
+	# the passives, toggles and secondary attacks that modify it come off the
+	# records. The first entry is the attack you hold the button down on, and it
+	# runs at attacks/s above.
+	# "rotation": ["Fire Strike",                # held; its modifiers derive
+	#              ("Mortar Trap", 15.0),        # pressed slower than it recharges
+	#              "Leap",
 	#              ("Sacred Strike", 1.5),       # off an item, pressed every 1.5s
-	#              0.5],
+	#              0.5],                         # a rate, for what cannot be named
+	# Nest a name only for a link the records do not carry - a shapeshift form
+	# and the attack it grants:  ("Feral Claws", ["Werewolf"])
 
 	# Pressing a skill an item grants costs you one swing of the above, and a
 	# skill only earns its place by beating it. Derived from the rotation; set

@@ -47,15 +47,17 @@ stats = {
 	"rotation": [
 		0.5,                          # the weapon itself, unreplaced
 		# WPS
-		("Amarasta's Quick Cut", 3), ("Belgothian's Shears", 3),
-		("Markovian's Advantage", 2), ("Zolhan's Technique", 1),
-		("Shadow Strike", 1, [("Nidalla's Justifiable Ends", 1), ("Nightfall", 1)]),
-		("Pneumatic Burst", 3, [("Shadow Dance", 2), ("Breath of Belgothian", 1),
-								("Elemental Awakening", 1)]),
-		("Veil of Shadow", 2, [("Night's Chill", 1)]),
-		("Blade Spirit", 1),
-		("Blade Barrier", 1),
-		("War Cry", 1, 7.5),
+		"Amarasta's Quick Cut", "Belgothian's Shears",
+		"Markovian's Advantage", "Zolhan's Technique",
+		"Shadow Strike",              # Nidalla's Justifiable Ends, Nightfall
+		"Pneumatic Burst",            # Shadow Dance, Breath of Belgothian, ...
+		# Veil of Shadow was here and is not a button - the records call it a
+		# modifier, and it is an aura she leaves running. What it does is take
+		# resistance off what she is hitting, which nothing here scores, so it
+		# and the Night's Chill on it are both out rather than nested somewhere.
+		"Blade Spirit",
+		"Blade Barrier",
+		("War Cry", 7.5),
 	],
 
 	# What that swings for. Pressing a skill an item grants costs you one of

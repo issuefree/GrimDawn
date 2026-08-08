@@ -6,6 +6,15 @@ if __name__ == "__main__":
 	import devotion
 	sys.exit(devotion.runModelFile(__file__))
 devotionPoints = 28
+# What is stated below is what the save gets wrong. Everything a model leaves
+# out is filled in at load from the character's own save file - every worn item,
+# its components, the set tiers and every point spent - so a stat written here
+# is an override, and the comment beside it is what was derived. Anything the
+# two agreed on to within 5% was deleted rather than annotated: it was a
+# transcription of a number the code already had.
+#
+#     python savefile.py Lachesis stats     what the save derives
+#
 stats =	{
 		# Character level. Enemy defence follows from it and from the difficulty,
 		# and crit chance follows from that against your offensive ability - so
@@ -36,21 +45,19 @@ stats =	{
 		# so it tracks the sheet instead of going stale against it.
 		"low healths/s":1.0/30, # total guesswork.
 
-		"physique":650,
-		"cunning":400,
-		"spirit":600,
+		"cunning":400,  # derived 360 -10%
 
-		"offense":1500,
-		"defense":1250,
+		"offense":1500,  # derived 572 -62%
+		"defense":1250,  # derived 376.5 -70%
 
-		"health":6500,
-		"armor":800,
-		"energy":3500,
+		"health":6500,  # derived 7821 +20%
+		"armor":800,  # derived 615.57 -23%
+		"energy":3500,  # derived 4963 +42%
 
-		"vitality %":1050, "vitality decay %":450,
-		"chaos %":500,
+		"vitality %":1050,  # derived vitality % 678 -35%
+		"chaos %":500,  # derived 249 -50%
 
-		"pet all damage %":250+100,
+		"pet all damage %":250+100,  # derived 103 -71%
 
 		"fight length":15,
 

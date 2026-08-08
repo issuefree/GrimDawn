@@ -17,6 +17,15 @@ if __name__ == "__main__":
 
 devotionPoints = 25
 
+# What is stated below is what the save gets wrong. Everything a model leaves
+# out is filled in at load from the character's own save file - every worn item,
+# its components, the set tiers and every point spent - so a stat written here
+# is an override, and the comment beside it is what was derived. Anything the
+# two agreed on to within 5% was deleted rather than annotated: it was a
+# transcription of a number the code already had.
+#
+#     python savefile.py Hela stats     what the save derives
+#
 stats = {
 	"attacks/s": 5.0,            # casts per second, as channelled in practice
 	"playStyle": "ranged",        # melee | shortranged | ranged | tank
@@ -52,22 +61,22 @@ stats = {
 	"level": 58,
 	"difficulty": "normal",       # from the level band, not from the save
 
-	"physique": 600, "cunning": 380, "spirit": 1053,
-	"offense": 1635, "defense": 1300,
-	"health": 9000, "health/s": 50, 
-	"energy": 4500, "energy/s": 165,
-	"armor": 479,
+	"physique": 600, "spirit": 1053,  # derived physique 568 -5%, spirit 960 -9%
+	"offense": 1635, "defense": 1300,  # derived offense 399 -76%, defense 406 -69%
+	"health": 9000,  # derived health 6369 -29%
+	"energy": 4500, "energy/s": 165,  # derived energy 5136 +14%, energy/s 22 -87%
+	"armor": 479,  # derived 342.14 -29%
 
 	# Flat and % damage for the types you care about. damagePriority below
 	# uses these to work out what a point of each is actually worth.
 	# vitality is 0 flat, so its percentage multiplies nothing and is priced at
 	# nothing - that is not a mistake in the sheet, it is what 250% of no
 	# vitality damage is worth.
-	"aether": 1700, "aether %": 1200,
-	"lightning": 500, "lightning %": 750,
-	"vitality": 0, "vitality %": 250,
-	"fire": 250, "fire %": 450,
-	"cold": 250, "cold %": 450,
+	"aether": 1700, "aether %": 1200,  # derived aether 42.5 -68%, aether % 699 -42%
+	"lightning": 500, "lightning %": 750,  # derived lightning 8 -86%, lightning % 286 -62%
+	"vitality": 0, "vitality %": 250,  # derived vitality % 110 -56%
+	"fire": 250, "fire %": 450,  # derived fire % 75 -83%
+	"cold": 250, "cold %": 450,  # derived cold % 43 -90%
 	"weapons":["sceptre", "offhand"],
 	"blacklist":[
 		tsunami # Hela's range for ray and reap are outside the range of the proc so it doesn't hit much.

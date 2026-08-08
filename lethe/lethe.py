@@ -17,6 +17,15 @@ if __name__ == "__main__":
 
 devotionPoints = 55
 
+# What is stated below is what the save gets wrong. Everything a model leaves
+# out is filled in at load from the character's own save file - every worn item,
+# its components, the set tiers and every point spent - so a stat written here
+# is an override, and the comment beside it is what was derived. Anything the
+# two agreed on to within 5% was deleted rather than annotated: it was a
+# transcription of a number the code already had.
+#
+#     python savefile.py Lethe stats     what the save derives
+#
 stats = {
 	"attacks/s": 2.0,            # attacks per second, as swung in practice
 	"playStyle": "melee",        # melee | shortranged | ranged | tank

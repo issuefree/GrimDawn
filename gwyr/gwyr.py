@@ -17,6 +17,15 @@ if __name__ == "__main__":
 
 devotionPoints = 41
 
+# What is stated below is what the save gets wrong. Everything a model leaves
+# out is filled in at load from the character's own save file - every worn item,
+# its components, the set tiers and every point spent - so a stat written here
+# is an override, and the comment beside it is what was derived. Anything the
+# two agreed on to within 5% was deleted rather than annotated: it was a
+# transcription of a number the code already had.
+#
+#     python savefile.py Gwyr stats     what the save derives
+#
 stats = {
 	# Attack Speed off the sheet. It is what the held attack runs at, what a
 	# damage over time is refreshed at, and the rate every attack-triggered
@@ -88,21 +97,21 @@ stats = {
 	# "enemy density": 0.03,
 
 	"weapons": ["2h ranged"],   # omit to allow every constellation
-	"physique": 950, "cunning": 550, "spirit": 450,
-	"offense": 2082, "defense": 1900,
-	"health": 8000, "health/s": 320, 
-	"energy": 2500, "energy/s": 28,
-	"armor": 900,
+	"physique": 950, "cunning": 550, "spirit": 450,  # derived physique 840 -12%, cunning 521 -5%, spirit 411 -9%
+	"offense": 2082, "defense": 1900,  # derived offense 668.5 -68%, defense 578 -70%
+	"health": 8000, "health/s": 320,  # derived health 7304 -9%, health/s 78.6 -75%
+	"energy": 2500, "energy/s": 28,  # derived energy 2742 +10%, energy/s 5 -82%
+	"armor": 900,  # derived 649.29 -28%
 	# "fight length": 30,
 
 	# Flat and % damage for the types you care about. damagePriority below
 	# uses these to work out what a point of each is actually worth.
-	"physical": 100, "physical %": 300,
-	"pierce": 675, "pierce %": 625,
-	"fire": 3000, "fire %": 1400,
-	"lightning": 25, "lightning %": 625,
-	"burn": 2000, "burn %": 1000, "burn duration": 200,
-	"electrocute": 0, "electrocute %": 400, "electrocute duration": 50,
+	"physical": 100, "physical %": 300,  # derived physical % 90 -70%
+	"pierce": 675, "pierce %": 625,  # derived pierce 35 -62%, pierce % 282 -55%
+	"fire": 3000, "fire %": 1400,  # derived fire 63.5 -68%, fire % 646 -54%
+	"lightning": 25, "lightning %": 625,  # derived lightning 5 +45%, lightning % 190 -70%
+	"burn": 2000, "burn %": 1000, "burn duration": 200,  # derived burn % 694 -31%, burn duration 150 -25%
+	"electrocute": 0, "electrocute %": 400,  # derived electrocute % 190 -52%
 }
 
 # One number per damage type saying how much you care about it. The flat vs %

@@ -8,17 +8,25 @@ if __name__ == "__main__":
 
 devotionPoints = 20
 
+# What is stated below is what the save gets wrong. Everything a model leaves
+# out is filled in at load from the character's own save file - every worn item,
+# its components, the set tiers and every point spent - so a stat written here
+# is an override, and the comment beside it is what was derived. Anything the
+# two agreed on to within 5% was deleted rather than annotated: it was a
+# transcription of a number the code already had.
+#
+#     python savefile.py Morena stats     what the save derives
+#
 stats = {
 		"level":39,
 		"difficulty":"normal",
 
-		"physique":500,
-		"cunning":750,
-		"spirit":300,
+		"cunning":750,  # derived 682 -9%
+		"spirit":300,  # derived 277 -8%
 
-		"offense":1200,
-		"defense":900,
-		"armor":425,
+		"offense":1200,  # derived 533 -56%
+		"defense":900,  # derived 286 -68%
+		"armor":425,  # derived 216.86 -49%
 
 		"attacks/s":1.88,
 		"rotation":[
@@ -48,17 +56,16 @@ stats = {
 		"hits/s":2,
 		"low healths/s":1.0/30, # total guesswork.
 
-		"health":5500,
-		"health/s":60,
+		"health/s":60,  # derived 44.68 -26%
 
-		"energy":1600,
+		"energy":1600,  # derived 1806 +13%
 		"energy/s":9,
 
-		"physical %":150, "physical":375,
-		"pierce %":400, "pierce":550,
-		"bleed %":400, "bleed":150,
-		"cold %":150, "cold":50,
-		"frostburn %":250, "frostburn":0,
+		"physical %":150, "physical":375,  # derived physical % 86 -43%, physical 114.5 -24%
+		"pierce %":400, "pierce":550,  # derived pierce % 194 -52%, pierce 37 -66%
+		"bleed %":400, "bleed":150,  # derived bleed % 251 -37%
+		"cold %":150, "cold":50,  # derived cold % 69 -54%, cold 5.5 -72%
+		"frostburn %":250, "frostburn":0,  # derived frostburn % 90 -64%
 
 		"fight length":30,
 

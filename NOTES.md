@@ -728,25 +728,72 @@ So the attributes, the resistances, the conversions and `+skills` are worth
 taking; the rest is a cross-check against the sheet rather than a replacement
 for it, and the output says so.
 
+## A model states only what the save gets wrong
+
+`Model.fillFromSave` fills every stat a model leaves out, so what a model states
+is an override rather than a transcription. A stated stat still wins, which is
+what a plan holding gear the character has not got yet needs.
+
+Applied across all eleven: a stat the save agreed with to within 5% was deleted,
+and one further off kept its value and gained a comment saying what was derived.
+Twenty-two stats came out. That is the honest yield, and it is small - the point
+of the exercise turned out not to be the deletions but what the annotations
+line up into. The gap is not noise per character, it is the same handful of
+gaps repeating:
+
+| family | n | median | range |
+|---|---|---|---|
+| `<type> %` | 41 | -57% | -98% .. -31% |
+| flat `<type>` | 19 | -62% | -92% .. +616% |
+| `offense` | 10 | -62% | -77% .. -56% |
+| `defense` | 10 | -67% | -70% .. -59% |
+| `armor` | 10 | -42% | -64% .. -23% |
+| `energy` | 10 | **+14%** | +9% .. +45% |
+| `energy/s` | 7 | -82% | -95% .. -57% |
+| `health/s` | 7 | -45% | -75% .. -14% |
+| `health` | 8 | -10% | -30% .. +20% |
+| attributes | 16 | -7% | -15% .. +9% |
+
+Four of those already have an entry above saying why - offensive and defensive
+ability have a base from level that is in neither the save nor the records,
+armor wants coverage weighting. The attributes are the one family that is
+basically right, which is why most of the deletions are attributes.
+
+`<type> %` is the largest and has no explanation yet. Forty-one readings across
+ten characters, all in the same direction, most of them clustered around half
+the stated figure. Something contributes a percentage to the sheet that is not
+being added up here, and its size is stable enough across very different builds
+that it is likely one mechanism rather than an accumulation of small ones.
+
+`energy` over-reading by a consistent +14% is the other odd one: it is the only
+family that leans positive on every character, which usually means something is
+being counted twice rather than missed.
+
+A resistance reads high where the sheet is capped and the gear is not - lochlan
+states 80 fire against a derived 120, which is not an error but forty points of
+overcap, and `resistOvercap` already prices that.
+
 ## Models that do not load
 
 `kieri` and `lachesis` state no `devotionPoints`, which is not a thing that can
-be inferred. `gwyr` and `lethe` are scaffolds with a level and nothing else.
+be inferred.
 
 ## Per-character data still outstanding
 
 Not modelling gaps - transcription. Every one of these is a number only the game
 can supply.
 
+Skill ranks and `+skills` have both come off this list: every rotation states
+points spent, read out of the save, and the gear ranks are derived at load. So
+have the resistances, which now come off the save for everyone.
+
 | character | needs |
 |---|---|
-| all with a rotation | **`+skills` off the gear** - `{"all": 1, "Berserker": 2}`. Ranks in a rotation are what you spent; the gear is stated once and added on load |
-| all with a rotation | **skill ranks.** Every rank is a stub except fenris's four and hela's two. Every damage weight is priced against them |
 | kieri, lachesis | `devotionPoints`. Neither loads without it |
-| kieri, lachesis, lethe, lilith | their rotations - each is bare rates, so no skill is named and no main attack can be read |
-| armitage, pakse | confirm the held attack, which is now whichever skill the rotation lists first. Fire Strike and Righteous Fervor are guesses; pakse's matters more, because his weapon pool claims 100% of swings at stub ranks so Righteous Fervor never fires |
-| hela, kieri, lachesis, lethe, lilith, lochlan, pakse | `attacks/s` off the sheet. All are round numbers or the old whole-bar aggregate. The three that have been read moved 3 -> 1.64, 3 -> 1.91 and 2 -> 2.43 |
-| everyone | resistances. `applyDefensePriority` derives nothing for `resist` because no sheet carries them |
+| kieri, lachesis, lilith | their rotations - each is bare rates, so no skill is named and no main attack can be read |
+| lethe | a main attack. She has no default-attack replacer at all, so her rotation leads with a bare rate and every granted skill is priced against a 100% swing |
+| armitage, pakse | confirm the held attack, which is whichever skill the rotation lists first. Fire Strike and Righteous Fervor are guesses. Pakse's now matters differently: his weapon pool skills are at 1-2 points rather than a stubbed 12, so Righteous Fervor does get to fire |
+| hela, kieri, lachesis, lilith, lochlan, pakse | `attacks/s` off the sheet. All are round numbers or the old whole-bar aggregate. The four that have been read moved 3 -> 1.64, 3 -> 1.91, 2 -> 2.43 and 2 -> 1.76 |
 | armitage | `hits taken/s` if 2.78 is wrong - it drives 76% of what he deals |
 | fenris | is his slam Brutal Slam off Severed Claw or the plainer Slam off Chipped Claw? Same cooldown, different damage |
 | nyx | level 24, Occultist/Shaman, no model at all |

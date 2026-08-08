@@ -51,6 +51,15 @@ weights = {
 		"stun %":50, "stun duration":10, 
 
 	}
+# What is stated below is what the save gets wrong. Everything a model leaves
+# out is filled in at load from the character's own save file - every worn item,
+# its components, the set tiers and every point spent - so a stat written here
+# is an override, and the comment beside it is what was derived. Anything the
+# two agreed on to within 5% was deleted rather than annotated: it was a
+# transcription of a number the code already had.
+#
+#     python savefile.py Kieri stats     what the save derives
+#
 stats =	{
 		# Character level. Enemy defence follows from it and from the difficulty,
 		# and crit chance follows from that against your offensive ability - so
@@ -63,10 +72,10 @@ stats =	{
 		# is grinding a difficulty he has out-levelled.
 		"difficulty":"normal",
 		# estimate how frequent combat events are for calculating dynamic stats and abilities
-		"attacks/s":1.75,		
+		"attacks/s":1.75,
 		"hits/s":.25,
 		"blocks/s":0,
-		"kills/s":1.5,		
+		"kills/s":1.5,
 		# crit chance was pinned here. It is derived now, from offensive
 		# ability against the enemy defence that level and difficulty give -
 		# so it tracks the sheet instead of going stale against it.
@@ -75,25 +84,23 @@ stats =	{
 		"fight length":20, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
 
 		# estimated sheet stats for target level
-		"physique":450,
-		"cunning":450,
-		"spirit":450,
+		"physique":450,  # derived 427 -5%
+		"cunning":450,  # derived 410 -9%
 
-		"offense":1200,
-		"defense":900,
+		"offense":1200,  # derived 486 -60%
+		"defense":900,  # derived 290.5 -68%
 
-		"health":4000,
-		"health/s %":10,
+		"health":4000,  # derived 3609 -10%
 
-		"armor":250,
-		"energy":2000,
+		"armor":250,  # derived 145.43 -42%
+		"energy":2000,  # derived 2182 +9%
 		
 		# estimated damage % for target level. add whatever damages are important to your build
-		"physical": 200, "physical %":150,
-		"fire": 650, "fire %":450, 
-		"burn":50, "burn %":300,
-		"lightning %":300, 
-		"electrocute %":300,
+		"physical": 200, "physical %":150,  # derived physical 47 -41%, physical % 49 -67%
+		"fire": 650, "fire %":450,  # derived fire 46 -61%, fire % 186 -59%
+		"burn":50, "burn %":300,  # derived burn % 82 -73%
+		"lightning %":300,  # derived 58 -81%
+		"electrocute %":300,  # derived 58 -81%
 
 		"playStyle":"ranged", # playstyle for weighting constellation abilities. [ranged/shortranged/melee/tank]
 		"rotation": [

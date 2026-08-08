@@ -13,6 +13,15 @@ from constellationData import *
 
 devotionPoints = 28
 
+# What is stated below is what the save gets wrong. Everything a model leaves
+# out is filled in at load from the character's own save file - every worn item,
+# its components, the set tiers and every point spent - so a stat written here
+# is an override, and the comment beside it is what was derived. Anything the
+# two agreed on to within 5% was deleted rather than annotated: it was a
+# transcription of a number the code already had.
+#
+#     python savefile.py Lochlan stats     what the save derives
+#
 stats = {
 		# The character, not the plan. This was 85 with the sheet below written
 		# as estimates for that level - see the block marked "still level 85"
@@ -21,7 +30,7 @@ stats = {
 		"difficulty":"normal",
 		# estimate how frequent combat events are for calculating dynamic stats and abilities
 		"attacks/s":1.76,
-		"crit damage": 70,
+		"crit damage": 70,  # derived 47 -33%
 		# His rotation, from bots/lochlan.ahk against the cooldowns the records
 		# state. A skill fires no faster than its cooldown and no faster than
 		# it is pressed, so the rate is one over whichever is longer; the load
@@ -67,40 +76,37 @@ stats = {
 
 		"fight length":15, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
 
-		"physique":763,
-		"cunning":400,
-		"spirit":451,
 
-		"offense":1964,
-		"defense":1625,
+		"offense":1964,  # derived 745 -62%
+		"defense":1625,  # derived 625.5 -62%
 
-		"health":10178,
+		"health":10178,  # derived 7078 -30%
 		# The percentage he already carries. A further point multiplies what the
 		# 10178 came from - 10178/1.31 = 7770 - so it buys 77.7, not the 101.8
 		# the total would say. Not on the sheet; read off the gear.
-		"health %":31,
-		"health/s":145,
+		"health %":31,  # derived 16 -48%
+		"health/s":145,  # derived 64.4 -56%
 
-		"armor":1353,
-		"armor absorb":84,
+		"armor":1353,  # derived 659.38 -51%
+		"armor absorb":84,  # derived 20 -76%
 
-		"energy":2358,
-		"energy/s":34,
+		"energy":2358,  # derived 2672 +13%
+		"energy/s":34,  # derived 9.2 -73%
 		
-		"pierce resist":80,
-		"fire resist":80, 
-		"cold resist":80, 
-		"lightning resist":80, 
-		"bleed resist":73,
-		"acid resist":40,
+		"pierce resist":80,  # derived 63 -21%
+		"fire resist":80,  # derived 120 +50%
+		"cold resist":80,
+		"lightning resist":80,
+		"bleed resist":73,  # derived 79 +8%
+		"acid resist":40,  # derived 44 +10%
 		"aether resist":6,
-		"chaos resist":14,
-		"vitality resist":51,
-		"physical resist":8,
+		"chaos resist":14,  # derived 15 +7%
+		"vitality resist":51,  # derived 44 -14%
+		"physical resist":8,  # derived 5 -38%
 
-		"physical %":640, "physical":150,
-		"lightning %":930, "lightning":5000,
-		"electrocute %":1019, "electrocute":500,
+		"physical %":640, "physical":150,  # derived physical % 202 -68%, physical 35 +73%
+		"lightning %":930, "lightning":5000,  # derived lightning % 631 -32%, lightning 55 -89%
+		"electrocute %":1019, "electrocute":500,  # derived electrocute % 461 -55%
 		# Off the sheet, which states a damage over time as a rate: Primal
 		# Strike's own tooltip reads 2002 bleed over two seconds against this
 		# 1001, which is the same effect a duration apart.
@@ -110,7 +116,7 @@ stats = {
 		# stated: it moves flat damage before either multiplier applies, so
 		# the converted half takes lightning's percentage instead of
 		# physical's - which is the whole reason it is worth having.
-		"physical to lightning": 51,
+		"physical to lightning": 51,  # derived 45 -12%
 
 		"playStyle":"melee", # playstyle for weighting constellation abilities. [ranged/shortranged/melee/tank]
 		"weapons":[

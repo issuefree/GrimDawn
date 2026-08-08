@@ -8,6 +8,15 @@ if __name__ == "__main__":
 
 devotionPoints = 57
 
+# What is stated below is what the save gets wrong. Everything a model leaves
+# out is filled in at load from the character's own save file - every worn item,
+# its components, the set tiers and every point spent - so a stat written here
+# is an override, and the comment beside it is what was derived. Anything the
+# two agreed on to within 5% was deleted rather than annotated: it was a
+# transcription of a number the code already had.
+#
+#     python savefile.py Armitage stats     what the save derives
+#
 stats = {
 		# Character level. Enemy defence follows from it and from the difficulty,
 		# and crit chance follows from that against your offensive ability - so
@@ -66,32 +75,31 @@ stats = {
 		# so it tracks the sheet instead of going stale against it.
 		"low healths/s":1.0/30, # total guesswork.
 
-		"physique":1000,
-		"cunning":475,
-		"spirit":400,
+		"physique":1000,  # derived 1061 +6%
+		"cunning":475,  # derived 409 -14%
+		"spirit":400,  # derived 436 +9%
 
-		"offense":2000,
-		"defense":2400,
+		"offense":2000,  # derived 665.5 -67%
+		"defense":2400,  # derived 780.5 -67%
 
-		"health":10000,
-		"health/s":275,
+		"health/s":275,  # derived 237.44 -14%
 
-		"armor":2650,
+		"armor":2650,  # derived 949.57 -64%
 
-		"energy":2000,
-		"energy/s":18,
+		"energy":2000,  # derived 2422 +21%
+		"energy/s":18,  # derived 7.7 -57%
 
-		"physical %":400, "physical":900,
-		"internal %":400, "internal":1,
-		"fire %":1300, "fire":1600,
-		"burn %":1000, "burn":500,
-		"lightning %":850, "lightning":69,
-		"electrocute %":650, "electrocute":1,
-		"chaos %":450, "chaos":1,
+		"physical %":400, "physical":900,  # derived physical % 8 -98%, physical 71.5 -60%
+		"internal %":400, "internal":1,  # derived internal % 8 -98%
+		"fire %":1300, "fire":1600,  # derived fire % 598 -54%, fire 40 -65%
+		"burn %":1000, "burn":500,  # derived burn % 518 -48%
+		"lightning %":850, "lightning":69,  # derived lightning % 362 -57%, lightning 52 +616%
+		"electrocute %":650, "electrocute":1,  # derived electrocute % 362 -44%
+		"chaos %":450, "chaos":1,  # derived chaos % 75 -83%
 
-		"physical retaliation": 6000,
-		"fire retaliation": 15000,
-		"lightning retaliation": 8000,
+		"physical retaliation": 6000,  # derived 813 -86%
+		"fire retaliation": 15000,  # derived 644.5 -96%
+		"lightning retaliation": 8000,  # derived 1056 -87%
 
 		"all retaliation %":831,
 

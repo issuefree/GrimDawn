@@ -8,6 +8,15 @@ if __name__ == "__main__":
 
 devotionPoints = 45
 
+# What is stated below is what the save gets wrong. Everything a model leaves
+# out is filled in at load from the character's own save file - every worn item,
+# its components, the set tiers and every point spent - so a stat written here
+# is an override, and the comment beside it is what was derived. Anything the
+# two agreed on to within 5% was deleted rather than annotated: it was a
+# transcription of a number the code already had.
+#
+#     python savefile.py Lilith stats     what the save derives
+#
 stats = {
 		# Character level. Enemy defence follows from it and from the difficulty,
 		# and crit chance follows from that against your offensive ability - so
@@ -45,29 +54,27 @@ stats = {
 		"fight length":20, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
 
 		# estimated sheet stats for target level
-		"physique":617,
-		"cunning":442,
-		"spirit":813,
+		"cunning":442,  # derived 391 -12%
 
-		"offense":1890,
-		"defense":1706,
+		"offense":1890,  # derived 436.5 -77%
+		"defense":1706,  # derived 633.5 -63%
 
-		"health":9834,
-		"health/s":88.38,
+		"health":9834,  # derived 7809 -21%
+		"health/s":88.38,  # derived 49.04 -45%
 		"health/s %":0,
 
-		"energy":6019/2,
-		"energy/s":52.12,
+		"energy":6019/2,  # derived 4376 +45%
+		"energy/s":52.12,  # derived 4.8 -91%
 		"energy/s %":0,
 
-		"armor":1199,
+		"armor":1199,  # derived 663 -45%
 		
 		# estimated damage % for target level. add whatever damages are important to your build
-		"aether %":300, # sheet % damage for important damage types.
+		"aether %":300, # sheet % damage for important damage types.  derived 73 -76%
 		"physical %":230,
-		"vitality %":400,
-		"vitality decay %":200,
-		"chaos %":400,
+		"vitality %":400,  # derived 79 -80%
+		"vitality decay %":200,  # derived 79 -60%
+		"chaos %":400,  # derived 160 -60%
 
 		"pet damage %":1241,
 

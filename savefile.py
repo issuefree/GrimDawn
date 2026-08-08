@@ -180,6 +180,214 @@ def readAttributes(header):
 	return out
 
 
+def _blockStart(reader, expect=None):
+	"""(type, end). The length is read without advancing the key, as the format
+	has it - that is the whole reason a block cannot be walked blindly."""
+	kind = reader.u32()
+	length = reader.u32(update=False)
+	if expect is not None and kind != expect:
+		raise ValueError("expected block %d, found %d" % (expect, kind))
+	return kind, reader.pos + length
+
+
+def _blockEnd(reader, end):
+	"""The check that the parse of a block was exactly right.
+
+	Landing on the byte the length promised, with a zero after it, is not
+	something a wrong field order does by accident - which is why every block
+	below is trusted once it passes.
+	"""
+	if reader.pos != end:
+		raise ValueError("block ended at %d, expected %d" % (reader.pos, end))
+	if reader.u32(update=False) != 0:
+		raise ValueError("block trailer is not zero")
+
+
+def _list(reader, element):
+	return [element(reader) for _ in range(reader.u32())]
+
+
+def _item(reader):
+	"""One item, wherever it sits. Only the names are kept; the seeds decide
+	which affixes rolled and nothing here scores an affix."""
+	names = [reader.string() for _ in range(5)]     # base, prefix, suffix, modifier, transmute
+	reader.u32()                                    # seed
+	component = reader.string()
+	reader.string()                                 # relic bonus
+	reader.u32()                                    # component seed
+	augment = reader.string()
+	# Eight, not the four a version-4 reference lists: these saves write
+	# inventory version 11 and the item grew. Six of them are zero on every item
+	# seen, one is the stack count, and the pair after it is zero - the two that
+	# follow belong to wherever the item sits and are read there.
+	for _ in range(8):
+		reader.u32()
+	return {"base": names[0], "prefix": names[1], "suffix": names[2],
+			"component": component, "augment": augment}
+
+
+def _placed(reader):
+	item = _item(reader)
+	reader.u32(); reader.u32()                      # x, y in the bag
+	return item
+
+
+def _equipped(reader):
+	item = _item(reader)
+	reader.u8()                                     # attached
+	return item
+
+
+def _uids(reader, count):
+	for _ in range(count):
+		for _ in range(reader.u32()):
+			for _ in range(16):
+				reader.u8()
+
+
+def _skill(reader, version=8):
+	"""One entry of the skills block: a record path and what you have in it.
+
+	Twenty-eight bytes after the name in these saves, where a version-5
+	reference lists twenty-seven - one more byte among the unknowns. The count
+	is what matters, because landing anywhere else puts the next name out and
+	the whole list with it.
+	"""
+	name = reader.string()
+	level = reader.u32()
+	reader.u8()                                     # enabled
+	devotionLevel = reader.u32()
+	reader.u32()                                    # experience
+	reader.u32()                                    # active
+	reader.u8(); reader.u8()                        # two unknowns
+	if version >= 8:
+		reader.u8()                                 # and a third, added since
+	reader.string(); reader.string()                # autocast skill and controller
+	return {"record": name, "level": level, "devotionLevel": devotionLevel}
+
+
+def _itemSkill(reader):
+	"""A skill something grants you, and what is bound to it.
+
+	Four strings and nothing else. The middle two are the interesting part: they
+	are the devotion proc bound to this skill and the controller that decides
+	when it fires, which is the binding the optimiser spends its whole time
+	choosing and has never been able to read back.
+	"""
+	return {"record": reader.string(), "boundSkill": reader.string(),
+			"controller": reader.string(), "source": reader.string()}
+
+
+def readCharacter(path):
+	"""Everything up to and including the skills, or as far as it gets.
+
+	The blocks have to be read in order and in full: the key advances on every
+	ciphertext byte, so nothing can be skipped, and a length is read without
+	advancing it, so nothing can be walked blindly either. Each block checks
+	itself against its own declared end.
+	"""
+	header = readHeader(path)
+	if not header:
+		return None
+	reader = header["reader"]
+
+	_, end = _blockStart(reader, 1)                 # character info
+	while reader.pos < end:
+		reader.u8()
+	_blockEnd(reader, end)
+
+	_, end = _blockStart(reader, 2)                 # attributes
+	reader.u32()                                    # version
+	import struct
+	for name in ATTRIBUTES:
+		value = reader.u32()
+		header[name] = (struct.unpack("<f", struct.pack("<I", value))[0]
+						if name in FLOATS else value)
+	_blockEnd(reader, end)
+
+	# The inventory and the stash are read for position only. Nothing here scores
+	# an item, and the item record has changed shape between game versions - it
+	# grew four fields since the reference this was written against, and two
+	# characters carry something that is a different shape again. So the bytes
+	# are consumed rather than interpreted.
+	#
+	# That is safe exactly as far as the nested blocks: a sack and a stash tab
+	# each declare their own length, and a length is read without advancing the
+	# key, so those have to be opened properly. Inside one there are only items,
+	# which carry no lengths, so consuming them byte by byte keeps the key right
+	# whatever shape they are.
+	_, end = _blockStart(reader, 3)                 # inventory
+	reader.u32()                                    # version
+	if reader.u8():
+		bags = reader.u32()
+		reader.u32(); reader.u32()                  # focused, selected
+		for _ in range(bags):
+			_, sackEnd = _blockStart(reader)
+			while reader.pos < sackEnd:
+				reader.u8()
+			_blockEnd(reader, sackEnd)
+	while reader.pos < end:                         # what you are wearing
+		reader.u8()
+	_blockEnd(reader, end)
+
+	_, end = _blockStart(reader, 4)                 # stash
+	reader.u32()                                    # version
+	for _ in range(reader.u32()):
+		_, tabEnd = _blockStart(reader)
+		while reader.pos < tabEnd:
+			reader.u8()
+		_blockEnd(reader, tabEnd)
+	while reader.pos < end:
+		reader.u8()
+	_blockEnd(reader, end)
+
+	for kind, groups in ((5, 3), (6, 3), (7, 3), (17, 6)):
+		_, end = _blockStart(reader, kind)
+		reader.u32()                                # version
+		_uids(reader, groups)
+		if kind == 5:
+			for _ in range(3):                      # where you respawn, per difficulty
+				for _ in range(16):
+					reader.u8()
+		_blockEnd(reader, end)
+
+	_, end = _blockStart(reader, 8)                 # skills
+	# Two versions in play across these saves: 8 on most, 6 on two of them, and
+	# the record is a byte shorter in 6. Getting it wrong does not misread one
+	# skill, it puts the next name out and every skill after it with it.
+	version = reader.u32()
+	header["skills"] = _list(reader, lambda r: _skill(r, version))
+	# Masteries allowed, the two reclamation counts, and a fourth this version
+	# adds. Reading three and a trailing int instead balances the books whenever
+	# the item-skill list is empty, which is why it looked right on the seven
+	# characters who carry no item skill and wrong on the four who do.
+	reader.u32(); reader.u32(); reader.u32()        # masteries allowed, two reclamations
+
+	# What follows is the skills something else grants you and what is bound to
+	# each. It is worth having - the middle two strings of an entry are the
+	# devotion proc bound to that skill and the controller that fires it, which
+	# is the binding this whole program exists to choose - but its shape varies
+	# between characters in a way four saves were not enough to pin down.
+	#
+	# So it is attempted, and where it does not come out exactly on the block's
+	# own end the bytes are consumed instead. The ranks above are the point and
+	# they are already read; this is the part that can be missing without
+	# costing anything. The block still has to end where it said it would.
+	mark, key = reader.pos, reader.key
+	try:
+		granted = _list(reader, _itemSkill) + _list(reader, _itemSkill)
+		if reader.pos != end:
+			raise ValueError("item skills did not land on the block end")
+		header["itemSkills"] = granted
+	except Exception:
+		reader.pos, reader.key = mark, key
+		header["itemSkills"] = []
+		while reader.pos < end:
+			reader.u8()
+	_blockEnd(reader, end)
+	return header
+
+
 def masteriesOf(tag):
 	"""["Soldier", "Demolitionist"] from tagSkillClassName0102."""
 	digits = tag[len("tagSkillClassName"):] if tag.startswith("tagSkillClassName") else ""
@@ -247,6 +455,46 @@ def show(root=None):
 		  "  and base health is on no character sheet at all.")
 
 
+def skillsOf(name, root=None):
+	"""[(skill name, points spent)] for one character, biggest first.
+
+	The save stores record paths; the names come from the same place skillgen
+	takes them, which is the first record in the chain that has one. Points
+	spent, not the rank the skill screen shows - that is this plus whatever your
+	gear grants, which is what "+skills" in a model is for.
+	"""
+	from gddata import Database, procRecords
+	found = characters(root)
+	if name not in found:
+		return []
+	character = readCharacter(found[name]["path"])
+	db = Database()
+	out = []
+	for entry in character["skills"]:
+		if not entry["level"]:
+			continue
+		record = db.read(entry["record"])
+		if not record:
+			continue
+		label = next((db.name(r) for r in procRecords(record, db) if db.name(r)), "")
+		if label:
+			out.append((label, entry["level"]))
+	return sorted(out, key=lambda row: (-row[1], row[0]))
+
+
+def showSkills(name, root=None):
+	"""Print one character's skills as a rotation would state them."""
+	rows = skillsOf(name, root)
+	if not rows:
+		print("  nothing read for %r" % name)
+		return
+	print("\n  %s - %d skills with points in them:\n" % (name, len(rows)))
+	for label, level in rows:
+		print('     ("%s", %d),' % (label, level))
+	print("\n  Points spent, not the rank the skill screen shows. Gear on top of\n"
+		  "  these is what \"+skills\" in a model states.")
+
+
 def _num(value):
 	return "-" if value is None else "%g" % round(value)
 
@@ -269,4 +517,8 @@ def _modelStat(name, key):
 
 
 if __name__ == "__main__":
-	show()
+	import sys
+	if len(sys.argv) > 1:
+		showSkills(sys.argv[1])
+	else:
+		show()

@@ -15,6 +15,11 @@ devotionPoints = 45
 # two agreed on to within 5% was deleted rather than annotated: it was a
 # transcription of a number the code already had.
 #
+# A stated stat has the constellations already taken subtracted from it at load,
+# because the sheet is read in town with them on and the optimiser is choosing
+# them - so a value here can sit above the derived figure beside it by exactly
+# what a devotion grants, and that is not a discrepancy.
+#
 #     python savefile.py Lilith stats     what the save derives
 #
 stats = {
@@ -54,11 +59,10 @@ stats = {
 		"fight length":20, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
 
 		# estimated sheet stats for target level
-		"cunning":442,  # derived 391 -12%
 
-		"defense":1706,  # derived 1878.14 +10%
+		"defense":1706,  # derived 1808.58 +7%
 
-		"health":9834,  # derived 7809 -21%
+		"health":9834,  # derived 7809 -18%
 		"health/s":88.38,  # derived 49.04 -45%
 		"health/s %":0,
 

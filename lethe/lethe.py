@@ -24,6 +24,11 @@ devotionPoints = 55
 # two agreed on to within 5% was deleted rather than annotated: it was a
 # transcription of a number the code already had.
 #
+# A stated stat has the constellations already taken subtracted from it at load,
+# because the sheet is read in town with them on and the optimiser is choosing
+# them - so a value here can sit above the derived figure beside it by exactly
+# what a devotion grants, and that is not a discrepancy.
+#
 #     python savefile.py Lethe stats     what the save derives
 #
 stats = {

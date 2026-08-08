@@ -26,22 +26,27 @@ PHYSIQUE_DEFENSE = 0.5
 # the enemy records state theirs as a level equation - `(charLevel*6)+50` - and
 # the player record states a flat 65 of each with no equation at all.
 #
-# So these two are fitted rather than read, which nothing else in this project
-# is. Against ten characters, what the sheet says minus everything that can be
-# accounted for, over level-1:
+# So this is fitted rather than read, which nothing else in this project is.
+# Against eight characters - the sheet, less the devotions it was read with,
+# less everything that can be accounted for - over level-1:
 #
-#     against level        rms 13%      against cunning/physique   rms 25-43%
+#     against level              rms 13%
+#     against cunning/physique   rms 25-43%
 #
 # Level explains it and the attribute does not. Fitting both together drives the
-# attribute coefficient to 0.146 for offense and to -0.094 for defense - so the
+# attribute coefficient to 0.146 for offense and to -0.094 for defense, so the
 # 0.5 above is already about right and the missing term is not an attribute at
 # all. That is the part worth trusting; the size of it is worth less.
 #
-# Pakse is excluded from the fit. His sheet implies 8.4 and 11.1 against a
-# 13.5-19.9 spread across everyone else, which reads as a stale sheet rather
-# than a different rule - re-read him and these should be refitted.
-LEVEL_OFFENSE = 17.1
-LEVEL_DEFENSE = 15.8
+# One constant rather than two, because two is over-fitting: separately they
+# come out 14.55 and 15.14 at rms 11% and 14%, and this single value scores the
+# same 11% and 14%. So the engine gives both the same gain. A round 15 sits well
+# inside the error too - there is nothing here that can tell 14.8 from 15.
+#
+# Pakse and lachesis are out of the fit: 6.9/9.8 and 11.7/10.0 against a
+# 12.3-18.0 spread across everyone else, which is a stale sheet rather than a
+# different rule. Re-read either and this is worth refitting.
+LEVEL_ABILITY = 14.84
 
 SPIRIT_HEALTH = 1.0
 SPIRIT_ENERGY = 2.0
@@ -558,6 +563,40 @@ class Model:
 		return dict(savefile.skillsOf(real)) if real else {}
 
 	@staticmethod
+	def removeCurrentDevotion(name, stats):
+		"""Take the constellations already taken back off a stated sheet.
+
+		The sheet is read in town with your devotions on it, so a number copied
+		off it includes them - and then the optimiser scores a candidate set on
+		top of it, counting the set you are wearing twice. The baseline it should
+		be choosing against is what you have without them.
+
+		Only what the model states, because that is the only thing the sheet
+		touched. Everything filled in from the save is built up out of gear and
+		skills and never had devotion in it to begin with.
+
+		A capped resistance comes off too, and should: at 80 fire with 20 of it
+		from a constellation, the baseline is 60, and a point of fire resistance
+		is worth something again.
+		"""
+		import savefile
+		real = Model.saveName(name)
+		if not real:
+			return []
+		granted = savefile.devotionOf(real)
+		removed = []
+		for key, value in sorted(granted.items()):
+			if key not in stats or not isinstance(stats[key], (int, float)):
+				continue
+			was = stats[key]
+			stats[key] = was - value
+			removed.append("%s %s-%s" % (key, fmt(was), fmt(value)))
+		if not removed:
+			return []
+		return ["current devotion comes off the stated sheet, which was read with "
+				"it on: " + ", ".join(removed)]
+
+	@staticmethod
 	def fillFromSave(name, stats):
 		"""Fill in whatever the model did not state, off the character's save.
 
@@ -632,7 +671,12 @@ class Model:
 		# Before everything, so that what the model states always wins and the
 		# rest of the load cannot tell the difference between a stated stat and
 		# a derived one.
-		notes, derivedFlat = Model.fillFromSave(name, stats)
+		# Before the fill, because it only applies to what the model states: a
+		# stat that comes off the save was built out of gear and skills and
+		# never had devotion in it.
+		notes = Model.removeCurrentDevotion(name, stats)
+		filled, derivedFlat = Model.fillFromSave(name, stats)
+		notes += filled
 		# before applyDefaults, which reads the allAttacks/s this fills in to
 		# decide whether it needs defaulting, and before anything else looks at
 		# the rotation as numbers. The ranks come from the save too, so a

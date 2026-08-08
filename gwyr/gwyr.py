@@ -24,6 +24,11 @@ devotionPoints = 41
 # two agreed on to within 5% was deleted rather than annotated: it was a
 # transcription of a number the code already had.
 #
+# A stated stat has the constellations already taken subtracted from it at load,
+# because the sheet is read in town with them on and the optimiser is choosing
+# them - so a value here can sit above the derived figure beside it by exactly
+# what a devotion grants, and that is not a discrepancy.
+#
 #     python savefile.py Gwyr stats     what the save derives
 #
 stats = {
@@ -94,10 +99,9 @@ stats = {
 	# "enemy density": 0.03,
 
 	"weapons": ["2h ranged"],   # omit to allow every constellation
-	"physique": 950, "cunning": 550, "spirit": 450,  # derived physique 840 -12%, cunning 521 -5%, spirit 411 -9%
-	"defense": 1900,  # derived 1780.6 -6%
-	"health": 8000, "health/s": 320,  # derived health 7304 -9%, health/s 78.6 -75%
-	"energy": 2500, "energy/s": 28,  # derived energy 2742 +10%, energy/s 5 -82%
+	"cunning": 550,  # derived cunning 521 -5%
+	"health/s": 320,  # derived health/s 78.6 -74%
+	"energy": 2500, "energy/s": 28,  # derived energy 2742 +17%, energy/s 5 -80%
 	"armor": 900,  # derived 649.29 -28%
 	# "fight length": 30,
 
@@ -105,7 +109,7 @@ stats = {
 	# uses these to work out what a point of each is actually worth.
 	"physical": 100, "physical %": 300,  # derived physical % 90 -70%
 	"pierce": 675, "pierce %": 625,  # derived pierce 35 -62%, pierce % 282 -55%
-	"fire": 3000, "fire %": 1400,  # derived fire 63.5 -68%, fire % 646 -54%
+	"fire": 3000, "fire %": 1400,  # derived fire 63.5 -72%, fire % 646 -48%
 	"lightning": 25, "lightning %": 625,  # derived lightning 5 +45%, lightning % 190 -70%
 	"burn": 2000, "burn %": 1000, "burn duration": 200,  # derived burn % 694 -31%, burn duration 150 -25%
 	"electrocute": 0, "electrocute %": 400,  # derived electrocute % 190 -52%

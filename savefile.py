@@ -608,6 +608,39 @@ def _setTiers(db):
 	return _TIERS
 
 
+def devotionOf(name, root=None):
+	"""What the constellations a character already has are worth, by stat.
+
+	The character sheet is read in town with your devotions on it, so every
+	number off it includes them - and the optimiser then scores a candidate
+	constellation set on top, which counts the set you are wearing twice. This
+	is what has to come off a stated sheet to get back to the baseline the
+	optimiser is choosing against.
+
+	A star's passive bonuses only. A proc contributes none - `templateAutoCast`
+	is what says so, the same test devotiongen uses to decide whether a star
+	carries bonuses or an ability - because a proc's damage is not on your sheet
+	and the optimiser scores it separately.
+	"""
+	from gddata import Database, starBonuses, procRecords
+	found = characters(root)
+	if name not in found:
+		return {}
+	db = Database()
+	out = {}
+	for entry in readCharacter(found[name]["path"])["skills"]:
+		path = entry["record"]
+		if "/devotion" not in path or int(entry["level"]) < 1:
+			continue
+		record = db.read(path)
+		if not record or any(r.get("templateAutoCast") for r in procRecords(record, db)):
+			continue
+		for key, value in starBonuses(record, db).items():
+			if isinstance(value, (int, float)):
+				out[key] = out.get(key, 0) + value
+	return out
+
+
 def sheetOf(name, root=None):
 	"""What the gear adds up to, in the vocabulary a model states.
 
@@ -745,8 +778,7 @@ def sheetOf(name, root=None):
 	# ability, cunning is offensive ability, spirit is energy. The same constants
 	# checkModel prices a point of each with, used here in the other direction.
 	from models import (PHYSIQUE_HEALTH, PHYSIQUE_REGEN, PHYSIQUE_DEFENSE,
-						CUNNING_OFFENSE, SPIRIT_ENERGY,
-						LEVEL_OFFENSE, LEVEL_DEFENSE)
+						CUNNING_OFFENSE, SPIRIT_ENERGY, LEVEL_ABILITY)
 	gear["health"] = gear.get("health", 0) + stats["physique"] * PHYSIQUE_HEALTH
 	gear["health/s"] = gear.get("health/s", 0) + stats["physique"] * PHYSIQUE_REGEN
 	# Offensive and defensive ability start at what the player record states, in
@@ -754,15 +786,13 @@ def sheetOf(name, root=None):
 	# on records/creatures/pc/malepc01.dbr, against a level 1 character's 50 of
 	# each attribute - small beside the rest, and the only part of the two that
 	# is written down anywhere.
-	# On top of that the engine gives both per level - see LEVEL_OFFENSE, which
-	# is the one number in this project that is fitted rather than read.
+	# On top of that the engine gives both the same gain per level - see
+	# LEVEL_ABILITY, the one number in this project that is fitted, not read.
 	base = _playerBase(db)
-	levels = max(0, character["level"] - 1)
-	gear["defense"] = (gear.get("defense", 0) + base["defense"]
-					   + levels * LEVEL_DEFENSE
+	levels = max(0, character["level"] - 1) * LEVEL_ABILITY
+	gear["defense"] = (gear.get("defense", 0) + base["defense"] + levels
 					   + stats["physique"] * PHYSIQUE_DEFENSE)
-	gear["offense"] = (gear.get("offense", 0) + base["offense"]
-					   + levels * LEVEL_OFFENSE
+	gear["offense"] = (gear.get("offense", 0) + base["offense"] + levels
 					   + stats["cunning"] * CUNNING_OFFENSE)
 	gear["energy"] = gear.get("energy", 0) + stats["spirit"] * SPIRIT_ENERGY
 	# Health and energy are the base times what the gear multiplies, and the

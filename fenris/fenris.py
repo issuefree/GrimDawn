@@ -15,6 +15,11 @@ devotionPoints = 20
 # two agreed on to within 5% was deleted rather than annotated: it was a
 # transcription of a number the code already had.
 #
+# A stated stat has the constellations already taken subtracted from it at load,
+# because the sheet is read in town with them on and the optimiser is choosing
+# them - so a value here can sit above the derived figure beside it by exactly
+# what a devotion grants, and that is not a discrepancy.
+#
 #     python savefile.py Fenris stats     what the save derives
 #
 stats = {
@@ -75,20 +80,18 @@ stats = {
 		"blocks/s":0,   # no shield, so the block-triggered procs really are worth nothing
 		"low healths/s":1.0/30, # total guesswork.
 
-		"cunning":600,  # derived 508 -15%
 
 
-		"health":6000,  # derived 5173 -14%
-		"health/s":50,  # derived 38.68 -23%
+		"health":6000,  # derived 5173 -13%
 
 		"armor":500,  # derived 263.57 -47%
 
 		"energy":1500,  # derived 1836 +22%
 		"energy/s":14,  # derived 2.5 -82%
 
-		"physical %":350, "physical":750,  # derived physical % 219 -37%, physical 175.5 +5%
+		"physical %":350,  # derived physical % 219 -30%
 		"pierce %":200, "pierce":0,  # derived pierce % 89 -56%
-		"bleed %":650, "bleed":1500,  # derived bleed % 311 -52%
+		"bleed %":650, "bleed":1500,  # derived bleed % 311 -37%
 		"chaos %":350, "chaos":400,  # derived chaos % 85 -76%, chaos 12 -86%
 
 		"fight length":30,

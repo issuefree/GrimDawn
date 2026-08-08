@@ -13,6 +13,11 @@ devotionPoints = 28
 # two agreed on to within 5% was deleted rather than annotated: it was a
 # transcription of a number the code already had.
 #
+# A stated stat has the constellations already taken subtracted from it at load,
+# because the sheet is read in town with them on and the optimiser is choosing
+# them - so a value here can sit above the derived figure beside it by exactly
+# what a devotion grants, and that is not a discrepancy.
+#
 #     python savefile.py Lachesis stats     what the save derives
 #
 stats =	{
@@ -47,17 +52,23 @@ stats =	{
 
 		"cunning":400,  # derived 360 -10%
 
-		"offense":1500,  # derived 1765.09 +18%
-		"defense":1250,  # derived 1492.15 +19%
+		# offense 1500 and defense 1250 were here and are gone: they are stale.
+		# Both implied a per-level ability gain of 11.7 and 10.0 against a
+		# 12.3-18.0 spread across every other character, which is a sheet that
+		# has not been read in a while rather than a different rule. She is out
+		# of the fit that LEVEL_ABILITY comes from for the same reason.
+		#
+		# What is left below is off the same stale sheet, so treat the derived
+		# figures in these comments as the better number until she is re-read.
 
-		"health":6500,  # derived 7821 +20%
+		"health":6500,  # derived 7821 +26%
 		"armor":800,  # derived 615.57 -23%
 		"energy":3500,  # derived 4963 +42%
 
-		"vitality %":1050,  # derived 678 -35%
-		"chaos %":500,  # derived 249 -50%
+		"vitality %":1050,  # derived 678 -15%
+		"chaos %":500,  # derived 249 -35%
 
-		"pet all damage %":250+100,  # derived 103 -71%
+		"pet all damage %":250+100,  # derived 103 -64%
 
 		"fight length":15,
 

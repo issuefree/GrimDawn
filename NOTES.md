@@ -750,35 +750,51 @@ be accounted for:
 Level explains it and the attribute does not. Fitting both together drives the
 attribute coefficient to 0.146 for offense and to **-0.094** for defense, so the
 existing 0.5 per point is already about right and what is missing is not an
-attribute at all. That is the part worth trusting. The size is worth less:
-17.1 and 15.8 per level, 13% rms, from sheets of mixed vintage.
+attribute at all. That is the part worth trusting. The size is worth less.
 
-Pakse is excluded from the fit. His implies 8.4 and 11.1 against a 13.5-19.9
-spread across everyone else, which reads as a stale sheet rather than a
-different rule.
+**One constant, not two.** Fitted separately the two come out 14.55 and 15.14 at
+rms 11% and 14%; a single 14.84 scores the same 11% and 14%. So the engine gives
+both the same gain and two numbers was fitting noise. A round 15 sits well inside
+the error as well - nothing here can tell 14.8 from 15.
+
+Pakse and lachesis are out of the fit, and their stated abilities are deleted
+rather than annotated. They implied 6.9/9.8 and 11.7/10.0 against a 12.3-18.0
+spread across everyone else, which is a sheet nobody has read in a while rather
+than a different rule.
 
     before   -48% .. -70% on all ten
-    after    eight of ten within 10%, lochlan +3% and +1%
+    after    lochlan +0% and +4%, six of the eight within 7%
 
-Lachesis (+18%, +19%) and pakse (+53%, +23%) are what is left. Both are worth
-re-reading off the game before anyone refits this.
+Armitage is the widest of the eight at +12% and -11%, in opposite directions,
+which is what a sheet read at two different times looks like.
 
-## Current devotion is on the sheet and nobody accounts for it
+## Current devotion comes off the baseline
 
-Not fixed, and it cuts the other way from everything else here. The character
-sheet is read in town with the devotions you already have, so every stated sheet
-number includes them - and the optimiser then scores a candidate constellation
-set on top of that, which counts the current set twice.
+The sheet is read in town with the devotions you already have, so every number
+copied off it includes them - and the optimiser then scored a candidate
+constellation set on top, counting the set you are wearing twice.
 
-Lochlan's 24 devotion records with points in them are worth +96 offensive and
-+105 defensive ability on their own, and that is only the two stats this section
-is about; the damage percentages will be larger. The save carries all of it -
-106 devotion records for lochlan - so it is readable either way.
+`savefile.devotionOf` reads what they are worth and `Model.removeCurrentDevotion`
+takes it off anything the model states. Only what the model states: a stat filled
+in from the save was built out of gear and skills and never had devotion in it.
 
-The fix is not to add them to the derived sheet. It is to take them off the
-baseline, because the baseline is meant to be what he has *without* the
-devotions he is choosing. That changes what every model optimises against, so
-it wants deciding rather than assuming.
+Lochlan's are worth rather more than the two abilities that led here:
+
+    health 500      lightning % 340    all damage % 120    offense 96
+    defense 105     electrocute % 100  retaliation % 180   internal % 90
+
+A star's passive bonuses only. A proc contributes none - `templateAutoCast` is
+the test, the same one devotiongen uses to decide whether a star carries bonuses
+or an ability - because a proc's damage is not on your sheet and the optimiser
+already scores it separately.
+
+A capped resistance comes off too, and should: at 80 fire with 20 of it from a
+constellation, the baseline is 60 and a point of fire resistance is worth
+something again.
+
+This also improved the largest unexplained family. `lightning %` read 930 stated
+against 631 derived, a -32% gap; 340 of that 930 is Ulo and Tempest, and with it
+off the two are 590 against 631.
 
 ## A rotation says what is on the bar and nothing else
 
@@ -891,6 +907,7 @@ have the resistances, which now come off the save for everyone.
 
 | character | needs |
 |---|---|
+| **pakse, lachesis** | **a fresh sheet.** Both are stale enough to have been thrown out of the LEVEL_ABILITY fit, and their stated offensive and defensive ability are deleted rather than annotated. Everything else they state is off the same reading, so the derived figures in their comments are the better number until they are re-read - and re-reading either is what would pin 14.84 down |
 | kieri, lachesis | `devotionPoints`. Neither loads without it |
 | kieri, lachesis, lilith | their rotations - each is bare rates, so no skill is named and no main attack can be read |
 | lethe | a main attack. She has no default-attack replacer at all, so her rotation leads with a bare rate and every granted skill is priced against a 100% swing |

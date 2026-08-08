@@ -58,6 +58,11 @@ weights = {
 # two agreed on to within 5% was deleted rather than annotated: it was a
 # transcription of a number the code already had.
 #
+# A stated stat has the constellations already taken subtracted from it at load,
+# because the sheet is read in town with them on and the optimiser is choosing
+# them - so a value here can sit above the derived figure beside it by exactly
+# what a devotion grants, and that is not a discrepancy.
+#
 #     python savefile.py Kieri stats     what the save derives
 #
 stats =	{
@@ -84,7 +89,6 @@ stats =	{
 		"fight length":20, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
 
 		# estimated sheet stats for target level
-		"physique":450,  # derived 427 -5%
 		"cunning":450,  # derived 410 -9%
 
 
@@ -97,8 +101,8 @@ stats =	{
 		"physical": 200, "physical %":150,  # derived physical 47 -41%, physical % 49 -67%
 		"fire": 650, "fire %":450,  # derived fire 46 -61%, fire % 186 -59%
 		"burn":50, "burn %":300,  # derived burn % 82 -73%
-		"lightning %":300,  # derived 58 -81%
-		"electrocute %":300,  # derived 58 -81%
+		"lightning %":300,  # derived 58 -78%
+		"electrocute %":300,  # derived 58 -77%
 
 		"playStyle":"ranged", # playstyle for weighting constellation abilities. [ranged/shortranged/melee/tank]
 		"rotation": [

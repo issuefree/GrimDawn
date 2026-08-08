@@ -15,17 +15,19 @@ devotionPoints = 20
 # two agreed on to within 5% was deleted rather than annotated: it was a
 # transcription of a number the code already had.
 #
+# A stated stat has the constellations already taken subtracted from it at load,
+# because the sheet is read in town with them on and the optimiser is choosing
+# them - so a value here can sit above the derived figure beside it by exactly
+# what a devotion grants, and that is not a discrepancy.
+#
 #     python savefile.py Morena stats     what the save derives
 #
 stats = {
 		"level":39,
 		"difficulty":"normal",
 
-		"cunning":750,  # derived 682 -9%
-		"spirit":300,  # derived 277 -8%
 
-		"offense":1200,  # derived 1315.5 +10%
-		"defense":900,  # derived 967.2 +7%
+		"defense":900,  # derived 929.76 +10%
 		"armor":425,  # derived 216.86 -49%
 
 		"attacks/s":1.88,
@@ -56,11 +58,11 @@ stats = {
 		"energy":1600,  # derived 1806 +13%
 		"energy/s":9,
 
-		"physical %":150, "physical":375,  # derived physical % 86 -43%, physical 114.5 -24%
+		"physical %":150, "physical":375,  # derived physical % 86 -36%, physical 114.5 -28%
 		"pierce %":400, "pierce":550,  # derived pierce % 194 -52%, pierce 37 -66%
-		"bleed %":400, "bleed":150,  # derived bleed % 251 -37%
-		"cold %":150, "cold":50,  # derived cold % 69 -54%, cold 5.5 -72%
-		"frostburn %":250, "frostburn":0,  # derived frostburn % 90 -64%
+		"bleed %":400, "bleed":150,  # derived bleed % 251 -25%
+		"cold %":150, "cold":50,  # derived cold % 69 -38%, cold 5.5 -77%
+		"frostburn %":250, "frostburn":0,  # derived frostburn % 90 -40%
 
 		"fight length":30,
 

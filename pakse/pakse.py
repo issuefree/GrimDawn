@@ -15,6 +15,11 @@ devotionPoints = 28
 # two agreed on to within 5% was deleted rather than annotated: it was a
 # transcription of a number the code already had.
 #
+# A stated stat has the constellations already taken subtracted from it at load,
+# because the sheet is read in town with them on and the optimiser is choosing
+# them - so a value here can sit above the derived figure beside it by exactly
+# what a devotion grants, and that is not a discrepancy.
+#
 #     python savefile.py Pakse stats     what the save derives
 #
 stats = {
@@ -65,15 +70,20 @@ stats = {
 		# so it tracks the sheet instead of going stale against it.
 		"low healths/s":1.0/30, # total guesswork.
 
-		"physique":1000,  # derived 936 -6%
 
-		"offense":1100,  # derived 1680.86 +53%
-		"defense":1300,  # derived 1603.2 +23%
+		# offense 1100 and defense 1300 were here and are gone: they are stale.
+		# Both implied a per-level ability gain of 6.9 and 9.8 against a
+		# 12.3-18.0 spread across every other character, which is not a
+		# different rule, it is a sheet that has not been read in a while. He is
+		# out of the fit that LEVEL_ABILITY comes from for the same reason.
+		#
+		# What is left below is off the same stale sheet, so treat the derived
+		# figures in these comments as the better number until he is re-read.
 
-		"health":10000,  # derived 9074 -9%
+		"health":10000,  # derived 9074 -6%
 		"health/s":133,  # derived 58.44 -56%
 
-		"armor":1000,  # derived 698.25 -30%
+		"armor":1000,  # derived 698.25 -26%
 
 		"energy":2000,  # derived 2246 +12%
 		"energy/s":15,  # derived 0.8 -95%
@@ -86,7 +96,7 @@ stats = {
 		# "chaos %":450, "chaos":1,
 		"acid":500,  # derived 38 -92%
 
-		"retaliation %":500,  # derived 393 -21%
+		"retaliation %":500,  # derived 393 +79%
 
 		"fight length":15,
 

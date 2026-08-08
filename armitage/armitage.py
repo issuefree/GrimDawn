@@ -15,6 +15,11 @@ devotionPoints = 57
 # two agreed on to within 5% was deleted rather than annotated: it was a
 # transcription of a number the code already had.
 #
+# A stated stat has the constellations already taken subtracted from it at load,
+# because the sheet is read in town with them on and the optimiser is choosing
+# them - so a value here can sit above the derived figure beside it by exactly
+# what a devotion grants, and that is not a discrepancy.
+#
 #     python savefile.py Armitage stats     what the save derives
 #
 stats = {
@@ -72,26 +77,25 @@ stats = {
 		# so it tracks the sheet instead of going stale against it.
 		"low healths/s":1.0/30, # total guesswork.
 
-		"physique":1000,  # derived 1061 +6%
-		"cunning":475,  # derived 409 -14%
-		"spirit":400,  # derived 436 +9%
+		"physique":1000,  # derived 1061 +14%
+		"cunning":475,  # derived 409 -11%
+		"spirit":400,  # derived 436 +23%
 
-		"offense":2000,  # derived 2184 +9%
-		"defense":2400,  # derived 2188.5 -9%
+		"offense":2000,  # derived 1991.9 +12%
+		"defense":2400,  # derived 2106.9 -11%
 
-		"health/s":275,  # derived 237.44 -14%
 
-		"armor":2650,  # derived 949.57 -64%
+		"armor":2650,  # derived 949.57 -62%
 
 		"energy":2000,  # derived 2422 +21%
-		"energy/s":18,  # derived 7.7 -57%
+		"energy/s":18,  # derived 7.7 -45%
 
 		"physical %":400, "physical":900,  # derived physical % 8 -98%, physical 71.5 -60%
 		"internal %":400, "internal":1,  # derived internal % 8 -98%
-		"fire %":1300, "fire":1600,  # derived fire % 598 -54%, fire 40 -65%
-		"burn %":1000, "burn":500,  # derived burn % 518 -48%
-		"lightning %":850, "lightning":69,  # derived lightning % 362 -57%, lightning 52 +616%
-		"electrocute %":650, "electrocute":1,  # derived electrocute % 362 -44%
+		"fire %":1300, "fire":1600,  # derived fire % 598 -44%, fire 40 -71%
+		"burn %":1000, "burn":500,  # derived burn % 518 -31%
+		"lightning %":850, "lightning":69,  # derived lightning % 362 -46%, lightning 52 +717%
+		"electrocute %":650, "electrocute":1,  # derived electrocute % 362 -32%
 		"chaos %":450, "chaos":1,  # derived chaos % 75 -83%
 
 		"physical retaliation": 6000,  # derived 813 -86%

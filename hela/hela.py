@@ -24,6 +24,11 @@ devotionPoints = 25
 # two agreed on to within 5% was deleted rather than annotated: it was a
 # transcription of a number the code already had.
 #
+# A stated stat has the constellations already taken subtracted from it at load,
+# because the sheet is read in town with them on and the optimiser is choosing
+# them - so a value here can sit above the derived figure beside it by exactly
+# what a devotion grants, and that is not a discrepancy.
+#
 #     python savefile.py Hela stats     what the save derives
 #
 stats = {
@@ -60,8 +65,6 @@ stats = {
 	"level": 58,
 	"difficulty": "normal",       # from the level band, not from the save
 
-	"physique": 600, "spirit": 1053,  # derived physique 568 -5%, spirit 960 -9%
-	"defense": 1300,  # derived 1371.6 +6%
 	"health": 9000,  # derived 6369 -29%
 	"energy": 4500, "energy/s": 165,  # derived energy 5136 +14%, energy/s 22 -87%
 	"armor": 479,  # derived 342.14 -29%
@@ -71,8 +74,8 @@ stats = {
 	# vitality is 0 flat, so its percentage multiplies nothing and is priced at
 	# nothing - that is not a mistake in the sheet, it is what 250% of no
 	# vitality damage is worth.
-	"aether": 1700, "aether %": 1200,  # derived aether 42.5 -68%, aether % 699 -42%
-	"lightning": 500, "lightning %": 750,  # derived lightning 8 -86%, lightning % 286 -62%
+	"aether": 1700, "aether %": 1200,  # derived aether 42.5 -70%, aether % 699 -35%
+	"lightning": 500, "lightning %": 750,  # derived lightning 8 -87%, lightning % 286 -59%
 	"vitality": 0, "vitality %": 250,  # derived vitality % 110 -56%
 	"fire": 250, "fire %": 450,  # derived fire % 75 -83%
 	"cold": 250, "cold %": 450,  # derived cold % 43 -90%

@@ -20,6 +20,11 @@ devotionPoints = 28
 # two agreed on to within 5% was deleted rather than annotated: it was a
 # transcription of a number the code already had.
 #
+# A stated stat has the constellations already taken subtracted from it at load,
+# because the sheet is read in town with them on and the optimiser is choosing
+# them - so a value here can sit above the derived figure beside it by exactly
+# what a devotion grants, and that is not a discrepancy.
+#
 #     python savefile.py Lochlan stats     what the save derives
 #
 stats = {
@@ -30,7 +35,7 @@ stats = {
 		"difficulty":"normal",
 		# estimate how frequent combat events are for calculating dynamic stats and abilities
 		"attacks/s":1.76,
-		"crit damage": 70,  # derived 47 -33%
+		"crit damage": 70,  # derived 47 -6%
 		# His rotation, from bots/lochlan.ahk against the cooldowns the records
 		# state. A skill fires no faster than its cooldown and no faster than
 		# it is pressed, so the rate is one over whichever is longer; the load
@@ -72,7 +77,7 @@ stats = {
 
 
 
-		"health":10178,  # derived 7078 -30%
+		"health":10178,  # derived 7078 -27%
 		# The percentage he already carries. A further point multiplies what the
 		# 10178 came from - 10178/1.31 = 7770 - so it buys 77.7, not the 101.8
 		# the total would say. Not on the sheet; read off the gear.
@@ -85,7 +90,7 @@ stats = {
 		"energy":2358,  # derived 2672 +13%
 		"energy/s":34,  # derived 9.2 -73%
 		
-		"pierce resist":80,  # derived 63 -21%
+		"pierce resist":80,  # derived 63 -10%
 		"fire resist":80,  # derived 120 +50%
 		"cold resist":80,
 		"lightning resist":80,
@@ -94,11 +99,11 @@ stats = {
 		"aether resist":6,
 		"chaos resist":14,  # derived 15 +7%
 		"vitality resist":51,  # derived 44 -14%
-		"physical resist":8,  # derived 5 -38%
+		"physical resist":8,  # derived 5 +25%
 
-		"physical %":640, "physical":150,  # derived physical % 202 -68%, physical 35 +73%
-		"lightning %":930, "lightning":5000,  # derived lightning % 631 -32%, lightning 55 -89%
-		"electrocute %":1019, "electrocute":500,  # derived electrocute % 461 -55%
+		"physical %":640, "physical":150,  # derived physical % 202 -66%, physical 35 +64%
+		"lightning %":930, "lightning":5000,  # derived lightning % 631 +7%, lightning 55 -92%
+		"electrocute %":1019, "electrocute":500,  # derived electrocute % 461 -50%
 		# Off the sheet, which states a damage over time as a rate: Primal
 		# Strike's own tooltip reads 2002 bleed over two seconds against this
 		# 1001, which is the same effect a duration apart.

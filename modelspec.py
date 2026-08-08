@@ -932,7 +932,7 @@ def mainAttack(stats):
 	return MainAttack(percent, flat, boost, longer, abilities, named, missing, mixed)
 
 
-def unmultiplyFlat(stats):
+def unmultiplyFlat(stats, alreadyFlat=()):
 	"""Turn the sheet's damage figures back into the flat the formula wants.
 
 	Grim Dawn computes damage as flat * (1 + X%/100), and the character sheet
@@ -955,13 +955,19 @@ def unmultiplyFlat(stats):
 	rotation's damage, the weapon damage weight, what one swing is worth - is
 	reading a number the game's own equation would recognise. The percentages
 	are left alone: they are already what they say.
+
+	"alreadyFlat" names the damage types that did not come off the sheet. A
+	figure added up out of the item records is flat to begin with, so dividing
+	it here would take the multiplier off a number that never had it on. The
+	duration scaling below still applies to those: an item stating a damage
+	over time states a rate, the same as the sheet does.
 	"""
 	from models import Model
 	bonus = Model.attributeBonus(stats)
 	changed = []
 	for damage in damages:
 		flat = float(stats.get(damage) or 0)
-		if not flat:
+		if not flat or damage in alreadyFlat:
 			continue
 		percent = float(stats.get(damage + " %", 0) or 0) + bonus.get(damage, 0)
 		if percent <= 0:

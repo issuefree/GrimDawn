@@ -97,7 +97,13 @@ stats =	{
 
 		"playStyle":"ranged", # playstyle for weighting constellation abilities. [ranged/shortranged/melee/tank]
 		"rotation": [
-			("Fire Strike", 8, [("Explosive Strike", 6), ("Static Strike", 2), ("Brimstone", 5)]),
+			# Ranks are points spent, off the save with
+			#     python savefile.py Kieri
+			# not the rank the skill screen shows. Gear is stated once, off the
+			# same save, which is where the difference went: Fire Strike read 8
+			# and he has spent 4, with the other 4 on his gear.
+			("Fire Strike", 4, [("Explosive Strike", 2), ("Static Strike", 2),
+								("Brimstone", 5)]),
 		],
 		"weapons":[
 			"ranged"

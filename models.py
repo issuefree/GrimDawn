@@ -512,6 +512,55 @@ class Model:
 		return out
 
 	@staticmethod
+	def fillFromSave(name, stats):
+		"""Fill in whatever the model did not state, off the character's save.
+
+		savefile.sheetOf adds up the gear, the components, the set tiers and
+		every point spent, so most of the sheet can be computed rather than
+		copied. A model states a stat only where the derived figure is wrong;
+		everything it leaves out comes from here.
+
+		Returns (notes, the damage types that were filled). The second is for
+		unmultiplyFlat, which must not treat these as sheet figures.
+		"""
+		import savefile
+		try:
+			derived, _ = savefile.sheetOf(name)
+		except Exception as problem:                     # no save, or an unreadable one
+			return (["no save for %s, so every stat has to be stated: %s"
+					 % (name, problem)], set())
+
+		notes = []
+		# "+skills" is a dict rather than a number, and it is the one thing here
+		# that is derived exactly: every rank comes off a worn item, a component
+		# or a set tier, none of which is a rolled range. A model that states its
+		# own still wins, because a plan can hold gear the character is not
+		# wearing yet.
+		granted = derived.pop("+skills", None)
+		if granted and "+skills" not in stats:
+			stats["+skills"] = granted
+			notes.append("+skills off the save: %d entries, %d ranks"
+						 % (len(granted), sum(granted.values())))
+
+		# Only what something downstream actually reads. sheetOf spells every
+		# bonus it can find, and the save carries a dozen the model has no use
+		# for - freeze resist, petrify resist, light radius - which would arrive
+		# here and be warned about as unknown stats the model never wrote.
+		known = modelspec.statVocabulary()
+		filled, flat = [], set()
+		for key, value in sorted(derived.items()):
+			if (key in stats or key not in known
+					or not isinstance(value, (int, float)) or not value):
+				continue
+			stats[key] = value
+			filled.append("%s %s" % (key, fmt(value)))
+			if key in damages:
+				flat.add(key)
+		if filled:
+			notes.append("off the save, not stated: " + ", ".join(filled))
+		return (notes, flat)
+
+	@staticmethod
 	def loadModel(name):
 		path = name.lower() + "/" + name.lower() + ".py"
 		if not os.path.exists(path):
@@ -530,14 +579,18 @@ class Model:
 			raise ValueError("%s does not define: %s" % (path, ", ".join(missing)))
 
 		stats, weights = namespace["stats"], namespace["weights"]
+		# Before everything, so that what the model states always wins and the
+		# rest of the load cannot tell the difference between a stated stat and
+		# a derived one.
+		notes, derivedFlat = Model.fillFromSave(name, stats)
 		# before applyDefaults, which reads the allAttacks/s this fills in to
 		# decide whether it needs defaulting, and before anything else looks at
 		# the rotation as numbers
-		notes = modelspec.resolveRotation(stats)
+		notes += modelspec.resolveRotation(stats)
 		notes += modelspec.applyDefaults(stats)
 		# Before anything prices a damage type. The sheet reports flat damage
 		# with the percentage already applied; the formula wants it without.
-		notes += modelspec.unmultiplyFlat(stats)
+		notes += modelspec.unmultiplyFlat(stats, derivedFlat)
 		priority = dict(namespace.get("damagePriority") or {})
 		# A model that still spells its catch-all as a weight is read as though
 		# it had written it in the block, because that is what it always meant.

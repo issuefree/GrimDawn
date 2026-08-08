@@ -48,23 +48,15 @@ stats = {
 			# WPS
 			("Feral Hunger", 7), ("Markovian's Advantage", 2), ("Zolhan's Technique", 2)
 		],
-		# What his gear adds on top, off the same save. Everything he wears and
-		# everything socketed into it, including the one affix pair he carries -
-		# the Badge of Mastery's +3 Savagery and +2 Primal Strike - and the set
-		# his three Royal Crown pieces make: Royal Exuberance, which is 5% to
-		# each attribute at two pieces and "+1 to all skills" at three.
+		# "+skills" was written out here by hand and is gone: the loader reads it
+		# off the save, and the two agreed entry for entry. Everything he wears
+		# and everything socketed into it, the one affix pair he carries - the
+		# Badge of Mastery's +3 Savagery and +2 Primal Strike - and the set his
+		# three Royal Crown pieces make: Royal Exuberance, 5% to each attribute
+		# at two pieces and "+1 to all skills" at three.
 		#
-		# That last one is why every rank here lands exactly where he had
-		# transcribed it. Savagery is 9 spent, +3 from gear and +1 from the set,
-		# which is the 13 the skill screen shows him.
-		"+skills":{
-			"all":1,
-			"Primal Strike":6, "Storm Totem":5, "Torrent":4, "Savagery":3,
-			"Blast Shield":3, "Sigil of Consumption":3, "Ascension":2,
-			"Blade Arc":2, "Mortar Trap":2, "Oleron's Rage":2, "Overguard":2,
-			"Resilience":2, "Smite":2, "Stormcaller's Pact":2,
-			"Thermite Mine":2, "War Cry":2,
-		},
+		# State one here to override it, which is what a plan wants when it
+		# holds gear the character is not wearing yet.
 		"hits/s":1,
 		"blocks/s":0,
 		"kills/s":1.5,

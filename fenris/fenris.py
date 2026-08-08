@@ -44,18 +44,23 @@ stats = {
 		"rotation":[
 			# Held; the Werewolf form's attack, with the form itself and its two
 			# passives nested inside, since all three modify what he swings.
-			("Feral Claws", 8, [("Werewolf", 8), ("Voracity", 4),
-								("Recklessness", 9)]),
+			# Ranks are points spent, off the save with
+			#     python savefile.py Fenris
+			# not the rank the skill screen shows. Gear is stated once, off the
+			# same save, rather than being folded into each of these. They were
+			# all 8 or 9 before, which was a placeholder rather than his build.
+			("Feral Claws", 6, [("Werewolf", 6), ("Voracity", 2),
+								("Recklessness", 4)]),
 			("Brutal Slam", 1.0),          # off Severed Claw. Chipped Claw's
 										   # plain "Slam" is the weaker version
 										   # and has the same 2s cooldown, so
 										   # only its damage would differ
-			("Curse of Frailty", 8, 2.5),
-			("Leap", 8),
-			("Bonechilling Cry", 8, 3.0),
-			("Blood of Dreeg", 8, 3.0),
-			("Rip and Tear", 8),
-			("Rallying Cry", 8, 4.0),
+			("Curse of Frailty", 2, 2.5, [("Vulnerability", 1)]),
+			("Leap", 2, [("Fault Line", 1)]),
+			("Bonechilling Cry", 1, 3.0),
+			("Blood of Dreeg", 1, 3.0),
+			("Rip and Tear", 6),
+			("Rallying Cry", 4, 4.0, [("Frenzied Cry", 1), ("Impulse", 1)]),
 		],
 
 		"hits/s":4,

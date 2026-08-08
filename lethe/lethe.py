@@ -25,7 +25,29 @@ stats = {
 	# game's own cooldown; add a third number where you press it slower than it
 	# recharges. The first entry is what you hold the button down on, and
 	# passives and toggles anywhere in the list are read as modifiers on it.
-	# "rotation": [("Cadence", 12), ("Blitz", 12, 4.0), 0.5],
+	#
+	# Off the save rather than written by hand:
+	#     python savefile.py Lethe
+	# Ranks are points spent; her gear is added on top of them from the same
+	# place. She is Nightblade / Soldier with no default-attack replacer - no
+	# Cadence, no Righteous Fervor, nothing - so the leading rate is her plain
+	# weapon swing, and the four weapon pool skills roll against it. That also
+	# means no main attack is named, so a granted skill is priced against a
+	# bare 100% swing; naming one would let the model read a real weapon
+	# percentage instead.
+	"rotation": [
+		0.5,                          # the weapon itself, unreplaced
+		# WPS
+		("Amarasta's Quick Cut", 3), ("Belgothian's Shears", 3),
+		("Markovian's Advantage", 2), ("Zolhan's Technique", 1),
+		("Shadow Strike", 1, [("Nidalla's Justifiable Ends", 1), ("Nightfall", 1)]),
+		("Pneumatic Burst", 3, [("Shadow Dance", 2), ("Breath of Belgothian", 1),
+								("Elemental Awakening", 1)]),
+		("Veil of Shadow", 2, [("Night's Chill", 1)]),
+		("Blade Spirit", 1),
+		("Blade Barrier", 1),
+		("War Cry", 1, 7.5),
+	],
 
 	# What that swings for. Pressing a skill an item grants costs you one of
 	# these, and a skill only earns its place by beating it - without a rotation

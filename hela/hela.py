@@ -39,9 +39,14 @@ stats = {
 	# brings of its own. The rest of her bar is still missing; adding it would
 	# stop every proc being scored against attacks/s alone.
 	"rotation": [
-		("Albrecht's Aether Ray", 26, [("Disintegration", 6)]),
-		("Reap Spirit", 9),
-		("Siphon Souls", 3, [("Sear Souls", 1), ("Blood Boil", 2)]),
+		# Ranks are points spent, off the save with
+		#     python savefile.py Hela
+		# not the rank the skill screen shows. The Ray read 26 here because that
+		# is what her skill screen says, and 14 of those are gear - which is now
+		# stated once, off the same save, instead of being inside this number.
+		("Albrecht's Aether Ray", 10, [("Disintegration", 2)]),
+		("Reap Spirit", 8),
+		("Siphon Souls", 2, [("Sear Souls", 1), ("Blood Boil", 1)]),
 	],
 
 	"level": 58,

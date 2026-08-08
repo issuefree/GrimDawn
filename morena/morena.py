@@ -25,16 +25,23 @@ stats = {
 			# Held on the left button, with the two passives that modify it
 			# nested inside - they are not buttons, and Onslaught is the only
 			# thing they can apply to.
-			("Onslaught", 1, [("Open Wounds", 3), ("Endless Rage", 1)]),
+			# Ranks are points spent, off the save with
+			#     python savefile.py Morena
+			# not the rank the skill screen shows. She has exactly one point in
+			# every skill on this bar; the numbers above 1 here were her skill
+			# screen, and that difference is her gear, stated once off the same
+			# save instead of being folded in nine times.
+			("Onslaught", 1, [("Open Wounds", 1), ("Endless Rage", 1)]),
 			("Shadow Strike", 1),
-			("Ring of Steel", 3, [("Circle of Slaughter", 6)]),
-			("Leap", 1, [("Fault Line", 4)]),
+			("Ring of Steel", 1, [("Circle of Slaughter", 1)]),
+			("Leap", 1, [("Fault Line", 1)]),
 			("Bonechilling Cry", 1, 12),
 			("Rallying Cry", 1, [("Frenzied Cry", 1), ("Impulse", 1)]),
 			("Pneumatic Burst", 1, [("Breath of Belgothian", 1), ("Shadow Dance", 1), ("Elemental Awakening", 1)]),
 			# WPS skills
-			("Bloodfangs", 3), ("Avalanche", 1), ("Belgothian's Shears", 3), ("Amarasta's Quick Cut", 5), ("Whirling Death", 3),
-			("Battle Surge", 4),
+			("Bloodfangs", 1), ("Avalanche", 1), ("Belgothian's Shears", 1),
+			("Amarasta's Quick Cut", 1), ("Whirling Death", 1),
+			("Battle Surge", 1),
 			("Untamed Rage", 1),
 		],
 

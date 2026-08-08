@@ -29,12 +29,22 @@ stats = {
 		# prints which one won for each. The first entry is what he holds the
 		# button down on, and it is his main attack. RANKS ARE STUBS.
 		"rotation":[
-			("Fire Strike", 12),               # held on left button
-			("Thermite Mine", 12, 5.0),
-			("War Cry", 12, 7.5),
-			("Mortar Trap", 12, 15.0),
-			("Zolhan's Technique", 12),
-			("Markovian's Advantage", 12),
+			# Ranks are points spent, read out of the save with
+			#     python savefile.py Armitage
+			# and not the rank the skill screen shows - the gear is added on top
+			# of these, off the same save, and does not belong in these numbers.
+			# Every one of them was a flat 12 before, which was nobody's build.
+			#
+			# What modifies what is out of the records too: Searing Strike hangs
+			# off Explosive Strike rather than off Fire Strike directly, and is
+			# in here because the chain still ends at the button he holds.
+			("Fire Strike", 7, [("Explosive Strike", 2), ("Searing Strike", 3),
+								("Static Strike", 1)]),   # held on left button
+			("Thermite Mine", 2, 5.0),
+			("War Cry", 6, 7.5, [("Break Morale", 1)]),
+			("Mortar Trap", 1, 15.0),
+			("Zolhan's Technique", 6),
+			("Markovian's Advantage", 5),
 			("Brutal Shield Slam", 3.0),   # off Serrated Shell: 300% weapon
 										   # damage where the plain Shield Slam off a
 										   # Battered Shell is 230%. Same 3s cooldown,

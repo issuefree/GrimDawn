@@ -27,15 +27,41 @@ stats = {
 		# it is pressed, so the rate is one over whichever is longer; the load
 		# prints which one won for each. The first entry is what he holds the
 		# button down on, and it is his main attack. RANKS ARE STUBS.
+		# Ranks are points spent, read out of the save with
+		#     python savefile.py Lochlan
+		# and not the rank the skill screen shows. The gear is stated once in
+		# "+skills" below instead of being added into every line by hand, which
+		# is what these were: Savagery read 13 where he has spent 9 and his gear
+		# grants 3.
+		#
+		# Blood Pact, Raging Tempest and Maelstrom were nested in here and are
+		# gone - the save has no points in any of the three, so they were
+		# contributing nothing but a number.
 		"rotation":[
-			("Savagery", 13, [("Might of the Bear", 3), ("Tenacity of the Boar", 2), ("Storm Touched", 4)]),                  # held on left button
-			("Primal Strike", 11, [("Torrent", 10), ("Storm Surge", 3)]),
-			("Storm Totem", 10),
-			("Wendigo Totem", 2, [("Blood Pact", 2)]),
-			("Wind Devil", 2, [("Raging Tempest", 3), ("Maelstrom", 4)]),
+			("Savagery", 9, [("Might of the Bear", 3), ("Tenacity of the Boar", 1),
+							 ("Storm Touched", 3)]),          # held on left button
+			("Primal Strike", 4, [("Torrent", 5), ("Storm Surge", 2)]),
+			("Storm Totem", 4),
+			("Wendigo Totem", 1),
+			("Wind Devil", 1),
 			# WPS
-			("Feral Hunger", 8), ("Markovian's Advantage", 3), ("Zolhan's Technique", 3)
+			("Feral Hunger", 7), ("Markovian's Advantage", 2), ("Zolhan's Technique", 2)
 		],
+		# What his gear adds on top, off the same save. Everything he wears and
+		# everything socketed into it, including the one affix pair he carries -
+		# the Badge of Mastery's +3 Savagery and +2 Primal Strike.
+		#
+		# Effective rank comes out one short of what he had transcribed on every
+		# skill that gear touches, so there is a point of "+1 to all skills"
+		# somewhere this does not read. Worth finding; it is a rank on every
+		# line rather than one.
+		"+skills":{
+			"Primal Strike":6, "Storm Totem":5, "Torrent":4, "Savagery":3,
+			"Blast Shield":3, "Sigil of Consumption":3, "Ascension":2,
+			"Blade Arc":2, "Mortar Trap":2, "Oleron's Rage":2, "Overguard":2,
+			"Resilience":2, "Smite":2, "Stormcaller's Pact":2,
+			"Thermite Mine":2, "War Cry":2,
+		},
 		"hits/s":1,
 		"blocks/s":0,
 		"kills/s":1.5,

@@ -1592,6 +1592,14 @@ def statVocabulary():
 	# "lightning %" is: stated in stats it says what percentage you already
 	# carry, which is what the total has to be divided by to find what another
 	# point of it would multiply.
+	#
+	# A conversion is both too, and for the same reason. As a weight it is what
+	# a devotion granting one would be worth; as a stat it is the conversion you
+	# already have, which rotationDamage moves damage across. It was only in the
+	# weight vocabulary, so a model stating its own read as an unknown stat -
+	# lochlan's "physical to lightning" was being applied and warned about in
+	# the same run.
+	vocab.update(conversions())
 	return vocab
 
 

@@ -77,6 +77,12 @@ stats = {
 		"lightning %":930, "lightning":5000,
 		"electrocute %":1019, "electrocute":500,
 
+		# Off the weapon. The sheet does not show conversion, so it has to be
+		# stated: it moves flat damage before either multiplier applies, so
+		# the converted half takes lightning's percentage instead of
+		# physical's - which is the whole reason it is worth having.
+		"physical to lightning": 51,
+
 		"playStyle":"melee", # playstyle for weighting constellation abilities. [ranged/shortranged/melee/tank]
 		"weapons":[
 			"twohand", "2h-axe"

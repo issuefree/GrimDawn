@@ -144,6 +144,42 @@ second measurement.
 `applyDamagePriority` - hela's hand-stated path - reads the corrected sheet too,
 since the correction is upstream of both paths.
 
+## Damage conversion was a weight and nothing else
+
+**Fixed.** `conversions()` gave every "X to Y" name to the weight vocabulary, so
+a devotion granting conversion could be priced - but a conversion *you already
+have* did nothing whatever to what the build deals. lochlan converts 51% of his
+physical to lightning off his weapon and the model was scoring all of it as
+physical.
+
+`rotationDamage` moves it now, before either multiplier applies, which is the
+order the game uses and the whole reason conversion is worth having: the
+converted share takes the target's percentage instead of the source's. For
+lochlan that is physical's 10.7 traded for lightning's 14.2.
+
+Two details worth keeping. Conversions out of one type come off its whole share
+at once, so two of them cannot each take half of what the other left, and they
+normalise at 100% because you cannot convert more of a type than you have. And a
+point of gear flat of a converted type is worth its own multiplier for the share
+that stays plus each target's for what it becomes, which is what `dFlat` now
+carries.
+
+The sheet does not show conversion, so it has to be stated - it is a stat, not a
+weight, and the two happen to share a spelling.
+
+Against the same Primal Strike measurement, physical goes from 2702 to 1324
+against 1000 in the game. Lightning goes the other way, 23391 to 25264 against
+22000, because it now receives what physical gave up. The split is much closer;
+the total is not, and both are about 25% over.
+
+**What is still out.** Three types are over by 30% to 100% - physical 1324
+against 1000, electrocute 5101 against 2500, bleed 1369 against 1000 - on a
+build where they are 2%, 13% and 7% of the damage. Lightning at 77% lands within
+15%. The two duration types are the suspicious pair, and one more reading would
+settle them: whether the game's breakdown reports a damage-over-time as its total
+over the duration or as damage a second. At three seconds that is the whole
+factor.
+
 ## The sheet is read in town, so no temporary buff is on it
 
 The character sheets in these models are read in town with only passive buffs

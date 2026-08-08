@@ -716,17 +716,54 @@ def rotationDamage(stats):
 				# carry either: it is read in town, where nothing is charged.
 				charged[key[:-2]] = charged.get(key[:-2], 0.0) + amount
 
-	out = {}
-	for damage in damages:
-		if damage in ("elemental", "all damage"):
-			continue
-		flat = float(stats.get(damage, 0) or 0)
+	types = [d for d in damages if d not in ("elemental", "all damage")]
+	multiplier = {}
+	for damage in types:
 		perc = (float(stats.get(damage + " %", 0) or 0) + bonus.get(damage, 0)
 				+ charged.get(damage, 0.0))
-		multiplier = 1.0 + perc / 100.0
-		base = flat * swings + own.get(damage, 0.0)
-		out[damage] = (base * multiplier, multiplier * swings, base / 100.0)
-	return out, swings
+		multiplier[damage] = 1.0 + perc / 100.0
+
+	# What each type deals before its own percentage is applied.
+	base = {d: float(stats.get(d, 0) or 0) * swings + own.get(d, 0.0) for d in types}
+
+	# Conversion moves damage from one type to another before either multiplier
+	# applies, so the converted share takes the target's percentage instead of
+	# the source's. That is the whole point of it, and it was read as a weight -
+	# what a devotion granting conversion is worth - while doing nothing at all
+	# to what the build deals. lochlan converts 51% of his physical to lightning,
+	# where physical multiplies by 10.7 and lightning by 14.2.
+	#
+	# Every conversion out of one type is taken off its whole share at once, so
+	# two of them cannot each take half of what the other left, and they are
+	# normalised at everything: you cannot convert 150% of a type.
+	out = {}
+	for source in types:
+		targets = {t: float(stats.get("%s to %s" % (source, t)) or 0) / 100.0
+				   for t in types if t != source and stats.get("%s to %s" % (source, t))}
+		total = sum(targets.values())
+		if total > 1.0:
+			targets = {t: v / total for t, v in targets.items()}
+		if targets:
+			out[source] = targets
+
+	converted = dict(base)
+	for source, targets in out.items():
+		for target, fraction in targets.items():
+			converted[target] += base[source] * fraction
+			converted[source] -= base[source] * fraction
+
+	result = {}
+	for damage in types:
+		# A point of gear flat of this type is worth its own multiplier for
+		# whatever share of it stays, plus each target's for what it becomes.
+		targets = out.get(damage, {})
+		perPoint = (1.0 - sum(targets.values())) * multiplier[damage]
+		for target, fraction in targets.items():
+			perPoint += fraction * multiplier[target]
+		result[damage] = (converted[damage] * multiplier[damage],
+						  perPoint * swings,
+						  converted[damage] / 100.0)
+	return result, swings
 
 
 def retaliationDamage(stats):

@@ -54,6 +54,9 @@ stats = {
 		"defense":1625,
 
 		"health":10178,
+		# What "+% Health" multiplies. The sheet shows the total; this is what
+		# the percentage acts on, so a point of it buys 10.7 rather than 101.8.
+		"base health":1070,
 		"health/s":145,
 
 		"armor":1353,

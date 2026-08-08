@@ -188,6 +188,30 @@ scaled by a skill's weapon damage percentage the way flat hit damage is. The
 model scales it. It does not matter for the numbers above, because the one type
 it would have moved is the one that turned out not to belong.
 
+## A percentage multiplies the base, and the sheet shows the total
+
+**Fixed where a base is stated, which is one stat on one model.**
+
+The same shape as the damage sheet reading high, in a second place. `health %`
+was priced as one percent of the health on the sheet. A percentage multiplies
+the base, and lochlan reads 10178 health over a base of 1070 - so a point of
+"+% Health" buys him 10.7 and the model was calling it 101.8, nine and a half
+times over.
+
+It applies to all eight of the stats that take a percentage: physique, cunning,
+spirit, offense, defense, health, energy, armor. `"base <stat>"` states what the
+percentage acts on, and where it is missing the weight falls back to the total
+and the load says which ones did.
+
+The base is not derivable. It is level and physique and gear flat in a
+proportion the sheet does not break out, so it has to be read - which is why the
+fallback is a note rather than an error.
+
+lochlan's health % goes from 254 to 27, and 59918 -> 58342. His other seven are
+still guessed, and every other model's eight are, so this is mostly still
+outstanding: `offense %` at 393 and `defense %` at 285 are the next two that
+matter, and both are almost certainly overstated the same way.
+
 ## What share of incoming damage is each type
 
 **Derived.** Every resistance was priced identically - a point of bleed resist

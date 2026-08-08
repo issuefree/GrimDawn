@@ -885,10 +885,29 @@ class Model:
 		for dam in magicalDurationDamage:
 			self.stats[dam + " %"] = self.getStat(dam + " %") + self.getStat("spirit")*SPIRIT_DURATION
 
-		#check stats vs % stats
-		percStats = ["physique", "cunning", "spirit", "offense", "defense", "health", "energy", "armor"]
+		# What a percentage point of each of these is worth. It multiplies the
+		# base, and the sheet shows you the total - lochlan reads 10178 health
+		# over a base of 1070, so a point of "+% Health" buys him 10.7 and this
+		# was calling it 101.8. Same shape as the damage sheet reading high, and
+		# the same fix: price it against the number the percentage acts on.
+		#
+		# "base <stat>" is not derivable - it is level and physique and gear flat
+		# in a proportion the sheet does not break out - so it is stated, and
+		# where it is not this falls back to the total and says which.
+		percStats = ["physique", "cunning", "spirit", "offense", "defense",
+					 "health", "energy", "armor"]
+		guessed = []
 		for stat in percStats:
-			self.setCalculated(stat+" %", self.getStat(stat) * self.get(stat) / 100)
+			base = self.getStat("base " + stat)
+			if not base and self.getStat(stat):
+				guessed.append(stat)
+			self.setCalculated(stat + " %",
+							   (base or self.getStat(stat)) * self.get(stat) / 100)
+		if guessed:
+			print("  note: no base stated for %s, so a percentage of each is priced "
+				  "against its total - which overstates it by however much of the "
+				  "total the percentage already built. State \"base health\" and "
+				  "the rest to fix it." % ", ".join(guessed))
 
 		# Resist reduction, from the game's multiplier rather than a fitted
 		# constant. A point of it buys 1/(100 - enemyResist) more damage, which

@@ -264,7 +264,7 @@ def _skill(reader, version=8):
 	"""
 	name = reader.string()
 	level = reader.u32()
-	reader.u8()                                     # enabled
+	enabled = reader.u8()
 	devotionLevel = reader.u32()
 	reader.u32()                                    # experience
 	reader.u32()                                    # active
@@ -272,7 +272,8 @@ def _skill(reader, version=8):
 	if version >= 8:
 		reader.u8()                                 # and a third, added since
 	reader.string(); reader.string()                # autocast skill and controller
-	return {"record": name, "level": level, "devotionLevel": devotionLevel}
+	return {"record": name, "level": level, "devotionLevel": devotionLevel,
+			"enabled": bool(enabled)}
 
 
 def _itemSkill(reader):
@@ -596,9 +597,54 @@ def sheetOf(name, root=None):
 
 	import skillData                    # noqa: F401 - registers the skills
 	from dataModel import Skill
+	from gddata import procRecords as _procRecords
 	skillNames = set(Skill.skills)
 
-	gear = {}
+	# What your own skills put on the sheet, which is most of what the gear
+	# alone was missing. Which ones count is a question of class, not of level:
+	#
+	#   Skill_Mastery          the bar itself, and it is the largest single
+	#                          contributor - Soldier at 50 is 250 physique and
+	#                          1400 health before anything else
+	#   Skill_Passive          a character passive, always on
+	#   Skill_Buff*Toggled     an aura, on the sheet when you have it running,
+	#                          which the save records per skill
+	#
+	# and what does not:
+	#
+	#   Skill_Modifier         belongs to one skill, not to you. Torrent's
+	#   Skill_Transmuter       lightning is Primal Strike's and nothing else's
+	#   Skill_PassiveOn*       fires on a hit or at low life, so it is not up
+	#                          in town where the sheet is read
+	#   everything else        an attack, a pet or a weapon pool skill
+	own = {}
+	for entry in character["skills"]:
+		if not entry["level"]:
+			continue
+		record = db.read(entry["record"])
+		if not record:
+			continue
+		label = next((db.name(r) for r in _procRecords(record, db) if db.name(r)), "")
+		skill = Skill.skills.get(label)
+		if not skill:
+			continue
+		ability = skill.getAbility(entry["level"])
+		kind = str(ability.gc("skillClass") or "")
+		if "Mastery" in kind or kind == "Skill_Passive":
+			pass
+		elif "Toggled" in kind and "Modifier" not in kind:
+			if not entry["enabled"]:
+				continue
+		else:
+			continue
+		for bonus, value in ability.bonuses.items():
+			# A [dps, seconds] pair belongs to the skill rather than the sheet,
+			# and a summon's bonuses arrive as a dict of their own.
+			if not isinstance(value, (int, float)) or bonus.startswith("triggered "):
+				continue
+			own[bonus] = own.get(bonus, 0) + value
+
+	gear = dict(own)
 	for worn in character["equipped"]:
 		for path in (worn["base"], worn["component"], worn["augment"]):
 			record = db.read(path) if path else None
@@ -613,6 +659,18 @@ def sheetOf(name, root=None):
 	stats = {}
 	for attribute in ("physique", "cunning", "spirit"):
 		stats[attribute] = round(character[attribute] + gear.get(attribute, 0))
+
+	# What the attributes themselves are worth, which the game applies on top of
+	# everything above: physique is health, health regeneration and defensive
+	# ability, cunning is offensive ability, spirit is energy. The same constants
+	# checkModel prices a point of each with, used here in the other direction.
+	from models import (PHYSIQUE_HEALTH, PHYSIQUE_REGEN, PHYSIQUE_DEFENSE,
+						CUNNING_OFFENSE, SPIRIT_ENERGY)
+	gear["health"] = gear.get("health", 0) + stats["physique"] * PHYSIQUE_HEALTH
+	gear["health/s"] = gear.get("health/s", 0) + stats["physique"] * PHYSIQUE_REGEN
+	gear["defense"] = gear.get("defense", 0) + stats["physique"] * PHYSIQUE_DEFENSE
+	gear["offense"] = gear.get("offense", 0) + stats["cunning"] * CUNNING_OFFENSE
+	gear["energy"] = gear.get("energy", 0) + stats["spirit"] * SPIRIT_ENERGY
 	# Health and energy are the base times what the gear multiplies, and the
 	# percentage is stated as well because a model needs both: the total to
 	# price a point of health against, and the percentage to know what another
@@ -663,16 +721,18 @@ def showSheet(name, root=None):
 				'"%s": %d' % kv for kv in sorted(value.items())) + "}"))
 		else:
 			print('     "%s": %s,' % (key, value))
-	print("\n  This is what the gear gives, not the character sheet. Against\n"
-		  "  lochlan's own numbers it lands for the resistances, the conversion\n"
-		  "  and the added ranks, and falls short everywhere else - physique 298\n"
-		  "  against 763, health 2108 against 10178 - because a mastery bar and\n"
-		  "  a skill both grant attributes and an item's prefix and suffix roll\n"
-		  "  from a seed, and none of the three is read. Armor comes out about\n"
-		  "  four times over, which is a bug rather than a gap.\n\n"
-		  "  So: take the resistances, the conversions and \"+skills\" from here.\n"
-		  "  %s and the rest still come off the sheet."
-		  % " and ".join(partial or ["Nothing"]).capitalize())
+	print("\n  Your base, plus your masteries and passives, plus your gear.\n"
+		  "  Against lochlan's own sheet:\n\n"
+		  "     physique  668 / 763      energy   2606 / 2358\n"
+		  "     cunning   367 / 400      health   6883 / 10178\n"
+		  "     spirit    418 / 451      offense   731 / 1964\n\n"
+		  "  The attributes land inside a tenth. What is still missing is an\n"
+		  "  item's prefix and suffix, which roll from a seed against a range the\n"
+		  "  record only bounds, and a base offensive and defensive ability that\n"
+		  "  comes from your level and is in neither the save nor the records.\n"
+		  "  Armor reads about four times over, which is a bug rather than a gap.\n\n"
+		  "  Trust the attributes, the resistances, the conversions and\n"
+		  "  \"+skills\". Check the rest against the sheet rather than pasting it.")
 
 
 def showSkills(name, root=None):

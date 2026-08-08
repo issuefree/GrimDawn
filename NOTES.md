@@ -679,32 +679,37 @@ The prefix and suffix are recorded but not reported. They are tags, and what
 they rolled comes from a seed against a range in the records - a seed on its own
 says nothing without the game's own roller.
 
-**Summing the gear does not give the sheet.** `python savefile.py Lochlan stats`
-adds up every worn record and what is socketed into it, through the same
-extraction itemgen uses. Against his own numbers:
+**Reconstructing the sheet.** `python savefile.py Lochlan stats` adds up your
+base from the save, then your masteries and passives, then your gear, then what
+the attributes are worth in turn. Against his own sheet:
 
-    resistances, conversion, added ranks   land
-    physique                298   vs   763
-    health                 2108   vs 10178
-    offense                 538   vs  1964
-    armor                  5275   vs  1353
+    physique  668 / 763      energy   2606 / 2358
+    cunning   367 / 400      health   6883 / 10178
+    spirit    418 / 451      offense   731 / 1964
 
-Three things contribute that this does not read, and they are most of the gap.
-A mastery bar grants attributes and so do skills, neither of which is gear. And
-an item's prefix and suffix roll their values from a seed against a range the
-record only bounds - a seed says nothing without the game's own roller, which is
-the one part of this that is genuinely closed.
+The attributes land inside a tenth, which they did not before: the mastery bar
+is the single largest contributor and was missing entirely - Soldier at 50 is
+250 physique and 1400 health on its own.
 
-Armor being four times over is a bug rather than a gap and has not been chased.
+Which skills count is a question of class, not of level. `Skill_Mastery` and
+`Skill_Passive` always, a `Skill_Buff*Toggled` when the save records it running
+- the sheet is read in town and that is where the three lochlan leaves on show
+up. A `Skill_Modifier` or `Skill_Transmuter` never: Torrent's lightning is
+Primal Strike's and not yours. Nor a `Skill_PassiveOn*`, which fires on a hit or
+at low life and is not up in town.
 
-So what it is good for is the part that is gear and only gear: resistances,
-damage conversion, and the ranks your equipment adds, which is exactly the
-`+skills` field. Take those three from here and read the rest off the sheet.
+Two things are still out and one is a bug:
 
-**What is left.** The affix rolls, which want the game's roller, and the mastery
-and skill contributions, which do not - those are in skillData already and could
-be summed the same way. That would close most of the remaining gap without
-touching a seed.
+  - an item's prefix and suffix roll from a seed against a range the record only
+    bounds. This is the part genuinely closed to us without the game's roller,
+    and it is most of the remaining health.
+  - offensive and defensive ability have a base from level that is in neither
+    the save nor the records, which is most of their gap.
+  - armor reads about four times over. Not chased.
+
+So the attributes, the resistances, the conversions and `+skills` are worth
+taking; the rest is a cross-check against the sheet rather than a replacement
+for it, and the output says so.
 
 ## Models that do not load
 

@@ -188,6 +188,36 @@ scaled by a skill's weapon damage percentage the way flat hit damage is. The
 model scales it. It does not matter for the numbers above, because the one type
 it would have moved is the one that turned out not to belong.
 
+## A weight cannot say "and no more than that"
+
+**Fixed for resistance, and the general case is still there.**
+
+Every weight is a value per point and the solver adds it up for as many points
+as it can buy. That is right for damage and wrong for anything the game caps.
+lochlan sits at 73 bleed resist, seven short of the cap, where a point is worth
+more than almost anything else he could take - and the solution bought 68 points
+of it across five constellations. No single one was over the headroom; together
+they were ten times it.
+
+The score is additive per constellation in both scorers, so this could not be
+capped per star or per constellation. `utils.resistOvercap` prices the overshoot
+back out of the whole selection, and both `evaluateSolution` and
+`fastsolve.Problem.score` subtract it - they have to agree or the run warns, and
+they do. It costs nothing measurable: lochlan went from 1198 restarts in five
+seconds to 1725, because the cheaper solutions it now finds are smaller.
+
+lochlan 122263 -> 79102, and his bleed resist overshoot is down from 61 wasted
+points to 9. It only applies to a type the sheet states, since headroom cannot be
+known without one, so the other eight models are untouched.
+
+**The general case.** Resistance is the sharpest instance but not the only one.
+Anything with a ceiling has it: `armor absorb` stops at 100, `avoid melee` and
+`avoid ranged` likewise, and `block %` at 100. None of those is capped, and a
+solution that stacks avoidance past 100% is scoring points that do not exist. The
+shape of the fix is the same each time - a headroom, and a correction against the
+whole selection - so the third one of these should probably generalise
+`resistOvercap` rather than copy it.
+
 ## Flat damage over time and % weapon damage
 
 **Open, and the one thing left that is definitely wrong.**

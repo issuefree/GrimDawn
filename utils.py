@@ -39,6 +39,49 @@ def solutionPath(solution, pre=""):
 	out = out[:-2]	
 	return pre + "["+out+"],"
 
+def cappedResists(model):
+	"""(resist, headroom, weight) for every type a solution can overshoot.
+
+	A weight is what one point is worth, and the solver adds it up for as many
+	points as it can buy - which is fine for damage and wrong for a resistance,
+	because the game stops counting at 80. lochlan sits at 73 bleed resist, where
+	a point is worth more than almost anything else he could take, and the
+	solution bought 68 points of it across five constellations for the seven that
+	can apply.
+
+	Only types the sheet states, since headroom is unknowable without it, and
+	only those still under their cap - the ones at it already derive a weight of
+	zero and cannot be overshot.
+	"""
+	import modelspec
+	out = []
+	for damage in resists:
+		have = model.stats.get(damage)
+		weight = model.get(damage)
+		if have is None or not weight:
+			continue
+		head = modelspec.MAX_RESIST + float(model.getStat("max " + damage) or 0) - float(have)
+		if head > 0:
+			out.append((damage, head, weight))
+	return out
+
+
+def resistOvercap(model, granted):
+	"""What a solution overpaid for resistance it cannot use.
+
+	`granted` maps a resist to how much the whole solution gives. Subtracted
+	from the score rather than capped per star, because five constellations each
+	granting a dozen points is exactly the case: no one of them is over the
+	headroom on its own and together they are ten times it.
+	"""
+	over = 0.0
+	for damage, head, weight in cappedResists(model):
+		spare = granted.get(damage, 0.0) - head
+		if spare > 0:
+			over += spare * weight
+	return over
+
+
 def evaluateSolution(solution, model, verbose=False):
 	if verbose:
 		print("Evaluating solution...")
@@ -58,6 +101,14 @@ def evaluateSolution(solution, model, verbose=False):
 			abilNum += 1
 		else:
 			value += base
+	# Resistance the solution cannot use, priced back out. See resistOvercap.
+	granted = {}
+	for c in solution:
+		for star in c.stars:
+			for damage in resists:
+				if damage in star.bonuses:
+					granted[damage] = granted.get(damage, 0.0) + star.bonuses[damage]
+	value -= resistOvercap(model, granted)
 	timeMethod("evaluateSolution", start)
 	return value
 

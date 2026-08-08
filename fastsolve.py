@@ -37,6 +37,19 @@ class Problem:
 		self.requires = [tuple(c.requires.affinities) for c in self.cons]
 		self.provides = [tuple(c.provides.affinities) for c in self.cons]
 
+		# Resistance a solution can overshoot, and how much each constellation
+		# grants of it - see utils.cappedResists. Kept as parallel flat lists so
+		# score() can add them up without touching a dict.
+		from utils import cappedResists
+		self.capped = cappedResists(model)
+		self.resistGrant = []
+		for c in self.cons:
+			row = [0.0] * len(self.capped)
+			for star in c.stars:
+				for k, (damage, _, _) in enumerate(self.capped):
+					row[k] += star.bonuses.get(damage, 0.0)
+			self.resistGrant.append(row if any(row) else None)
+
 		idx = {id(c): i for i, c in enumerate(self.cons)}
 		self.conflicts = [frozenset(idx[id(x)] for x in c.conflicts if id(x) in idx)
 						  for c in self.cons]
@@ -57,6 +70,19 @@ class Problem:
 				ranks = self.byRank[i]
 				if r < len(ranks):
 					total += ranks[r]
+		# The one part of the score that is not additive: a resistance stops
+		# counting at its cap, so what the selection grants past the headroom
+		# has to come back off. Skipped entirely when nothing is near a cap,
+		# which is every model that does not state its resistances.
+		if self.capped:
+			for k, (_, head, weight) in enumerate(self.capped):
+				given = 0.0
+				for i in sel:
+					row = self.resistGrant[i]
+					if row is not None:
+						given += row[k]
+				if given > head:
+					total -= (given - head) * weight
 		return total
 
 	def feasible(self, sel):

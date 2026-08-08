@@ -644,9 +644,16 @@ def sheetOf(name, root=None):
 				continue
 			own[bonus] = own.get(bonus, 0) + value
 
-	gear = dict(own)
+	# Armor is not summed. The game picks a body part per hit and each piece
+	# protects its own, so what you have against a hit is the average across
+	# them - which is also exactly the quantity applyDefensePriority wants when
+	# it prices what armor stops per hit. Summing read lochlan at 5275 where a
+	# hit meets something nearer 750.
+	gear, armor = dict(own), []
 	for worn in character["equipped"]:
-		for path in (worn["base"], worn["component"], worn["augment"]):
+		piece = 0.0
+		for path in (worn["base"], worn["prefix"], worn["suffix"],
+					 worn["component"], worn["augment"]):
 			record = db.read(path) if path else None
 			if not record:
 				continue
@@ -654,7 +661,14 @@ def sheetOf(name, root=None):
 				if isinstance(value, list):
 					continue                # a duration pair; the model reads
 											# those off the skill, not the item
-				gear[bonus] = gear.get(bonus, 0) + value
+				if bonus == "armor":
+					piece += value
+				else:
+					gear[bonus] = gear.get(bonus, 0) + value
+		if piece:
+			armor.append(piece)
+	if armor:
+		gear["armor"] = sum(armor) / len(armor)
 
 	stats = {}
 	for attribute in ("physique", "cunning", "spirit"):
@@ -726,13 +740,18 @@ def showSheet(name, root=None):
 		  "     physique  668 / 763      energy   2606 / 2358\n"
 		  "     cunning   367 / 400      health   6883 / 10178\n"
 		  "     spirit    418 / 451      offense   731 / 1964\n\n"
-		  "  The attributes land inside a tenth. What is still missing is an\n"
-		  "  item's prefix and suffix, which roll from a seed against a range the\n"
-		  "  record only bounds, and a base offensive and defensive ability that\n"
-		  "  comes from your level and is in neither the save nor the records.\n"
-		  "  Armor reads about four times over, which is a bug rather than a gap.\n\n"
-		  "  Trust the attributes, the resistances, the conversions and\n"
-		  "  \"+skills\". Check the rest against the sheet rather than pasting it.")
+		  "     armor     659 / 1353\n\n"
+		  "  A damage range is averaged, which is what the game rolls between.\n"
+		  "  Armor is averaged rather than summed: the game picks a body part per\n"
+		  "  hit and each piece protects its own, so the average is both nearer\n"
+		  "  the sheet and the number applyDefensePriority wants. It reads low\n"
+		  "  because a chest plate covers more of you than a belt does and\n"
+		  "  nothing here weights them.\n\n"
+		  "  Offensive and defensive ability have a base from your level that is\n"
+		  "  in neither the save nor the records, so only their gear and\n"
+		  "  attribute share is here. The attributes land inside a tenth and are\n"
+		  "  worth taking, as are the resistances, the conversions and\n"
+		  "  \"+skills\".")
 
 
 def showSkills(name, root=None):

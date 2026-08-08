@@ -700,12 +700,19 @@ at low life and is not up in town.
 
 Two things are still out and one is a bug:
 
-  - an item's prefix and suffix roll from a seed against a range the record only
-    bounds. This is the part genuinely closed to us without the game's roller,
-    and it is most of the remaining health.
+  - an item's prefix and suffix are read now, and a damage range is taken at its
+    average, which is what `starBonuses` already did for every other range in
+    the project. lochlan turns out to have almost none - his gear is legendaries
+    and the one affix pair he carries grants skill ranks - so this was never the
+    missing health it looked like.
   - offensive and defensive ability have a base from level that is in neither
     the save nor the records, which is most of their gap.
-  - armor reads about four times over. Not chased.
+  - armor is averaged rather than summed. The game picks a body part per hit and
+    each piece protects its own, so the average is both nearer the sheet and the
+    quantity `applyDefensePriority` wants when it prices what armor stops per
+    hit. Summing read 5275 against a sheet of 1353; averaging reads 659. It is
+    low because a chest plate covers more of you than a belt and nothing here
+    weights them by coverage, which is what would close the rest.
 
 So the attributes, the resistances, the conversions and `+skills` are worth
 taking; the rest is a cross-check against the sheet rather than a replacement

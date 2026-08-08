@@ -216,10 +216,27 @@ it is missing the weight falls back to the total and the load names which:
     note: no "physique %", "cunning %", "spirit %", "offense %", "defense %",
     "energy %", "armor %" stated
 
-lochlan's health % goes 254 -> 194 and he goes 58342 -> 61558. Seven of his eight
-and all eight of everyone else's are still priced against their totals, so each
-is high by exactly the percentage that character already carries. `offense %` at
-393 and `defense %` at 285 are the next two.
+lochlan's health % goes 254 -> 194 and he goes 58342 -> 61558.
+
+**How much the rest is worth.** None of the eight is on the character sheet -
+they have to be read off gear - so it matters which are worth the trouble. What
+each actually buys in a solved build, across five models:
+
+    armitage  armor %   11.1%   health %  5.7%   defense %  2.5%
+    lochlan   health %  11.6%
+    pakse     armor %    5.0%   health %  2.8%
+    gwyr      health %   4.1%   armor %   2.7%   defense %  0.3%
+    morena    health %   0.3%
+
+Only `armor %` and `health %` ever reach a percent of a solution. `physique %`,
+`cunning %`, `spirit %`, `energy %` and `offense %` do not appear in any of them,
+and `defense %` is a rounding error. So this is two numbers per character, not
+eight.
+
+And the error is bounded by the percentage itself: a weight is high by exactly
+what you carry, so a rough figure is worth nearly as much as an exact one. At
+lochlan's +31% health, the unstated case overprices 11.6% of his solution by
+31%, which is about 3% of his total.
 
 ## What share of incoming damage is each type
 

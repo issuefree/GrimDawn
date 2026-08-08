@@ -908,11 +908,18 @@ class Model:
 			self.setCalculated(stat + " %",
 							   total / (1.0 + percent / 100.0) * self.get(stat) / 100)
 		if guessed:
-			print("  note: no %s stated, so a percentage of each is priced against "
-				  "its total - high by however much of that total the percentage "
-				  "already built. These are sheet readings, not weights: state "
-				  "\"health %%\": 31 in stats for what you already carry."
-				  % ", ".join('"%s %%"' % g for g in guessed))
+			# Which of these are worth reading off your gear is measured rather
+			# than sorted by weight: across five solved models only "armor %" and
+			# "health %" ever reach a percent of a solution, and "offense %" has
+			# the largest weight of the lot while appearing in none of them.
+			worth = [g for g in ("armor", "health") if g in guessed]
+			print("  note: no %s stated, so each is priced against its total and is "
+				  "high by exactly the percentage you already carry.%s"
+				  % (", ".join('"%s %%"' % g for g in guessed),
+					 (" Only %s tends to move a solution - read %s off your gear and "
+					  "state it in stats, as \"health %%\": 31."
+					  % (" and ".join('"%s %%"' % w for w in worth),
+						 "them" if len(worth) > 1 else "it")) if worth else ""))
 
 		# Resist reduction, from the game's multiplier rather than a fitted
 		# constant. A point of it buys 1/(100 - enemyResist) more damage, which

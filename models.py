@@ -891,23 +891,28 @@ class Model:
 		# was calling it 101.8. Same shape as the damage sheet reading high, and
 		# the same fix: price it against the number the percentage acts on.
 		#
-		# "base <stat>" is not derivable - it is level and physique and gear flat
-		# in a proportion the sheet does not break out - so it is stated, and
-		# where it is not this falls back to the total and says which.
+		# What it multiplies is the total divided by the percentage you already
+		# have, exactly as unmultiplyFlat does for damage - not the game's "base
+		# health", which is the level's contribution alone. lochlan reads 10178
+		# health at +31%, so a point buys 10178/1.31/100 = 77.7. His base health
+		# is 1070 and multiplying that would have said 10.7, which is as wrong in
+		# the other direction as the 101.8 it replaced.
 		percStats = ["physique", "cunning", "spirit", "offense", "defense",
 					 "health", "energy", "armor"]
 		guessed = []
 		for stat in percStats:
-			base = self.getStat("base " + stat)
-			if not base and self.getStat(stat):
+			total = self.getStat(stat)
+			percent = float(self.getStat(stat + " %") or 0)
+			if total and not percent:
 				guessed.append(stat)
 			self.setCalculated(stat + " %",
-							   (base or self.getStat(stat)) * self.get(stat) / 100)
+							   total / (1.0 + percent / 100.0) * self.get(stat) / 100)
 		if guessed:
-			print("  note: no base stated for %s, so a percentage of each is priced "
-				  "against its total - which overstates it by however much of the "
-				  "total the percentage already built. State \"base health\" and "
-				  "the rest to fix it." % ", ".join(guessed))
+			print("  note: no %s stated, so a percentage of each is priced against "
+				  "its total - high by however much of that total the percentage "
+				  "already built. These are sheet readings, not weights: state "
+				  "\"health %%\": 31 in stats for what you already carry."
+				  % ", ".join('"%s %%"' % g for g in guessed))
 
 		# Resist reduction, from the game's multiplier rather than a fitted
 		# constant. A point of it buys 1/(100 - enemyResist) more damage, which

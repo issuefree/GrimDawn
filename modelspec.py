@@ -1588,11 +1588,10 @@ def statVocabulary():
 	for stat in ("physique", "cunning", "spirit", "health", "health/s", "energy",
 				 "energy/s", "armor", "offense", "defense", "blocked damage"):
 		vocab.add(stat + " %")
-	# What a percentage of each acts on, which the sheet shows only as a total.
-	# Not a weight - it is a sheet reading, like any other stat here.
-	for stat in ("physique", "cunning", "spirit", "offense", "defense",
-				 "health", "energy", "armor"):
-		vocab.add("base " + stat)
+	# "<stat> %" is a sheet reading as well as a weight, the same way
+	# "lightning %" is: stated in stats it says what percentage you already
+	# carry, which is what the total has to be divided by to find what another
+	# point of it would multiply.
 	return vocab
 
 
@@ -1780,13 +1779,13 @@ stats = {
 	# Pressing a skill an item grants costs you one swing of the above, and a
 	# skill only earns its place by beating it. Derived from the rotation; set
 	# this only for an attack the skill data does not describe.
-	# What a "+%%" bonus acts on. The sheet shows you the total, and a
-	# percentage multiplies the base - lochlan reads 10178 health over a base of
-	# 1070, so a point of "+%% Health" buys him 10.7 and not 101.8. Without these
-	# a percentage is priced against the total and comes out high by however much
-	# of it the percentage already built.
-	# "base health": 0, "base armor": 0, "base offense": 0, "base defense": 0,
-	# "base physique": 0, "base cunning": 0, "base spirit": 0, "base energy": 0,
+	# The percentage you already carry, for each stat that takes one. A further
+	# point multiplies what the total came from, not the total - lochlan reads
+	# 10178 health at +31%%, so a point of "+%% Health" buys 10178/1.31/100 = 77.7
+	# and not 101.8. Without these a percentage is priced against the total and
+	# comes out high by exactly the percentage you have.
+	# "health %%": 0, "armor %%": 0, "offense %%": 0, "defense %%": 0,
+	# "physique %%": 0, "cunning %%": 0, "spirit %%": 0, "energy %%": 0,
 
 	# "main attack %%": 100,
 

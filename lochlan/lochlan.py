@@ -54,9 +54,10 @@ stats = {
 		"defense":1625,
 
 		"health":10178,
-		# What "+% Health" multiplies. The sheet shows the total; this is what
-		# the percentage acts on, so a point of it buys 10.7 rather than 101.8.
-		"base health":1070,
+		# The percentage he already carries. A further point multiplies what the
+		# 10178 came from - 10178/1.31 = 7770 - so it buys 77.7, not the 101.8
+		# the total would say. Not on the sheet; read off the gear.
+		"health %":31,
 		"health/s":145,
 
 		"armor":1353,

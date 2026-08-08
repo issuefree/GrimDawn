@@ -20,6 +20,29 @@ PHYSIQUE_REGEN = 1 / 25.0
 PHYSIQUE_DEFENSE = 0.5
 # Spirit: health, energy, energy regen flat and percentage, and the magical
 # damage types - 1/215 for direct, 1/200 for the durations.
+
+# What a character gains per level in offensive and defensive ability, beyond
+# what attributes and gear give. The engine adds it and nothing writes it down:
+# the enemy records state theirs as a level equation - `(charLevel*6)+50` - and
+# the player record states a flat 65 of each with no equation at all.
+#
+# So these two are fitted rather than read, which nothing else in this project
+# is. Against ten characters, what the sheet says minus everything that can be
+# accounted for, over level-1:
+#
+#     against level        rms 13%      against cunning/physique   rms 25-43%
+#
+# Level explains it and the attribute does not. Fitting both together drives the
+# attribute coefficient to 0.146 for offense and to -0.094 for defense - so the
+# 0.5 above is already about right and the missing term is not an attribute at
+# all. That is the part worth trusting; the size of it is worth less.
+#
+# Pakse is excluded from the fit. His sheet implies 8.4 and 11.1 against a
+# 13.5-19.9 spread across everyone else, which reads as a stale sheet rather
+# than a different rule - re-read him and these should be refitted.
+LEVEL_OFFENSE = 17.1
+LEVEL_DEFENSE = 15.8
+
 SPIRIT_HEALTH = 1.0
 SPIRIT_ENERGY = 2.0
 SPIRIT_REGEN = 0.01

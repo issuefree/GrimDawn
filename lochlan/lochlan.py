@@ -71,8 +71,6 @@ stats = {
 		"fight length":15, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
 
 
-		"offense":1964,  # derived 745 -62%
-		"defense":1625,  # derived 625.5 -62%
 
 		"health":10178,  # derived 7078 -30%
 		# The percentage he already carries. A further point multiplies what the

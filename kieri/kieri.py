@@ -87,8 +87,6 @@ stats =	{
 		"physique":450,  # derived 427 -5%
 		"cunning":450,  # derived 410 -9%
 
-		"offense":1200,  # derived 486 -60%
-		"defense":900,  # derived 290.5 -68%
 
 		"health":4000,  # derived 3609 -10%
 

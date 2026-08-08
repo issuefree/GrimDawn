@@ -567,7 +567,23 @@ def showGear(name, root=None):
 		print("     %-42s %s" % (piece[:42], extra))
 
 
-_SETS, _TIERS = {}, {}
+_SETS, _TIERS, _BASE = {}, {}, {}
+
+
+def _playerBase(db):
+	"""What a character has before level, attributes, gear or skills.
+
+	The player creature record carries it: 65 offensive and 65 defensive
+	ability, beside the 50 of each attribute a level 1 character starts with.
+	The enemy records state theirs as a level equation - `(charLevel*6)+50` and
+	the like - and the player's does not, which is the whole difficulty with
+	these two: whatever the game adds per level is in the engine, not here.
+	"""
+	if not _BASE:
+		record = db.read("records/creatures/pc/malepc01.dbr") or {}
+		_BASE["offense"] = float(record.get("characterOffensiveAbility") or 0)
+		_BASE["defense"] = float(record.get("characterDefensiveAbility") or 0)
+	return _BASE
 
 
 def _sets(db):
@@ -729,11 +745,25 @@ def sheetOf(name, root=None):
 	# ability, cunning is offensive ability, spirit is energy. The same constants
 	# checkModel prices a point of each with, used here in the other direction.
 	from models import (PHYSIQUE_HEALTH, PHYSIQUE_REGEN, PHYSIQUE_DEFENSE,
-						CUNNING_OFFENSE, SPIRIT_ENERGY)
+						CUNNING_OFFENSE, SPIRIT_ENERGY,
+						LEVEL_OFFENSE, LEVEL_DEFENSE)
 	gear["health"] = gear.get("health", 0) + stats["physique"] * PHYSIQUE_HEALTH
 	gear["health/s"] = gear.get("health/s", 0) + stats["physique"] * PHYSIQUE_REGEN
-	gear["defense"] = gear.get("defense", 0) + stats["physique"] * PHYSIQUE_DEFENSE
-	gear["offense"] = gear.get("offense", 0) + stats["cunning"] * CUNNING_OFFENSE
+	# Offensive and defensive ability start at what the player record states, in
+	# the same way health and energy start at the save's own base. It is 65 each
+	# on records/creatures/pc/malepc01.dbr, against a level 1 character's 50 of
+	# each attribute - small beside the rest, and the only part of the two that
+	# is written down anywhere.
+	# On top of that the engine gives both per level - see LEVEL_OFFENSE, which
+	# is the one number in this project that is fitted rather than read.
+	base = _playerBase(db)
+	levels = max(0, character["level"] - 1)
+	gear["defense"] = (gear.get("defense", 0) + base["defense"]
+					   + levels * LEVEL_DEFENSE
+					   + stats["physique"] * PHYSIQUE_DEFENSE)
+	gear["offense"] = (gear.get("offense", 0) + base["offense"]
+					   + levels * LEVEL_OFFENSE
+					   + stats["cunning"] * CUNNING_OFFENSE)
 	gear["energy"] = gear.get("energy", 0) + stats["spirit"] * SPIRIT_ENERGY
 	# Health and energy are the base times what the gear multiplies, and the
 	# percentage is stated as well because a model needs both: the total to
@@ -744,6 +774,12 @@ def sheetOf(name, root=None):
 		stats[pool] = round((character[pool] + gear.get(pool, 0)) * (1 + percent / 100.0))
 		if percent:
 			stats[pool + " %"] = round(percent)
+	# The two abilities take a percentage the same way, and it was being read off
+	# the gear and then never applied to anything - lochlan carries +10%.
+	for ability in ("offense", "defense"):
+		percent = gear.get(ability + " %", 0)
+		if percent:
+			gear[ability] = gear.get(ability, 0) * (1 + percent / 100.0)
 	for bonus, value in sorted(gear.items()):
 		if bonus in stats or bonus in ("physique", "cunning", "spirit"):
 			continue

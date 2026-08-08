@@ -56,8 +56,7 @@ stats = {
 		# estimated sheet stats for target level
 		"cunning":442,  # derived 391 -12%
 
-		"offense":1890,  # derived 436.5 -77%
-		"defense":1706,  # derived 633.5 -63%
+		"defense":1706,  # derived 1878.14 +10%
 
 		"health":9834,  # derived 7809 -21%
 		"health/s":88.38,  # derived 49.04 -45%

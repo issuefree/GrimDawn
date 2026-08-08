@@ -707,8 +707,9 @@ Two things are still out and one is a bug:
     the project. lochlan turns out to have almost none - his gear is legendaries
     and the one affix pair he carries grants skill ranks - so this was never the
     missing health it looked like.
-  - offensive and defensive ability have a base from level that is in neither
-    the save nor the records, which is most of their gap.
+  - offensive and defensive ability gain per level, which is in neither the save
+    nor the records and had been most of their gap. Fitted rather than read -
+    see below.
   - armor is averaged rather than summed. The game picks a body part per hit and
     each piece protects its own, so the average is both nearer the sheet and the
     quantity `applyDefensePriority` wants when it prices what armor stops per
@@ -719,6 +720,65 @@ Two things are still out and one is a bug:
 So the attributes, the resistances, the conversions and `+skills` are worth
 taking; the rest is a cross-check against the sheet rather than a replacement
 for it, and the output says so.
+
+## Offensive and defensive ability gain per level
+
+Both read 48-70% low against every sheet. Three things were missing and the
+third is the only interesting one.
+
+**The base.** `records/creatures/pc/malepc01.dbr` states 65 offensive and 65
+defensive ability, beside the 50 of each attribute a level 1 character starts
+with. Small, and it was not being added.
+
+**The percentage.** `offense %` and `defense %` were read off the gear and then
+applied to nothing. Lochlan carries +10%.
+
+**The per-level gain**, which was the rest of it. The game's own text says
+offensive ability comes from "skills, items, and Cunning" and defensive from
+"skills, items, and Physique", and states no rate for either - the enemy records
+state theirs as a level equation, `(charLevel*6)+50` and the like, and the
+player record has no equation at all. So this one is **fitted**, which nothing
+else in the project is. Against ten characters, sheet minus everything that can
+be accounted for:
+
+| explanation | OA rms | DA rms |
+|---|---|---|
+| against the attribute | 43% | 25% |
+| against level | 22% | 16% |
+| both together | 22% | 16% |
+
+Level explains it and the attribute does not. Fitting both together drives the
+attribute coefficient to 0.146 for offense and to **-0.094** for defense, so the
+existing 0.5 per point is already about right and what is missing is not an
+attribute at all. That is the part worth trusting. The size is worth less:
+17.1 and 15.8 per level, 13% rms, from sheets of mixed vintage.
+
+Pakse is excluded from the fit. His implies 8.4 and 11.1 against a 13.5-19.9
+spread across everyone else, which reads as a stale sheet rather than a
+different rule.
+
+    before   -48% .. -70% on all ten
+    after    eight of ten within 10%, lochlan +3% and +1%
+
+Lachesis (+18%, +19%) and pakse (+53%, +23%) are what is left. Both are worth
+re-reading off the game before anyone refits this.
+
+## Current devotion is on the sheet and nobody accounts for it
+
+Not fixed, and it cuts the other way from everything else here. The character
+sheet is read in town with the devotions you already have, so every stated sheet
+number includes them - and the optimiser then scores a candidate constellation
+set on top of that, which counts the current set twice.
+
+Lochlan's 24 devotion records with points in them are worth +96 offensive and
++105 defensive ability on their own, and that is only the two stats this section
+is about; the damage percentages will be larger. The save carries all of it -
+106 devotion records for lochlan - so it is readable either way.
+
+The fix is not to add them to the derived sheet. It is to take them off the
+baseline, because the baseline is meant to be what he has *without* the
+devotions he is choosing. That changes what every model optimises against, so
+it wants deciding rather than assuming.
 
 ## A rotation says what is on the bar and nothing else
 

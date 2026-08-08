@@ -77,8 +77,6 @@ stats = {
 
 		"cunning":600,  # derived 508 -15%
 
-		"offense":1250,  # derived 413 -67%
-		"defense":1100,  # derived 410 -63%
 
 		"health":6000,  # derived 5173 -14%
 		"health/s":50,  # derived 38.68 -23%

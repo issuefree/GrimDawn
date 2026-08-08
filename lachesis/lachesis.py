@@ -47,14 +47,14 @@ stats =	{
 
 		"cunning":400,  # derived 360 -10%
 
-		"offense":1500,  # derived 572 -62%
-		"defense":1250,  # derived 376.5 -70%
+		"offense":1500,  # derived 1765.09 +18%
+		"defense":1250,  # derived 1492.15 +19%
 
 		"health":6500,  # derived 7821 +20%
 		"armor":800,  # derived 615.57 -23%
 		"energy":3500,  # derived 4963 +42%
 
-		"vitality %":1050,  # derived vitality % 678 -35%
+		"vitality %":1050,  # derived 678 -35%
 		"chaos %":500,  # derived 249 -50%
 
 		"pet all damage %":250+100,  # derived 103 -71%

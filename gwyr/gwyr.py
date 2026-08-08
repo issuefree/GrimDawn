@@ -95,7 +95,7 @@ stats = {
 
 	"weapons": ["2h ranged"],   # omit to allow every constellation
 	"physique": 950, "cunning": 550, "spirit": 450,  # derived physique 840 -12%, cunning 521 -5%, spirit 411 -9%
-	"offense": 2082, "defense": 1900,  # derived offense 668.5 -68%, defense 578 -70%
+	"defense": 1900,  # derived 1780.6 -6%
 	"health": 8000, "health/s": 320,  # derived health 7304 -9%, health/s 78.6 -75%
 	"energy": 2500, "energy/s": 28,  # derived energy 2742 +10%, energy/s 5 -82%
 	"armor": 900,  # derived 649.29 -28%

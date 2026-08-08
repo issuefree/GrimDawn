@@ -61,8 +61,8 @@ stats = {
 	"difficulty": "normal",       # from the level band, not from the save
 
 	"physique": 600, "spirit": 1053,  # derived physique 568 -5%, spirit 960 -9%
-	"offense": 1635, "defense": 1300,  # derived offense 399 -76%, defense 406 -69%
-	"health": 9000,  # derived health 6369 -29%
+	"defense": 1300,  # derived 1371.6 +6%
+	"health": 9000,  # derived 6369 -29%
 	"energy": 4500, "energy/s": 165,  # derived energy 5136 +14%, energy/s 22 -87%
 	"armor": 479,  # derived 342.14 -29%
 

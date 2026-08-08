@@ -67,8 +67,8 @@ stats = {
 
 		"physique":1000,  # derived 936 -6%
 
-		"offense":1100,  # derived 488.5 -56%
-		"defense":1300,  # derived 527 -59%
+		"offense":1100,  # derived 1680.86 +53%
+		"defense":1300,  # derived 1603.2 +23%
 
 		"health":10000,  # derived 9074 -9%
 		"health/s":133,  # derived 58.44 -56%
@@ -78,14 +78,13 @@ stats = {
 		"energy":2000,  # derived 2246 +12%
 		"energy/s":15,  # derived 0.8 -95%
 
-		"physical":125,  # derived physical 124.5 +199%
 		# "internal %":400, "internal":1,
 		# "fire %":1300, "fire":1600,
 		# "burn %":1000, "burn":500,
 		# "lightning %":850, "lightning":69,
 		# "electrocute %":650, "electrocute":1,
 		# "chaos %":450, "chaos":1,
-		"acid":500,  # derived acid 38 -54%
+		"acid":500,  # derived 38 -92%
 
 		"retaliation %":500,  # derived 393 -21%
 

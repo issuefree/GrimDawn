@@ -24,8 +24,8 @@ stats = {
 		"cunning":750,  # derived 682 -9%
 		"spirit":300,  # derived 277 -8%
 
-		"offense":1200,  # derived 533 -56%
-		"defense":900,  # derived 286 -68%
+		"offense":1200,  # derived 1315.5 +10%
+		"defense":900,  # derived 967.2 +7%
 		"armor":425,  # derived 216.86 -49%
 
 		"attacks/s":1.88,

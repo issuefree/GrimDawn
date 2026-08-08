@@ -663,10 +663,28 @@ and could never be read back. What granted it is spelled two ways - a component
 puts an int before the path where a transformation does not - so the path is
 looked for rather than assumed.
 
-**What is left.** The gear. Every item is skipped, and reading them would give
-the sheet itself rather than the transcription of it - which is most of what a
-model still states by hand. It is the same job as the skills and now that the
-block boundaries hold, it is bounded work rather than a puzzle.
+**The gear is read too.** `python savefile.py Lochlan gear` names every piece
+and what is socketed into it:
+
+    Dread-Mask of Gurgoth        Polished Emerald
+    Pendant of the Royal Crown   Attuned Lodestone, Stormtail Viper Venom
+    Falcon's Claw                Oleron's Blood, Potent Stonetusk Hoof
+
+The item record had moved on the same way everything else had - four numbers in
+inventory version 4, eight in 11, and the same two characters are still on 4.
+Only what you are wearing is parsed; the bags are consumed, because they hold
+loot rather than a build and an odd thing in one should not cost the parse.
+
+The prefix and suffix are recorded but not reported. They are tags, and what
+they rolled comes from a seed against a range in the records - a seed on its own
+says nothing without the game's own roller.
+
+**What is left.** Turning the gear into a sheet. Each worn record carries its
+own bonuses and an `itemSkillName` - Falcon's Claw grants item_lightningchain_01,
+Zeal grants relic_zeal - so the flat damage, the resistances and the item skills
+a model states by hand are all reachable from here. That is the last of the
+transcription, and it is now a matter of summing records rather than reading a
+format.
 
 ## Models that do not load
 

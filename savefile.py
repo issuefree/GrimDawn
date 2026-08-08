@@ -20,6 +20,7 @@ the total devotion earned.
 
     python savefile.py            every character, against what its model says
     python savefile.py Gwyr       his skills, in the syntax a rotation wants
+    python savefile.py Gwyr gear  what he is wearing, and what is in it
 
 Nothing can be skipped, because the key advances on every ciphertext byte
 consumed - and nothing can be walked blindly either, because a nested block
@@ -216,33 +217,32 @@ def _list(reader, element):
 	return [element(reader) for _ in range(reader.u32())]
 
 
-def _item(reader):
-	"""One item, wherever it sits. Only the names are kept; the seeds decide
-	which affixes rolled and nothing here scores an affix."""
-	names = [reader.string() for _ in range(5)]     # base, prefix, suffix, modifier, transmute
+def _item(reader, version=11):
+	"""One item: what it is, what rolled on it and what is socketed into it.
+
+	Eight strings and six numbers, of which the names are the part worth having.
+	The seeds decide which affix values rolled and the records carry only the
+	ranges, so a seed without the game's own roller says nothing.
+	"""
+	base = reader.string()
+	prefix = reader.string()
+	suffix = reader.string()
+	reader.string(); reader.string()                # modifier, transmute
 	reader.u32()                                    # seed
 	component = reader.string()
 	reader.string()                                 # relic bonus
 	reader.u32()                                    # component seed
 	augment = reader.string()
-	# Eight, not the four a version-4 reference lists: these saves write
-	# inventory version 11 and the item grew. Six of them are zero on every item
-	# seen, one is the stack count, and the pair after it is zero - the two that
-	# follow belong to wherever the item sits and are read there.
-	for _ in range(8):
+	# Four in inventory version 4, eight in 11. Two of these characters have not
+	# been loaded since that changed and are still on the short one.
+	for _ in range(8 if version >= 11 else 4):
 		reader.u32()
-	return {"base": names[0], "prefix": names[1], "suffix": names[2],
+	return {"base": base, "prefix": prefix, "suffix": suffix,
 			"component": component, "augment": augment}
 
 
-def _placed(reader):
-	item = _item(reader)
-	reader.u32(); reader.u32()                      # x, y in the bag
-	return item
-
-
-def _equipped(reader):
-	item = _item(reader)
+def _equipped(reader, version=11):
+	item = _item(reader, version)
 	reader.u8()                                     # attached
 	return item
 
@@ -340,16 +340,38 @@ def readCharacter(path):
 	# which carry no lengths, so consuming them byte by byte keeps the key right
 	# whatever shape they are.
 	_, end = _blockStart(reader, 3)                 # inventory
-	reader.u32()                                    # version
+	version = reader.u32()
+	header["equipped"] = []
 	if reader.u8():
 		bags = reader.u32()
 		reader.u32(); reader.u32()                  # focused, selected
 		for _ in range(bags):
+			# The bags are loot and are consumed, not read. Whatever odd thing
+			# is sitting in one cannot break the parse that way, and two of
+			# these characters carry something the item layout below does not
+			# describe.
 			_, sackEnd = _blockStart(reader)
 			while reader.pos < sackEnd:
 				reader.u8()
 			_blockEnd(reader, sackEnd)
-	while reader.pos < end:                         # what you are wearing
+		# What you are wearing, which is the part worth having: twelve slots,
+		# then two weapon sets of two. Attempted, and consumed if it does not
+		# land on the block's own end, so a shape we have not seen costs the
+		# gear and not the skills.
+		mark, key = reader.pos, reader.key
+		try:
+			reader.u8()                             # use alternate
+			worn = [_equipped(reader, version) for _ in range(12)]
+			reader.u8()
+			worn += [_equipped(reader, version) for _ in range(2)]
+			reader.u8()
+			worn += [_equipped(reader, version) for _ in range(2)]
+			if reader.pos != end:
+				raise ValueError("equipment did not land on the block end")
+			header["equipped"] = [w for w in worn if w["base"]]
+		except Exception:
+			reader.pos, reader.key = mark, key
+	while reader.pos < end:
 		reader.u8()
 	_blockEnd(reader, end)
 
@@ -505,6 +527,45 @@ def skillsOf(name, root=None):
 	return sorted(out, key=lambda row: (-row[1], row[0]))
 
 
+def gearOf(name, root=None):
+	"""[(item name, component, augment)] for what a character is wearing.
+
+	The names come from the game's own records, the way skillgen takes a skill's
+	name. A prefix and a suffix are recorded too, but they are tags rather than
+	rolled values - the record carries the range and the seed picks from it - so
+	only what the piece is, and what is socketed into it, is reported.
+	"""
+	from gddata import Database
+	found = characters(root)
+	if name not in found:
+		return []
+	character = readCharacter(found[name]["path"])
+	db = Database()
+
+	def label(path):
+		record = db.read(path) if path else None
+		return (db.name(record) if record else "") or (
+			path.split("/")[-1][:-4] if path else "")
+
+	out = []
+	for worn in character["equipped"]:
+		out.append((label(worn["base"]), label(worn["component"]),
+					label(worn["augment"])))
+	return out
+
+
+def showGear(name, root=None):
+	"""Print what a character is wearing, with what is socketed into it."""
+	rows = gearOf(name, root)
+	if not rows:
+		print("  nothing read for %r" % name)
+		return
+	print("\n  %s is wearing %d pieces:\n" % (name, len(rows)))
+	for piece, component, augment in rows:
+		extra = ", ".join(x for x in (component, augment) if x)
+		print("     %-42s %s" % (piece[:42], extra))
+
+
 def showSkills(name, root=None):
 	"""Print one character's skills as a rotation would state them."""
 	rows = skillsOf(name, root)
@@ -541,7 +602,9 @@ def _modelStat(name, key):
 
 if __name__ == "__main__":
 	import sys
-	if len(sys.argv) > 1:
+	if len(sys.argv) > 2 and sys.argv[2] == "gear":
+		showGear(sys.argv[1])
+	elif len(sys.argv) > 1:
 		showSkills(sys.argv[1])
 	else:
 		show()

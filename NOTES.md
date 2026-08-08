@@ -640,21 +640,33 @@ of them disagreed about devotion:
     armitage 52 (model 57)   fenris 13 (20)    kieri 13 (15)
     lethe 20 (55)            lilith 34 (45)    pakse 34 (28)
 
-**What is left.** Block 3 is where the items live and the walk stops there. A
-block cannot be skipped - the key advances on every ciphertext byte consumed -
-and it cannot be walked blindly either, because a block containing items
-contains their lengths, and a length is read without advancing the key. Consume
-those four bytes as data and the key is out. So every block from the third on
-has to be parsed field by field.
+**The skills are read.** `python savefile.py Gwyr` prints his ranks in the syntax
+a rotation wants - Fire Strike 7, Brimstone 6, Explosive Strike 3, against a
+model that stubs all three at 12. That was the largest piece of transcription
+left and the thing every damage weight is priced against.
 
-Worth doing for the skills block, which is the ranks - the single largest piece
-of transcription left, and the thing every damage weight is priced against.
-grimtools.com/calc reads all of this from an uploaded save, which is proof the
-rest of the format is no harder than what is already done.
+Four things had moved on from the reference implementation, and each put the
+*next* field out rather than failing where it went wrong:
 
-Nyx is the twelfth save and does not decode: her data version reads as garbage
-where every other save reads 8. Either an older format or a character the game
-wrote differently.
+    the item grew four fields          inventory version 4 -> 11
+    a stash tab grew five              version 6 -> 11
+    a skill record grew a byte         version 5 -> 8, and two saves are still 6
+    what follows the skill list        two lists, not one
+
+The inventory and the stash are consumed rather than interpreted - only their
+nested block lengths are read properly, since those cannot be skipped. No item
+is parsed, which is deliberate: the item record is the part that keeps changing.
+
+An item skill entry gives the devotion proc bound to that skill and the
+controller that fires it, which is the binding the optimiser exists to choose
+and could never be read back. What granted it is spelled two ways - a component
+puts an int before the path where a transformation does not - so the path is
+looked for rather than assumed.
+
+**What is left.** The gear. Every item is skipped, and reading them would give
+the sheet itself rather than the transcription of it - which is most of what a
+model still states by hand. It is the same job as the skills and now that the
+block boundaries hold, it is bounded work rather than a puzzle.
 
 ## Models that do not load
 

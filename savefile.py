@@ -14,12 +14,23 @@ key, the data version, and a sixteen-byte uid. With those consumed the blocks
 fall out with the right types and lengths and a zero trailer on each, which is
 the check that the key is still in step.
 
-What is not done is the inside of most blocks. A block cannot be skipped, because
-the key advances on every ciphertext byte consumed, and it cannot be walked
-blindly either: a block that contains items contains their lengths, and a length
-is read *without* advancing the key, so consuming those four bytes as data puts
-the key out. Every block has to be parsed field by field or not at all. See
-NOTES.md for what that leaves.
+The blocks are read as far as the skills, which is what there was to get: the
+ranks you have spent points on, the attributes and base health before gear, and
+the total devotion earned.
+
+    python savefile.py            every character, against what its model says
+    python savefile.py Gwyr       his skills, in the syntax a rotation wants
+
+Nothing can be skipped, because the key advances on every ciphertext byte
+consumed - and nothing can be walked blindly either, because a nested block
+declares its length and a length is read *without* advancing the key. So the
+inventory and the stash are opened properly at their block boundaries and their
+contents consumed byte by byte: no item is interpreted, which is deliberate,
+since the item record is the part of this format that keeps changing shape.
+
+Every block checks itself against its own declared end. Landing on the promised
+byte with a zero after it is not something a wrong field order does by accident,
+which is what makes the rest of it trustworthy.
 """
 import os
 import struct
@@ -116,11 +127,9 @@ def readHeader(path):
 def blocks(header):
 	"""Walk the file's blocks, yielding (type, start, length) for each.
 
-	Stops at the first block it cannot walk. A block's own bytes can be consumed
-	without understanding them - the key advances the same either way - but not
-	one that contains a nested length, because a length is read without
-	advancing the key and consuming those four bytes as data breaks it. On these
-	saves that is the third block, which is where the items live.
+	Stops at the first block it cannot walk, which is the third - a block's own
+	bytes can be consumed without understanding them, but not one that contains
+	a nested length. readCharacter goes further by opening those properly.
 	"""
 	reader, data = header["reader"], header["data"]
 	while reader.pos < len(data) - 8:
@@ -274,8 +283,22 @@ def _itemSkill(reader):
 	when it fires, which is the binding the optimiser spends its whole time
 	choosing and has never been able to read back.
 	"""
-	return {"record": reader.string(), "boundSkill": reader.string(),
-			"controller": reader.string(), "source": reader.string()}
+	record = reader.string()
+	bound = reader.string()
+	controller = reader.string()
+	# What granted it, and how it is spelled depends on what that was. A
+	# component puts an int in front of the path - armitage's Brutal Shield Slam
+	# comes off compa_reinforcedshell and does - where a transformation does not;
+	# fenris's Feral Claws comes off werewolf1 and goes straight to the path. So
+	# the path is looked for rather than assumed to be next.
+	mark, key = reader.pos, reader.key
+	source = reader.string()
+	if not source.startswith("records/"):
+		reader.pos, reader.key = mark, key
+		reader.u32()
+		source = reader.string()
+	return {"record": record, "boundSkill": bound,
+			"controller": controller, "source": source}
 
 
 def readCharacter(path):

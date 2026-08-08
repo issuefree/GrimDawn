@@ -566,6 +566,115 @@ def showGear(name, root=None):
 		print("     %-42s %s" % (piece[:42], extra))
 
 
+def sheetOf(name, root=None):
+	"""What the gear adds up to, in the vocabulary a model states.
+
+	Not the character sheet, and the difference is large. Against lochlan's own
+	numbers this lands for the resistances, the conversion and the added ranks
+	and falls short everywhere else - physique 298 against 763, health 2108
+	against 10178 - because three things contribute that are not read here: a
+	mastery bar grants attributes, so do skills, and an item's prefix and suffix
+	roll their values from a seed against a range the record only bounds.
+	Armor comes out about four times over, which is a bug rather than a gap.
+
+	Every worn piece, plus whatever is socketed into it, read through the same
+	extraction itemgen uses to build itemData - so a bonus is spelled here the
+	way a model spells it. Attributes and health start from the save's own base
+	rather than from zero, because those are the two the character has before
+	any of this.
+
+	Returns (stats, missing): what could be worked out, and the names of what
+	could not.
+	"""
+	from gddata import Database
+	from itemgen import itemBonuses
+	found = characters(root)
+	if name not in found:
+		return {}, []
+	character = readCharacter(found[name]["path"])
+	db = Database()
+
+	import skillData                    # noqa: F401 - registers the skills
+	from dataModel import Skill
+	skillNames = set(Skill.skills)
+
+	gear = {}
+	for worn in character["equipped"]:
+		for path in (worn["base"], worn["component"], worn["augment"]):
+			record = db.read(path) if path else None
+			if not record:
+				continue
+			for bonus, value in itemBonuses(record, db).items():
+				if isinstance(value, list):
+					continue                # a duration pair; the model reads
+											# those off the skill, not the item
+				gear[bonus] = gear.get(bonus, 0) + value
+
+	stats = {}
+	for attribute in ("physique", "cunning", "spirit"):
+		stats[attribute] = round(character[attribute] + gear.get(attribute, 0))
+	# Health and energy are the base times what the gear multiplies, and the
+	# percentage is stated as well because a model needs both: the total to
+	# price a point of health against, and the percentage to know what another
+	# point of "+% Health" would multiply.
+	for pool in ("health", "energy"):
+		percent = gear.get(pool + " %", 0)
+		stats[pool] = round((character[pool] + gear.get(pool, 0)) * (1 + percent / 100.0))
+		if percent:
+			stats[pool + " %"] = round(percent)
+	for bonus, value in sorted(gear.items()):
+		if bonus in stats or bonus in ("physique", "cunning", "spirit"):
+			continue
+		if bonus.endswith(" resist") or bonus.startswith("max "):
+			stats[bonus] = round(value)
+		elif bonus in ("armor", "armor %", "offense", "defense", "health/s",
+					   "energy/s", "attack speed", "move speed", "cast speed"):
+			stats[bonus] = round(value, 2)
+		elif bonus.endswith(" skills") or bonus == "all skills" or bonus in skillNames:
+			# "+2 Shaman skills" and "+2 Blade Arc" are both ranks your gear
+			# adds, which is what the "+skills" field states - not stats of
+			# their own, which is where they were landing.
+			stats.setdefault("+skills", {})
+			key = ("all" if bonus == "all skills"
+				   else bonus[:-len(" skills")].title() if bonus.endswith(" skills")
+				   else bonus)
+			stats["+skills"][key] = stats["+skills"].get(key, 0) + round(value)
+		else:
+			stats[bonus] = round(value, 2)
+
+	# Offensive and defensive ability have a base from level and attributes that
+	# the save does not carry and the records do not state, so only the gear's
+	# share of them is known.
+	missing = [n for n in ("offense", "defense") if n in stats]
+	return stats, missing
+
+
+def showSheet(name, root=None):
+	"""Print the sheet the gear implies, as a model would state it."""
+	stats, partial = sheetOf(name, root)
+	if not stats:
+		print("  nothing read for %r" % name)
+		return
+	print("\n  %s, from the save:\n" % name)
+	for key in sorted(stats):
+		value = stats[key]
+		if isinstance(value, dict):
+			print('     "%s": %s,' % (key, "{" + ", ".join(
+				'"%s": %d' % kv for kv in sorted(value.items())) + "}"))
+		else:
+			print('     "%s": %s,' % (key, value))
+	print("\n  This is what the gear gives, not the character sheet. Against\n"
+		  "  lochlan's own numbers it lands for the resistances, the conversion\n"
+		  "  and the added ranks, and falls short everywhere else - physique 298\n"
+		  "  against 763, health 2108 against 10178 - because a mastery bar and\n"
+		  "  a skill both grant attributes and an item's prefix and suffix roll\n"
+		  "  from a seed, and none of the three is read. Armor comes out about\n"
+		  "  four times over, which is a bug rather than a gap.\n\n"
+		  "  So: take the resistances, the conversions and \"+skills\" from here.\n"
+		  "  %s and the rest still come off the sheet."
+		  % " and ".join(partial or ["Nothing"]).capitalize())
+
+
 def showSkills(name, root=None):
 	"""Print one character's skills as a rotation would state them."""
 	rows = skillsOf(name, root)
@@ -604,6 +713,8 @@ if __name__ == "__main__":
 	import sys
 	if len(sys.argv) > 2 and sys.argv[2] == "gear":
 		showGear(sys.argv[1])
+	elif len(sys.argv) > 2 and sys.argv[2] == "stats":
+		showSheet(sys.argv[1])
 	elif len(sys.argv) > 1:
 		showSkills(sys.argv[1])
 	else:

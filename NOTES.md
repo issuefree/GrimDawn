@@ -679,12 +679,32 @@ The prefix and suffix are recorded but not reported. They are tags, and what
 they rolled comes from a seed against a range in the records - a seed on its own
 says nothing without the game's own roller.
 
-**What is left.** Turning the gear into a sheet. Each worn record carries its
-own bonuses and an `itemSkillName` - Falcon's Claw grants item_lightningchain_01,
-Zeal grants relic_zeal - so the flat damage, the resistances and the item skills
-a model states by hand are all reachable from here. That is the last of the
-transcription, and it is now a matter of summing records rather than reading a
-format.
+**Summing the gear does not give the sheet.** `python savefile.py Lochlan stats`
+adds up every worn record and what is socketed into it, through the same
+extraction itemgen uses. Against his own numbers:
+
+    resistances, conversion, added ranks   land
+    physique                298   vs   763
+    health                 2108   vs 10178
+    offense                 538   vs  1964
+    armor                  5275   vs  1353
+
+Three things contribute that this does not read, and they are most of the gap.
+A mastery bar grants attributes and so do skills, neither of which is gear. And
+an item's prefix and suffix roll their values from a seed against a range the
+record only bounds - a seed says nothing without the game's own roller, which is
+the one part of this that is genuinely closed.
+
+Armor being four times over is a bug rather than a gap and has not been chased.
+
+So what it is good for is the part that is gear and only gear: resistances,
+damage conversion, and the ranks your equipment adds, which is exactly the
+`+skills` field. Take those three from here and read the rest off the sheet.
+
+**What is left.** The affix rolls, which want the game's roller, and the mastery
+and skill contributions, which do not - those are in skillData already and could
+be summed the same way. That would close most of the remaining gap without
+touching a seed.
 
 ## Models that do not load
 

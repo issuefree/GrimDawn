@@ -567,6 +567,31 @@ def showGear(name, root=None):
 		print("     %-42s %s" % (piece[:42], extra))
 
 
+_SETS, _TIERS = {}, {}
+
+
+def _sets(db):
+	"""{set name: the records that belong to it}, built once."""
+	if not _SETS:
+		for path in db.under("records/items/lootsets/"):
+			record = db.read(path)
+			if not record:
+				continue
+			name = db.tags.get(record.get("setName") or "", "")
+			members = record.get("setMembers") or []
+			if name and members:
+				_SETS[name] = set([members] if isinstance(members, str) else members)
+	return _SETS
+
+
+def _setTiers(db):
+	"""What each piece count adds, from itemgen - built once, it walks every set."""
+	if not _TIERS:
+		from itemgen import setBonuses
+		_TIERS.update(setBonuses(db))
+	return _TIERS
+
+
 def sheetOf(name, root=None):
 	"""What the gear adds up to, in the vocabulary a model states.
 
@@ -670,9 +695,34 @@ def sheetOf(name, root=None):
 	if armor:
 		gear["armor"] = sum(armor) / len(armor)
 
+	# Set bonuses, which are on none of the pieces themselves. A set states its
+	# bonuses as a running total per piece count, and itemgen.setBonuses has
+	# already turned that into what each count adds - so wearing n pieces is the
+	# sum of the tiers from two up to n.
+	#
+	# lochlan's three Royal Crown pieces are the Royal Exuberance set: 5% to
+	# each attribute at two, and "+1 to all skills" at three. That last is the
+	# rank his transcribed ranks had and this did not, on every skill at once.
+	for setName, members in _sets(db).items():
+		worn = sum(1 for w in character["equipped"] if w["base"] in members)
+		if worn < 2:
+			continue
+		for count in range(2, worn + 1):
+			tier = _setTiers(db).get("%s (%d)" % (setName, count))
+			if not tier:
+				continue
+			for bonus, value in tier[0].items():
+				if isinstance(value, (int, float)):
+					gear[bonus] = gear.get(bonus, 0) + value
+
 	stats = {}
 	for attribute in ("physique", "cunning", "spirit"):
-		stats[attribute] = round(character[attribute] + gear.get(attribute, 0))
+		# The percentage multiplies the lot, the same way it does for health -
+		# and it is usually a set that grants one, which is why this only
+		# started mattering once sets were read.
+		percent = gear.get(attribute + " %", 0)
+		stats[attribute] = round((character[attribute] + gear.get(attribute, 0))
+								 * (1 + percent / 100.0))
 
 	# What the attributes themselves are worth, which the game applies on top of
 	# everything above: physique is health, health regeneration and defensive

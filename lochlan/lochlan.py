@@ -26,7 +26,8 @@ stats = {
 		# state. A skill fires no faster than its cooldown and no faster than
 		# it is pressed, so the rate is one over whichever is longer; the load
 		# prints which one won for each. The first entry is what he holds the
-		# button down on, and it is his main attack. RANKS ARE STUBS.
+		# button down on, and it is his main attack.
+		#
 		# Ranks are points spent, read out of the save with
 		#     python savefile.py Lochlan
 		# and not the rank the skill screen shows. The gear is stated once in
@@ -49,13 +50,15 @@ stats = {
 		],
 		# What his gear adds on top, off the same save. Everything he wears and
 		# everything socketed into it, including the one affix pair he carries -
-		# the Badge of Mastery's +3 Savagery and +2 Primal Strike.
+		# the Badge of Mastery's +3 Savagery and +2 Primal Strike - and the set
+		# his three Royal Crown pieces make: Royal Exuberance, which is 5% to
+		# each attribute at two pieces and "+1 to all skills" at three.
 		#
-		# Effective rank comes out one short of what he had transcribed on every
-		# skill that gear touches, so there is a point of "+1 to all skills"
-		# somewhere this does not read. Worth finding; it is a rank on every
-		# line rather than one.
+		# That last one is why every rank here lands exactly where he had
+		# transcribed it. Savagery is 9 spent, +3 from gear and +1 from the set,
+		# which is the 13 the skill screen shows him.
 		"+skills":{
+			"all":1,
 			"Primal Strike":6, "Storm Totem":5, "Torrent":4, "Savagery":3,
 			"Blast Shield":3, "Sigil of Consumption":3, "Ascension":2,
 			"Blade Arc":2, "Mortar Trap":2, "Oleron's Rage":2, "Overguard":2,

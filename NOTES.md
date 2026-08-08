@@ -478,12 +478,22 @@ and nothing reads it. Blocked on two things: whether `cooldown` means the proc's
 or the bound skill's, which one in-game tooltip check settles, and on the
 resolved rotation carrying only rates and no cooldowns.
 
-## Set bonuses are not extracted
+## Set bonuses
 
-`itemgen` does not read set records, so the Ultos' Storm bonuses at 2/3/4/5
-pieces - including the Ultos' Wrath proc on the fifth - are invisible. lochlan
-wears that set. They used to be hand-written in his model file; see the history
-of `lochlan/lochlan.py` for what they said.
+**Read, and applied.** `itemgen.setBonuses` has extracted them for a while - the
+note here saying otherwise was stale - but nothing was working out which sets a
+character actually wears, so they reached itemData and stopped.
+
+`sheetOf` counts worn pieces per set now and adds the tiers earned. A set states
+its bonuses as a running total per piece count and setBonuses has already turned
+that into what each count adds, so wearing n pieces is the sum of tiers two to n.
+
+It was worth more than it looked. lochlan's three Royal Crown pieces are the
+Royal Exuberance set: 5% to each attribute at two, and **+1 to all skills** at
+three. That last was the rank his hand-transcribed ranks had and the derivation
+did not, on every skill at once - and with it his ranks land exactly where he
+had written them. The attribute percentage closed most of the rest: spirit is
+now exact, cunning within one percent, physique within four.
 
 ## Skills that yield no bonuses are dropped entirely
 

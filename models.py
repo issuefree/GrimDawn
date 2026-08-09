@@ -580,10 +580,21 @@ class Model:
 		if not real:
 			return []
 		granted = savefile.devotionOf(real)
+		# A flat damage or retaliation figure on the sheet has already been
+		# multiplied and a constellation's has not, so the two are in different
+		# units and cannot simply be subtracted. Put the devotion's on the
+		# sheet's footing first; unmultiplyFlat divides the pair back out
+		# together afterwards.
+		retalPercent = float(stats.get("all retaliation %", 0)
+							 or stats.get("retaliation %", 0) or 0)
 		removed = []
 		for key, value in sorted(granted.items()):
 			if key not in stats or not isinstance(stats[key], (int, float)):
 				continue
+			if key in damages:
+				value *= 1 + float(stats.get(key + " %", 0) or 0) / 100.0
+			elif key.endswith(" retaliation") and key[:-len(" retaliation")] in damages:
+				value *= 1 + retalPercent / 100.0
 			was = stats[key]
 			stats[key] = was - value
 			removed.append("%s %s-%s" % (key, fmt(was), fmt(value)))

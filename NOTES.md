@@ -834,12 +834,26 @@ folds them at the source.
 
     stated 831 -> 591 with devotion off, against a derived 433
 
-The flat retaliation per type is still out and disagrees in both directions.
-Taking his sheet as post-multiplier the way damage is, fire implies 1512 flat
-against 744 derived and physical implies 615 against 838. So it is not one
-missing factor. Blast Shield's 75 fire retaliation is a `Skill_PassiveOn*` and
-correctly excluded from the sheet, which is part of the fire gap but nowhere
-near all of it.
+**The flat was being multiplied twice.** The sheet states retaliation the way it
+states damage - with the multiplier already applied - and `unmultiplyFlat` only
+divided the damage types back out. `retaliationDamage` then multiplied the sheet
+figure again, so armitage's retaliation was scored at nine times what he
+actually retaliates for, on a build where retaliation is most of his damage.
+
+    fire retaliation       -95%  ->  -47%
+    physical retaliation   -86%  ->   +1%
+    lightning retaliation  -88%  ->  -15%
+
+Physical landing on +1% is the check that the division is the right one.
+
+Two things fell out of it. `removeCurrentDevotion` was subtracting a
+constellation's flat damage - which is pre-multiplier - from a sheet figure that
+is post-multiplier, so the units did not match; it puts the devotion's figure on
+the sheet's footing first now, for damage and retaliation alike. And the fire
+gap that is left is the sort of thing an item-granted buff would explain:
+armitage runs Burning Weapons, which is in `itemAbilities` rather than
+`skillData`, and no item skill's bonuses are read onto the sheet at all. That is
+the next category.
 
 ## How armor works, off the game rather than by trial
 

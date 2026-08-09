@@ -1077,6 +1077,23 @@ def unmultiplyFlat(stats, alreadyFlat=()):
 	# It composes with dotFactor rather than duplicating it: this says what one
 	# application is worth, and dotFactor says what share of it you collect
 	# before your next swing overwrites it.
+	# Retaliation is stated on the sheet the same way and was not being divided
+	# back out, so retaliationDamage multiplied it a second time. Armitage reads
+	# 14606 fire retaliation at +831%, which is 1569 flat and not 14606 waiting
+	# for a multiplier - the old reading made his retaliation nine times what he
+	# actually retaliates for, on a build where it is most of his damage.
+	retaliated = []
+	retalPercent = float(stats.get("all retaliation %", 0)
+						 or stats.get("retaliation %", 0) or 0)
+	if retalPercent > 0:
+		for damage in damages:
+			key = damage + " retaliation"
+			flat = float(stats.get(key) or 0)
+			if not flat or key in alreadyFlat:
+				continue
+			stats[key] = flat / (1.0 + retalPercent / 100.0)
+			retaliated.append("%s %g -> %s" % (key, flat, fmt(stats[key])))
+
 	rated = []
 	for damage, seconds in DOT_SECONDS.items():
 		if not stats.get(damage):
@@ -1090,6 +1107,9 @@ def unmultiplyFlat(stats, alreadyFlat=()):
 	if changed:
 		notes.append("sheet damage is what the multiplier has already been applied "
 					 "to, so it is divided back out: " + ", ".join(changed))
+	if retaliated:
+		notes.append("retaliation is stated the same way, so the retaliation "
+					 "multiplier comes back out of it too: " + ", ".join(retaliated))
 	if rated:
 		notes.append("a damage over time is stated on the sheet as a rate, so it is "
 					 "taken over its duration: " + ", ".join(rated))

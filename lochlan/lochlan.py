@@ -11,7 +11,7 @@ from dataModel import *
 from itemData import *
 from constellationData import *
 
-devotionPoints = 28
+devotionPoints = 29
 
 # What is stated below is what the save gets wrong. Everything a model leaves
 # out is filled in at load from the character's own save file - every worn item,
@@ -35,7 +35,7 @@ stats = {
 		"difficulty":"normal",
 		# estimate how frequent combat events are for calculating dynamic stats and abilities
 		"attacks/s":1.76,
-		"crit damage": 70,  # derived 47 -6%
+		"crit damage": 70,  # derived 47 -15%
 		"rotation":[
 			"Savagery",            # held on left button, so this is his main attack
 			"Primal Strike",
@@ -52,31 +52,30 @@ stats = {
 		"low healths/s":1.0/20, # total guesswork.
 		"fight length":15, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
 
-		"health":10178,  # derived 8420 -13%
 		# The percentage he already carries. A further point multiplies what the
 		# 10178 came from - 10178/1.31 = 7770 - so it buys 77.7, not the 101.8
 		# the total would say. Not on the sheet; read off the gear.
-		"health/s":145,  # derived 64.4 -56%
+		"health/s":145,  # derived 76.96 -27%
 
-		"armor":1353,  # derived 659.38 -51%
+		"armor":1353,  # derived 750.57 -44%
 
-		"energy":2358,  # derived 2672 +13%
-		"energy/s":34,  # derived 9.2 -73%
+		"energy":2358,  # derived 2764 +17%
+		"energy/s":34,  # derived 4.2 -88%
 		
-		"pierce resist":80,  # derived 66 -6%
+		"pierce resist":80,  # derived 66 -18%
 		"fire resist":80,  # derived 120 +50%
 		"cold resist":80,
 		"lightning resist":80,
-		"bleed resist":73,  # derived 79 +8%
-		"acid resist":40,  # derived 44 +10%
+		"bleed resist":73,  # derived 79 +22%
+		"acid resist":40,  # derived 64 +60%
 		"aether resist":6,  # derived 3 -50%
 		"chaos resist":14,  # derived 15 +7%
-		"vitality resist":51,  # derived 44 -14%
+		"vitality resist":51,  # derived 64 +25%
 		"physical resist":8,  # derived 5 +25%
 
-		"physical %":640, "physical":150,  # derived physical % 202 -66%, physical 35 +64%
-		"lightning %":930, "lightning":5000,  # derived lightning % 631 +7%, lightning 55 -92%
-		"electrocute %":1019, "electrocute":500,  # derived electrocute % 461 -50%
+		"physical %":640, "physical":150,  # derived physical % 117 -81%, physical 35 +64%
+		"lightning %":930, "lightning":5000,  # derived lightning % 556 -6%, lightning 55 -92%
+		"electrocute %":1019, "electrocute":500,  # derived electrocute % 386 -58%
 		# Off the sheet, which states a damage over time as a rate: Primal
 		# Strike's own tooltip reads 2002 bleed over two seconds against this
 		# 1001, which is the same effect a duration apart.

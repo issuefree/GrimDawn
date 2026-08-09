@@ -772,13 +772,34 @@ which is what a sheet read at two different times looks like.
 
 `armorDefensiveAbsorption: 70.0` in `records/game/gameengine.dbr`, and what gear
 and skills grant is a percentage *of* it rather than points added to it - the
-game's own tooltip says "Increases Armor Absorption by X%". So lochlan's +20% is
-84 and not 90, which is exactly what his sheet reads.
+game's own tooltip says "Increases Armor Absorption by X%". A single Scaly Hide
+is `defensiveAbsorptionModifier 20.0`, so one is 84 and two are 98.
 
 What was being reported was the bonus on its own. Every character other than
 lochlan had no `armor absorb` stated and was filled in at whatever their gear
 granted - 0 for most of them - so armor was being priced against a character who
-absorbs nothing. They now read 75 to 92.
+absorbs nothing. They now read 75 to 98.
+
+## The saves are live, so derived numbers move under you
+
+Worth knowing before chasing a discrepancy. Lochlan's armor absorption was 84
+one minute and 98 the next, and nothing in the code had changed: he was being
+played, and a second Scaly Hide went in. His components went 8 to 12 and his
+derived health 8420 to 9045 in the same stretch, which took health inside 5% and
+deleted it from his model.
+
+    python - <<'PY'
+    import savefile, os, time
+    for n, i in savefile.characters().items():
+        print(n, time.ctime(os.path.getmtime(i["path"])))
+    PY
+
+Two things follow. A stated sheet is a photograph and the derived one is live, so
+a gap can be either a modelling error or a week of play - check the file's date
+before believing the gap. And pakse's save is **226 days old**, which is a better
+explanation of him than anything about his sheet: his derived numbers are of a
+character nobody has played since, so re-reading his sheet will not help until
+he is loaded and saved.
 
 ## A modifier that modifies nothing is a character passive
 
@@ -804,10 +825,11 @@ is on it.
 ## Health
 
 Better, and not finished. Devotion coming off the stated side and the two
-passives above take lochlan from -30% to -13%:
+passives above took lochlan from -30% to -13%, and gearing he did while this was
+being written took him inside 5% and out of his model altogether:
 
     fenris -13%   gwyr  -1%   hela -29%   kieri -10%
-    lilith -16%   lochlan -13%   pakse -6%
+    lilith -16%   lochlan -6%   pakse -6%
 
 What is left has no shape to it. Fitted against level it is 74% rms, against
 physique 81%, against both 68% - so unlike offensive ability there is no single

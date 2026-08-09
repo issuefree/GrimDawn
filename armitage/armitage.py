@@ -96,7 +96,7 @@ stats = {
 		"fire retaliation": (12191+17021)/2,  # derived 644.5 -96%
 		"lightning retaliation": (1422+15844)/2,  # derived 1056 -87%
 
-		"all retaliation %":831,
+		"all retaliation %":831,  # derived 433 -27%
 
 		"fight length":30,
 

@@ -631,6 +631,22 @@ REGIONS = {
 }
 
 
+def _oneSpelling(stats):
+	"""Fold the aliases onto the name the rest of the code reads.
+
+	The retaliation multiplier has two names - the sheet says one and the weight
+	vocabulary has long said the other - and rotationDamage takes "all
+	retaliation %" in preference. That was enough to make them look harmless,
+	but they are not: armitage states "all retaliation %" and everything derived
+	said "retaliation %", so the devotions he already has were never taken off
+	the one the scorer actually reads. 240 of his 831 is Targo and Ulzuin.
+	"""
+	if "retaliation %" in stats:
+		stats["all retaliation %"] = (stats.pop("retaliation %")
+									  + stats.get("all retaliation %", 0))
+	return stats
+
+
 def devotionOf(name, root=None):
 	"""What the constellations a character already has are worth, by stat.
 
@@ -661,7 +677,7 @@ def devotionOf(name, root=None):
 		for key, value in starBonuses(record, db).items():
 			if isinstance(value, (int, float)):
 				out[key] = out.get(key, 0) + value
-	return out
+	return _oneSpelling(out)
 
 
 def sheetOf(name, root=None):
@@ -940,7 +956,7 @@ def sheetOf(name, root=None):
 	stats["level"] = character["level"]
 
 	missing = []
-	return stats, missing
+	return _oneSpelling(stats), missing
 
 
 def showSheet(name, root=None):

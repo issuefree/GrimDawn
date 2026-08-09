@@ -94,7 +94,7 @@ stats = {
 		# "chaos %":450, "chaos":1,
 		"acid":500,  # derived 38 -92%
 
-		"retaliation %":500,  # derived 449 +104%
+		"retaliation %":500,
 
 		"fight length":15,
 

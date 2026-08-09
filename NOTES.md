@@ -799,6 +799,38 @@ than a different rule.
 Armitage is the widest of the eight at +12% and -11%, in opposite directions,
 which is what a sheet read at two different times looks like.
 
+## A shield is not armor, and block is not read
+
+Armitage's remaining armor gap is not his shield. `Skybreach Bulwark` is class
+`WeaponArmor_Shield` and states no `defensiveProtection` at all - a shield does
+not add to your armor rating, it blocks instead:
+
+    defensiveBlock 1105    defensiveBlockChance 35    blockAbsorption 100
+
+None of those three are extracted. `itemBonuses` maps `blockRecoveryTime` and
+nothing else off it, so `block %` and blocked damage come out empty on every
+character - and armitage and pakse both carry `"block %": 100` weights that have
+nothing to score against. That is a real gap and a separate one from armor.
+
+## Retaliation
+
+Two names for one stat, and it mattered. The multiplier is spelled
+`all retaliation %` on a sheet and `retaliation %` in the bonus vocabulary;
+`rotationDamage` reads the first in preference to the second, which made them
+look interchangeable. They are not: armitage states the first and everything
+derived said the second, so the devotions he already has were never taken off
+the one the scorer reads. 240 of his 831 is Targo and Ulzuin. `_oneSpelling`
+folds them at the source.
+
+    stated 831 -> 591 with devotion off, against a derived 433
+
+The flat retaliation per type is still out and disagrees in both directions.
+Taking his sheet as post-multiplier the way damage is, fire implies 1512 flat
+against 744 derived and physical implies 615 against 838. So it is not one
+missing factor. Blast Shield's 75 fire retaliation is a `Skill_PassiveOn*` and
+correctly excluded from the sheet, which is part of the fire gap but nowhere
+near all of it.
+
 ## How armor works, off the game rather than by trial
 
 Three guesses were made at this - sum, even average, coverage-weighted - and the

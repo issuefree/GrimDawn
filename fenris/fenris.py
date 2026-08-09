@@ -83,15 +83,15 @@ stats = {
 
 		"health":6000,  # derived 5173 -13%
 
-		"armor":500,  # derived 674.6 +35%
+		"armor":500,  # derived 316.29 -37%
 
 		"energy":1500,  # derived 1836 +22%
 		"energy/s":14,  # derived 2.5 -82%
 
 		"physical %":350,  # derived 219 -30%
-		"pierce %":200, "pierce":0,  # derived pierce % 89 -56%
-		"bleed %":650, "bleed":1500,  # derived bleed % 311 -37%
-		"chaos %":350, "chaos":400,  # derived chaos % 85 -76%, chaos 12 -86%
+		"pierce %":200, "pierce":0,  # derived pierce % 100 -50%
+		"bleed %":650, "bleed":1500,  # derived bleed % 340 -31%
+		"chaos %":350, "chaos":400,  # derived chaos % 114 -67%, chaos 12 -86%
 
 		"fight length":30,
 

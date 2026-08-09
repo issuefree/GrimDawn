@@ -615,12 +615,12 @@ def _setTiers(db):
 	return _TIERS
 
 
-# Which body part each armour slot protects. The game picks one per hit, and
-# records/game/combatformulas.dbr states the chances: torso 26, legs 20, head 15,
-# shoulders 15, arms 12, feet 12, summing to a hundred. A waist is armour and has
-# no region of its own, so its protection applies wherever you are hit - as does
-# anything else that grants armour without covering you, a ring or a component in
-# something that is not armour.
+# Which body part each armour slot protects, off combatformulas.dbr: torso 26,
+# legs 20, head 15, shoulders 15, arms 12, feet 12, summing to a hundred. Not
+# used, and kept because finding them took a while and the next attempt at armor
+# will want them - weighting the pieces by these reads +77% against gwyr's fresh
+# sheet where an even average reads -21%, so the coverage is not what is wrong.
+# See the armor section in NOTES.
 REGIONS = {
 	"ArmorProtective_Head": "combatRegionHeadChance",
 	"ArmorProtective_Shoulder": "combatRegionShouldersChance",
@@ -629,24 +629,6 @@ REGIONS = {
 	"ArmorProtective_Legs": "combatRegionLegsChance",
 	"ArmorProtective_Feet": "combatRegionFeetChance",
 }
-
-
-def _coveredArmor(pieces, db):
-	"""What a hit actually meets, weighted by where hits land.
-
-	[(item class, that piece's armour)] in, one number out. Averaging the six
-	pieces evenly was the previous guess and reads low, because a chest plate is
-	hit twice as often as a pair of boots and carries the most armour.
-	"""
-	formulas = db.read("records/game/combatformulas.dbr") or {}
-	covered, loose = 0.0, 0.0
-	for kind, value in pieces:
-		field = REGIONS.get(kind)
-		if field:
-			covered += value * float(formulas.get(field) or 0) / 100.0
-		else:
-			loose += value
-	return covered + loose
 
 
 def devotionOf(name, root=None):
@@ -727,19 +709,58 @@ def sheetOf(name, root=None):
 	#
 	# and what does not:
 	#
-	#   Skill_Modifier         belongs to one skill, not to you - Torrent's
-	#   Skill_Transmuter       lightning is Primal Strike's and nothing else's -
-	#                          *unless the records name nothing for it to modify*,
-	#                          which is how a mastery states a plain character
-	#                          passive. Heart of the Wild is +22% health and +48%
-	#                          health regeneration and modifies no skill at all;
-	#                          Oak Skin is armor, defence and two resistances.
-	#                          Both are yours, and both were being dropped.
+	#   Skill_Modifier         *if what it modifies is itself counted*. A
+	#   Skill_Transmuter       modifier is on your sheet exactly when the thing
+	#                          it hangs off is: Temper modifies Flame Touched,
+	#                          an aura he leaves running, so its +66% physical
+	#                          is his - where Static Strike modifies Fire Strike
+	#                          and belongs to that attack alone. Follow the
+	#                          chain, because they stack two deep. A modifier
+	#                          the records give no parent at all is how a
+	#                          mastery states a plain character passive - Heart
+	#                          of the Wild, Oak Skin - and counts too.
+	#
+	# and what does not:
+	#
 	#   Skill_PassiveOn*       fires on a hit or at low life, so it is not up
 	#                          in town where the sheet is read
 	#   everything else        an attack, a pet or a weapon pool skill
 	import modelspec
-	own = {}
+
+	def counted(label, ability, enabled, seen=None):
+		"""Is this skill's payload on your character sheet?"""
+		kind = str(ability.gc("skillClass") or "")
+		if "Mastery" in kind or kind == "Skill_Passive":
+			return True
+		if "Toggled" in kind and "Modifier" not in kind:
+			return bool(enabled)
+		if kind not in ("Skill_Modifier", "Skill_Transmuter"):
+			return False
+		parent = modelspec.recordedParent(label)
+		if not parent:
+			return True                   # a character passive, not a skill's
+		seen = seen or set()
+		if parent in seen:
+			return False                  # a cycle in the record naming
+		seen.add(parent)
+		other = Skill.skills.get(parent)
+		if other is None:
+			return False
+		# At the parent's own rank where he has one, so a toggle he has not
+		# switched on does not carry its modifiers in.
+		rank, on = invested.get(parent, (1, True))
+		return counted(parent, other.getAbility(rank), on, seen)
+
+	invested, own = {}, {}
+	for entry in character["skills"]:
+		if not entry["level"]:
+			continue
+		record = db.read(entry["record"])
+		if not record:
+			continue
+		label = next((db.name(r) for r in _procRecords(record, db) if db.name(r)), "")
+		if label in Skill.skills:
+			invested[label] = (entry["level"], entry["enabled"])
 	for entry in character["skills"]:
 		if not entry["level"]:
 			continue
@@ -751,15 +772,7 @@ def sheetOf(name, root=None):
 		if not skill:
 			continue
 		ability = skill.getAbility(entry["level"])
-		kind = str(ability.gc("skillClass") or "")
-		if "Mastery" in kind or kind == "Skill_Passive":
-			pass
-		elif "Toggled" in kind and "Modifier" not in kind:
-			if not entry["enabled"]:
-				continue
-		elif kind == "Skill_Modifier" and not modelspec.recordedParent(label):
-			pass                          # a character passive, not a skill's
-		else:
+		if not counted(label, ability, entry["enabled"]):
 			continue
 		for bonus, value in ability.bonuses.items():
 			# A [dps, seconds] pair belongs to the skill rather than the sheet,
@@ -790,9 +803,9 @@ def sheetOf(name, root=None):
 				else:
 					gear[bonus] = gear.get(bonus, 0) + value
 		if piece:
-			armor.append((str((db.read(worn["base"]) or {}).get("Class") or ""), piece))
+			armor.append(piece)
 	if armor:
-		gear["armor"] = _coveredArmor(armor, db)
+		gear["armor"] = sum(armor) / len(armor)
 
 	# Set bonuses, which are on none of the pieces themselves. A set states its
 	# bonuses as a running total per piece count, and itemgen.setBonuses has
@@ -868,6 +881,14 @@ def sheetOf(name, root=None):
 		percent = gear.get(ability + " %", 0)
 		gear[ability] = (gear.get(ability, 0) * (1 + percent / 100.0)
 						 + ABILITY_CONSTANT)
+	# The same again for the three that were left. Every one of these was read
+	# off the gear and applied to nothing: armitage carries 5% armor off a
+	# Menhir's Blessing augment and 45% health regeneration, and lochlan's
+	# Heart of the Wild alone is 48% of his 111%.
+	for stat in ("armor", "health/s", "energy/s"):
+		percent = gear.get(stat + " %", 0)
+		if percent:
+			gear[stat] = gear.get(stat, 0) * (1 + percent / 100.0)
 	# Armor absorption is a percentage of the engine's 70, not a total. What was
 	# being reported was the bonus on its own.
 	gear["armor absorb"] = base["armor absorb"] * (1 + gear.get("armor absorb", 0) / 100.0)

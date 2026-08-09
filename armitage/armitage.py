@@ -76,29 +76,25 @@ stats = {
 		# so it tracks the sheet instead of going stale against it.
 		"low healths/s":1.0/30, # total guesswork.
 
-		"physique":1000,  # derived 1061 +14%
-		"cunning":475,  # derived 409 -11%
-		"spirit":400,  # derived 436 +23%
 
-		"defense":2400,  # derived 1930.5 -19%
+		"defense":2462,  # derived 2090.5 -14%
 
+		"armor":2415,  # derived 1395.87 -38%
 
-		"armor":2650,  # derived 2040.89 -18%
+		"energy":2060,  # derived 2422 +18%
+		"energy/s":42,  # derived 8.47 -78%
 
-		"energy":2000,  # derived 2422 +21%
-		"energy/s":18,  # derived 7.7 -45%
+		"physical %":256, "physical":(467+527)/2,  # derived 74 -71%
+		"internal %":256,  # derived 74 -71%
+		"fire %":1397, "fire":(2594+3139)/2,  # derived 598 -49%
+		"burn %":1074, "burn":520,  # derived burn % 518 -37%
+		"lightning %":951, "lightning":(442+679)/2,  # derived 362 -53%
+		"electrocute %":674,  # derived 362 -35%
+		"chaos %":224,  # derived 75 -67%
 
-		"physical %":400, "physical":900,  # derived physical % 8 -98%, physical 71.5 -60%
-		"internal %":400, "internal":1,  # derived internal % 8 -98%
-		"fire %":1300, "fire":1600,  # derived fire % 598 -44%, fire 40 -71%
-		"burn %":1000, "burn":500,  # derived burn % 518 -31%
-		"lightning %":850, "lightning":69,  # derived lightning % 362 -46%, lightning 52 +717%
-		"electrocute %":650, "electrocute":1,  # derived electrocute % 362 -32%
-		"chaos %":450, "chaos":1,  # derived chaos % 75 -83%
-
-		"physical retaliation": 6000,  # derived 813 -86%
-		"fire retaliation": 15000,  # derived 644.5 -96%
-		"lightning retaliation": 8000,  # derived 1056 -87%
+		"physical retaliation": (5201+6245)/2,  # derived 813 -86%
+		"fire retaliation": (12191+17021)/2,  # derived 644.5 -96%
+		"lightning retaliation": (1422+15844)/2,  # derived 1056 -87%
 
 		"all retaliation %":831,
 
@@ -145,22 +141,6 @@ weights = {
 		"armor absorb": 20,
 		
 		"damage absorb %":100,
-
-		"defense": 7.5, # "defense %": ,
-		
-		"resist": 15,
-		
-		"physical resist":35,
-		"pierce resist":0,
-		
-		"fire resist":0, 
-		"lightning resist":0,
-		"cold resist":0,
-		"acid resist":5,
-		"chaos resist":0,
-		"vitality resist":0,
-		"aether resist":25,
-
 
 		"block %": 100,
 		"blocked damage %":50-10,

@@ -61,13 +61,13 @@ stats =	{
 		# figures in these comments as the better number until she is re-read.
 
 		"health":6500,  # derived 8603 +39%
-		"armor":800,  # derived 1502.28 +88%
+		"armor":800,  # derived 664.82 -17%
 		"energy":3500,  # derived 4963 +42%
 
 		"vitality %":1050,  # derived 678 -15%
-		"chaos %":500,  # derived 249 -35%
+		"chaos %":500,  # derived 259 -32%
 
-		"pet all damage %":250+100,  # derived 103 -64%
+		"pet all damage %":250+100,  # derived 343 +18%
 
 		"fight length":15,
 

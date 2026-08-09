@@ -79,13 +79,12 @@ stats = {
 		# What is left below is off the same stale sheet, so treat the derived
 		# figures in these comments as the better number until he is re-read.
 
-		"health":10000,  # derived 9074 -6%
-		"health/s":133,  # derived 58.44 -56%
+		"health/s":133,  # derived 95.26 -28%
 
-		"armor":1000,  # derived 1953.96 +106%
+		"armor":1000,  # derived 1200.99 +26%
 
 		"energy":2000,  # derived 2246 +12%
-		"energy/s":15,  # derived 0.8 -95%
+		"energy/s":15,  # derived 0.96 -94%
 
 		# "internal %":400, "internal":1,
 		# "fire %":1300, "fire":1600,
@@ -95,7 +94,7 @@ stats = {
 		# "chaos %":450, "chaos":1,
 		"acid":500,  # derived 38 -92%
 
-		"retaliation %":500,  # derived 393 +79%
+		"retaliation %":500,  # derived 405 +84%
 
 		"fight length":15,
 

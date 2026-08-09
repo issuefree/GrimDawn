@@ -80,10 +80,9 @@ stats = {
 	# of a ranged character who kites. hits/s is hits he lands, which drives
 	# every hit-triggered proc; hits taken/s is how often he is hit, which is
 	# what armor is counted against.
-	"hits/s": 4,
-	"hits taken/s": 0.5,
-	"low healths/s": 1.0/30,
-	"blocks/s": 0,          # two-handed ranged, so this one is not a guess
+	"hits/s": 1,
+	"low healths/s": 1.0/60,
+	"blocks/s": 0,
 
 	# Your level, and what you fight. Crit chance is derived from your offensive
 	# ability against the enemy's defensive one using the game's own hit
@@ -93,26 +92,22 @@ stats = {
 	# the game's records do not carry. "enemy density" is enemies per square
 	# metre and sizes every area proc.
 	# from the save file, not transcribed
-	"difficulty": "elite",        # normal | elite | ultimate
-	# "enemy defense": 1400,        # overrides what level+difficulty derive
-	# "enemy resist": 25,           # ditto, for every damage type at once
-	# "enemy density": 0.03,
+	"difficulty": "normal",        # normal | elite | ultimate
 
 	"weapons": ["2h ranged"],   # omit to allow every constellation
-	"cunning": 550,  # derived 521 -5%
-	"health/s": 320,  # derived 78.6 -74%
-	"energy": 2500, "energy/s": 28,  # derived energy 2742 +17%, energy/s 5 -80%
-	"armor": 900,  # derived 1595.76 +77%
-	# "fight length": 30,
+	"health/s": 319,  # derived 86.46 -71%
+	"energy/s": 28,  # derived 5 -80%
+	"armor": 901,  # derived 701.23 -22%
+	"fight length": 30,
 
 	# Flat and % damage for the types you care about. damagePriority below
 	# uses these to work out what a point of each is actually worth.
-	"physical": 100, "physical %": 300,  # derived physical % 90 -70%
-	"pierce": 675, "pierce %": 625,  # derived pierce 35 -62%, pierce % 282 -55%
-	"fire": 3000, "fire %": 1400,  # derived fire 63.5 -72%, fire % 646 -48%
-	"lightning": 25, "lightning %": 625,  # derived lightning 5 +45%, lightning % 190 -70%
-	"burn": 2000, "burn %": 1000, "burn duration": 200,  # derived burn % 694 -31%, burn duration 150 -25%
-	"electrocute": 0, "electrocute %": 400,  # derived electrocute % 190 -52%
+	"physical": (109+128)/2, "physical %": 318,  # derived 108 -66%
+	"pierce": (666+676)/2, "pierce %": 626,  # derived 300 -52%
+	"fire": (2704+3108)/2, "fire %": 1392,  # derived 646 -48%
+	"lightning %": 627,  # derived 190 -70%
+	"burn": 1989, "burn %": 996, "burn duration": 193,  # derived burn % 694 -30%, burn duration 150 -22%
+	"electrocute %": 398,  # derived 190 -52%
 }
 
 # One number per damage type saying how much you care about it. The flat vs %

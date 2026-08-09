@@ -26,7 +26,7 @@ stats = {
 		"difficulty":"normal",
 
 
-		"armor":425,  # derived 541.16 +27%
+		"armor":425,  # derived 251.55 -41%
 
 		"attacks/s":1.88,
 		"rotation":[
@@ -51,16 +51,16 @@ stats = {
 		"hits/s":2,
 		"low healths/s":1.0/30, # total guesswork.
 
-		"health/s":60,  # derived 44.68 -26%
+		"health/s":60,  # derived 49.15 -18%
 
 		"energy":1600,  # derived 1806 +13%
 		"energy/s":9,
 
 		"physical %":150, "physical":375,  # derived physical % 86 -36%, physical 114.5 -28%
-		"pierce %":400, "pierce":550,  # derived pierce % 194 -52%, pierce 37 -66%
-		"bleed %":400, "bleed":150,  # derived bleed % 251 -25%
-		"cold %":150, "cold":50,  # derived cold % 69 -38%, cold 5.5 -77%
-		"frostburn %":250, "frostburn":0,  # derived frostburn % 90 -40%
+		"pierce %":400, "pierce":550,  # derived pierce % 205 -49%, pierce 37 -66%
+		"bleed %":400, "bleed":150,  # derived bleed % 262 -22%
+		"cold %":150, "cold":50,  # derived cold % 80 -28%, cold 15.5 -35%
+		"frostburn %":250, "frostburn":0,  # derived frostburn % 101 -33%
 
 		"fight length":30,
 

@@ -61,21 +61,21 @@ stats = {
 
 
 		"health":9834,  # derived 7984 -16%
-		"health/s":88.38,  # derived 49.04 -45%
+		"health/s":88.38,  # derived 77.48 -12%
 		"health/s %":0,
 
 		"energy":6019/2,  # derived 4376 +45%
 		"energy/s":52.12,  # derived 4.8 -91%
 		"energy/s %":0,
 
-		"armor":1199,  # derived 1649.73 +38%
+		"armor":1199,  # derived 716.04 -40%
 		
 		# estimated damage % for target level. add whatever damages are important to your build
 		"aether %":300, # sheet % damage for important damage types.  derived 73 -76%
 		"physical %":230,
 		"vitality %":400,  # derived 79 -80%
 		"vitality decay %":200,  # derived 79 -60%
-		"chaos %":400,  # derived 160 -60%
+		"chaos %":400,  # derived 170 -58%
 
 		"pet damage %":1241,
 

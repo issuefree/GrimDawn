@@ -710,6 +710,15 @@ Two things are still out and one is a bug:
   - offensive and defensive ability gain per level, which is in neither the save
     nor the records and had been most of their gap. Fitted rather than read -
     see below.
+  - **armor coverage was tried and does not work.** combatformulas.dbr gives the
+    chances a hit lands on each part - torso 26, legs 20, head 15, shoulders 15,
+    arms 12, feet 12 - and weighting the pieces by them reads **+77%** against
+    gwyr's freshly read sheet where an even average reads -21%. Against three
+    characters no aggregation fits: sheet over even-average is 2.16 for
+    armitage, 1.26 for gwyr, 1.58 for lochlan, so it is not a constant factor
+    and the coverage is not what is wrong. Something about the per-piece figure
+    is - `defensiveProtection` off the base record, 636 on a level 50 head.
+    `savefile.REGIONS` keeps the mapping for whoever tries next.
   - armor is averaged rather than summed. The game picks a body part per hit and
     each piece protects its own, so the average is both nearer the sheet and the
     quantity `applyDefensePriority` wants when it prices what armor stops per
@@ -836,6 +845,37 @@ before believing the gap. And pakse's save is **226 days old**, which is a bette
 explanation of him than anything about his sheet: his derived numbers are of a
 character nobody has played since, so re-reading his sheet will not help until
 he is loaded and saved.
+
+## A modifier counts when what it modifies counts
+
+`Skill_Modifier` was excluded wholesale, then excluded unless the records gave
+it no parent. Both were approximations of the real rule: **a modifier is on your
+sheet exactly when the thing it hangs off is.**
+
+    Temper          -> Flame Touched   an aura he leaves running  -> counts
+    Squad Tactics   -> Field Command   an aura he leaves running  -> counts
+    Static Strike   -> Fire Strike     an attack                  -> does not
+    Blindside       -> Blitz           an attack                  -> does not
+    Heart of the Wild -> nothing       a character passive        -> counts
+
+Follow the chain, because they stack two deep - Searing Might modifies Explosive
+Strike modifies Fire Strike. A toggle that is switched off carries none of its
+modifiers in, which the save records per skill.
+
+Temper alone is +66% physical, internal and pierce and +114% retaliation, and
+Squad Tactics is +85% all damage. Against armitage's freshly read sheet this
+took `physical %` from 8 to 159 against a stated 256 - from -98% to -38%.
+
+## Percentages that were read and never applied
+
+Four of them, all the same bug: the value was extracted off the gear, reported
+as a stat, and multiplied into nothing.
+
+    offense %    defense %    armor %    health/s %    energy/s %
+
+Lochlan's `health/s %` is 111, of which 48 is Heart of the Wild. Armitage
+carries 5% armor off a Menhir's Blessing augment and 45% health regeneration.
+Health and energy were the only two that had ever been applied.
 
 ## A modifier that modifies nothing is a character passive
 

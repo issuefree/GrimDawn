@@ -817,10 +817,25 @@ rotation already scores.
 Nothing records whether an item toggle is switched on, so carrying one counts as
 running it.
 
-**`itemAbilities` does not have all of them.** Divine Guard is granted by
-armitage's Divinesteel Hauberk, is `Skill_BuffRadiusToggled`, and is not in the
-110 entries `itemAbilities` builds - so it is still missed. Worth chasing before
-anyone reads much into what is left of the damage percentages.
+**Read off the worn record, not through `itemAbilities`.** That function is built
+from `itemData`, whose `equipment` holds **seventeen** pieces where components
+and augments hold 107 and 376 - gear is not indexed. Divine Guard comes off a
+Divinesteel Hauberk that is not among the seventeen, so the first attempt at
+this missed it entirely. The gear in hand has the record, so there is nothing to
+look up, and the coverage question disappears.
+
+Two things had to be right. The class is on the skill record the item points at,
+but the *payload* is on the record that one delegates to - reading the top
+record alone found nothing at all, which is the whole reason `procRecords`
+exists. And Divine Guard grants no damage percentage, so the damage numbers this
+was chasing did not move; what it grants is
+
+    health % 14   fire resist 30   chaos resist 18   vitality resist 18
+                  physical resist 5
+
+`itemAbilities` is still limited the same way for **rotations** - a rotation
+naming a skill granted by a piece of gear outside those seventeen will not
+resolve it. That is a separate fix in itemgen, and nothing needs it yet.
 
 ## A shield is not armor, and block is not read
 

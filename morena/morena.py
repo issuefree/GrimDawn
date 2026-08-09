@@ -57,7 +57,7 @@ stats = {
 		"energy/s":9,
 
 		"physical %":150, "physical":375,  # derived physical % 86 -36%, physical 114.5 -28%
-		"pierce %":400, "pierce":550,  # derived pierce % 280 -30%, pierce 37 -66%
+		"pierce %":400, "pierce":550,  # derived pierce % 280 -30%, pierce 47 -57%
 		"bleed %":400, "bleed":150,  # derived bleed % 262 -22%
 		"cold %":150, "cold":50,  # derived cold % 80 -28%, cold 15.5 -35%
 		"frostburn %":250, "frostburn":0,  # derived frostburn % 101 -33%

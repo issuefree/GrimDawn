@@ -73,7 +73,7 @@ stats = {
 		# estimated damage % for target level. add whatever damages are important to your build
 		"aether %":300, # sheet % damage for important damage types.  derived 73 -76%
 		"physical %":230,
-		"vitality %":400,  # derived 79 -80%
+		"vitality %":400,  # derived 204 -49%
 		"vitality decay %":200,  # derived 79 -60%
 		"chaos %":400,  # derived 170 -58%
 

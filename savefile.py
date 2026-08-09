@@ -825,7 +825,13 @@ def sheetOf(name, root=None):
 	#
 	# Nothing records whether an item toggle is switched on, so a toggle you
 	# carry is counted as running.
-	granted = modelspec.itemAbilities()
+	# Read off the worn record rather than through modelspec.itemAbilities,
+	# which cannot see most of them: it is built from itemData, whose
+	# `equipment` holds seventeen pieces where components and augments hold 107
+	# and 376. Divine Guard comes off a Divinesteel Hauberk that is not among
+	# the seventeen, so going through that list missed it. The gear in hand has
+	# the record, so there is nothing to look up.
+	from gddata import starBonuses
 	itemSkills = set()
 	for worn in character["equipped"]:
 		for path in (worn["base"], worn["prefix"], worn["suffix"],
@@ -835,21 +841,24 @@ def sheetOf(name, root=None):
 			payload = db.read(skillPath) if skillPath else None
 			if not payload:
 				continue
-			label = next((db.name(r) for r in _procRecords(payload, db)
-						  if db.name(r)), "")
-			if not label or label in itemSkills or label not in granted:
-				continue
-			ability = granted[label][0]
-			kind = str(ability.gc("skillClass") or "")
+			kind = str(payload.get("Class") or "")
 			if "Toggled" not in kind or "Modifier" in kind:
 				continue
+			chain = _procRecords(payload, db)
+			label = next((db.name(r) for r in chain if db.name(r)), "") or skillPath
+			if label in itemSkills:
+				continue
 			itemSkills.add(label)
-			for bonus, value in ability.bonuses.items():
-				if not isinstance(value, (int, float)) or bonus.startswith("triggered "):
-					continue
-				if bonus == "weapon damage %":
-					continue
-				own[bonus] = own.get(bonus, 0) + value
+			# A buff states its payload on the record it delegates to rather
+			# than on the skill the item points at, which is the whole reason
+			# procRecords exists - reading the top record alone found nothing.
+			for stated in chain:
+				for bonus, value in starBonuses(stated, db).items():
+					if (not isinstance(value, (int, float))
+							or bonus.startswith("triggered ")
+							or bonus == "weapon damage %"):
+						continue
+					own[bonus] = own.get(bonus, 0) + value
 
 	# Armor, by the rule the game states in tagCharStatsArmorTotalDescription:
 	# "Bonuses on skills and on non-armor pieces are added to all armor slots."

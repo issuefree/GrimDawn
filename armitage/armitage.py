@@ -86,8 +86,8 @@ stats = {
 
 		"physical %":256, "physical":(467+527)/2,  # derived 74 -71%
 		"internal %":256,  # derived 74 -71%
-		"fire %":1397, "fire":(2594+3139)/2,  # derived 598 -49%
-		"burn %":1074, "burn":520,  # derived burn % 518 -37%
+		"fire %":1397, "fire":(2594+3139)/2,  # derived 673 -42%
+		"burn %":1074, "burn":520,  # derived burn % 593 -28%
 		"lightning %":951, "lightning":(442+679)/2,  # derived 362 -53%
 		"electrocute %":674,  # derived 362 -35%
 		"chaos %":224,  # derived 75 -67%

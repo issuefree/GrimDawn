@@ -104,9 +104,9 @@ stats = {
 	"physical": (109+128)/2, "physical %": 318,  # derived 108 -66%
 	"pierce": (666+676)/2, "pierce %": 626,  # derived 300 -52%
 	"fire": (2704+3108)/2, "fire %": 1392,  # derived 646 -48%
-	"lightning %": 627,  # derived 190 -70%
+	"lightning %": 627,  # derived 265 -58%
 	"burn": 1989, "burn %": 996, "burn duration": 193,  # derived burn % 694 -30%, burn duration 150 -22%
-	"electrocute %": 398,  # derived 190 -52%
+	"electrocute %": 398,  # derived 265 -33%
 }
 
 # One number per damage type saying how much you care about it. The flat vs %

@@ -72,7 +72,7 @@ stats = {
 	# vitality is 0 flat, so its percentage multiplies nothing and is priced at
 	# nothing - that is not a mistake in the sheet, it is what 250% of no
 	# vitality damage is worth.
-	"aether": 1700, "aether %": 1200,  # derived aether 42.5 -70%, aether % 699 -35%
+	"aether": 1700, "aether %": 1200,  # derived aether 42.5 -70%, aether % 774 -28%
 	"lightning": 500, "lightning %": 750,  # derived lightning 8 -87%, lightning % 286 -59%
 	"vitality": 0, "vitality %": 250,  # derived vitality % 110 -56%
 	"fire": 250, "fire %": 450,  # derived fire % 75 -83%

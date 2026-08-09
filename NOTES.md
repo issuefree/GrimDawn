@@ -799,6 +799,29 @@ than a different rule.
 Armitage is the widest of the eight at +12% and -11%, in opposite directions,
 which is what a sheet read at two different times looks like.
 
+## A skill an item grants is on your sheet too
+
+None of them were read. The save does not list an item's skill beside your own -
+armitage has no item-skill entry at all in his skill block - so they have to be
+found on the gear that grants them, through `itemSkillName`.
+
+Only the toggles, by the same test a mastery skill gets. Armitage runs Burning
+Weapons off an Enchanted Flint, `Skill_BuffSelfToggled`, +75% fire and +75% burn.
+What is correctly left out is as informative: Thornhide and Hellspawn are
+`Skill_BuffSelfDuration`, temporary the way Word of Renewal is, and Brutal Shield
+Slam, Chain Lightning, Pyroclasm and Counterblow are attacks whose damage the
+rotation already scores.
+
+    fire %   -41% -> -35%      burn %   -27% -> -18%
+
+Nothing records whether an item toggle is switched on, so carrying one counts as
+running it.
+
+**`itemAbilities` does not have all of them.** Divine Guard is granted by
+armitage's Divinesteel Hauberk, is `Skill_BuffRadiusToggled`, and is not in the
+110 entries `itemAbilities` builds - so it is still missed. Worth chasing before
+anyone reads much into what is left of the damage percentages.
+
 ## A shield is not armor, and block is not read
 
 Armitage's remaining armor gap is not his shield. `Skybreach Bulwark` is class

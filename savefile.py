@@ -813,6 +813,44 @@ def sheetOf(name, root=None):
 				continue
 			own[bonus] = own.get(bonus, 0) + value
 
+	# A skill an item grants is on your sheet by the same test as one you spent a
+	# point on, and none of them were being read: the save does not list them
+	# beside your own skills, so they have to come off the gear that grants them.
+	#
+	# Only the toggles. Armitage wears Burning Weapons off an Enchanted Flint and
+	# Divine Guard off a Divinesteel Hauberk, both Skill_Buff*Toggled and both
+	# left running - where Thornhide and Hellspawn are Skill_BuffSelfDuration,
+	# temporary the way Word of Renewal is, and Brutal Shield Slam and the rest
+	# are attacks whose damage the rotation already scores.
+	#
+	# Nothing records whether an item toggle is switched on, so a toggle you
+	# carry is counted as running.
+	granted = modelspec.itemAbilities()
+	itemSkills = set()
+	for worn in character["equipped"]:
+		for path in (worn["base"], worn["prefix"], worn["suffix"],
+					 worn["component"], worn["augment"]):
+			record = db.read(path) if path else None
+			skillPath = record.get("itemSkillName") if record else None
+			payload = db.read(skillPath) if skillPath else None
+			if not payload:
+				continue
+			label = next((db.name(r) for r in _procRecords(payload, db)
+						  if db.name(r)), "")
+			if not label or label in itemSkills or label not in granted:
+				continue
+			ability = granted[label][0]
+			kind = str(ability.gc("skillClass") or "")
+			if "Toggled" not in kind or "Modifier" in kind:
+				continue
+			itemSkills.add(label)
+			for bonus, value in ability.bonuses.items():
+				if not isinstance(value, (int, float)) or bonus.startswith("triggered "):
+					continue
+				if bonus == "weapon damage %":
+					continue
+				own[bonus] = own.get(bonus, 0) + value
+
 	# Armor, by the rule the game states in tagCharStatsArmorTotalDescription:
 	# "Bonuses on skills and on non-armor pieces are added to all armor slots."
 	#

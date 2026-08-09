@@ -67,7 +67,7 @@ stats =	{
 		"vitality %":1050,  # derived 678 -15%
 		"chaos %":500,  # derived 259 -32%
 
-		"pet all damage %":250+100,  # derived 343 +18%
+		"pet all damage %":250+100,  # derived 383 +32%
 
 		"fight length":15,
 

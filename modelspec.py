@@ -1647,6 +1647,10 @@ def statVocabulary():
 	vocab.update({"physique", "cunning", "spirit", "offense", "defense", "health",
 				  "health/s", "energy", "energy/s", "armor", "armor absorb",
 				  "armor piercing", "attack speed", "cast speed", "move speed",
+				  # what a shield stops per block, off defensiveBlock. The
+				  # percentage form was a legitimate stat and the flat one it
+				  # multiplies was not, so a shield's own figure had nowhere to go.
+				  "blocked damage",
 				  "block %", "blocked damage %", "damage absorb %", "lifesteal %",
 				  "weapon damage %", "crit damage", "retaliation %", "pet damage %",
 				  # What you deal by being hit. The flat figures are per type,

@@ -118,6 +118,12 @@ DIRECT = {
     "defensiveSlowLifeLeach": "life leech resist",
     "defensivePetrify": "petrify resist", "defensiveTrap": "trap resist",
     "defensiveDisruption": "skill disruption protection",
+    # A shield states all three: how often it blocks, how much it stops when it
+    # does, and what share of that it absorbs. Only the two Modifier forms were
+    # read - the "+4% Chance to Block" an item adds - so a shield contributed
+    # its recovery time and nothing else, and every "block %" weight in a model
+    # had nothing at all to score against.
+    "defensiveBlockChance": "block %", "defensiveBlock": "blocked damage",
     "defensiveBlockModifier": "block %", "defensiveBlockAmountModifier": "blocked damage %",
     "blockRecoveryTime": "shield recovery",
     "offensiveTotalDamageModifier": "all damage %",

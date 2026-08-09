@@ -807,10 +807,20 @@ not add to your armor rating, it blocks instead:
 
     defensiveBlock 1105    defensiveBlockChance 35    blockAbsorption 100
 
-None of those three are extracted. `itemBonuses` maps `blockRecoveryTime` and
-nothing else off it, so `block %` and blocked damage come out empty on every
-character - and armitage and pakse both carry `"block %": 100` weights that have
-nothing to score against. That is a real gap and a separate one from armor.
+Two of those are read now. Only the `Modifier` forms had been - the "+4% Chance
+to Block" an item adds - so a shield contributed its recovery time and nothing
+else, and the `"block %": 100` weights armitage and pakse both carry had nothing
+at all to score against.
+
+    defensiveBlockChance -> block %          armitage 57, pakse 51
+    defensiveBlock       -> blocked damage   armitage 1105, pakse 508
+
+`blocked damage` had to be added to the stat vocabulary as well: the percentage
+form was legitimate and the flat figure it multiplies was not, so a shield's own
+number had nowhere to land. Lochlan is two-handed and correctly reads none of it.
+
+`blockAbsorption` is still unread. It is 100 on 361 of the 367 shields in the
+database, so it buys nothing to model until one of the six turns up.
 
 ## Retaliation
 

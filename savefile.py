@@ -615,6 +615,40 @@ def _setTiers(db):
 	return _TIERS
 
 
+# Which body part each armour slot protects. The game picks one per hit, and
+# records/game/combatformulas.dbr states the chances: torso 26, legs 20, head 15,
+# shoulders 15, arms 12, feet 12, summing to a hundred. A waist is armour and has
+# no region of its own, so its protection applies wherever you are hit - as does
+# anything else that grants armour without covering you, a ring or a component in
+# something that is not armour.
+REGIONS = {
+	"ArmorProtective_Head": "combatRegionHeadChance",
+	"ArmorProtective_Shoulder": "combatRegionShouldersChance",
+	"ArmorProtective_Hands": "combatRegionArmsChance",
+	"ArmorProtective_Chest": "combatRegionTorsoChance",
+	"ArmorProtective_Legs": "combatRegionLegsChance",
+	"ArmorProtective_Feet": "combatRegionFeetChance",
+}
+
+
+def _coveredArmor(pieces, db):
+	"""What a hit actually meets, weighted by where hits land.
+
+	[(item class, that piece's armour)] in, one number out. Averaging the six
+	pieces evenly was the previous guess and reads low, because a chest plate is
+	hit twice as often as a pair of boots and carries the most armour.
+	"""
+	formulas = db.read("records/game/combatformulas.dbr") or {}
+	covered, loose = 0.0, 0.0
+	for kind, value in pieces:
+		field = REGIONS.get(kind)
+		if field:
+			covered += value * float(formulas.get(field) or 0) / 100.0
+		else:
+			loose += value
+	return covered + loose
+
+
 def devotionOf(name, root=None):
 	"""What the constellations a character already has are worth, by stat.
 
@@ -756,9 +790,9 @@ def sheetOf(name, root=None):
 				else:
 					gear[bonus] = gear.get(bonus, 0) + value
 		if piece:
-			armor.append(piece)
+			armor.append((str((db.read(worn["base"]) or {}).get("Class") or ""), piece))
 	if armor:
-		gear["armor"] = sum(armor) / len(armor)
+		gear["armor"] = _coveredArmor(armor, db)
 
 	# Set bonuses, which are on none of the pieces themselves. A set states its
 	# bonuses as a running total per piece count, and itemgen.setBonuses has
@@ -794,7 +828,8 @@ def sheetOf(name, root=None):
 	# ability, cunning is offensive ability, spirit is energy. The same constants
 	# checkModel prices a point of each with, used here in the other direction.
 	from models import (PHYSIQUE_HEALTH, PHYSIQUE_REGEN, PHYSIQUE_DEFENSE,
-						CUNNING_OFFENSE, SPIRIT_ENERGY, LEVEL_ABILITY)
+						CUNNING_OFFENSE, SPIRIT_ENERGY, LEVEL_ABILITY,
+						ABILITY_CONSTANT)
 	gear["health"] = gear.get("health", 0) + stats["physique"] * PHYSIQUE_HEALTH
 	gear["health/s"] = gear.get("health/s", 0) + stats["physique"] * PHYSIQUE_REGEN
 	# Offensive and defensive ability start at what the player record states, in
@@ -802,10 +837,17 @@ def sheetOf(name, root=None):
 	# on records/creatures/pc/malepc01.dbr, against a level 1 character's 50 of
 	# each attribute - small beside the rest, and the only part of the two that
 	# is written down anywhere.
-	# On top of that the engine gives both the same gain per level - see
-	# LEVEL_ABILITY, the one number in this project that is fitted, not read.
+	# On top of that the engine gives both a gain per level, and the game states
+	# the whole equation in records/game/combatformulas.dbr:
+	#
+	#   (offensiveAbilityDV + (characterLevelDV * 12) + ((dexterityDV + bonusDV)
+	#    * 0.5)) * (1 + (offensiveAbilityModifierDV / 100)) + 53
+	#
+	# and the same for defence against physique. So it is twelve a level, the
+	# 0.5 per point is exact, the percentage multiplies the lot, and there is a
+	# flat 53 on the end that lands *after* the percentage.
 	base = _playerBase(db)
-	levels = max(0, character["level"] - 1) * LEVEL_ABILITY
+	levels = character["level"] * LEVEL_ABILITY
 	gear["defense"] = (gear.get("defense", 0) + base["defense"] + levels
 					   + stats["physique"] * PHYSIQUE_DEFENSE)
 	gear["offense"] = (gear.get("offense", 0) + base["offense"] + levels
@@ -824,8 +866,8 @@ def sheetOf(name, root=None):
 	# the gear and then never applied to anything - lochlan carries +10%.
 	for ability in ("offense", "defense"):
 		percent = gear.get(ability + " %", 0)
-		if percent:
-			gear[ability] = gear.get(ability, 0) * (1 + percent / 100.0)
+		gear[ability] = (gear.get(ability, 0) * (1 + percent / 100.0)
+						 + ABILITY_CONSTANT)
 	# Armor absorption is a percentage of the engine's 70, not a total. What was
 	# being reported was the bonus on its own.
 	gear["armor absorb"] = base["armor absorb"] * (1 + gear.get("armor absorb", 0) / 100.0)
@@ -849,10 +891,13 @@ def sheetOf(name, root=None):
 		else:
 			stats[bonus] = round(value, 2)
 
-	# Offensive and defensive ability have a base from level and attributes that
-	# the save does not carry and the records do not state, so only the gear's
-	# share of them is known.
-	missing = [n for n in ("offense", "defense") if n in stats]
+	# Character level, which is a fact about the save and not a reading of it.
+	# Every model stated its own and three had drifted: lochlan's said 60 against
+	# a save that says 62, because he was played between the two. State one to
+	# plan at a level you have not reached.
+	stats["level"] = character["level"]
+
+	missing = []
 	return stats, missing
 
 

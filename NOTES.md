@@ -721,6 +721,42 @@ So the attributes, the resistances, the conversions and `+skills` are worth
 taking; the rest is a cross-check against the sheet rather than a replacement
 for it, and the output says so.
 
+## combatformulas.dbr states the equations outright
+
+`records/game/combatformulas.dbr` was never opened, and it has the answers to
+several things that were being worked out the hard way:
+
+    offensiveAbilityEquation  (offensiveAbilityDV + (characterLevelDV * 12)
+                               + ((dexterityDV + bonusDV) * 0.5))
+                              * (1 + (offensiveAbilityModifierDV / 100)) + 53
+
+    defensiveAbilityEquation  ...the same, against strength
+
+    combatRegionTorsoChance 26   HeadChance 15   ShouldersChance 15
+    combatRegionLegsChance  20   ArmsChance 12   FeetChance      12
+
+    physicalDamageEquation         physicalDamageDV*((dexterityDV/245)+1)
+    physicalDurationDamageEquation physicalDamageDV*((dexterityDV/215)+1)
+    magicalDamageEquation          magicalDamageDV*((intelligenceDV/215)+1)
+    magicalDurationDamageEquation  magicalDamageDV*((intelligenceDV/200)+1)
+
+The four damage equations confirm every attribute constant already in models.py.
+The region chances are the armour coverage weighting that was an open question -
+a chest is hit twice as often as a boot - and they sum to a hundred.
+
+**The ability constant was fitted at 14.84 and is 12.** The fit had the shape
+right and the size wrong. It said the missing term was level rather than an
+attribute, and that the 0.5 per point was already correct; both are exactly what
+the equation says, and it also correctly called pakse and lachesis stale. But it
+was against level-1 rather than level, it missed the flat 53 that lands after
+the percentage, and 14.84 was absorbing something else - the derived side reads
+about 11% under on most characters even with the game's own arithmetic, which is
+a real gap the fit had been hiding by inflating the per-level term.
+
+The lesson is the obvious one: the equations were in the database the whole time,
+and a fit against ten hand-typed sheets was never going to beat reading them.
+Look for the record before fitting anything.
+
 ## Offensive and defensive ability gain per level
 
 Both read 48-70% low against every sheet. Three things were missing and the
@@ -977,6 +1013,7 @@ have the resistances, which now come off the save for everyone.
 
 | character | needs |
 |---|---|
+| everyone | **`attacks/s`**, which is the one thing on this list that cannot be derived. The weapon states a speed *class* - `characterBaseAttackSpeed -0.16`, `tagAttackSpeedVerySlow` - and `attack speed %` comes off the gear, but the seconds a swing takes is in the animation assets rather than the record database, and the game warns the two do not simply multiply: "Slower weapons gain less from % Attack Speed bonuses". The weapon's own tooltip prints it (`tagAttackSpeed`, "{%.2f0} Attacks per Second"), so it is one number to read per character |
 | **pakse, lachesis** | **a fresh sheet.** Both are stale enough to have been thrown out of the LEVEL_ABILITY fit, and their stated offensive and defensive ability are deleted rather than annotated. Everything else they state is off the same reading, so the derived figures in their comments are the better number until they are re-read - and re-reading either is what would pin 14.84 down |
 | kieri, lachesis | `devotionPoints`. Neither loads without it |
 | kieri, lachesis, lilith | their rotations - each is bare rates, so no skill is named and no main attack can be read |

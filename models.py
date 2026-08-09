@@ -21,32 +21,28 @@ PHYSIQUE_DEFENSE = 0.5
 # Spirit: health, energy, energy regen flat and percentage, and the magical
 # damage types - 1/215 for direct, 1/200 for the durations.
 
-# What a character gains per level in offensive and defensive ability, beyond
-# what attributes and gear give. The engine adds it and nothing writes it down:
-# the enemy records state theirs as a level equation - `(charLevel*6)+50` - and
-# the player record states a flat 65 of each with no equation at all.
+# Offensive and defensive ability per character level, and the flat constant on
+# the end of both. records/game/combatformulas.dbr states the whole thing:
 #
-# So this is fitted rather than read, which nothing else in this project is.
-# Against eight characters - the sheet, less the devotions it was read with,
-# less everything that can be accounted for - over level-1:
+#   (offensiveAbilityDV + (characterLevelDV * 12) + ((dexterityDV + bonusDV)
+#    * 0.5)) * (1 + (offensiveAbilityModifierDV / 100)) + 53
 #
-#     against level              rms 13%
-#     against cunning/physique   rms 25-43%
+# and the same for defence against strength. This was fitted before it was
+# found - at 14.84 a level, from eight characters at 13% rms, with a note
+# saying it was the one number in the project that was not read. The fit had
+# the shape right and the size wrong: twelve, not fifteen, and against the
+# whole level rather than level-1.
 #
-# Level explains it and the attribute does not. Fitting both together drives the
-# attribute coefficient to 0.146 for offense and to -0.094 for defense, so the
-# 0.5 above is already about right and the missing term is not an attribute at
-# all. That is the part worth trusting; the size of it is worth less.
+# What the fit did get right is worth keeping: it said the missing term was
+# level and not an attribute, and that the 0.5 per point already in the code
+# was correct. Both are exactly what the equation says. It also said pakse and
+# lachesis were stale, and they still are.
 #
-# One constant rather than two, because two is over-fitting: separately they
-# come out 14.55 and 15.14 at rms 11% and 14%, and this single value scores the
-# same 11% and 14%. So the engine gives both the same gain. A round 15 sits well
-# inside the error too - there is nothing here that can tell 14.8 from 15.
-#
-# Pakse and lachesis are out of the fit: 6.9/9.8 and 11.7/10.0 against a
-# 12.3-18.0 spread across everyone else, which is a stale sheet rather than a
-# different rule. Re-read either and this is worth refitting.
-LEVEL_ABILITY = 14.84
+# The same record confirms every other attribute constant here - dexterity/245
+# for physical damage, /215 for its durations, intelligence/215 and /200 for
+# the magical ones - none of which needed changing.
+LEVEL_ABILITY = 12.0
+ABILITY_CONSTANT = 53.0
 
 SPIRIT_HEALTH = 1.0
 SPIRIT_ENERGY = 2.0

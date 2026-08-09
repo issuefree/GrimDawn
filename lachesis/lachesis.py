@@ -25,7 +25,6 @@ stats =	{
 		# and crit chance follows from that against your offensive ability - so
 		# without it every crit-triggered proc scores zero. It also decides which
 		# gear evalItemMods will show you.
-		"level":63,
 		# Which column of the difficulty table to read. It moves enemy
 		# defence, and every enemy resistance by up to twelve points, so
 		# it is not a detail. Taken from the level band; correct it if he
@@ -62,7 +61,7 @@ stats =	{
 		# figures in these comments as the better number until she is re-read.
 
 		"health":6500,  # derived 8603 +39%
-		"armor":800,  # derived 615.57 -23%
+		"armor":800,  # derived 1502.28 +88%
 		"energy":3500,  # derived 4963 +42%
 
 		"vitality %":1050,  # derived 678 -15%

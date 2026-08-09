@@ -31,7 +31,6 @@ stats = {
 		# The character, not the plan. This was 85 with the sheet below written
 		# as estimates for that level - see the block marked "still level 85"
 		# further down, which is what now has to come off the real sheet.
-		"level":60,
 		"difficulty":"normal",
 		# estimate how frequent combat events are for calculating dynamic stats and abilities
 		"attacks/s":1.76,
@@ -55,11 +54,11 @@ stats = {
 		# The percentage he already carries. A further point multiplies what the
 		# 10178 came from - 10178/1.31 = 7770 - so it buys 77.7, not the 101.8
 		# the total would say. Not on the sheet; read off the gear.
-		"health/s":145,  # derived 76.96 -27%
+		"health/s":145,  # derived 77.4 -26%
 
-		"armor":1353,  # derived 750.57 -44%
+		"armor":1353,  # derived 1794.44 +35%
 
-		"energy":2358,  # derived 2764 +17%
+		"energy":2358,  # derived 2824 +20%
 		"energy/s":34,  # derived 4.2 -88%
 		
 		"pierce resist":80,  # derived 66 -18%

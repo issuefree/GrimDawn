@@ -23,12 +23,10 @@ devotionPoints = 20
 #     python savefile.py Morena stats     what the save derives
 #
 stats = {
-		"level":39,
 		"difficulty":"normal",
 
 
-		"defense":900,  # derived 929.76 +10%
-		"armor":425,  # derived 216.86 -49%
+		"armor":425,  # derived 541.16 +27%
 
 		"attacks/s":1.88,
 		"rotation":[

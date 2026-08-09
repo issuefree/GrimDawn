@@ -27,7 +27,6 @@ stats = {
 		# and crit chance follows from that against your offensive ability - so
 		# without it every crit-triggered proc scores zero. It also decides which
 		# gear evalItemMods will show you.
-		"level":70,
 		# Which column of the difficulty table to read. It moves enemy
 		# defence, and every enemy resistance by up to twelve points, so
 		# it is not a detail. Taken from the level band; correct it if he
@@ -60,7 +59,6 @@ stats = {
 
 		# estimated sheet stats for target level
 
-		"defense":1706,  # derived 1808.58 +7%
 
 		"health":9834,  # derived 7984 -16%
 		"health/s":88.38,  # derived 49.04 -45%
@@ -70,7 +68,7 @@ stats = {
 		"energy/s":52.12,  # derived 4.8 -91%
 		"energy/s %":0,
 
-		"armor":1199,  # derived 663 -45%
+		"armor":1199,  # derived 1649.73 +38%
 		
 		# estimated damage % for target level. add whatever damages are important to your build
 		"aether %":300, # sheet % damage for important damage types.  derived 73 -76%

@@ -6,7 +6,7 @@ stormTotem 		:= spell("d", 4300, 250)
 wendigoTotem 	:= spell("q", 5000, 200)
 warCry 			:= spell("w", 5000, 200)
 primalStrike 	:= spell("e", 1000, 200)  ; spam
-oleronsMight 	:= spell("r", 3500, 200)
+oleronsMight 	:= spell("f", 3500, 200)
 
 ~*LButton::{
 	if WinActive("Grim Dawn") {

@@ -92,7 +92,7 @@ stats = {
 	# Override "enemy defense" directly if you grind a difficulty whose scaling
 	# the game's records do not carry. "enemy density" is enemies per square
 	# metre and sizes every area proc.
-	"level": 73,                  # from the save file, not transcribed
+	# from the save file, not transcribed
 	"difficulty": "elite",        # normal | elite | ultimate
 	# "enemy defense": 1400,        # overrides what level+difficulty derive
 	# "enemy resist": 25,           # ditto, for every damage type at once
@@ -102,7 +102,7 @@ stats = {
 	"cunning": 550,  # derived 521 -5%
 	"health/s": 320,  # derived 78.6 -74%
 	"energy": 2500, "energy/s": 28,  # derived energy 2742 +17%, energy/s 5 -80%
-	"armor": 900,  # derived 649.29 -28%
+	"armor": 900,  # derived 1595.76 +77%
 	# "fight length": 30,
 
 	# Flat and % damage for the types you care about. damagePriority below

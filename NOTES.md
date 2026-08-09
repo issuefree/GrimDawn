@@ -710,21 +710,7 @@ Two things are still out and one is a bug:
   - offensive and defensive ability gain per level, which is in neither the save
     nor the records and had been most of their gap. Fitted rather than read -
     see below.
-  - **armor coverage was tried and does not work.** combatformulas.dbr gives the
-    chances a hit lands on each part - torso 26, legs 20, head 15, shoulders 15,
-    arms 12, feet 12 - and weighting the pieces by them reads **+77%** against
-    gwyr's freshly read sheet where an even average reads -21%. Against three
-    characters no aggregation fits: sheet over even-average is 2.16 for
-    armitage, 1.26 for gwyr, 1.58 for lochlan, so it is not a constant factor
-    and the coverage is not what is wrong. Something about the per-piece figure
-    is - `defensiveProtection` off the base record, 636 on a level 50 head.
-    `savefile.REGIONS` keeps the mapping for whoever tries next.
-  - armor is averaged rather than summed. The game picks a body part per hit and
-    each piece protects its own, so the average is both nearer the sheet and the
-    quantity `applyDefensePriority` wants when it prices what armor stops per
-    hit. Summing read 5275 against a sheet of 1353; averaging reads 659. It is
-    low because a chest plate covers more of you than a belt and nothing here
-    weights them by coverage, which is what would close the rest.
+  - armor is solved, and the game says how - see below.
 
 So the attributes, the resistances, the conversions and `+skills` are worth
 taking; the rest is a cross-check against the sheet rather than a replacement
@@ -812,6 +798,48 @@ than a different rule.
 
 Armitage is the widest of the eight at +12% and -11%, in opposite directions,
 which is what a sheet read at two different times looks like.
+
+## How armor works, off the game rather than by trial
+
+Three guesses were made at this - sum, even average, coverage-weighted - and the
+game states it in two places that were never read.
+
+**`tagCharStatsArmorTotalDescription`**: *"The higher your Armor Rating, the less
+damage you will take from physical attacks. Bonuses on skills and on non-armor
+pieces are added to all armor slots."*
+
+So the six protective slots each hold their own protection, and everything else -
+a skill, a waist, a ring, a relic - is added to **every** one of them. A hit
+lands on one slot, so what it meets is the average of the six plus all of that.
+
+    Armitage  sheet 2415   derived 1749   -28%
+    Gwyr      sheet  901   derived  879    -2%
+    Lochlan   sheet 1353   derived 1069   -21%
+
+Gwyr's is a freshly read sheet and lands within 2%. Lochlan's is a day of play
+old. Armitage carries a shield, whose protection this does not find - which is
+the obvious next thing to check for him.
+
+A one-character typo was hiding most of it: the class is
+`ArmorProtective_Shoulders`, plural, and `REGIONS` had it singular, so 922 of
+lochlan's armor was being treated as a global bonus and added to every slot.
+
+**`combatformulas.dbr`** states what the number then does:
+
+    damage <= protection    damage * (1 - absorption)
+    damage >  protection    protection * (1 - absorption) + (damage - protection)
+
+Armor covers up to its own value and absorbs 70% of that much (see armor
+absorption below); anything past it lands undiminished. `applyDefensePriority`
+prices armor linearly and does not know about the knee, which is worth revisiting
+- armor is worth a great deal up to the size of the hits you take and much less
+after.
+
+The coverage chances - torso 26, legs 20, head 15, shoulders 15, arms 12, feet 12
+- turn out **not** to be part of the sheet's number. Weighting by them reads +77%
+against gwyr where the plain average reads -2%. They describe which slot a hit
+picks, which is the piecewise formula's business, not the rating's.
+`savefile.REGIONS` keeps the mapping and is what says which slots are body slots.
 
 ## Armor absorption has a base of 70
 

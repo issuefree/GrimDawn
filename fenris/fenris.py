@@ -83,7 +83,7 @@ stats = {
 
 		"health":6000,  # derived 5173 -13%
 
-		"armor":500,  # derived 316.29 -37%
+		"armor":500,  # derived 447.2 -11%
 
 		"energy":1500,  # derived 1836 +22%
 		"energy/s":14,  # derived 2.5 -82%

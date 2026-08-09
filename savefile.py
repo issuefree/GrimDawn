@@ -623,7 +623,7 @@ def _setTiers(db):
 # See the armor section in NOTES.
 REGIONS = {
 	"ArmorProtective_Head": "combatRegionHeadChance",
-	"ArmorProtective_Shoulder": "combatRegionShouldersChance",
+	"ArmorProtective_Shoulders": "combatRegionShouldersChance",
 	"ArmorProtective_Hands": "combatRegionArmsChance",
 	"ArmorProtective_Chest": "combatRegionTorsoChance",
 	"ArmorProtective_Legs": "combatRegionLegsChance",
@@ -734,6 +734,18 @@ def sheetOf(name, root=None):
 			return True
 		if "Toggled" in kind and "Modifier" not in kind:
 			return bool(enabled)
+		# A Skill_OnHit* is a toggle that also hits back. Vindictive Flame is
+		# classed by its proc and carries +100 fire retaliation and +90 health
+		# regeneration while it is running; Counter Strike carries physical
+		# retaliation and 20% of the retaliation multiplier. Those are on the
+		# sheet, and the proc's own damage is dropped below with every other
+		# "triggered" bonus, so counting these does not double anything.
+		#
+		# Not to be confused with Skill_PassiveOn*, which is Menhir's Will
+		# firing at low life - a condition rather than a toggle, and not up in
+		# town where the sheet is read.
+		if kind.startswith("Skill_OnHit"):
+			return bool(enabled)
 		if kind not in ("Skill_Modifier", "Skill_Transmuter"):
 			return False
 		parent = modelspec.recordedParent(label)
@@ -774,19 +786,26 @@ def sheetOf(name, root=None):
 		ability = skill.getAbility(entry["level"])
 		if not counted(label, ability, entry["enabled"]):
 			continue
+		onHit = str(ability.gc("skillClass") or "").startswith("Skill_OnHit")
 		for bonus, value in ability.bonuses.items():
 			# A [dps, seconds] pair belongs to the skill rather than the sheet,
 			# and a summon's bonuses arrive as a dict of their own.
 			if not isinstance(value, (int, float)) or bonus.startswith("triggered "):
 				continue
+			# What a Skill_OnHit's own swing is worth describes its proc, not you.
+			if onHit and bonus == "weapon damage %":
+				continue
 			own[bonus] = own.get(bonus, 0) + value
 
-	# Armor is not summed. The game picks a body part per hit and each piece
-	# protects its own, so what you have against a hit is the average across
-	# them - which is also exactly the quantity applyDefensePriority wants when
-	# it prices what armor stops per hit. Summing read lochlan at 5275 where a
-	# hit meets something nearer 750.
+	# Armor, by the rule the game states in tagCharStatsArmorTotalDescription:
+	# "Bonuses on skills and on non-armor pieces are added to all armor slots."
+	#
+	# So the six protective slots each hold their own protection, and everything
+	# else - a skill, a waist, a ring, a relic - is added to every one of them.
+	# A hit lands on one slot, so what it meets is the average of the six plus
+	# all of that. Summing read lochlan at 5275 where a hit meets nearer 900.
 	gear, armor = dict(own), []
+	globalArmor = float(own.pop("armor", 0) or 0)
 	for worn in character["equipped"]:
 		piece = 0.0
 		for path in (worn["base"], worn["prefix"], worn["suffix"],
@@ -803,9 +822,11 @@ def sheetOf(name, root=None):
 				else:
 					gear[bonus] = gear.get(bonus, 0) + value
 		if piece:
-			armor.append(piece)
-	if armor:
-		gear["armor"] = sum(armor) / len(armor)
+			if str((db.read(worn["base"]) or {}).get("Class") or "") in REGIONS:
+				armor.append(piece)
+			else:
+				globalArmor += piece      # a waist, a ring, a relic: every slot
+	gear["armor"] = (sum(armor) / len(armor) if armor else 0.0) + globalArmor
 
 	# Set bonuses, which are on none of the pieces themselves. A set states its
 	# bonuses as a running total per piece count, and itemgen.setBonuses has

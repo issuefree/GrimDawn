@@ -95,9 +95,8 @@ stats = {
 	"difficulty": "normal",        # normal | elite | ultimate
 
 	"weapons": ["2h ranged"],   # omit to allow every constellation
-	"health/s": 319,  # derived 86.46 -71%
+	"health/s": 319,  # derived 108.46 -64%
 	"energy/s": 28,  # derived 5 -80%
-	"armor": 901,  # derived 701.23 -22%
 	"fight length": 30,
 
 	# Flat and % damage for the types you care about. damagePriority below

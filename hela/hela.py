@@ -66,7 +66,6 @@ stats = {
 
 	"health": 9000,  # derived 6369 -29%
 	"energy": 4500, "energy/s": 165,  # derived energy 5136 +14%, energy/s 30.14 -82%
-	"armor": 479,  # derived 369.51 -23%
 
 	# Flat and % damage for the types you care about. damagePriority below
 	# uses these to work out what a point of each is actually worth.

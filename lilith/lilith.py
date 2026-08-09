@@ -68,7 +68,7 @@ stats = {
 		"energy/s":52.12,  # derived 4.8 -91%
 		"energy/s %":0,
 
-		"armor":1199,  # derived 716.04 -40%
+		"armor":1199,  # derived 909.18 -24%
 		
 		# estimated damage % for target level. add whatever damages are important to your build
 		"aether %":300, # sheet % damage for important damage types.  derived 73 -76%

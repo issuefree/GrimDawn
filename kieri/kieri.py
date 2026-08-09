@@ -93,7 +93,7 @@ stats =	{
 
 		"health":4000,  # derived 3609 -10%
 
-		"armor":250,  # derived 157.06 -37%
+		"armor":250,  # derived 228.24 -9%
 		"energy":2000,  # derived 2182 +9%
 		
 		# estimated damage % for target level. add whatever damages are important to your build

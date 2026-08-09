@@ -26,7 +26,7 @@ stats = {
 		"difficulty":"normal",
 
 
-		"armor":425,  # derived 251.55 -41%
+		"armor":425,  # derived 396.91 -7%
 
 		"attacks/s":1.88,
 		"rotation":[

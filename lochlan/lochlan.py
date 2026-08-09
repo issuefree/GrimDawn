@@ -56,7 +56,7 @@ stats = {
 		# the total would say. Not on the sheet; read off the gear.
 		"health/s":145,  # derived 163.31 +56%
 
-		"armor":1353,  # derived 840.64 -37%
+		"armor":1353,  # derived 1069.23 -20%
 
 		"energy":2358,  # derived 2824 +20%
 		"energy/s":34,  # derived 4.2 -88%

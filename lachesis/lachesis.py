@@ -61,7 +61,7 @@ stats =	{
 		# figures in these comments as the better number until she is re-read.
 
 		"health":6500,  # derived 8603 +39%
-		"armor":800,  # derived 664.82 -17%
+		"armor":800,  # derived 873.54 +9%
 		"energy":3500,  # derived 4963 +42%
 
 		"vitality %":1050,  # derived 678 -15%

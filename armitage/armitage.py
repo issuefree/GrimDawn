@@ -79,7 +79,7 @@ stats = {
 
 		"defense":2462,  # derived 2090.5 -14%
 
-		"armor":2415,  # derived 1395.87 -38%
+		"armor":2415,  # derived 1748.57 -23%
 
 		"energy":2060,  # derived 2422 +18%
 		"energy/s":42,  # derived 8.47 -78%

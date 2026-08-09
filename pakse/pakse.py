@@ -81,7 +81,7 @@ stats = {
 
 		"health/s":133,  # derived 95.26 -28%
 
-		"armor":1000,  # derived 1200.99 +26%
+		"armor":1000,  # derived 1956.79 +106%
 
 		"energy":2000,  # derived 2246 +12%
 		"energy/s":15,  # derived 0.96 -94%
@@ -94,7 +94,7 @@ stats = {
 		# "chaos %":450, "chaos":1,
 		"acid":500,  # derived 38 -92%
 
-		"retaliation %":500,  # derived 405 +84%
+		"retaliation %":500,  # derived 449 +104%
 
 		"fight length":15,
 

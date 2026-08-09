@@ -62,7 +62,7 @@ stats = {
 
 		"defense":1706,  # derived 1808.58 +7%
 
-		"health":9834,  # derived 7809 -18%
+		"health":9834,  # derived 7984 -16%
 		"health/s":88.38,  # derived 49.04 -45%
 		"health/s %":0,
 

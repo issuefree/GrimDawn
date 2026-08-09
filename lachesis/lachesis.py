@@ -61,7 +61,7 @@ stats =	{
 		# What is left below is off the same stale sheet, so treat the derived
 		# figures in these comments as the better number until she is re-read.
 
-		"health":6500,  # derived 7821 +26%
+		"health":6500,  # derived 8603 +39%
 		"armor":800,  # derived 615.57 -23%
 		"energy":3500,  # derived 4963 +42%
 

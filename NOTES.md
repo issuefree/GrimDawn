@@ -768,6 +768,54 @@ than a different rule.
 Armitage is the widest of the eight at +12% and -11%, in opposite directions,
 which is what a sheet read at two different times looks like.
 
+## Armor absorption has a base of 70
+
+`armorDefensiveAbsorption: 70.0` in `records/game/gameengine.dbr`, and what gear
+and skills grant is a percentage *of* it rather than points added to it - the
+game's own tooltip says "Increases Armor Absorption by X%". So lochlan's +20% is
+84 and not 90, which is exactly what his sheet reads.
+
+What was being reported was the bonus on its own. Every character other than
+lochlan had no `armor absorb` stated and was filled in at whatever their gear
+granted - 0 for most of them - so armor was being priced against a character who
+absorbs nothing. They now read 75 to 92.
+
+## A modifier that modifies nothing is a character passive
+
+`Skill_Modifier` was excluded wholesale, on the grounds that it belongs to one
+skill rather than to you: Torrent's lightning is Primal Strike's. That is right
+where the records name a parent, and wrong where they do not, which is how a
+mastery states a plain always-on passive.
+
+Lochlan has two:
+
+    Heart of the Wild    health % 22, health/s % 48
+    Oak Skin             armor 14, defence 11, aether and pierce resist 3
+
+Both are his. Neither was counted. `recordedParent` already knew the difference
+- Storm Touched names Savagery, Storm Surge names Primal Strike, and these two
+name nothing at all.
+
+The exclusions that stay are worth noting because they look similar and are not:
+lochlan's Menhir's Will is `Skill_PassiveOnLifeBuffSel` and fires at low life,
+and gwyr's Word of Renewal is a cast buff. The sheet is read in town, so neither
+is on it.
+
+## Health
+
+Better, and not finished. Devotion coming off the stated side and the two
+passives above take lochlan from -30% to -13%:
+
+    fenris -13%   gwyr  -1%   hela -29%   kieri -10%
+    lilith -16%   lochlan -13%   pakse -6%
+
+What is left has no shape to it. Fitted against level it is 74% rms, against
+physique 81%, against both 68% - so unlike offensive ability there is no single
+missing term, and `PHYSIQUE_HEALTH = 2.5` is not wrong in a way more physique
+would fix. The residual is per character, which points at gear: an affix rolls
+its value from a seed against a range and the range's average is what gets read.
+Hela is the worst at -29% and has no skipped skill carrying health at all.
+
 ## Current devotion comes off the baseline
 
 The sheet is read in town with the devotions you already have, so every number

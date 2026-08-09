@@ -99,8 +99,8 @@ stats = {
 	# "enemy density": 0.03,
 
 	"weapons": ["2h ranged"],   # omit to allow every constellation
-	"cunning": 550,  # derived cunning 521 -5%
-	"health/s": 320,  # derived health/s 78.6 -74%
+	"cunning": 550,  # derived 521 -5%
+	"health/s": 320,  # derived 78.6 -74%
 	"energy": 2500, "energy/s": 28,  # derived energy 2742 +17%, energy/s 5 -80%
 	"armor": 900,  # derived 649.29 -28%
 	# "fight length": 30,

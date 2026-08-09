@@ -89,7 +89,7 @@ stats = {
 		"energy":1500,  # derived 1836 +22%
 		"energy/s":14,  # derived 2.5 -82%
 
-		"physical %":350,  # derived physical % 219 -30%
+		"physical %":350,  # derived 219 -30%
 		"pierce %":200, "pierce":0,  # derived pierce % 89 -56%
 		"bleed %":650, "bleed":1500,  # derived bleed % 311 -37%
 		"chaos %":350, "chaos":400,  # derived chaos % 85 -76%, chaos 12 -86%

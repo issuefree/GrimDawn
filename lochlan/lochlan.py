@@ -36,17 +36,6 @@ stats = {
 		# estimate how frequent combat events are for calculating dynamic stats and abilities
 		"attacks/s":1.76,
 		"crit damage": 70,  # derived 47 -6%
-		# His rotation, from bots/lochlan.ahk against the cooldowns the records
-		# state. A skill fires no faster than its cooldown and no faster than
-		# it is pressed, so the rate is one over whichever is longer; the load
-		# prints which one won for each. The first entry is what he holds the
-		# button down on, and it is his main attack.
-		#
-		# What is on his bar and the order he plays it. Nothing else: the rank is
-		# the points he has spent, off the save, and the modifiers are whatever
-		# the records say modifies these - Might of the Bear, Torrent, Storm
-		# Surge and the rest were all written out here and all come back on
-		# their own. The load prints them.
 		"rotation":[
 			"Savagery",            # held on left button, so this is his main attack
 			"Primal Strike",
@@ -56,47 +45,31 @@ stats = {
 			# WPS
 			"Feral Hunger", "Markovian's Advantage", "Zolhan's Technique",
 		],
-		# "+skills" was written out here by hand and is gone: the loader reads it
-		# off the save, and the two agreed entry for entry. Everything he wears
-		# and everything socketed into it, the one affix pair he carries - the
-		# Badge of Mastery's +3 Savagery and +2 Primal Strike - and the set his
-		# three Royal Crown pieces make: Royal Exuberance, 5% to each attribute
-		# at two pieces and "+1 to all skills" at three.
-		#
-		# State one here to override it, which is what a plan wants when it
-		# holds gear the character is not wearing yet.
+
 		"hits/s":1,
 		"blocks/s":0,
 		"kills/s":1.5,
-		# crit chance was pinned here. It is derived now, from offensive
-		# ability against the enemy defence that level and difficulty give -
-		# so it tracks the sheet instead of going stale against it.
 		"low healths/s":1.0/20, # total guesswork.
-
 		"fight length":15, # average length of a fight... this is for weighting abilities and over time effects. If you rely on wearing down opponents this should be long. If you are a glass cannon this should be small.
 
-
-
-		"health":10178,  # derived 7078 -27%
+		"health":10178,  # derived 8420 -13%
 		# The percentage he already carries. A further point multiplies what the
 		# 10178 came from - 10178/1.31 = 7770 - so it buys 77.7, not the 101.8
 		# the total would say. Not on the sheet; read off the gear.
-		"health %":31,  # derived 16 -48%
 		"health/s":145,  # derived 64.4 -56%
 
 		"armor":1353,  # derived 659.38 -51%
-		"armor absorb":84,  # derived 20 -76%
 
 		"energy":2358,  # derived 2672 +13%
 		"energy/s":34,  # derived 9.2 -73%
 		
-		"pierce resist":80,  # derived 63 -10%
+		"pierce resist":80,  # derived 66 -6%
 		"fire resist":80,  # derived 120 +50%
 		"cold resist":80,
 		"lightning resist":80,
 		"bleed resist":73,  # derived 79 +8%
 		"acid resist":40,  # derived 44 +10%
-		"aether resist":6,
+		"aether resist":6,  # derived 3 -50%
 		"chaos resist":14,  # derived 15 +7%
 		"vitality resist":51,  # derived 44 -14%
 		"physical resist":8,  # derived 5 +25%

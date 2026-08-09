@@ -583,6 +583,13 @@ def _playerBase(db):
 		record = db.read("records/creatures/pc/malepc01.dbr") or {}
 		_BASE["offense"] = float(record.get("characterOffensiveAbility") or 0)
 		_BASE["defense"] = float(record.get("characterDefensiveAbility") or 0)
+		# Armor absorption starts at 70% for everybody and is not on the player
+		# record at all - it is one line in the game engine's own record. What
+		# gear and skills grant is a percentage *of* that: the game's tooltip
+		# says "Increases Armor Absorption by X%", so lochlan's +20% is 84 and
+		# not 90, which is exactly what his sheet reads.
+		engine = db.read("records/game/gameengine.dbr") or {}
+		_BASE["armor absorb"] = float(engine.get("armorDefensiveAbsorption") or 0)
 	return _BASE
 
 
@@ -686,11 +693,18 @@ def sheetOf(name, root=None):
 	#
 	# and what does not:
 	#
-	#   Skill_Modifier         belongs to one skill, not to you. Torrent's
-	#   Skill_Transmuter       lightning is Primal Strike's and nothing else's
+	#   Skill_Modifier         belongs to one skill, not to you - Torrent's
+	#   Skill_Transmuter       lightning is Primal Strike's and nothing else's -
+	#                          *unless the records name nothing for it to modify*,
+	#                          which is how a mastery states a plain character
+	#                          passive. Heart of the Wild is +22% health and +48%
+	#                          health regeneration and modifies no skill at all;
+	#                          Oak Skin is armor, defence and two resistances.
+	#                          Both are yours, and both were being dropped.
 	#   Skill_PassiveOn*       fires on a hit or at low life, so it is not up
 	#                          in town where the sheet is read
 	#   everything else        an attack, a pet or a weapon pool skill
+	import modelspec
 	own = {}
 	for entry in character["skills"]:
 		if not entry["level"]:
@@ -709,6 +723,8 @@ def sheetOf(name, root=None):
 		elif "Toggled" in kind and "Modifier" not in kind:
 			if not entry["enabled"]:
 				continue
+		elif kind == "Skill_Modifier" and not modelspec.recordedParent(label):
+			pass                          # a character passive, not a skill's
 		else:
 			continue
 		for bonus, value in ability.bonuses.items():
@@ -810,6 +826,9 @@ def sheetOf(name, root=None):
 		percent = gear.get(ability + " %", 0)
 		if percent:
 			gear[ability] = gear.get(ability, 0) * (1 + percent / 100.0)
+	# Armor absorption is a percentage of the engine's 70, not a total. What was
+	# being reported was the bonus on its own.
+	gear["armor absorb"] = base["armor absorb"] * (1 + gear.get("armor absorb", 0) / 100.0)
 	for bonus, value in sorted(gear.items()):
 		if bonus in stats or bonus in ("physique", "cunning", "spirit"):
 			continue
